@@ -1,0 +1,17 @@
+# Every text file is LF on every checkout, including a checkout on Windows.
+# Git for Windows writes CRLF by default. See dbmeta D89 and D110.
+* text=auto eol=lf
+
+# The reference images, the test fonts and the test files of upstream are
+# copies of the files of upstream, byte for byte (docs/UPSTREAM.md). Git must
+# not change them. An SVG file of a test can hold CRLF line ends on purpose.
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.svgz binary
+*.ttf binary
+*.otf binary
+testdata/** -text
+svg/testdata/** -text
+internal/*/testdata/** -text

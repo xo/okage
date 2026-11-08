@@ -1,0 +1,27 @@
+upstream	date	status	okage	note
+0a5a15b4285daed2711ecb8a4cea76ab9f141e09	2026-10-28	pending		Fix filter primitive subregions with `primitiveUnits=objectBoundingBox` (#1188). Port: usvg, tests
+91455ee06d08ac2bfeab2b035ed2cfbfd0a68614	2026-10-28	pending		Fix spacing and seams in fractional-size SVG patterns (#1171). Port: resvg, tests
+88a0c592e656582fc932a50f74848fdc566cd94e	2026-10-29	pending		Make group bounding boxes optional (#1167). Port: usvg text, usvg, resvg, tests, c-api, not ported
+0c40ddc7eecdb1400a90d365043443a57eb76d38	2026-10-29	pending		Fix `feDisplacementMap` applying `scale` twice (#1157). Port: usvg, resvg, tests
+88635659450874f10959cb50cc5cc22f1acc9279	2026-10-29	pending		Read all text of a style element, also after an XML comment (#1161). Port: usvg, tests
+3c42a96f08f1ee1ae2067ea0b8b971241ce160c4	2026-10-29	pending		Support `path` attribute on `<textPath>` element (#1020). Port: usvg, tests
+e1a4c92da6d354a41c402f57d65705ad632eba25	2026-10-30	pending		Upgrade to harfrust 0.15 and skrifa 0.49 (#1156). Port: usvg text. It raises harfrust to 0.15 and skrifa to 0.49, which waits for question 13
+d3c73607c1aa58048a07eae34139b393e3b40700	2026-10-30	pending		Create shaping fonts once per tree (#1195). Port: usvg text, usvg
+b8518ff46ca5047c2affd72d864529e0c6f036d3	2026-10-30	pending		Calculate bounding boxes lazily (#1196). Port: usvg text, usvg, tests
+4f2da26b7072a693c4097b4b49d6f581b326d04c	2026-10-30	pending		Hash each ID only once when building the XML ID map (#1198). Port: usvg
+c0e2c8c0ad4a6f7e7844f868fff9dbe503cd4476	2026-10-30	pending		Find elements with recursive references in a single traversal (#1197). Port: usvg
+838769e88916269e0bf50016e032321595b38f76	2026-10-30	pending		Check generated IDs against the document's ID map (#1199). Port: usvg
+9798a2055106bdb4acf3382c11cc6d47d3f41bc8	2026-10-30	pending		Box the text decorations of layouted spans (#1200). Port: usvg text
+a1dd3077f47f28c0f127c627a504caeb675ac0be	2026-10-30	pending		Keep the marker context of paints on the parser state (#1201). Port: usvg
+07a63a75c74ff9ca85c6d8043927c802c982313d	2026-10-30	pending		Borrow the declarations of `style` attributes from the input (#1204). Port: usvg
+4e9c72b8ce9490350aafae4e92091b6e828d2cce	2026-10-30	pending		Drop the XML document before converting the tree (#1206). Port: usvg
+aaaa3550973183aed9a749dbcbae46de787de967	2026-10-30	pending		Resolve the fonts of a text once per tree (#1208). Port: usvg text, usvg
+4ba2462da4ecf1f93731e957fc65d4ccb7c51bed	2026-10-30	pending		Skip color glyph lookups for fonts without color tables (#1209). Port: usvg text, usvg
+b01519ef1956dc0e96de39203fa444a030de4d6a	2026-10-31	pending		Cache shape plans per font (#1211). Port: usvg text, usvg
+9371cf7a1fb3ffb0c9f02bbdf976e9d1fed4767c	2026-10-31	pending		Allocate the bounding box caches of nodes on first use (#1212). Port: usvg
+cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	pending		Store path IDs as `Box<str>` (#1213). Port: usvg text, usvg
+107c3128825c11a972961a738a1e9f4de4d79ad6	2026-11-04	pending		fix: check for loops in `HrefIter` (#1218). Port: usvg, tests
+30fda2c3829147e7b95bfe34df89d1e90ef7dd90	2026-11-04	pending		Avoid cloning font data for shared files (#1220). Port: usvg text
+4cc963bde79f92ee3cf738ab2683f4851a07892c	2026-11-04	pending		Fix sbix bitmap placement (#1221). Port: usvg text, tests
+04291b740387ca7310bce66cd7108ee8d7c51ef0	2026-11-04	pending		Use the owned font model for all font lookups (#1222). Port: usvg text, usvg
+847abd69841493b011d07f9202f9f1fa616a82c6	2026-11-05	pending		Make max parsing depth configurable. (#1223). Port: usvg, tests
