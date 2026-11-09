@@ -121,12 +121,22 @@ func fromStr(text string, opt *options) (*Tree, error) {
 	xmlOpt := roxmltree.DefaultParsingOptions()
 	xmlOpt.AllowDTD = true
 
-	doc, err := roxmltree.ParseWithOptions(text, xmlOpt)
+	// The XML document is no longer needed once `svgtree` is built, so drop it
+	// before the conversion to lower the peak memory usage.
+	//
+	// Port: Go has no block that drops a value. The garbage collector frees
+	// the XML document once no live variable holds it, which is after
+	// parseTree returns.
+	xml, err := roxmltree.ParseWithOptions(text, xmlOpt)
+	if err != nil {
+		return nil, parsingFailed(err)
+	}
+	doc, err := parseTree(xml, opt.styleSheet, opt)
 	if err != nil {
 		return nil, parsingFailed(err)
 	}
 
-	return fromXMLTree(doc, opt)
+	return convertDoc(doc, opt)
 }
 
 // fromXMLTree is Tree::from_xmltree in usvg src/parser/mod.rs. It parses
@@ -134,7 +144,7 @@ func fromStr(text string, opt *options) (*Tree, error) {
 //
 // Port: the function is unexported, because internal/roxmltree is internal
 // and a user cannot make its document (D5).
-func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) {
+func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) { //nolint:unused // the port of a public function of upstream
 	svgDoc, err := parseTree(doc, opt.styleSheet, opt)
 	if err != nil {
 		return nil, parsingFailed(err)
