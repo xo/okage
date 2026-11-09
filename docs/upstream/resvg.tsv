@@ -13,7 +13,7 @@ c0e2c8c0ad4a6f7e7844f868fff9dbe503cd4476	2026-10-30	ported		Find elements with r
 838769e88916269e0bf50016e032321595b38f76	2026-10-30	ported		Check generated IDs against the document's ID map (#1199). Port: usvg
 9798a2055106bdb4acf3382c11cc6d47d3f41bc8	2026-10-30	ported		Box the text decorations of layouted spans (#1200). Port: usvg text
 a1dd3077f47f28c0f127c627a504caeb675ac0be	2026-10-30	ported		Keep the marker context of paints on the parser state (#1201). Port: usvg
-07a63a75c74ff9ca85c6d8043927c802c982313d	2026-10-30	pending		Borrow the declarations of `style` attributes from the input (#1204). Port: usvg
+07a63a75c74ff9ca85c6d8043927c802c982313d	2026-10-30	ported		Borrow the declarations of `style` attributes from the input (#1204). Port: usvg
 4e9c72b8ce9490350aafae4e92091b6e828d2cce	2026-10-30	pending		Drop the XML document before converting the tree (#1206). Port: usvg
 aaaa3550973183aed9a749dbcbae46de787de967	2026-10-30	pending		Resolve the fonts of a text once per tree (#1208). Port: usvg text, usvg
 4ba2462da4ecf1f93731e957fc65d4ccb7c51bed	2026-10-30	pending		Skip color glyph lookups for fonts without color tables (#1209). Port: usvg text, usvg

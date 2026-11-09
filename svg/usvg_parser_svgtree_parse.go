@@ -373,75 +373,18 @@ func parseSvgElement(
 		}
 	}
 
-	writeDeclaration := func(declaration simplecss.Declaration) {
-		// TODO: perform XML attribute normalization
-		imp := declaration.Important
-		val := declaration.Value
-
-		if declaration.Name == "marker" {
-			insertAttribute(AIdMarkerStart, val, imp)
-			insertAttribute(AIdMarkerMid, val, imp)
-			insertAttribute(AIdMarkerEnd, val, imp)
-		} else if declaration.Name == "font" {
-			if shorthand, err := svgtypes.ParseFontShorthand(val); err == nil {
-				// First we need to reset all values to their default.
-				insertAttribute(AIdFontStyle, "normal", imp)
-				insertAttribute(AIdFontVariant, "normal", imp)
-				insertAttribute(AIdFontWeight, "normal", imp)
-				insertAttribute(AIdFontStretch, "normal", imp)
-				insertAttribute(AIdLineHeight, "normal", imp)
-				insertAttribute(AIdFontSizeAdjust, "none", imp)
-				insertAttribute(AIdFontKerning, "auto", imp)
-				insertAttribute(AIdFontVariantCaps, "normal", imp)
-				insertAttribute(AIdFontVariantLigatures, "normal", imp)
-				insertAttribute(AIdFontVariantNumeric, "normal", imp)
-				insertAttribute(AIdFontVariantEastAsian, "normal", imp)
-				insertAttribute(AIdFontVariantPosition, "normal", imp)
-
-				// Then, we set the properties that have been declared.
-				if shorthand.FontStretch != "" {
-					insertAttribute(AIdFontStretch, shorthand.FontStretch, imp)
-				}
-				if shorthand.FontWeight != "" {
-					insertAttribute(AIdFontWeight, shorthand.FontWeight, imp)
-				}
-				if shorthand.FontVariant != "" {
-					insertAttribute(AIdFontVariant, shorthand.FontVariant, imp)
-				}
-				if shorthand.FontStyle != "" {
-					insertAttribute(AIdFontStyle, shorthand.FontStyle, imp)
-				}
-				insertAttribute(AIdFontSize, shorthand.FontSize, imp)
-				insertAttribute(AIdFontFamily, shorthand.FontFamily, imp)
-			} else {
-				doc.opt.warnf(
-					"Failed to parse %s value: '%s'",
-					AIdFont,
-					declaration.Value,
-				)
-			}
-		} else if aid, ok := aidFromStr(declaration.Name); ok {
-			// Parse only the presentation attributes.
-			if aid.isPresentation() {
-				insertAttribute(aid, val, imp)
-			}
-		}
-	}
-
 	// Apply CSS.
 	for _, rule := range styleSheet.Rules {
 		if rule.Selector.Matches(xmlNode2{xmlNode}) {
 			for _, declaration := range rule.Declarations {
-				writeDeclaration(declaration)
+				writeDeclaration(declaration, insertAttribute, doc.opt)
 			}
 		}
 	}
 
 	// Split a `style` attribute.
 	if value, ok := xmlNode.Attribute(roxmltree.ExpandedNameFromStr("style")); ok {
-		for declaration := range simplecss.NewDeclarationTokenizer(value).All() {
-			writeDeclaration(declaration)
-		}
+		writeDeclarations(value, insertAttribute, doc.opt)
 	}
 
 	if len(doc.nodes) > 1_000_000 {
@@ -458,6 +401,78 @@ func parseSvgElement(
 	)
 
 	return nodeID, nil
+}
+
+// writeDeclarations is write_declarations in usvg
+// src/parser/svgtree/parse.rs.
+//
+// Port: upstream passes a function that borrows or copies each value, so
+// that a value borrows the input where it can. A Go string always shares
+// its bytes, so that parameter has no Go form. opt holds the logger (D20).
+func writeDeclarations(text string, insert func(AId, string, bool), opt *options) {
+	for declaration := range simplecss.NewDeclarationTokenizer(text).All() {
+		writeDeclaration(declaration, insert, opt)
+	}
+}
+
+// writeDeclaration is write_declaration in usvg
+// src/parser/svgtree/parse.rs.
+//
+// Port: as in writeDeclarations, the function that borrows or copies a
+// value has no Go form. opt holds the logger (D20).
+func writeDeclaration(declaration simplecss.Declaration, insert func(AId, string, bool), opt *options) {
+	// TODO: perform XML attribute normalization
+	imp := declaration.Important
+	val := declaration.Value
+
+	if declaration.Name == "marker" {
+		insert(AIdMarkerStart, val, imp)
+		insert(AIdMarkerMid, val, imp)
+		insert(AIdMarkerEnd, val, imp)
+	} else if declaration.Name == "font" {
+		if shorthand, err := svgtypes.ParseFontShorthand(val); err == nil {
+			// First we need to reset all values to their default.
+			insert(AIdFontStyle, "normal", imp)
+			insert(AIdFontVariant, "normal", imp)
+			insert(AIdFontWeight, "normal", imp)
+			insert(AIdFontStretch, "normal", imp)
+			insert(AIdLineHeight, "normal", imp)
+			insert(AIdFontSizeAdjust, "none", imp)
+			insert(AIdFontKerning, "auto", imp)
+			insert(AIdFontVariantCaps, "normal", imp)
+			insert(AIdFontVariantLigatures, "normal", imp)
+			insert(AIdFontVariantNumeric, "normal", imp)
+			insert(AIdFontVariantEastAsian, "normal", imp)
+			insert(AIdFontVariantPosition, "normal", imp)
+
+			// Then, we set the properties that have been declared.
+			if shorthand.FontStretch != "" {
+				insert(AIdFontStretch, shorthand.FontStretch, imp)
+			}
+			if shorthand.FontWeight != "" {
+				insert(AIdFontWeight, shorthand.FontWeight, imp)
+			}
+			if shorthand.FontVariant != "" {
+				insert(AIdFontVariant, shorthand.FontVariant, imp)
+			}
+			if shorthand.FontStyle != "" {
+				insert(AIdFontStyle, shorthand.FontStyle, imp)
+			}
+			insert(AIdFontSize, shorthand.FontSize, imp)
+			insert(AIdFontFamily, shorthand.FontFamily, imp)
+		} else {
+			opt.warnf(
+				"Failed to parse %s value: '%s'",
+				AIdFont,
+				declaration.Value,
+			)
+		}
+	} else if aid, ok := aidFromStr(declaration.Name); ok {
+		// Parse only the presentation attributes.
+		if aid.isPresentation() {
+			insert(aid, val, imp)
+		}
+	}
 }
 
 // appendAttribute is append_attribute in usvg src/parser/svgtree/parse.rs.
