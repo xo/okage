@@ -13,7 +13,8 @@ Before you change anything, read three things:
 Do not decide an open question on your own. Add it to the end of
 `docs/PLAN.md`, and ask a maintainer.
 
-On 2026-11-09 the port of tiny-skia is done, and its speed is the open work.
+On 2026-11-09 the port of tiny-skia is done. It has no speed target, and
+work that makes it faster is always welcome (D35).
 `svg` parses and renders SVG files, with text.
 `docs/PLAN.md` holds the status of each phase.
 
@@ -93,4 +94,4 @@ stage the change for review. A maintainer commits.
 ## Releases
 
 A maintainer makes each release. The first tag, `v0.1.0`, comes when the port
-of tiny-skia is done: at the end of phase 5, and after the gate of phase 4.
+of tiny-skia is done: at the end of phase 5.

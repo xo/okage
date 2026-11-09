@@ -10,8 +10,8 @@ document.
 
 ## Status
 
-On 2026-11-09 phases 0 to 10 have their code, and every gate holds but the
-speed target of D18:
+On 2026-11-09 phases 0 to 10 have their code, and every gate holds. D35
+closes the speed target of D18:
 
 1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
    the test module, the lint configuration and CI. The prototype of D17 was
@@ -23,11 +23,12 @@ speed target of D18:
    cubic curve. The math functions are correctly rounded (D26).
 4. Phase 4: the SIMD paths of `internal/wide`, with the CPU check (D15, D28).
    The tests pass in both builds, on arm64 and on WebAssembly, and with
-   TinyGo. okage is about 10 to 20 times slower than the scalar code of
-   upstream (D18), and `BACKLOG.md` holds the work that closes the gap.
+   TinyGo. okage is about 1.2 to 3 times slower than the scalar code of
+   upstream (D33). It has no speed target (D35), and `BACKLOG.md` holds the
+   steps that can make it faster.
 5. Phase 5: the three commits of tiny-skia after the base commit, up to
    `5d475477` on 2026-08-20. One commit is ported, and two are not
-   applicable. The release `v0.1.0` waits for the target of D18 in phase 4.
+   applicable.
 6. Phase 6: `internal/roxmltree`, `internal/simplecss`, `internal/xmlwriter`,
    `internal/svgtypes` and the subset of kurbo in `internal/kurbo`, with
    every test of upstream. `internal/crmath` has the correctly rounded f64
@@ -63,8 +64,7 @@ speed target of D18:
     commits of the crates under `internal/` after their base wait until resvg
     raises their versions (D12).
 
-okage now follows its upstreams when a maintainer asks. The release `v0.1.0`
-waits for the target of D18 in phase 4.
+okage now follows its upstreams when a maintainer asks.
 
 These documents hold the rules and the references that come from this plan:
 
@@ -437,10 +437,9 @@ renders SVG files.
 
 ### Speed
 
-okage ports the benchmarks of tiny-skia. The SIMD build takes at most twice
-the time of upstream with AVX2 on the benchmarks of fills, and the speed of
-the scalar build is recorded (D18). D17 records the measurements of the
-prototype.
+okage ports the benchmarks of tiny-skia, and records the speed of each build
+(D18). okage has no speed target, and work that makes it faster is always
+welcome (D35). D17 records the measurements of the prototype.
 
 When a comparison with another Go library is needed, its benchmark goes in
 the test module, and the library needs the approval of the maintainers (D22).
@@ -526,8 +525,8 @@ Write the SIMD implementation of `internal/wide` for amd64, arm64 and
 WebAssembly, with the CPU check of D15.
 
 Gate: every test of phase 3 passes in the SIMD build, and with the fallback of
-D15. The SIMD build gives the same bytes as the scalar build, and it meets the
-target of D18. The comparison of the builds for WebAssembly runs, and its
+D15. The SIMD build gives the same bytes as the scalar build, and its speed
+is recorded (D18, D35). The comparison of the builds for WebAssembly runs, and its
 numbers are recorded.
 
 ### Phase 5. Follow tiny-skia
@@ -738,7 +737,7 @@ Each of these was measured on 2026-11-09:
    match. The maintainers chose to port no image decoder (D7), and to compare
    the output of `svg` within a tolerance (D23).
 5. GoAT, which compiles C into Go assembly, was considered on 2026-11-09 to
-   reach the target of D18. The maintainers did not take it. It needs a
+   reach the target of D18, which D35 later closed. The maintainers did not take it. It needs a
    copy of the pipeline in C beside the Go code, against D1, and its
    assembly cannot be reviewed.
 

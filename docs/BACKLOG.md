@@ -81,14 +81,13 @@ differences stay:
 
 ## Phase 4
 
-### Close the gap to the speed target
+### Make the pipeline faster
 
-From D18, D28 and D33. D33 wrote the hot stages of lowp and highp as one loop
-on the lanes, and okage is now about 1.2 to 3 times slower than the scalar
-code of upstream on the benchmarks of D18 (see D33). The target of D18 is
-the SIMD build within twice the time of upstream with AVX2, which is still
-about 4 to 6 times away. Measure and try, in this order, keeping the bytes of
-every test:
+From D18, D28, D33 and D35. okage has no speed target (D35), and this work
+stays open. After D33, okage is about 1.2 to 3 times slower than the scalar
+code of upstream, and about 4 to 11 times slower than its AVX2 code, on the
+benchmarks of D18. Measure and try, in this order, keeping the bytes of every
+test:
 
 1. The forms of D17 that are not measured: one loop with a `switch` on the
    stage, and the color channels in local variables. The call of each stage

@@ -1,6 +1,6 @@
 # D18. The SIMD build is within twice the time of upstream
 
-Status: Decided.
+Status: Decided, amended by D35.
 
 1. The SIMD build of okage takes at most twice the time of upstream with AVX2
    on the ported benchmarks of fills, on amd64.
@@ -43,3 +43,6 @@ values of a lane, and the times above include that change. Before it,
 `BlendColorDodge` took 111 ms.
 
 `docs/BACKLOG.md` holds the work that closes the gap.
+
+D35 closes this target. okage has no speed target, and work that makes it
+faster stays open.

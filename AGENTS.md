@@ -17,10 +17,10 @@ that each implementation keeps in mind (D25).
 On 2026-11-09 the port of tiny-skia is done in both builds and with TinyGo:
 `path`, the root package, `internal/wide` and `internal/crmath`. The 157
 integration tests of upstream pass, and the Rust oracle gives the same bytes
-on each random scene with no cubic curve. The speed target of D18 is not met
-yet. `svg` holds the port of usvg and resvg, with the layout of text on
+on each random scene with no cubic curve. okage has no speed target, and work
+that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `847abd69` of resvg. The maintainers accepted the decisions D1
-to D25, D29, D30 and D32 to D34, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
+to D25, D29, D30 and D32 to D35, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
