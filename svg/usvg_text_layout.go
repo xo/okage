@@ -260,9 +260,7 @@ func (c *glyphCluster) clone() glyphCluster {
 func layoutText(
 	textNode *Text,
 	resolver *FontResolver,
-	fontdb *FontDatabase,
-	fontsCache fontsCache,
-	shapingFonts shapingFonts,
+	fonts *fontCache,
 	opt *options,
 ) ([]Span, NonZeroRect, bool) {
 	for i := range textNode.chunks {
@@ -270,10 +268,10 @@ func layoutText(
 		for j := range chunk.spans {
 			span := &chunk.spans[j]
 			key := span.font.key()
-			if _, ok := fontsCache[key]; !ok {
-				if id, ok := resolver.selectFont(&span.font, fontdb, opt); ok {
-					if font, ok := databaseLoadFont(fontdb, id, span.font.variations); ok {
-						fontsCache[key] = font
+			if _, ok := fonts.resolved[key]; !ok {
+				if id, ok := resolver.selectFont(&span.font, fonts.fontdb, opt); ok {
+					if font, ok := resolveFont(id, span.font.variations, fonts); ok {
+						fonts.resolved[key] = font
 					}
 				}
 			}
@@ -305,7 +303,7 @@ func layoutText(
 			x, y = 0.0, 0.0
 		}
 
-		clusters := processChunk(chunk, fontsCache, resolver, fontdb, shapingFonts, opt)
+		clusters := processChunk(chunk, resolver, fonts, opt)
 		if len(clusters) == 0 {
 			charOffset += utf8.RuneCountInString(chunk.text)
 			continue
@@ -321,7 +319,7 @@ func layoutText(
 			chunk,
 			charOffset,
 			textNode.writingMode,
-			fontsCache,
+			fonts.resolved,
 			clusters,
 		)
 
@@ -334,7 +332,7 @@ func layoutText(
 
 		for j := range chunk.spans {
 			span := &chunk.spans[j]
-			font, ok := fontsCache[span.font.key()]
+			font, ok := fonts.resolved[span.font.key()]
 			if !ok {
 				continue
 			}
@@ -1065,10 +1063,8 @@ func collectNormals(
 //nolint:dupword // the comments of upstream
 func processChunk(
 	chunk *TextChunk,
-	fontsCache fontsCache,
 	resolver *FontResolver,
-	fontdb *FontDatabase,
-	shapingFonts shapingFonts,
+	fonts *fontCache,
 	opt *options,
 ) []glyphCluster {
 	// The way this function works is a bit tricky.
@@ -1110,7 +1106,7 @@ func processChunk(
 	var glyphs []glyph
 	for i := range chunk.spans {
 		span := &chunk.spans[i]
-		font, ok := fontsCache[span.font.key()]
+		font, ok := fonts.resolved[span.font.key()]
 		if !ok {
 			continue
 		}
@@ -1124,8 +1120,7 @@ func processChunk(
 			span.fontSize.Get(),
 			span.fontOpticalSizing,
 			resolver,
-			fontdb,
-			shapingFonts,
+			fonts,
 			opt,
 		)
 
@@ -1422,25 +1417,70 @@ func formGlyphClusters(glyphs []glyph, text string, fontSize float32) glyphClust
 	}
 }
 
-// skrifaDecoration is skrifa::metrics::Decoration: the offset and the
-// thickness of a line.
-type skrifaDecoration struct {
-	offset    float32
+// lineBox is LineBox of read-fonts src/model/metrics/global.rs: the
+// ascender, the descender and the line gap from one table, in font units.
+// The ascender is above the baseline and the descender below it, whatever
+// sign a font stores them with.
+type lineBox struct {
+	ascender  float32
+	descender float32
+	lineGap   float32
+}
+
+// hasNonzeroExtent is LineBox::has_nonzero_extent of read-fonts. It reports
+// whether either end of the line is away from the baseline.
+func (l lineBox) hasNonzeroExtent() bool {
+	return l.ascender != 0 || l.descender != 0
+}
+
+// newLineBox is line_box of read-fonts src/model/metrics/global.rs. It
+// returns a line with its ascender above the baseline and its descender
+// below it.
+func newLineBox(ascender, descender, lineGap float32) lineBox {
+	return lineBox{
+		ascender:  abs32(ascender),
+		descender: -abs32(descender),
+		lineGap:   lineGap,
+	}
+}
+
+// abs32 is f32::abs.
+func abs32(x float32) float32 {
+	return math.Float32frombits(math.Float32bits(x) &^ (1 << 31))
+}
+
+// fontMetrics is Metrics of read-fonts src/model/metrics/global.rs, which
+// usvg reads with font.metrics(), with the fields that usvg reads. A nil
+// field is None.
+type fontMetrics struct {
+	rawUnitsPerEm  uint16
+	hheaLine       *lineBox
+	typoLine       *lineBox
+	useTypoMetrics bool
+	winLine        *lineBox
+	xHeight        *float32
+}
+
+// decorationMetrics is Decoration of read-fonts
+// src/model/metrics/style.rs: the position and the thickness of an
+// underline or a strikethrough, in font units.
+type decorationMetrics struct {
+	position  float32
 	thickness float32
 }
 
-// skrifaMetrics is skrifa::metrics::Metrics, with the fields that usvg
-// reads. A nil field is None.
-type skrifaMetrics struct {
-	unitsPerEm uint16
-	ascent     float32
-	descent    float32
-	xHeight    *float32
-	strikeout  *skrifaDecoration
-	underline  *skrifaDecoration
+// styleMetrics is StyleMetrics of read-fonts src/model/metrics/style.rs,
+// which usvg reads with font.style_metrics(), with the fields that usvg
+// reads. A nil field is None. Of a script, usvg reads only the vertical
+// offset.
+type styleMetrics struct {
+	subscriptYOffset   *float32
+	superscriptYOffset *float32
+	underline          *decorationMetrics
+	strikeThrough      *decorationMetrics
 }
 
-// The minimum sizes of the tables that skrifa reads, below which read-fonts
+// The minimum sizes of the tables that read-fonts reads, below which it
 // fails to read a table.
 const (
 	headMinSize = 54
@@ -1482,8 +1522,8 @@ func readMVAR(face *parsedFace) (tables.MVAR, bool) {
 	return mvar, err == nil
 }
 
-// mvarMetricDelta is Mvar::metric_delta of read-fonts, which skrifa and usvg
-// call. It returns the delta of the metric tag at coords, or 0.
+// mvarMetricDelta is MvarInstance::get of read-fonts. It returns the delta
+// of the metric tag at coords, or 0.
 func mvarMetricDelta(mvar tables.MVAR, tag string, coords []tables.Coord) float32 {
 	t := ot.MustNewTag(tag)
 	for _, rec := range mvar.ValueRecords {
@@ -1494,94 +1534,130 @@ func mvarMetricDelta(mvar tables.MVAR, tag string, coords []tables.Coord) float3
 	return 0
 }
 
-// newSkrifaMetrics is Metrics::new of skrifa src/metrics.rs, for an unscaled
-// size, which usvg calls with font.metrics. coords is the location of the
-// face in its normalized variation space.
-//
-// Port: skrifa reads the tables head, post, OS/2, hhea and MVAR with
-// read-fonts. go-text loads them, and they are read here by the same rules.
-func newSkrifaMetrics(face *parsedFace, coords []tables.Coord) skrifaMetrics {
-	var metrics skrifaMetrics
-	if head := face.rawTable("head"); len(head) >= headMinSize {
-		metrics.unitsPerEm = binary.BigEndian.Uint16(head[18:])
-	}
-	i16 := func(b []byte, off int) float32 {
-		return float32(int16(binary.BigEndian.Uint16(b[off:])))
-	}
-	if post := face.rawTable("post"); len(post) >= postMinSize {
-		metrics.underline = &skrifaDecoration{
-			offset:    i16(post, 8),
-			thickness: i16(post, 10),
-		}
-	}
-	// Choosing proper line metrics is a challenge due to the changing
-	// spec, backward compatibility and broken fonts.
-	//
-	// We use the same strategy as FreeType:
-	// 1. Use the OS/2 metrics if the table exists and the USE_TYPO_METRICS
-	//    flag is set.
-	// 2. Otherwise, use the hhea metrics.
-	// 3. If hhea metrics are zero and the OS/2 table exists:
-	//    3a. Use the typo metrics if they are non-zero
-	//    3b. Otherwise, use the win metrics
-	os2 := readOS2(face)
-	usedTypoMetrics := false
-	if os2 != nil {
-		const useTypoMetrics = 1 << 7
-		if binary.BigEndian.Uint16(os2[62:])&useTypoMetrics != 0 {
-			metrics.ascent = i16(os2, 68)
-			metrics.descent = i16(os2, 70)
-			usedTypoMetrics = true
-		}
-		if binary.BigEndian.Uint16(os2) >= 2 {
-			xHeight := i16(os2, 86)
-			metrics.xHeight = &xHeight
-		}
-		metrics.strikeout = &skrifaDecoration{
-			offset:    i16(os2, 28),
-			thickness: i16(os2, 26),
-		}
-	}
-	if !usedTypoMetrics {
-		if hhea := face.rawTable("hhea"); len(hhea) >= hheaMinSize {
-			metrics.ascent = i16(hhea, 4)
-			metrics.descent = i16(hhea, 6)
-		}
-		if metrics.ascent == 0.0 && metrics.descent == 0.0 {
-			if os2 != nil {
-				if i16(os2, 68) != 0 || i16(os2, 70) != 0 {
-					metrics.ascent = i16(os2, 68)
-					metrics.descent = i16(os2, 70)
-				} else {
-					metrics.ascent = float32(binary.BigEndian.Uint16(os2[74:]))
-					// Win descent is always positive while other descent values are negative. Negate it
-					// to ensure we return consistent metrics.
-					metrics.descent = -float32(binary.BigEndian.Uint16(os2[76:]))
-				}
+// metricDeltas returns the function that the function metric of read-fonts
+// src/model/metrics.rs applies: a design-unit metric with the delta of its
+// location. At the default location, MVAR is not read.
+func metricDeltas(face *parsedFace, coords []tables.Coord) func(value float32, tag string) float32 {
+	if !allZero(coords) {
+		if mvar, ok := readMVAR(face); ok {
+			return func(value float32, tag string) float32 {
+				return value + mvarMetricDelta(mvar, tag, coords)
 			}
 		}
 	}
-	if mvar, ok := readMVAR(face); ok && !allZero(coords) {
-		metricDelta := func(tag string) float32 { return mvarMetricDelta(mvar, tag, coords) }
-		metrics.ascent += metricDelta("hasc")
-		metrics.descent += metricDelta("hdsc")
-		if metrics.xHeight != nil {
-			*metrics.xHeight += metricDelta("xhgt")
+	return func(value float32, _ string) float32 { return value }
+}
+
+// newFontMetrics is Metrics::from_sfnt of read-fonts
+// src/model/metrics/global.rs. coords is the location of the face in its
+// normalized variation space.
+//
+// Port: read-fonts keeps a metric as an F48Dot16. Go keeps it as a float32.
+func newFontMetrics(face *parsedFace, coords []tables.Coord) fontMetrics {
+	metric := metricDeltas(face, coords)
+	i16 := func(b []byte, off int) float32 {
+		return float32(int16(binary.BigEndian.Uint16(b[off:])))
+	}
+	u16 := func(b []byte, off int) float32 {
+		return float32(binary.BigEndian.Uint16(b[off:]))
+	}
+
+	var metrics fontMetrics
+	if head := face.rawTable("head"); len(head) >= headMinSize {
+		metrics.rawUnitsPerEm = binary.BigEndian.Uint16(head[18:])
+	}
+	if hhea := face.rawTable("hhea"); len(hhea) >= hheaMinSize {
+		// `MVAR` names one horizontal ascender, descender and line gap
+		// between them, so the same delta applies to whichever of these
+		// two sets a caller goes on to believe.
+		l := newLineBox(
+			metric(i16(hhea, 4), "hasc"),
+			metric(i16(hhea, 6), "hdsc"),
+			metric(i16(hhea, 8), "hlgp"),
+		)
+		metrics.hheaLine = &l
+	}
+	if os2 := readOS2(face); os2 != nil {
+		typo := newLineBox(
+			metric(i16(os2, 68), "hasc"),
+			metric(i16(os2, 70), "hdsc"),
+			metric(i16(os2, 72), "hlgp"),
+		)
+		metrics.typoLine = &typo
+		metrics.winLine = &lineBox{
+			ascender:  metric(u16(os2, 74), "hcla"),
+			descender: -metric(u16(os2, 76), "hcld"),
 		}
-		if metrics.underline != nil {
-			metrics.underline.offset += metricDelta("undo")
-			metrics.underline.thickness += metricDelta("unds")
-		}
-		if metrics.strikeout != nil {
-			metrics.strikeout.offset += metricDelta("stro")
-			metrics.strikeout.thickness += metricDelta("strs")
+		const useTypoMetrics = 1 << 7
+		metrics.useTypoMetrics = binary.BigEndian.Uint16(os2[62:])&useTypoMetrics != 0
+		if binary.BigEndian.Uint16(os2) >= 2 {
+			xHeight := metric(i16(os2, 86), "xhgt")
+			metrics.xHeight = &xHeight
 		}
 	}
 	return metrics
 }
 
-// allZero reports whether coords is empty or holds only zeros, the case where
-// LocationRef::effective_coords of skrifa is empty.
+// hLine is Metrics::h_line of read-fonts src/model/metrics/global.rs. It
+// returns the ascender, descender and gap for horizontal text.
+//
+// The line is the first of these that applies:
+//
+//  1. The typographic line, if `OS/2` sets `USE_TYPO_METRICS`.
+//  2. The `hhea` line, if either end is nonzero.
+//  3. The typographic line, if either end is nonzero.
+//  4. The `OS/2` clipping line, with no gap.
+//
+// It returns false if the font has no line metrics.
+func (m *fontMetrics) hLine() (lineBox, bool) {
+	switch {
+	case m.typoLine != nil && m.useTypoMetrics:
+		return *m.typoLine, true
+	case m.hheaLine != nil && m.hheaLine.hasNonzeroExtent():
+		return *m.hheaLine, true
+	case m.typoLine != nil && m.typoLine.hasNonzeroExtent():
+		return *m.typoLine, true
+	case m.winLine != nil:
+		// The clipping line has no gap between one line and the next, so
+		// there is none to report.
+		return lineBox{ascender: m.winLine.ascender, descender: m.winLine.descender}, true
+	case m.hheaLine != nil:
+		return *m.hheaLine, true
+	}
+	return lineBox{}, false
+}
+
+// newStyleMetrics is StyleMetrics::from_sfnt of read-fonts
+// src/model/metrics/style.rs. coords is the location of the face in its
+// normalized variation space.
+func newStyleMetrics(face *parsedFace, coords []tables.Coord) styleMetrics {
+	metric := metricDeltas(face, coords)
+	i16 := func(b []byte, off int) float32 {
+		return float32(int16(binary.BigEndian.Uint16(b[off:])))
+	}
+
+	var metrics styleMetrics
+	if os2 := readOS2(face); os2 != nil {
+		subscript := metric(i16(os2, 16), "sbyo")
+		metrics.subscriptYOffset = &subscript
+		superscript := metric(i16(os2, 24), "spyo")
+		metrics.superscriptYOffset = &superscript
+		metrics.strikeThrough = &decorationMetrics{
+			position:  metric(i16(os2, 28), "stro"),
+			thickness: metric(i16(os2, 26), "strs"),
+		}
+	}
+	if post := face.rawTable("post"); len(post) >= postMinSize {
+		metrics.underline = &decorationMetrics{
+			position:  metric(i16(post, 8), "undo"),
+			thickness: metric(i16(post, 10), "unds"),
+		}
+	}
+	return metrics
+}
+
+// allZero reports whether coords is empty or holds only zeros: the default
+// location, where read-fonts reads no MVAR.
 func allZero(coords []tables.Coord) bool {
 	for _, c := range coords {
 		if c != 0 {
@@ -1589,18 +1665,6 @@ func allZero(coords []tables.Coord) bool {
 		}
 	}
 	return true
-}
-
-// variationsLocation is font.axes().location(variations) of skrifa, which
-// usvg calls. It returns the normalized coordinates of the variations in
-// the variation space of the font.
-//
-// Port: go-text normalizes the values with the tables fvar and avar, as
-// skrifa does.
-func variationsLocation(ft *font.Font, variations []FontVariation) []tables.Coord {
-	face := font.NewFace(ft)
-	face.SetVariations(toGoTextVariations(variations))
-	return face.Coords()
 }
 
 // toGoTextVariations converts variations to the variations of go-text.
@@ -1612,31 +1676,27 @@ func toGoTextVariations(variations []FontVariation) []font.Variation {
 	return vs
 }
 
-// databaseLoadFont is DatabaseExt::load_font for Database in usvg
-// src/text/layout.rs.
+// resolveFont is resolve_font in usvg src/text/layout.rs.
 //
-// Port: skrifa::FontRef::from_index becomes the face that go-text parses, and
-// font.metrics becomes newSkrifaMetrics.
-func databaseLoadFont(fontdb *FontDatabase, id FontID, variations []FontVariation) (*resolvedFont, bool) {
-	face, ok := fontdb.withFaceData(id)
+// Port: font.metrics() becomes newFontMetrics, and font.style_metrics()
+// becomes newStyleMetrics, at the coordinates of the face of the instance.
+func resolveFont(id FontID, variations []FontVariation, fonts *fontCache) (*resolvedFont, bool) {
+	l, ok := fonts.load(id)
 	if !ok {
 		return nil, false
 	}
-
-	// For variable fonts, metrics depend on the position in the design space,
-	// so resolve the requested variations to a normalized location first.
-	// Metrics are always in font units, so the size stays unscaled.
-	coords := variationsLocation(face.font, variations)
-	metrics := newSkrifaMetrics(face, coords)
+	face := l.instance(variations).face
+	metrics := newFontMetrics(l.pf, face.Coords())
 
 	// Reject fonts with an out-of-range unitsPerEm, like `ttf-parser` did.
-	if metrics.unitsPerEm < 16 || metrics.unitsPerEm > 16384 {
+	if metrics.rawUnitsPerEm < 16 || metrics.rawUnitsPerEm > 16384 {
 		return nil, false
 	}
-	unitsPerEm := metrics.unitsPerEm
+	unitsPerEm := metrics.rawUnitsPerEm
 
-	ascent := metrics.ascent
-	descent := metrics.descent
+	line, _ := metrics.hLine()
+	ascent := line.ascender
+	descent := line.descender
 
 	var xHeight uint16
 	if metrics.xHeight != nil && *metrics.xHeight > 0.0 {
@@ -1654,44 +1714,43 @@ func databaseLoadFont(fontdb *FontDatabase, id FontID, variations []FontVariatio
 		xHeight = uint16(v)
 	}
 
+	style := newStyleMetrics(l.pf, face.Coords())
+
 	var lineThroughPosition int16
-	if metrics.strikeout != nil {
-		lineThroughPosition = asI16(round32(metrics.strikeout.offset))
+	if style.strikeThrough != nil {
+		lineThroughPosition = asI16(round32(style.strikeThrough.position))
 	} else {
 		lineThroughPosition = int16(xHeight) / 2
 	}
 
 	var underlinePosition int16
 	var underlineThickness uint16
-	if metrics.underline != nil {
-		thickness := wide.TruncI32(round32(metrics.underline.thickness))
+	if style.underline != nil {
+		thickness := wide.TruncI32(round32(style.underline.thickness))
 		if thickness > 0 && thickness <= math.MaxUint16 {
 			underlineThickness = uint16(thickness)
 		} else {
-			// `skrifa` guarantees that units_per_em is > 0
 			underlineThickness = unitsPerEm / 12
 		}
 
-		underlinePosition = asI16(round32(metrics.underline.offset))
+		underlinePosition = asI16(round32(style.underline.position))
 	} else {
 		underlinePosition = -int16(unitsPerEm) / 9
 		underlineThickness = unitsPerEm / 12
 	}
 
 	// 0.2 and 0.4 are generic offsets used by some applications (Inkscape/librsvg).
-	subscriptOffset := asI16(round32(float32(unitsPerEm) / 0.2))
-	superscriptOffset := asI16(round32(float32(unitsPerEm) / 0.4))
-
-	// TODO: Consider upstreaming into skrifa
-	if os2 := readOS2(face); os2 != nil {
-		subscriptOffset = int16(binary.BigEndian.Uint16(os2[16:]))
-		superscriptOffset = int16(binary.BigEndian.Uint16(os2[24:]))
+	var subscriptOffset int16
+	if style.subscriptYOffset != nil {
+		subscriptOffset = asI16(round32(*style.subscriptYOffset))
+	} else {
+		subscriptOffset = asI16(round32(float32(unitsPerEm) / 0.2))
 	}
-	if mvar, ok := readMVAR(face); ok && len(coords) != 0 {
-		metricDelta := func(tag string) float32 { return mvarMetricDelta(mvar, tag, coords) }
-
-		subscriptOffset += asI16(round32(metricDelta("sbyo")))
-		superscriptOffset += asI16(round32(metricDelta("spyo")))
+	var superscriptOffset int16
+	if style.superscriptYOffset != nil {
+		superscriptOffset = asI16(round32(*style.superscriptYOffset))
+	} else {
+		superscriptOffset = asI16(round32(float32(unitsPerEm) / 0.4))
 	}
 
 	return &resolvedFont{
@@ -1722,19 +1781,6 @@ func asI16(x float32) int16 {
 	return int16(x)
 }
 
-// databaseHasChar is DatabaseExt::has_char for Database in usvg
-// src/text/layout.rs.
-//
-// Port: skrifa::charmap::Charmap::map becomes the cmap of go-text.
-func databaseHasChar(fontdb *FontDatabase, id FontID, c rune) bool {
-	face, ok := fontdb.withFaceData(id)
-	if !ok {
-		return false
-	}
-	_, ok = face.font.NominalGlyph(c)
-	return ok
-}
-
 // shapeText is shape_text in usvg src/text/layout.rs. It does the text
 // shaping with font fallback.
 //
@@ -1748,20 +1794,18 @@ func shapeText(
 	fontSize float32,
 	fontOpticalSizing FontOpticalSizing,
 	resolver *FontResolver,
-	fontdb *FontDatabase,
-	shapingFonts shapingFonts,
+	fonts *fontCache,
 	opt *options,
 ) []glyph {
+	shapingVariations := withOpticalSizing(variations, fontOpticalSizing, fontSize)
+
 	glyphs := shapeTextWithFont(
 		text,
 		font,
 		smallCaps,
 		applyKerning,
-		variations,
-		fontSize,
-		fontOpticalSizing,
-		fontdb,
-		shapingFonts,
+		shapingVariations,
+		fonts,
 	)
 
 	// Remember all fonts used for shaping.
@@ -1784,11 +1828,11 @@ outer:
 			break outer
 		}
 
-		id, ok := resolver.selectFallback(missing, usedFonts, fontdb, opt)
+		id, ok := resolver.selectFallback(missing, usedFonts, fonts.fontdb, opt)
 		if !ok {
 			break outer
 		}
-		fallbackFont, ok := databaseLoadFont(fontdb, id, variations)
+		fallbackFont, ok := resolveFont(id, variations, fonts)
 		if !ok {
 			break outer
 		}
@@ -1799,11 +1843,8 @@ outer:
 			fallbackFont,
 			smallCaps,
 			applyKerning,
-			variations,
-			fontSize,
-			fontOpticalSizing,
-			fontdb,
-			shapingFonts,
+			shapingVariations,
+			fonts,
 		)
 
 		allMatched := !slices.ContainsFunc(fallbackGlyphs, func(g glyph) bool { return g.isMissing() })
@@ -1842,31 +1883,6 @@ outer:
 	}
 
 	return glyphs
-}
-
-// hasAxis reports whether the variable font of face has an axis tag. It is
-// font.axes().get_by_tag(tag).is_some() of skrifa and harfrust.
-//
-// Port: go-text keeps the axes of a font private, so the table fvar is read
-// from its bytes.
-func hasAxis(face *parsedFace, tag [4]byte) bool {
-	fvar := face.rawTable("fvar")
-	if len(fvar) < 16 {
-		return false
-	}
-	axesOffset := int(binary.BigEndian.Uint16(fvar[4:]))
-	axisCount := int(binary.BigEndian.Uint16(fvar[8:]))
-	axisSize := int(binary.BigEndian.Uint16(fvar[10:]))
-	for i := range axisCount {
-		off := axesOffset + i*axisSize
-		if off+4 > len(fvar) {
-			return false
-		}
-		if [4]byte(fvar[off:off+4]) == tag {
-			return true
-		}
-	}
-	return false
 }
 
 // bidiRun is a run of text of one embedding level, as BidiInfo::visual_runs
@@ -1962,44 +1978,6 @@ func guessScript(runes []rune) language.Script {
 	return 0
 }
 
-// shapingFonts is ShapingFonts in usvg src/text/layout.rs.
-type shapingFonts = map[FontID]*shapingFont
-
-// shapingFont is ShapingFont in usvg src/text/layout.rs.
-//
-// Port: harfrust::Font becomes the font of the package harfbuzz of go-text,
-// which holds the accelerators of the lookups of the face. The parsed face
-// itself is already cached by the font database. go-text keeps its shape
-// plans in a buffer, keyed by the face, so plans is the buffer that shapes
-// each run with font, and it keeps the plans from one run to the next.
-type shapingFont struct {
-	font  *harfbuzz.Font
-	plans *harfbuzz.Buffer
-}
-
-// shapingFontFor is shaping_font in usvg src/text/layout.rs.
-//
-// Port: go-text shares the font data of the parsed face, so Go copies
-// nothing. The Go name takes a suffix, because the type shapingFont has the
-// name of the function.
-func shapingFontFor(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) (*shapingFont, bool) {
-	if font, ok := shapingFonts[id]; ok {
-		return font, true
-	}
-
-	// Share the font data if it is already in memory, otherwise copy it.
-	pf, ok := fontdb.withFaceData(id)
-	if !ok {
-		return nil, false
-	}
-	font := &shapingFont{
-		font:  harfbuzz.NewFont(gotextNewFace(pf)),
-		plans: harfbuzz.NewBuffer(),
-	}
-	shapingFonts[id] = font
-	return font, true
-}
-
 // shapeTextWithFont is shape_text_with_font in usvg src/text/layout.rs. It
 // converts a text into a list of glyph IDs.
 //
@@ -2007,57 +1985,24 @@ func shapingFontFor(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) 
 //
 // Port: upstream returns None when the font does not load, or when
 // harfrust::shape fails, which each caller takes as no glyphs, so Go returns
-// nil. harfrust becomes the package harfbuzz of go-text, with a face whose
-// coordinates are the variations, and unicode-bidi becomes visualRuns. The
-// shaping of go-text does not fail. Upstream finds the opsz axis in the table
-// fvar, and hasAxis reads that table too. A font of go-text cannot change the
-// variations of its face, so a font with variations is a new font, as the
-// instance of upstream is.
+// nil. harfrust becomes the package harfbuzz of go-text, with the face of
+// the font instance, whose coordinates are the variations, and unicode-bidi
+// becomes visualRuns. The shaping of go-text does not fail.
 func shapeTextWithFont(
 	text string,
 	font *resolvedFont,
 	smallCaps bool,
 	applyKerning bool,
 	variations []FontVariation,
-	fontSize float32,
-	fontOpticalSizing FontOpticalSizing,
-	fontdb *FontDatabase,
-	shapingFonts shapingFonts,
+	fonts *fontCache,
 ) []glyph {
-	sf, ok := shapingFontFor(font.id, fontdb, shapingFonts)
+	l, ok := fonts.load(font.id)
 	if !ok {
 		return nil
 	}
-	hbFont, plans := sf.font, sf.plans
-	pf, ok := fontdb.withFaceData(font.id)
-	if !ok {
-		return nil
-	}
-
-	// Build the list of variations to apply
-	vars := slices.Clone(variations)
-
-	// Automatic optical sizing: if font-optical-sizing is auto and the font has
-	// an 'opsz' axis that isn't explicitly set, auto-set it to match font size.
-	// This matches browser behavior (CSS font-optical-sizing: auto).
-	if fontOpticalSizing == FontOpticalSizingAuto {
-		hasExplicitOpsz := slices.ContainsFunc(vars, func(v FontVariation) bool { return v.Tag == opsz })
-		if !hasExplicitOpsz && hasAxis(pf, opsz) {
-			vars = append(vars, FontVariation{Tag: opsz, Value: fontSize})
-		}
-	}
+	hbFont, plans := l.instance(variations).shaper()
 
 	var glyphs []glyph
-
-	// A shaper instance is only needed to apply variations.
-	if len(vars) != 0 {
-		face := gotextNewFace(pf)
-		face.SetVariations(toGoTextVariations(vars))
-		hbFont = harfbuzz.NewFont(face)
-		// A new face would add its plans to the cache at each call, so a
-		// font with variations shapes with a buffer of its own.
-		plans = nil
-	}
 
 	var features []harfbuzz.Feature
 	if smallCaps {
@@ -2095,11 +2040,7 @@ func shapeTextWithFont(
 		}
 
 		buffer := plans
-		if buffer == nil {
-			buffer = harfbuzz.NewBuffer()
-		} else {
-			buffer.Clear()
-		}
+		buffer.Clear()
 		buffer.AddRunes(runes, 0, -1)
 		buffer.Props.Direction = direction
 
@@ -2149,12 +2090,6 @@ func shapeTextWithFont(
 	}
 
 	return glyphs
-}
-
-// gotextNewFace returns a new face of go-text for the font of pf, with no
-// variations.
-func gotextNewFace(pf *parsedFace) *font.Face {
-	return font.NewFace(pf.font)
 }
 
 // glyphClusters is GlyphClusters in usvg src/text/layout.rs. It is an

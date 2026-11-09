@@ -16,10 +16,6 @@ import (
 // Port: the font database of usvg_text_fontdb.go takes the place of the
 // crate fontdb, and go-text takes the place of skrifa (D9).
 
-// opsz is OPSZ in usvg src/text/mod.rs. It is the optical sizing variation
-// axis tag.
-var opsz = [4]byte{'o', 'p', 's', 'z'}
-
 // GlyphID is GlyphId in usvg src/text/mod.rs. It is the ID of a glyph within
 // a font.
 //
@@ -172,7 +168,7 @@ func DefaultFallbackSelector(logger *slog.Logger) FallbackSelectionFn {
 				continue
 			}
 
-			if !databaseHasChar(fontdb, face.ID, c) {
+			if !hasChar(fontdb, face.ID, c) {
 				continue
 			}
 
@@ -214,7 +210,7 @@ func (r FontResolver) String() string {
 //     as decoration spans).
 //  2. We convert all of the positioned glyphs into outlines.
 func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool {
-	textFragments, bbox, ok := layoutText(text, resolver, cache.fontdb, cache.fonts, cache.shapingFonts, cache.opt)
+	textFragments, bbox, ok := layoutText(text, resolver, cache.fonts, cache.opt)
 	if !ok {
 		return false
 	}
@@ -226,7 +222,7 @@ func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool
 	}
 	text.absBoundingBox = absBBox.ToRect()
 
-	group, strokeBBox, ok := flatten(text, cache)
+	group, strokeBBox, ok := flatten(text, cache.fonts)
 	if !ok {
 		return false
 	}
@@ -239,4 +235,20 @@ func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool
 	text.absStrokeBoundingBox = absStrokeBBox.ToRect()
 
 	return true
+}
+
+// hasChar is has_char in usvg src/text/mod.rs.
+//
+// Port: skrifa::charmap::Charmap::map becomes the cmap of go-text.
+func hasChar(fontdb *FontDatabase, id FontID, c rune) bool {
+	// Unlike for the main fonts where we use skrifa's owned font abstraction,
+	// here we just call `with_face_data` repeatedly so we don't need to call `to_vec`
+	// for all fallback fonts.
+	// TODO: Cache the charmaps of fallback candidates, building one for every lookup is expensive.
+	face, ok := fontdb.withFaceData(id)
+	if !ok {
+		return false
+	}
+	_, ok = face.font.NominalGlyph(c)
+	return ok
 }

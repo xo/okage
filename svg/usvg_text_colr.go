@@ -283,19 +283,24 @@ func (p *glyphPainter) paintSweepGradient(
 	// TODO: surface warning without printing to stdout
 }
 
+// toTspTransform is to_tsp_transform in usvg src/text/colr.rs.
+func toTspTransform(ts colrTransform) Transform {
+	return path.TransformFromRow(ts.xx, ts.yx, ts.xy, ts.yy, ts.dx, ts.dy)
+}
+
 // paintTransform is paint_transform in usvg src/text/colr.rs.
 func paintTransform(outlineTransform, transform colrTransform, opt *options) colrTransform {
-	outlineTs := skrifaToTspTransform(outlineTransform)
-	gradientTransform := skrifaToTspTransform(transform)
+	outlineTs := toTspTransform(outlineTransform)
+	gradientTransform := toTspTransform(transform)
 
 	inv, ok := outlineTs.Invert()
 	if !ok {
 		opt.warnf("Failed to calculate transform for gradient in glyph.")
 		inv = path.DefaultTransform()
 	}
-	gradientTransform = inv.PreConcat(gradientTransform)
+	ts := inv.PreConcat(gradientTransform)
 
-	return tspToSkrifaTransform(gradientTransform)
+	return colrTransform{xx: ts.SX, yx: ts.KY, xy: ts.KX, yy: ts.SY, dx: ts.TX, dy: ts.TY}
 }
 
 // mapRect is map_rect in usvg src/text/colr.rs. It returns the bounding box
@@ -475,7 +480,7 @@ func (p *glyphPainter) pushClipGlyph(glyphID GlyphID) {
 
 	var rootBounds *Rect
 	if hasBounds {
-		if r, ok := mapRect(bounds, skrifaToTspTransform(p.outlineTransform)); ok {
+		if r, ok := mapRect(bounds, toTspTransform(p.outlineTransform)); ok {
 			rootBounds = &r
 		}
 	}
@@ -501,7 +506,7 @@ func (p *glyphPainter) pushClipBox(clipBox colrBoundingBox) {
 
 	var bounds *Rect
 	if b, ok := path.RectFromLTRB(xMin, yMin, xMax, yMax); ok {
-		if r, ok := mapRect(b, skrifaToTspTransform(p.outlineTransform)); ok {
+		if r, ok := mapRect(b, toTspTransform(p.outlineTransform)); ok {
 			bounds = &r
 		}
 	}

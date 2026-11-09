@@ -73,6 +73,23 @@ the graph, so `svg/usvg_text_colr_paint.go` ports the walk of skrifa 0.44
 no crate of text. A maintainer decides whether the walk stays in `svg`, or
 goes to go-text as a contribution.
 
+## Phase 10
+
+### Follow the font model of read-fonts 0.46 more closely
+
+From phase 10, resvg commit `04291b74`, and D9 rule 3. usvg now reads fonts
+through the owned font model of read-fonts 0.46, which skrifa 0.49 exports.
+`svg/usvg_text_cache.go` and `resolveFont` follow its rules on go-text. Three
+differences stay:
+
+1. read-fonts keeps a metric with its MVAR delta as an F48Dot16. Go keeps it
+   as a float32, so a rounded metric can differ at a location with a delta.
+2. The walk of the paint graph of COLRv1 in `svg/usvg_text_colr_paint.go`
+   ports skrifa 0.44. usvg now walks the graph with the model of read-fonts
+   0.46. No test shows a difference.
+3. read-fonts reads the strikes of the table EBDT. usvg draws none of its
+   glyphs, so Go leaves the strikes out. The result is the same.
+
 ## Phase 4
 
 ### Close the gap to the speed target

@@ -6,8 +6,6 @@
 package svg
 
 import (
-	"encoding/binary"
-	"math"
 	"slices"
 	"strconv"
 
@@ -80,22 +78,9 @@ func (s *converterState) clone() *converterState {
 
 // converterCache is Cache in usvg src/parser/converter.rs.
 type converterCache struct {
-	// This fontdb is initialized from [`Options::fontdb`] and then populated
-	// over the course of conversion.
-	//
-	// Port: it is a copy of the database of the options, which the
-	// conversion can change (see FontSelectionFn).
-	fontdb *FontDatabase
-
-	// Port: Go keys each cache with a text that glyphCacheKey makes.
-	cacheOutline     map[string]*path.Path
-	cacheColr        map[string]*Tree
-	cacheSvg         map[string]Node
-	cacheRaster      map[string]*bitmapImage
-	cacheHasOpsz     map[FontID]bool
-	cacheColorTables map[FontID]colorTables
-	fonts            fontsCache
-	shapingFonts     shapingFonts
+	// Port: the fontdb of fonts is a copy of the database of the options,
+	// which the conversion can change (see FontSelectionFn).
+	fonts *fontCache
 
 	clipPaths map[string]*ClipPath
 	masks     map[string]*Mask
@@ -128,16 +113,7 @@ type converterCache struct {
 // newConverterCache is Cache::new in usvg src/parser/converter.rs.
 func newConverterCache(svgDoc *document, fontdb *FontDatabase) *converterCache {
 	return &converterCache{
-		fontdb: fontdb,
-
-		cacheOutline:     map[string]*path.Path{},
-		cacheColr:        map[string]*Tree{},
-		cacheSvg:         map[string]Node{},
-		cacheRaster:      map[string]*bitmapImage{},
-		cacheHasOpsz:     map[FontID]bool{},
-		cacheColorTables: map[FontID]colorTables{},
-		fonts:            fontsCache{},
-		shapingFonts:     shapingFonts{},
+		fonts: newFontCache(fontdb, nil),
 
 		clipPaths: map[string]*ClipPath{},
 		masks:     map[string]*Mask{},
@@ -332,98 +308,6 @@ func countPaintRefs(root *Group) map[Paint]int {
 	return refs
 }
 
-// glyphCacheKey returns the key of a glyph of a font with some
-// variations in a cache of Cache in usvg src/parser/converter.rs, which keys
-// it with the tuple (ID, GlyphId, Vec<FontVariation>).
-func glyphCacheKey(font FontID, glyph GlyphID, variations []FontVariation) string {
-	b := make([]byte, 0, 8+8*len(variations))
-	b = binary.BigEndian.AppendUint32(b, uint32(font))
-	b = binary.BigEndian.AppendUint32(b, uint32(glyph))
-	for _, v := range variations {
-		b = append(b, v.Tag[:]...)
-		b = binary.BigEndian.AppendUint32(b, math.Float32bits(v.Value))
-	}
-	return string(b)
-}
-
-// fontdbSvg is Cache::fontdb_svg in usvg src/parser/converter.rs, which the
-// macro font_lookup makes.
-func (c *converterCache) fontdbSvg(font FontID, glyph GlyphID) (Node, bool) {
-	if !c.colorTables(font).svg {
-		return nil, false
-	}
-
-	key := glyphCacheKey(font, glyph, nil)
-	if hit, ok := c.cacheSvg[key]; ok {
-		return hit, hit != nil
-	}
-	lookup, _ := databaseSvg(c.fontdb, font, glyph, c.opt)
-	c.cacheSvg[key] = lookup
-	return lookup, lookup != nil
-}
-
-// fontdbRaster is Cache::fontdb_raster in usvg src/parser/converter.rs,
-// which the macro font_lookup makes.
-func (c *converterCache) fontdbRaster(font FontID, glyph GlyphID) (*bitmapImage, bool) {
-	if !c.colorTables(font).bitmaps {
-		return nil, false
-	}
-
-	key := glyphCacheKey(font, glyph, nil)
-	if hit, ok := c.cacheRaster[key]; ok {
-		return hit, hit != nil
-	}
-	lookup, _ := databaseRaster(c.fontdb, font, glyph)
-	c.cacheRaster[key] = lookup
-	return lookup, lookup != nil
-}
-
-// colorTables is Cache::color_tables in usvg src/parser/converter.rs.
-func (c *converterCache) colorTables(font FontID) colorTables {
-	if t, ok := c.cacheColorTables[font]; ok {
-		return t
-	}
-	t := databaseColorTables(c.fontdb, font)
-	c.cacheColorTables[font] = t
-	return t
-}
-
-// fontdbOutline is Cache::fontdb_outline in usvg src/parser/converter.rs.
-func (c *converterCache) fontdbOutline(font FontID, glyph GlyphID, variations []FontVariation) (*path.Path, bool) {
-	key := glyphCacheKey(font, glyph, variations)
-	if hit, ok := c.cacheOutline[key]; ok {
-		return hit, hit != nil
-	}
-	lookup, _ := databaseOutline(c.fontdb, font, glyph, variations)
-	c.cacheOutline[key] = lookup
-	return lookup, lookup != nil
-}
-
-// fontdbColr is Cache::fontdb_colr in usvg src/parser/converter.rs.
-func (c *converterCache) fontdbColr(font FontID, glyph GlyphID, variations []FontVariation) (*Tree, bool) {
-	if !c.colorTables(font).colr {
-		return nil, false
-	}
-
-	key := glyphCacheKey(font, glyph, variations)
-	if hit, ok := c.cacheColr[key]; ok {
-		return hit, hit != nil
-	}
-	lookup, _ := databaseColr(c.fontdb, font, glyph, variations, c.opt)
-	c.cacheColr[key] = lookup
-	return lookup, lookup != nil
-}
-
-// hasOpszAxis is Cache::has_opsz_axis in usvg src/parser/converter.rs.
-func (c *converterCache) hasOpszAxis(font FontID) bool {
-	if cached, ok := c.cacheHasOpsz[font]; ok {
-		return cached
-	}
-	hasOpsz := databaseHasOpszAxis(c.fontdb, font)
-	c.cacheHasOpsz[font] = hasOpsz
-	return hasOpsz
-}
-
 // convertLength is SvgNode::convert_length in usvg src/parser/converter.rs.
 func (n svgNode) convertLength(
 	aid AId,
@@ -605,6 +489,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 
 	cache := newConverterCache(svgDoc, opt.fontdb.Clone())
 	cache.opt = opt
+	cache.fonts.opt = opt
 
 	// The root transform wraps the viewBox mapping, so its origin is resolved
 	// against the viewport rather than the viewBox.
@@ -651,7 +536,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 
 	// The fontdb might have been mutated and we want to apply these changes to
 	// the tree's fontdb.
-	tree.fontdb = cache.fontdb
+	tree.fontdb = cache.fonts.fontdb
 
 	if restoreViewbox {
 		calculateSvgBBox(tree)
