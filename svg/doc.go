@@ -16,6 +16,21 @@
 // does. Most fields are private, and a method with the name of the Rust getter
 // returns each one, such as Group.ID for Group::id.
 //
-// The package does not port the feature text of usvg yet, so a Text node has
-// no layout.
+// The text of a file is laid out with the fonts of a FontDatabase, which the
+// caller gives with WithFontDatabase (D9). The package reads no font of the
+// system by itself. To use the fonts of a system as resvg does, load them
+// into the database and set the generic families, because the package reads
+// no configuration of fontconfig:
+//
+//	db := svg.NewFontDatabase()
+//	db.LoadSystemFonts(os.DirFS("/"))
+//	if home, err := os.UserHomeDir(); err == nil {
+//		db.LoadUserFonts(os.DirFS(home))
+//	}
+//	db.SetSansSerifFamily("Noto Sans")
+//	tree, err := svg.FromData(data, svg.WithFontDatabase(db))
+//
+// A text whose families match no font of the database is not drawn, as in
+// resvg. The database reads only the names and the styles of each font file
+// when it loads it, and reads the rest of a file when a face of it is used.
 package svg

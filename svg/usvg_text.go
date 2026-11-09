@@ -239,16 +239,19 @@ func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool
 
 // hasChar is has_char in usvg src/text/mod.rs.
 //
-// Port: skrifa::charmap::Charmap::map becomes the cmap of go-text.
+// Port: skrifa::charmap::Charmap::map becomes the cmap of go-text. The
+// database keeps the cmap of each face that it reads, as the TODO of upstream
+// asks, and it reads only the tables cmap and OS/2 of the face, as skrifa
+// does. The result is the same as a new charmap for each lookup.
 func hasChar(fontdb *FontDatabase, id FontID, c rune) bool {
 	// Unlike for the main fonts where we use skrifa's owned font abstraction,
 	// here we just call `with_face_data` repeatedly so we don't need to call `to_vec`
 	// for all fallback fonts.
 	// TODO: Cache the charmaps of fallback candidates, building one for every lookup is expensive.
-	face, ok := fontdb.withFaceData(id)
+	cmap, ok := fontdb.faceCharmap(id)
 	if !ok {
 		return false
 	}
-	_, ok = face.font.NominalGlyph(c)
+	_, ok = cmap.Lookup(c)
 	return ok
 }

@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"io/fs"
 	"iter"
 	"log/slog"
@@ -107,12 +108,90 @@ type FaceInfo struct {
 	source *fontSource
 }
 
-// fontSource is Source::Binary in fontdb 0.24 src/lib.rs: the bytes of a
-// font, with the faces that go-text parses from it on first use.
+// fontSource is Source in fontdb 0.24 src/lib.rs: Source::Binary, the bytes
+// of a font, or Source::File, a font file that is read on first use. It holds
+// the faces that go-text parses from the bytes on first use.
+//
+// Port: fontdb maps a file into memory with the feature memmap. Go reads the
+// file of an fs.FS into memory the first time that a face of it is used, so
+// that a database of the fonts of a system does not hold every file.
 type fontSource struct {
-	data  []byte
+	// fsys and name are the file of Source::File. They are nil and empty for
+	// Source::Binary.
+	fsys fs.FS
+	name string
+
+	dataOnce sync.Once
+	data     []byte
+
 	once  sync.Once
 	faces []*parsedFace
+
+	// cmaps holds the character map of each face, which cmapOnce reads on
+	// first use from the tables cmap and OS/2 alone.
+	cmapOnce sync.Once
+	cmaps    []font.Cmap
+}
+
+// charmap returns the character map of the face of index i, as go-text
+// builds it from the tables cmap and OS/2, or false when the face has none.
+// It reads only those tables, so that a search for a fallback font does not
+// read and parse each font of a system whole.
+func (s *fontSource) charmap(i uint32) (font.Cmap, bool) {
+	s.cmapOnce.Do(func() {
+		var res opentype.Resource = bytes.NewReader(s.data)
+		if s.fsys != nil {
+			f, err := s.fsys.Open(s.name)
+			if err != nil {
+				return
+			}
+			defer func() { _ = f.Close() }()
+			r, ok := f.(opentype.Resource)
+			if !ok {
+				r = bytes.NewReader(s.bytes())
+			}
+			res = r
+		}
+		lds, err := opentype.NewLoaders(res)
+		if err != nil {
+			return
+		}
+		s.cmaps = make([]font.Cmap, len(lds))
+		for j, ld := range lds {
+			raw, _ := ld.RawTable(opentype.MustNewTag("OS/2"))
+			os2, _, _ := tables.ParseOs2(raw)
+			raw, err := ld.RawTable(opentype.MustNewTag("cmap"))
+			if err != nil {
+				continue
+			}
+			tb, _, err := tables.ParseCmap(raw)
+			if err != nil {
+				continue
+			}
+			if cmap, _, err := font.ProcessCmap(tb, os2.FontPage()); err == nil {
+				s.cmaps[j] = cmap
+			}
+		}
+	})
+	if int(i) >= len(s.cmaps) || s.cmaps[i] == nil {
+		return nil, false
+	}
+	return s.cmaps[i], true
+}
+
+// bytes returns the bytes of the font, read from its file on first use. It
+// returns nil when the file cannot be read.
+func (s *fontSource) bytes() []byte {
+	s.dataOnce.Do(func() {
+		if s.fsys == nil {
+			return
+		}
+		data, err := fs.ReadFile(s.fsys, s.name)
+		if err == nil {
+			s.data = data
+		}
+	})
+	return s.data
 }
 
 // parsedFace is a face that go-text parses: the loader of its tables and the
@@ -133,7 +212,7 @@ type parsedFace struct {
 // false when go-text cannot parse it.
 func (s *fontSource) parsed(i uint32) (*parsedFace, bool) {
 	s.once.Do(func() {
-		lds, err := opentype.NewLoaders(bytes.NewReader(s.data))
+		lds, err := opentype.NewLoaders(bytes.NewReader(s.bytes()))
 		if err != nil {
 			return
 		}
@@ -252,7 +331,40 @@ func (db *FontDatabase) LoadFontData(data []byte) []FontID {
 // source in a warning.
 func (db *FontDatabase) loadFontSource(data []byte, name string) []FontID {
 	source := &fontSource{data: data}
-	lds, err := opentype.NewLoaders(bytes.NewReader(data))
+	source.dataOnce.Do(func() {})
+	return db.loadFaces(source, bytes.NewReader(data), name)
+}
+
+// loadFontFile is Database::load_font_file in fontdb 0.24 src/lib.rs, for a
+// file of fsys. It reads only the table directory and the tables of each
+// FaceInfo, and the source reads the whole file when a face is used.
+func (db *FontDatabase) loadFontFile(fsys fs.FS, name string) {
+	f, err := fsys.Open(name)
+	if err != nil {
+		db.warnf("Failed to load '%s' cause %s.", name, err)
+		return
+	}
+	defer func() { _ = f.Close() }()
+	source := &fontSource{fsys: fsys, name: name}
+	res, ok := f.(opentype.Resource)
+	if !ok {
+		// The file cannot be read at an offset, so it is read whole.
+		data, err := io.ReadAll(f)
+		if err != nil {
+			db.warnf("Failed to load '%s' cause %s.", name, err)
+			return
+		}
+		source = &fontSource{data: data}
+		source.dataOnce.Do(func() {})
+		res = bytes.NewReader(data)
+	}
+	db.loadFaces(source, res, "'"+name+"'")
+}
+
+// loadFaces pushes a FaceInfo for each face of the font that res reads, as
+// Database::load_font_source in fontdb 0.24 src/lib.rs does.
+func (db *FontDatabase) loadFaces(source *fontSource, res opentype.Resource, name string) []FontID {
+	lds, err := opentype.NewLoaders(res)
 	if err != nil {
 		// Port: ttf_parser::fonts_in_collection gives 1 for data that is
 		// not a collection, and the parse of that face fails.
@@ -298,12 +410,7 @@ func (db *FontDatabase) LoadFontsFS(fsys fs.FS, dir string) {
 		}
 		switch strings.ToLower(path.Ext(p)) {
 		case ".ttf", ".ttc", ".otf", ".otc":
-			data, err := fs.ReadFile(fsys, p)
-			if err != nil {
-				db.warnf("Failed to load '%s' cause %s.", p, err)
-				continue
-			}
-			db.loadFontSource(data, "'"+p+"'")
+			db.loadFontFile(fsys, p)
 		}
 	}
 }
@@ -336,10 +443,39 @@ var systemFontDirs = []string{
 // directory and the configuration of fontconfig. This helper reads the
 // folders of each platform from fsys, so that no build tag selects them
 // (D9), and it reads no home directory and no fontconfig. Load the fonts of
-// a home directory with LoadFontsFS.
+// a home directory with LoadUserFonts.
 func (db *FontDatabase) LoadSystemFonts(fsys fs.FS) {
 	for _, dir := range systemFontDirs {
 		db.LoadFontsFS(fsys, dir)
+	}
+}
+
+// userFontDirs holds the folders of the home directory that
+// Database::load_system_fonts in fontdb 0.24 src/lib.rs reads on Windows,
+// macOS and Linux, relative to the home directory.
+var userFontDirs = []string{
+	// Windows, from USERPROFILE
+	"AppData/Local/Microsoft/Windows/Fonts",
+	"AppData/Roaming/Microsoft/Windows/Fonts",
+	// macOS, from HOME
+	"Library/Fonts",
+	// Linux and the other systems of fontdb without fontconfig, from HOME
+	".fonts",
+	".local/share/fonts",
+}
+
+// LoadUserFonts loads the fonts of the folders of a home directory that
+// Database::load_system_fonts in fontdb 0.24 src/lib.rs reads, from home,
+// which is the home directory, such as os.DirFS of os.UserHomeDir.
+//
+// A folder that home does not have is skipped, and that is no error.
+//
+// Port: fontdb reads these folders in load_system_fonts, from the variable
+// HOME or USERPROFILE. This helper reads the folders of each platform from
+// home, so that no build tag selects them and no environment is read (D9).
+func (db *FontDatabase) LoadUserFonts(home fs.FS) {
+	for _, dir := range userFontDirs {
+		db.LoadFontsFS(home, dir)
 	}
 }
 
@@ -506,7 +642,18 @@ func (db *FontDatabase) FaceData(id FontID) ([]byte, uint32, bool) {
 	if !ok {
 		return nil, 0, false
 	}
-	return face.source.data, face.Index, true
+	data := face.source.bytes()
+	return data, face.Index, data != nil
+}
+
+// faceCharmap returns the character map of the face id, which the source of
+// the face reads once and keeps (see fontSource.charmap).
+func (db *FontDatabase) faceCharmap(id FontID) (font.Cmap, bool) {
+	face, ok := db.Face(id)
+	if !ok {
+		return nil, false
+	}
+	return face.source.charmap(face.Index)
 }
 
 // withFaceData is Database::with_face_data in fontdb 0.24 src/lib.rs, with

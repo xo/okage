@@ -1,6 +1,7 @@
 package svg
 
 import (
+	"bytes"
 	"os"
 	"testing"
 	"testing/fstest"
@@ -115,5 +116,34 @@ func TestFontDatabaseLoadFS(t *testing.T) {
 	db.LoadSystemFonts(fstest.MapFS{})
 	if !db.IsEmpty() {
 		t.Errorf("Len() = %d, want 0", db.Len())
+	}
+}
+
+// TestFontDatabaseLoadUserFonts checks that LoadUserFonts reads the folders of
+// a home directory of each platform, and that a font of a file gives its
+// bytes when a face is used.
+func TestFontDatabaseLoadUserFonts(t *testing.T) {
+	data, err := os.ReadFile("testdata/fonts/NotoMono-Regular.ttf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := fstest.MapFS{
+		".fonts/a.ttf":                                {Data: data},
+		".local/share/fonts/b.ttf":                    {Data: data},
+		"Library/Fonts/c.ttf":                         {Data: data},
+		"AppData/Local/Microsoft/Windows/Fonts/d.ttf": {Data: data},
+		"Documents/e.ttf":                             {Data: data},
+	}
+	db := NewFontDatabase()
+	db.LoadUserFonts(home)
+	if db.Len() != 4 {
+		t.Fatalf("Len() = %d, want 4", db.Len())
+	}
+	got, index, ok := db.FaceData(0)
+	if !ok || index != 0 || !bytes.Equal(got, data) {
+		t.Errorf("FaceData(0) = %d bytes, %d, %t, want the %d bytes of the file", len(got), index, ok, len(data))
+	}
+	if _, ok := db.withFaceData(0); !ok {
+		t.Error("withFaceData(0) = false, want true")
 	}
 }
