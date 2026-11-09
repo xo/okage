@@ -1296,13 +1296,36 @@ type Group struct {
 	filters          []*Filter
 	// Calculated from `children` on first access and cached, so they must
 	// only be accessed once the group is complete.
+	//
+	// Port: the atomic pointer is the OnceLock<Box<GroupBoundingBoxes>> of
+	// upstream. A nil pointer is an unset OnceLock.
+	boundingBoxes atomic.Pointer[groupBoundingBoxes]
+	children      []Node
+}
+
+// groupBoundingBoxes is GroupBoundingBoxes in usvg src/tree/mod.rs.
+//
+// Boxed, because most nodes never have their bounding boxes requested.
+type groupBoundingBoxes struct {
 	boundingBox          onceLock[optional[Rect]]
 	absBoundingBox       onceLock[optional[Rect]]
 	strokeBoundingBox    onceLock[optional[Rect]]
 	absStrokeBoundingBox onceLock[optional[Rect]]
 	layerBoundingBox     onceLock[optional[NonZeroRect]]
 	absLayerBoundingBox  onceLock[optional[NonZeroRect]]
-	children             []Node
+}
+
+// clone is the derived Clone for GroupBoundingBoxes in usvg
+// src/tree/mod.rs.
+func (b *groupBoundingBoxes) clone() *groupBoundingBoxes {
+	c := new(groupBoundingBoxes)
+	b.boundingBox.cloneInto(&c.boundingBox)
+	b.absBoundingBox.cloneInto(&c.absBoundingBox)
+	b.strokeBoundingBox.cloneInto(&c.strokeBoundingBox)
+	b.absStrokeBoundingBox.cloneInto(&c.absStrokeBoundingBox)
+	b.layerBoundingBox.cloneInto(&c.layerBoundingBox)
+	b.absLayerBoundingBox.cloneInto(&c.absLayerBoundingBox)
+	return c
 }
 
 // cloneGroup is the derived Clone for Group in usvg src/tree/mod.rs.
@@ -1370,12 +1393,9 @@ func (g *Group) moveInto(c *Group) {
 	c.mask = g.mask
 	c.filters = g.filters
 	c.children = g.children
-	g.boundingBox.cloneInto(&c.boundingBox)
-	g.absBoundingBox.cloneInto(&c.absBoundingBox)
-	g.strokeBoundingBox.cloneInto(&c.strokeBoundingBox)
-	g.absStrokeBoundingBox.cloneInto(&c.absStrokeBoundingBox)
-	g.layerBoundingBox.cloneInto(&c.layerBoundingBox)
-	g.absLayerBoundingBox.cloneInto(&c.absLayerBoundingBox)
+	if b := g.boundingBoxes.Load(); b != nil {
+		c.boundingBoxes.Store(b.clone())
+	}
 }
 
 // emptyGroup is Group::empty in usvg src/tree/mod.rs.
@@ -1483,7 +1503,7 @@ func (g *Group) Filters() []*Filter {
 //
 // Can be set to `None` in case of an empty group.
 func (g *Group) BoundingBox() (Rect, bool) {
-	return g.boundingBox.getOrInit(func() optional[Rect] {
+	return g.groupBoundingBoxes().boundingBox.getOrInit(func() optional[Rect] {
 		return optionalOf(g.unionOfChildren(func(child Node) (Rect, bool) {
 			r, ok := NodeBoundingBox(child)
 			if !ok {
@@ -1499,7 +1519,7 @@ func (g *Group) BoundingBox() (Rect, bool) {
 //
 // `userSpaceOnUse` in SVG terms.
 func (g *Group) AbsBoundingBox() (Rect, bool) {
-	return g.absBoundingBox.getOrInit(func() optional[Rect] {
+	return g.groupBoundingBoxes().absBoundingBox.getOrInit(func() optional[Rect] {
 		return optionalOf(g.unionOfChildren(NodeAbsBoundingBox))
 	}).get()
 }
@@ -1509,7 +1529,7 @@ func (g *Group) AbsBoundingBox() (Rect, bool) {
 //
 // Similar to `bounding_box`, but includes stroke.
 func (g *Group) StrokeBoundingBox() (Rect, bool) {
-	return g.strokeBoundingBox.getOrInit(func() optional[Rect] {
+	return g.groupBoundingBoxes().strokeBoundingBox.getOrInit(func() optional[Rect] {
 		return optionalOf(g.unionOfChildren(func(child Node) (Rect, bool) {
 			r, ok := NodeStrokeBoundingBox(child)
 			if !ok {
@@ -1526,7 +1546,7 @@ func (g *Group) StrokeBoundingBox() (Rect, bool) {
 //
 // Similar to `abs_bounding_box`, but includes stroke.
 func (g *Group) AbsStrokeBoundingBox() (Rect, bool) {
-	return g.absStrokeBoundingBox.getOrInit(func() optional[Rect] {
+	return g.groupBoundingBoxes().absStrokeBoundingBox.getOrInit(func() optional[Rect] {
 		return optionalOf(g.unionOfChildren(NodeAbsStrokeBoundingBox))
 	}).get()
 }
@@ -1545,7 +1565,7 @@ func (g *Group) AbsStrokeBoundingBox() (Rect, bool) {
 //
 // Unlike other bounding boxes, cannot have zero size.
 func (g *Group) LayerBoundingBox() (NonZeroRect, bool) {
-	return g.layerBoundingBox.getOrInit(func() optional[NonZeroRect] {
+	return g.groupBoundingBoxes().layerBoundingBox.getOrInit(func() optional[NonZeroRect] {
 		return optionalOf(g.calculateLayerBoundingBox())
 	}).get()
 }
@@ -1554,13 +1574,25 @@ func (g *Group) LayerBoundingBox() (NonZeroRect, bool) {
 // src/tree/mod.rs. It returns the element's "layer" bounding box in canvas
 // units.
 func (g *Group) AbsLayerBoundingBox() (NonZeroRect, bool) {
-	return g.absLayerBoundingBox.getOrInit(func() optional[NonZeroRect] {
+	return g.groupBoundingBoxes().absLayerBoundingBox.getOrInit(func() optional[NonZeroRect] {
 		r, ok := g.LayerBoundingBox()
 		if !ok {
 			return optional[NonZeroRect]{}
 		}
 		return optionalOf(r.Transform(g.absTransform))
 	}).get()
+}
+
+// groupBoundingBoxes is Group::bounding_boxes in usvg src/tree/mod.rs.
+//
+// Port: the field boundingBoxes has the name of the method, so the Go name
+// is the name of the type that it returns (D10).
+func (g *Group) groupBoundingBoxes() *groupBoundingBoxes {
+	if b := g.boundingBoxes.Load(); b != nil {
+		return b
+	}
+	g.boundingBoxes.CompareAndSwap(nil, new(groupBoundingBoxes))
+	return g.boundingBoxes.Load()
 }
 
 // Children is Group::children in usvg src/tree/mod.rs. It returns the
@@ -1666,18 +1698,38 @@ func (o PaintOrder) String() string {
 
 // Path is Path in usvg src/tree/mod.rs. It is a path element.
 type Path struct {
-	id                   string
-	visible              bool
-	fill                 *Fill
-	stroke               *Stroke
-	paintOrder           PaintOrder
-	renderingMode        ShapeRendering
-	data                 *path.Path
-	absTransform         Transform
+	id            string
+	visible       bool
+	fill          *Fill
+	stroke        *Stroke
+	paintOrder    PaintOrder
+	renderingMode ShapeRendering
+	data          *path.Path
+	absTransform  Transform
+	// Port: the atomic pointer is the OnceLock<Box<PathBoundingBoxes>> of
+	// upstream. A nil pointer is an unset OnceLock.
+	boundingBoxes atomic.Pointer[pathBoundingBoxes]
+}
+
+// pathBoundingBoxes is PathBoundingBoxes in usvg src/tree/mod.rs.
+//
+// Boxed, because most nodes never have their bounding boxes requested.
+type pathBoundingBoxes struct {
 	boundingBox          onceLock[optional[Rect]]
 	absBoundingBox       onceLock[optional[Rect]]
 	strokeBoundingBox    onceLock[optional[Rect]]
 	absStrokeBoundingBox onceLock[optional[Rect]]
+}
+
+// clone is the derived Clone for PathBoundingBoxes in usvg
+// src/tree/mod.rs.
+func (b *pathBoundingBoxes) clone() *pathBoundingBoxes {
+	c := new(pathBoundingBoxes)
+	b.boundingBox.cloneInto(&c.boundingBox)
+	b.absBoundingBox.cloneInto(&c.absBoundingBox)
+	b.strokeBoundingBox.cloneInto(&c.strokeBoundingBox)
+	b.absStrokeBoundingBox.cloneInto(&c.absStrokeBoundingBox)
+	return c
 }
 
 // newSimplePath is Path::new_simple in usvg src/tree/mod.rs.
@@ -1724,10 +1776,9 @@ func newPath(
 // shared, and the caller copies them where it needs to.
 func (p *Path) clone() *Path {
 	c := newPath(p.id, p.visible, p.fill, p.stroke, p.paintOrder, p.renderingMode, p.data, p.absTransform)
-	p.boundingBox.cloneInto(&c.boundingBox)
-	p.absBoundingBox.cloneInto(&c.absBoundingBox)
-	p.strokeBoundingBox.cloneInto(&c.strokeBoundingBox)
-	p.absStrokeBoundingBox.cloneInto(&c.absStrokeBoundingBox)
+	if b := p.boundingBoxes.Load(); b != nil {
+		c.boundingBoxes.Store(b.clone())
+	}
 	return c
 }
 
@@ -1800,7 +1851,7 @@ func (p *Path) AbsTransform() Transform {
 //
 // `objectBoundingBox` in SVG terms. Meaning it doesn't affected by parent transforms.
 func (p *Path) BoundingBox() (Rect, bool) {
-	return p.boundingBox.getOrInit(func() optional[Rect] {
+	return p.pathBoundingBoxes().boundingBox.getOrInit(func() optional[Rect] {
 		return optionalOf(p.data.ComputeTightBounds())
 	}).get()
 }
@@ -1810,7 +1861,7 @@ func (p *Path) BoundingBox() (Rect, bool) {
 //
 // `userSpaceOnUse` in SVG terms.
 func (p *Path) AbsBoundingBox() (Rect, bool) {
-	return p.absBoundingBox.getOrInit(func() optional[Rect] {
+	return p.pathBoundingBoxes().absBoundingBox.getOrInit(func() optional[Rect] {
 		if p.absTransform.HasSkew() {
 			data, ok := p.absData()
 			if !ok {
@@ -1832,7 +1883,7 @@ func (p *Path) AbsBoundingBox() (Rect, bool) {
 //
 // Will have the same value as `bounding_box` when path has no stroke.
 func (p *Path) StrokeBoundingBox() (Rect, bool) {
-	return p.strokeBoundingBox.getOrInit(func() optional[Rect] {
+	return p.pathBoundingBoxes().strokeBoundingBox.getOrInit(func() optional[Rect] {
 		if r, ok := calculateStrokeBBox(p.stroke, p.data); ok {
 			return some(r)
 		}
@@ -1846,7 +1897,7 @@ func (p *Path) StrokeBoundingBox() (Rect, bool) {
 //
 // Will have the same value as `abs_bounding_box` when path has no stroke.
 func (p *Path) AbsStrokeBoundingBox() (Rect, bool) {
-	return p.absStrokeBoundingBox.getOrInit(func() optional[Rect] {
+	return p.pathBoundingBoxes().absStrokeBoundingBox.getOrInit(func() optional[Rect] {
 		switch {
 		case p.stroke == nil:
 			return optionalOf(p.AbsBoundingBox())
@@ -1867,6 +1918,18 @@ func (p *Path) AbsStrokeBoundingBox() (Rect, bool) {
 			return optionalOf(r.Transform(p.absTransform))
 		}
 	}).get()
+}
+
+// pathBoundingBoxes is Path::bounding_boxes in usvg src/tree/mod.rs.
+//
+// Port: the field boundingBoxes has the name of the method, so the Go name
+// is the name of the type that it returns (D10).
+func (p *Path) pathBoundingBoxes() *pathBoundingBoxes {
+	if b := p.boundingBoxes.Load(); b != nil {
+		return b
+	}
+	p.boundingBoxes.CompareAndSwap(nil, new(pathBoundingBoxes))
+	return p.boundingBoxes.Load()
 }
 
 // absData is Path::abs_data in usvg src/tree/mod.rs.

@@ -10,6 +10,7 @@ import (
 	"image"
 	"image/png"
 	"math"
+	"sync"
 	"testing"
 
 	"github.com/xo/okage/path"
@@ -392,17 +393,8 @@ func TestImage(t *testing.T) {
 // src/tree/mod.rs.
 func assertNoBoundingBoxes(t *testing.T, group *Group) {
 	t.Helper()
-	for _, set := range []bool{
-		group.boundingBox.done.Load(),
-		group.absBoundingBox.done.Load(),
-		group.strokeBoundingBox.done.Load(),
-		group.absStrokeBoundingBox.done.Load(),
-		group.layerBoundingBox.done.Load(),
-		group.absLayerBoundingBox.done.Load(),
-	} {
-		if set {
-			t.Errorf("group %q has a bounding box", group.id)
-		}
+	if group.boundingBoxes.Load() != nil {
+		t.Errorf("group %q has bounding boxes", group.id)
 	}
 
 	for _, child := range group.Children() {
@@ -410,11 +402,8 @@ func assertNoBoundingBoxes(t *testing.T, group *Group) {
 		case *Group:
 			assertNoBoundingBoxes(t, n)
 		case *Path:
-			if n.boundingBox.done.Load() ||
-				n.absBoundingBox.done.Load() ||
-				n.strokeBoundingBox.done.Load() ||
-				n.absStrokeBoundingBox.done.Load() {
-				t.Errorf("path %q has a bounding box", n.id)
+			if n.boundingBoxes.Load() != nil {
+				t.Errorf("path %q has bounding boxes", n.id)
 			}
 		}
 	}
@@ -476,4 +465,35 @@ func TestUserSpacePaintServersDontCalculateBoundingBoxes(t *testing.T) {
                 <path d="M 20 20 C 80 0 120 200 180 180" fill="url(#lg)" stroke="url(#lg)" stroke-width="10"/>
             </svg>`)
 	assertNoBoundingBoxes(t, tree.Root())
+}
+
+// TestBoundingBoxesConcurrent reads the bounding boxes of one tree from
+// several goroutines. A Tree of upstream is Sync, and the lazy caches must
+// keep that true. Run it with -race.
+func TestBoundingBoxesConcurrent(t *testing.T) {
+	tree := mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                <g opacity="0.5">
+                    <path d="M 20 20 C 80 0 120 200 180 180" stroke="black" stroke-width="10"/>
+                    <rect x="20" y="20" width="100" height="100"/>
+                </g>
+            </svg>`)
+	want := mustRect(tree.Root().StrokeBoundingBox())
+	tree = mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                <g opacity="0.5">
+                    <path d="M 20 20 C 80 0 120 200 180 180" stroke="black" stroke-width="10"/>
+                    <rect x="20" y="20" width="100" height="100"/>
+                </g>
+            </svg>`)
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Go(func() {
+			if got, ok := tree.Root().StrokeBoundingBox(); !ok || got != want {
+				t.Errorf("StrokeBoundingBox() = %v, %v, want %v", got, ok, want)
+			}
+			if _, ok := NodeAbsLayerBoundingBox(tree.Root().Children()[0]); !ok {
+				t.Error("NodeAbsLayerBoundingBox() failed")
+			}
+		})
+	}
+	wg.Wait()
 }
