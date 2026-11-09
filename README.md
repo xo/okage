@@ -129,6 +129,11 @@ okage also adds APIs that upstream does not have:
 
 1. A `Pixmap` gives an `*image.RGBA` that shares its bytes, and it implements
    `image.Image` and `draw.Image` (D19).
+2. `svg.New` makes a `Renderer`, which renders SVG data into an
+   `*image.RGBA` in one call, as `xo/resvg` does. It loads the fonts of the
+   system on its first call, and sets each generic family to the first of a
+   list of common fonts that is installed. The package registers the format
+   `svg` with `image.RegisterFormat`, so `image.Decode` reads SVG data (D36).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

@@ -285,7 +285,7 @@ func WithFontDatabaseLogger(logger *slog.Logger) FontDatabaseOption {
 // depends on the platform (D9), so it is Impact on each platform.
 func NewFontDatabase(opts ...FontDatabaseOption) *FontDatabase {
 	db := &FontDatabase{
-		familySerif:     "Times New Roman",
+		familySerif:     familyTimesNewRoman,
 		familySansSerif: "Arial",
 		familyCursive:   "Comic Sans MS",
 		familyFantasy:   "Impact",

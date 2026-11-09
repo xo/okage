@@ -20,7 +20,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `847abd69` of resvg. The maintainers accepted the decisions D1
-to D35. The open questions are at the end of `docs/PLAN.md`.
+to D36. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -53,7 +53,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9 and D32 |
+| working on images, text or fonts in `svg` | D7, D9, D32 and D36 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -120,8 +120,10 @@ not repeat. No question is open, and the next question is question 19.
    architecture (D15). The pipeline and the rest of okage are the same in
    each build. They call the methods of the vector types, and they index a
    lane only where upstream does (D28), or in one loop on the lanes of a hot
-   stage that gives the same bits (D33). No other code chooses its behavior by platform. Fonts, for example,
-   come from an `fs.FS` that the caller gives (D9).
+   stage that gives the same bits (D33). The one other code that chooses its
+   behavior by platform is the `Renderer` of `svg`, which finds the root of
+   the system fonts on Windows (D36). The parser takes its fonts from an
+   `fs.FS` that the caller gives (D9).
 9. Keep TinyGo in mind (D25). The packages that a user imports do not use
    `reflect`, `encoding/json`, `encoding/xml` or `runtime/debug`. The pipeline
    does not allocate, and uses no closure or interface, on its hot path. A

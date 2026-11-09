@@ -25,6 +25,11 @@ import (
 // the place of fontdb::Database (D9). The fonts come from the caller, with
 // WithFontDatabase, WithFontFile or WithFontFS. The method fontdb_mut is
 // fontdbMut, which the options that change the database call.
+//
+// The options also hold the options of the Renderer of renderer.go (D36).
+// WithFontDatabase, WithFontFamily and the options of the generic families
+// record that they were given, so that the renderer does not change what
+// they set.
 
 // ImageHrefDataResolverFn is ImageHrefDataResolverFn in usvg
 // src/parser/image.rs. It is a shorthand for [ImageHrefResolver]'s data
@@ -181,6 +186,10 @@ type options struct {
 	// logger is the logger of WithLogger. Nil logs nothing (D20). Upstream
 	// has no such field, and logs with the crate log.
 	logger *slog.Logger
+
+	// render holds the options of the Renderer of renderer.go (D36), which
+	// the parser ignores. Upstream has no such field.
+	render renderOptions
 }
 
 // defaultOptions is the impl Default for Options in usvg
@@ -190,7 +199,7 @@ func defaultOptions() options {
 		resourcesDir: "",
 		dpi:          96.0,
 		// Default font is user-agent dependent so we can use whichever we like.
-		fontFamily:        "Times New Roman",
+		fontFamily:        familyTimesNewRoman,
 		fontSize:          12.0,
 		languages:         []string{"en"},
 		shapeRendering:    DefaultShapeRendering(),
@@ -299,6 +308,7 @@ func WithDPI(dpi float32) Option {
 func WithFontFamily(family string) Option {
 	return func(o *options) {
 		o.fontFamily = family
+		o.render.fontFamilySet = true
 	}
 }
 
@@ -404,13 +414,15 @@ func WithFontResolver(resolver FontResolver) Option {
 // parsing, they go into a copy of this database, which Tree.FontDB returns.
 // The parse never changes db, so a program can load its fonts once and share
 // db between parses. The options WithFontFile, WithFontFS and the options of
-// the generic families change a copy of db.
+// the generic families change a copy of db. A Renderer with this option
+// loads no font and sets no generic family (D36).
 //
 // Default: an empty database (D9).
 func WithFontDatabase(db *FontDatabase) Option {
 	return func(o *options) {
 		o.fontdb = db
 		o.fontdbOwned = false
+		o.render.customFontDB = true
 	}
 }
 
@@ -445,6 +457,7 @@ func WithFontFS(fsys fs.FS) Option {
 func WithSerifFamily(family string) Option {
 	return func(o *options) {
 		o.fontdbMut().SetSerifFamily(family)
+		o.render.families |= familySerifSet
 	}
 }
 
@@ -456,6 +469,7 @@ func WithSerifFamily(family string) Option {
 func WithSansSerifFamily(family string) Option {
 	return func(o *options) {
 		o.fontdbMut().SetSansSerifFamily(family)
+		o.render.families |= familySansSerifSet
 	}
 }
 
@@ -467,6 +481,7 @@ func WithSansSerifFamily(family string) Option {
 func WithCursiveFamily(family string) Option {
 	return func(o *options) {
 		o.fontdbMut().SetCursiveFamily(family)
+		o.render.families |= familyCursiveSet
 	}
 }
 
@@ -478,6 +493,7 @@ func WithCursiveFamily(family string) Option {
 func WithFantasyFamily(family string) Option {
 	return func(o *options) {
 		o.fontdbMut().SetFantasyFamily(family)
+		o.render.families |= familyFantasySet
 	}
 }
 
@@ -489,6 +505,7 @@ func WithFantasyFamily(family string) Option {
 func WithMonospaceFamily(family string) Option {
 	return func(o *options) {
 		o.fontdbMut().SetMonospaceFamily(family)
+		o.render.families |= familyMonospaceSet
 	}
 }
 

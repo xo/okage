@@ -1,6 +1,6 @@
 # D9. Text uses go-text, and the layout of text of usvg is ported
 
-Status: Decided, amended by D32.
+Status: Decided, amended by D32 and D36.
 
 usvg converts text into paths. It finds fonts with fontdb, shapes text with
 harfrust, reads outlines and color glyphs with skrifa and read-fonts, and
@@ -47,6 +47,9 @@ browser does not give the bytes of its fonts to a program.
    that.
 3. No build tag selects the fonts of a platform. Only the `fs.FS` differs.
 4. The tests use the fonts in `crates/resvg/tests/fonts` of resvg.
+
+D36 amends rule 1: the `Renderer` of `svg` loads the fonts of the system by
+itself. The functions of the parser still take their fonts from the caller.
 
 Astra, Gemini Pro and DeepSeek Pro each advised on 2026-11-09 not to port the
 crates of text, and to take the fonts from the caller.

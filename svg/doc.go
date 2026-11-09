@@ -16,11 +16,22 @@
 // does. Most fields are private, and a method with the name of the Rust getter
 // returns each one, such as Group.ID for Group::id.
 //
-// The text of a file is laid out with the fonts of a FontDatabase, which the
-// caller gives with WithFontDatabase (D9). The package reads no font of the
-// system by itself. To use the fonts of a system as resvg does, load them
-// into the database and set the generic families, because the package reads
-// no configuration of fontconfig:
+// A Renderer renders SVG data into an *image.RGBA in one call (D36):
+//
+//	r := svg.New(svg.WithBackground(color.White), svg.WithWidth(800), svg.WithScaleMode(svg.ScaleBestFit))
+//	img, err := r.Render(data)
+//
+// A Renderer loads the fonts of the system and of the home directory on its
+// first call, and sets each generic family to the first of its candidates
+// that is installed, such as SerifCandidates. It reads no configuration of
+// fontconfig. It is safe for concurrent use. The package registers the format
+// svg with image.RegisterFormat, so image.Decode reads SVG data after a
+// program imports the package.
+//
+// The functions of the parser, such as FromData, read no font of the system.
+// They lay out text with the fonts of a FontDatabase, which the caller gives
+// with WithFontDatabase (D9). To use the fonts of a system with them, load the
+// fonts into the database and set the generic families:
 //
 //	db := svg.NewFontDatabase()
 //	db.LoadSystemFonts(os.DirFS("/"))

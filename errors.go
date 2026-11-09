@@ -364,3 +364,15 @@ const (
 	// failed cause " and the error of roxmltree.
 	ErrSVGParsingFailed Error = "parsing svg: SVG data parsing failed"
 )
+
+// The sentinel errors of the Renderer of svg (D36). They take the place of
+// the errors of github.com/xo/resvg for an invalid size or scale.
+const (
+	// ErrSVGInvalidRenderSize is the error of a render whose image has no
+	// pixel, or more pixels than a pixmap can hold.
+	ErrSVGInvalidRenderSize Error = "rendering svg: invalid width or height"
+
+	// ErrSVGInvalidRenderScale is the error of a render whose scale is zero
+	// on an axis.
+	ErrSVGInvalidRenderScale Error = "rendering svg: invalid scale"
+)
