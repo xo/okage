@@ -117,20 +117,37 @@ func parse(xml *roxmltree.Document, injectedStylesheet string, opt *options) (*d
 		return nil, okage.ErrXMLNoRootNode
 	}
 
-	// Collect all elements with `id` attribute.
+	// Collect all elements with `id` attribute, and all elements that
+	// can be referenced recursively.
 	links := map[string]nodeID{}
+	var patterns, clipPaths, masks, filters, feImages []nodeID
 	for node := range doc.descendants() {
 		if id, ok := node.attributeStr(AIdId); ok {
 			links[id] = node.id
 		}
+
+		if tag, ok := node.tagName(); ok {
+			switch tag {
+			case EIdPattern:
+				patterns = append(patterns, node.id)
+			case EIdClipPath:
+				clipPaths = append(clipPaths, node.id)
+			case EIdMask:
+				masks = append(masks, node.id)
+			case EIdFilter:
+				filters = append(filters, node.id)
+			case EIdFeImage:
+				feImages = append(feImages, node.id)
+			}
+		}
 	}
 	doc.links = links
 
-	fixRecursivePatterns(doc)
-	fixRecursiveLinks(EIdClipPath, AIdClipPath, doc)
-	fixRecursiveLinks(EIdMask, AIdMask, doc)
-	fixRecursiveLinks(EIdFilter, AIdFilter, doc)
-	fixRecursiveFeImage(doc)
+	fixRecursivePatterns(patterns, doc)
+	fixRecursiveLinks(clipPaths, AIdClipPath, doc)
+	fixRecursiveLinks(masks, AIdMask, doc)
+	fixRecursiveLinks(filters, AIdFilter, doc)
+	fixRecursiveFeImage(feImages, doc)
 
 	return doc, nil
 }
@@ -830,9 +847,9 @@ func (x xmlNode2) PseudoClassMatches(class simplecss.PseudoClass) bool {
 
 // fixRecursivePatterns is fix_recursive_patterns in usvg
 // src/parser/svgtree/parse.rs.
-func fixRecursivePatterns(doc *document) {
+func fixRecursivePatterns(patterns []nodeID, doc *document) {
 	for {
-		nodeID, ok := findRecursivePattern(AIdFill, doc)
+		nodeID, ok := findRecursivePattern(AIdFill, patterns, doc)
 		if !ok {
 			break
 		}
@@ -841,7 +858,7 @@ func fixRecursivePatterns(doc *document) {
 	}
 
 	for {
-		nodeID, ok := findRecursivePattern(AIdStroke, doc)
+		nodeID, ok := findRecursivePattern(AIdStroke, patterns, doc)
 		if !ok {
 			break
 		}
@@ -852,11 +869,9 @@ func fixRecursivePatterns(doc *document) {
 
 // findRecursivePattern is find_recursive_pattern in usvg
 // src/parser/svgtree/parse.rs.
-func findRecursivePattern(aid AId, doc *document) (nodeID, bool) {
-	for patternNode := range doc.root().descendants() {
-		if !patternNode.hasTagName(EIdPattern) {
-			continue
-		}
+func findRecursivePattern(aid AId, patterns []nodeID, doc *document) (nodeID, bool) {
+	for _, id := range patterns {
+		patternNode := doc.get(id)
 		for node := range patternNode.descendants() {
 			value, ok := node.attributeStr(aid)
 			if !ok {
@@ -900,9 +915,9 @@ func findRecursivePattern(aid AId, doc *document) (nodeID, bool) {
 
 // fixRecursiveLinks is fix_recursive_links in usvg
 // src/parser/svgtree/parse.rs.
-func fixRecursiveLinks(eid EId, aid AId, doc *document) {
+func fixRecursiveLinks(nodes []nodeID, aid AId, doc *document) {
 	for {
-		nodeID, ok := findRecursiveLink(eid, aid, doc)
+		nodeID, ok := findRecursiveLink(nodes, aid, doc)
 		if !ok {
 			break
 		}
@@ -913,11 +928,9 @@ func fixRecursiveLinks(eid EId, aid AId, doc *document) {
 
 // findRecursiveLink is find_recursive_link in usvg
 // src/parser/svgtree/parse.rs.
-func findRecursiveLink(eid EId, aid AId, doc *document) (nodeID, bool) {
-	for node := range doc.root().descendants() {
-		if !node.hasTagName(eid) {
-			continue
-		}
+func findRecursiveLink(nodes []nodeID, aid AId, doc *document) (nodeID, bool) {
+	for _, id := range nodes {
+		node := doc.get(id)
 		for child := range node.descendants() {
 			link, ok := child.nodeAttribute(aid)
 			if !ok {
@@ -948,12 +961,10 @@ func findRecursiveLink(eid EId, aid AId, doc *document) (nodeID, bool) {
 //	  <feImage xlink:href="#rect1"/>
 //	</filter>
 //	<rect id="rect1" x="36" y="36" width="120" height="120" fill="green" filter="url(#filter1)"/>
-func fixRecursiveFeImage(doc *document) {
+func fixRecursiveFeImage(feImages []nodeID, doc *document) {
 	var ids []nodeID
-	for feNode := range doc.root().descendants() {
-		if !feNode.hasTagName(EIdFeImage) {
-			continue
-		}
+	for _, id := range feImages {
+		feNode := doc.get(id)
 		link, ok := feNode.nodeAttribute(AIdHref)
 		if !ok {
 			continue

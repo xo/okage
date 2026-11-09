@@ -1,7 +1,7 @@
 repository	url	checkout	crates	okage	policy	base	matched
 tiny-skia	https://github.com/linebender/tiny-skia	upstream/tiny-skia	tiny-skia 0.12.0, tiny-skia-path 0.12.0	., path	port	e48b9027762d33731e60e40eb17eaa4f583b0185	5d4754777746eef0828be166896eaf482c49f8f2
 strict-num	https://github.com/RazrFalcon/strict-num	upstream/strict-num	strict-num 0.1.1	path	port	edf5020c215063c3a9eb8fcac463c82eaceba6df	76d36febdb73e875ae3e0c6ae1310a084a7860c7
-resvg	https://github.com/linebender/resvg	upstream/resvg	usvg 0.49.0, resvg 0.49.0	svg	port	66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba	4f2da26b7072a693c4097b4b49d6f581b326d04c
+resvg	https://github.com/linebender/resvg	upstream/resvg	usvg 0.49.0, resvg 0.49.0	svg	port	66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba	c0e2c8c0ad4a6f7e7844f868fff9dbe503cd4476
 svgtypes	https://github.com/linebender/svgtypes	upstream/svgtypes	svgtypes 0.16.1	internal/svgtypes	port	fa62387aea54d7af49ad65b47bca8d731136dd56	
 roxmltree	https://github.com/RazrFalcon/roxmltree	upstream/roxmltree	roxmltree 0.21.1	internal/roxmltree	port	67644e16f43c34cadc9e163163dd1aaf7ebe205e	
 simplecss	https://github.com/linebender/simplecss	upstream/simplecss	simplecss 0.2.2	internal/simplecss	port	6eacb39ca5c4c2390bfde374ed0651f0e35c9d8d	
