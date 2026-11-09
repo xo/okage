@@ -1983,17 +1983,26 @@ func guessScript(runes []rune) language.Script {
 }
 
 // shapingFonts is ShapingFonts in usvg src/text/layout.rs.
+type shapingFonts = map[FontID]*shapingFont
+
+// shapingFont is ShapingFont in usvg src/text/layout.rs.
 //
 // Port: harfrust::Font becomes the font of the package harfbuzz of go-text,
 // which holds the accelerators of the lookups of the face. The parsed face
-// itself is already cached by the font database.
-type shapingFonts = map[FontID]*harfbuzz.Font
+// itself is already cached by the font database. go-text keeps its shape
+// plans in a buffer, keyed by the face, so plans is the buffer that shapes
+// each run with font, and it keeps the plans from one run to the next.
+type shapingFont struct {
+	font  *harfbuzz.Font
+	plans *harfbuzz.Buffer
+}
 
-// shapingFont is shaping_font in usvg src/text/layout.rs.
+// shapingFontFor is shaping_font in usvg src/text/layout.rs.
 //
 // Port: go-text shares the font data of the parsed face, so Go copies
-// nothing.
-func shapingFont(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) (*harfbuzz.Font, bool) {
+// nothing. The Go name takes a suffix, because the type shapingFont has the
+// name of the function.
+func shapingFontFor(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) (*shapingFont, bool) {
 	if font, ok := shapingFonts[id]; ok {
 		return font, true
 	}
@@ -2003,7 +2012,10 @@ func shapingFont(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) (*h
 	if !ok {
 		return nil, false
 	}
-	font := harfbuzz.NewFont(gotextNewFace(pf))
+	font := &shapingFont{
+		font:  harfbuzz.NewFont(gotextNewFace(pf)),
+		plans: harfbuzz.NewBuffer(),
+	}
 	shapingFonts[id] = font
 	return font, true
 }
@@ -2032,10 +2044,11 @@ func shapeTextWithFont(
 	fontdb *FontDatabase,
 	shapingFonts shapingFonts,
 ) []glyph {
-	hbFont, ok := shapingFont(font.id, fontdb, shapingFonts)
+	sf, ok := shapingFontFor(font.id, fontdb, shapingFonts)
 	if !ok {
 		return nil
 	}
+	hbFont, plans := sf.font, sf.plans
 	pf, ok := fontdb.withFaceData(font.id)
 	if !ok {
 		return nil
@@ -2061,6 +2074,9 @@ func shapeTextWithFont(
 		face := gotextNewFace(pf)
 		face.SetVariations(toGoTextVariations(vars))
 		hbFont = harfbuzz.NewFont(face)
+		// A new face would add its plans to the cache at each call, so a
+		// font with variations shapes with a buffer of its own.
+		plans = nil
 	}
 
 	var features []harfbuzz.Feature
@@ -2098,7 +2114,12 @@ func shapeTextWithFont(
 			byteOffsets = append(byteOffsets, i)
 		}
 
-		buffer := harfbuzz.NewBuffer()
+		buffer := plans
+		if buffer == nil {
+			buffer = harfbuzz.NewBuffer()
+		} else {
+			buffer.Clear()
+		}
 		buffer.AddRunes(runes, 0, -1)
 		buffer.Props.Direction = direction
 
