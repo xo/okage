@@ -281,11 +281,10 @@ func layoutText(
 	textNode *Text,
 	resolver *FontResolver,
 	fontdb *FontDatabase,
+	fontsCache fontsCache,
 	shapingFonts shapingFonts,
 	opt *options,
 ) ([]Span, NonZeroRect, bool) {
-	fontsCache := fontsCache{}
-
 	for i := range textNode.chunks {
 		chunk := &textNode.chunks[i]
 		for j := range chunk.spans {

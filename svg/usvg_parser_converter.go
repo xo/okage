@@ -93,6 +93,7 @@ type converterCache struct {
 	cacheSvg     map[string]Node
 	cacheRaster  map[string]*bitmapImage
 	cacheHasOpsz map[FontID]bool
+	fonts        fontsCache
 	shapingFonts shapingFonts
 
 	clipPaths map[string]*ClipPath
@@ -133,6 +134,7 @@ func newConverterCache(svgDoc *document, fontdb *FontDatabase) *converterCache {
 		cacheSvg:     map[string]Node{},
 		cacheRaster:  map[string]*bitmapImage{},
 		cacheHasOpsz: map[FontID]bool{},
+		fonts:        fontsCache{},
 		shapingFonts: shapingFonts{},
 
 		clipPaths: map[string]*ClipPath{},
