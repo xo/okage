@@ -1,6 +1,6 @@
 # D31. Images are compared with the pixel metric of resvg
 
-Status: Proposed.
+Status: Decided.
 
 D23 says that the images of `svg` are compared within a tolerance, and
 question 16 asked how. This decision answers it. It builds on the metric that

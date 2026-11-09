@@ -1,6 +1,6 @@
 # D27. A Rust enum with data becomes a struct or an interface
 
-Status: Proposed.
+Status: Decided.
 
 `docs/UPSTREAM.md` says that the port of the first Rust enum with data
 chooses its Go form, and that a decision records it. The port of tiny-skia

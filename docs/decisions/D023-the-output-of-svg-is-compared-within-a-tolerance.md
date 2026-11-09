@@ -14,9 +14,9 @@ upstream.
 3. The images that `svg` renders are compared within a tolerance with two
    oracles: resvg, through the Rust oracle, and libvips, through the vips
    oracle (D22).
-4. How to compare two images within a reasonable tolerance is not decided. It
-   is chosen after the port of tiny-skia and before phase 8, and a decision
-   records it. D31 proposes it.
+4. How to compare two images within a reasonable tolerance is chosen after
+   the port of tiny-skia and before phase 8, and a decision records it. D31
+   records it.
 
 The tests of resvg require zero pixels that differ. The tests with no text and
 no raster image record how many still pass with zero pixels that differ.

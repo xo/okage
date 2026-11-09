@@ -46,7 +46,7 @@ closes the speed target of D18:
    breaks the data of a raster image, which okage reads with other code (D7).
 
 8. Phase 8: `svg` has the port of the renderer of resvg, with its 1,742
-   integration tests and the 15 tests of `extra.rs`, and D31 proposes how the
+   integration tests and the 15 tests of `extra.rs`, and D31 sets how the
    images are compared. Each test file without text and without a raster
    image gives 0 pixels that differ from the reference image of resvg, and
    the same bytes as the Rust oracle. The tests with a JPEG image differ in
@@ -747,8 +747,8 @@ An open question stays here until the maintainers answer it. Then it becomes
 a decision in [`decisions/`](decisions/README.md), and it is deleted from this
 list. The numbers do not repeat. The next question is question 19.
 
-The maintainers answered questions 1 to 15, 17 and 18 on 2026-11-09, and the
-decisions record the answers. Question 16, how two images are compared
-within a tolerance, has the proposed answer D31.
+The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
+record the answers. D31 answers question 16, how two images are compared
+within a tolerance.
 
 No question is open.

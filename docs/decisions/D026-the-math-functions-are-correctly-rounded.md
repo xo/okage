@@ -1,6 +1,6 @@
 # D26. The math functions are correctly rounded
 
-Status: Proposed.
+Status: Decided.
 
 tiny-skia calls functions of the C library through the methods of `f32` and
 `f64` in Rust: `acos` and `cos` for an `f64` in `src/path64/cubic64.rs`, and
