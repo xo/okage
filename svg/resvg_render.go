@@ -117,7 +117,11 @@ func renderGroup(group *Group, ctx *context, transform Transform, pixmap *okage.
 // renderLayer is render_layer in resvg src/render.rs. It renders an isolated
 // group into a new layer, returning it and its position.
 func renderLayer(group *Group, ctx *context, transform Transform) (*okage.Pixmap, path.IntRect, bool) {
-	bbox, ok := group.LayerBoundingBox().Transform(transform)
+	layerBBox, ok := group.LayerBoundingBox()
+	if !ok {
+		return nil, path.IntRect{}, false
+	}
+	bbox, ok := layerBBox.Transform(transform)
 	if !ok {
 		return nil, path.IntRect{}, false
 	}

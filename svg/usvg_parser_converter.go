@@ -754,9 +754,10 @@ func resolveSvgSize(svg svgNode, opt *options) (Size, error, bool) { //nolint:re
 //
 // Simply iterates over all nodes and calculates a bounding box.
 func calculateSvgBBox(tree *Tree) {
-	bbox := tree.root.AbsBoundingBox()
-	if size, ok := path.SizeFromWH(bbox.Right(), bbox.Bottom()); ok {
-		tree.size = size
+	if bbox, ok := tree.root.AbsBoundingBox(); ok {
+		if size, ok := path.SizeFromWH(bbox.Right(), bbox.Bottom()); ok {
+			tree.size = size
+		}
 	}
 }
 
@@ -979,7 +980,6 @@ func convertGroup(
 	}
 
 	absTransform := parent.absTransform.PreConcat(transform)
-	dummy := mustRect(path.RectFromXYWH(0.0, 0.0, 0.0, 0.0))
 	g := &Group{
 		id:                   id,
 		transform:            transform,
@@ -991,12 +991,12 @@ func convertGroup(
 		mask:                 nil,
 		filters:              nil,
 		isContextElement:     false,
-		boundingBox:          dummy,
-		absBoundingBox:       dummy,
-		strokeBoundingBox:    dummy,
-		absStrokeBoundingBox: dummy,
-		layerBoundingBox:     mustNonZeroRect(path.NonZeroRectFromXYWH(0.0, 0.0, 1.0, 1.0)),
-		absLayerBoundingBox:  mustNonZeroRect(path.NonZeroRectFromXYWH(0.0, 0.0, 1.0, 1.0)),
+		boundingBox:          optional[Rect]{},
+		absBoundingBox:       optional[Rect]{},
+		strokeBoundingBox:    optional[Rect]{},
+		absStrokeBoundingBox: optional[Rect]{},
+		layerBoundingBox:     optional[NonZeroRect]{},
+		absLayerBoundingBox:  optional[NonZeroRect]{},
 		children:             nil,
 	}
 	collectChildren(cache, g)

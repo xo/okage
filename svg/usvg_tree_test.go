@@ -245,9 +245,7 @@ func testTree(t *testing.T) (*Tree, *Path, *Group) {
 
 	clip := emptyClipPath("clip")
 	clip.root.children = []Node{testPath(t, "inclip", testRect(t, 0, 0, 50, 50), nil, nil, path.DefaultTransform())}
-	if !clip.root.calculateBoundingBoxes() {
-		t.Fatal("calculateBoundingBoxes of the clip path failed")
-	}
+	clip.root.calculateBoundingBoxes()
 
 	p1 := testPath(t, "p1", testRect(t, 10, 10, 100, 100), &Fill{paint: lg}, testStroke(pattern, 2), path.DefaultTransform())
 	g := emptyGroup()
@@ -256,9 +254,7 @@ func testTree(t *testing.T) (*Tree, *Path, *Group) {
 	g.isContextElement = true
 	p1.fill.contextElement = &contextElement{kind: contextElementUseNode}
 	g.children = []Node{p1}
-	if !g.calculateBoundingBoxes() {
-		t.Fatal("calculateBoundingBoxes of the group failed")
-	}
+	g.calculateBoundingBoxes()
 
 	tree := &Tree{root: *emptyGroup()}
 	tree.root.children = []Node{g}
@@ -268,17 +264,18 @@ func testTree(t *testing.T) (*Tree, *Path, *Group) {
 
 func TestGroupBoundingBoxes(t *testing.T) {
 	_, _, g := testTree(t)
-	if want := testRect(t, 10, 10, 100, 100); g.BoundingBox() != want {
-		t.Errorf("BoundingBox() = %v, want %v", g.BoundingBox(), want)
+	if want, got := testRect(t, 10, 10, 100, 100), mustRect(g.BoundingBox()); got != want {
+		t.Errorf("BoundingBox() = %v, want %v", got, want)
 	}
-	if want := testRect(t, 9, 9, 102, 102); g.StrokeBoundingBox() != want {
-		t.Errorf("StrokeBoundingBox() = %v, want %v", g.StrokeBoundingBox(), want)
+	if want, got := testRect(t, 9, 9, 102, 102), mustRect(g.StrokeBoundingBox()); got != want {
+		t.Errorf("StrokeBoundingBox() = %v, want %v", got, want)
 	}
 	// The clip path cuts the layer bounding box.
-	if want := testNonZeroRect(t, 9, 9, 41, 41); g.LayerBoundingBox() != want || g.AbsLayerBoundingBox() != want {
-		t.Errorf("LayerBoundingBox() = %v, %v, want %v", g.LayerBoundingBox(), g.AbsLayerBoundingBox(), want)
+	layer, absLayer := mustNonZeroRect(g.LayerBoundingBox()), mustNonZeroRect(g.AbsLayerBoundingBox())
+	if want := testNonZeroRect(t, 9, 9, 41, 41); layer != want || absLayer != want {
+		t.Errorf("LayerBoundingBox() = %v, %v, want %v", layer, absLayer, want)
 	}
-	if r, ok := NodeAbsLayerBoundingBox(g); !ok || r != g.AbsLayerBoundingBox() {
+	if r, ok := NodeAbsLayerBoundingBox(g); !ok || r != absLayer {
 		t.Errorf("NodeAbsLayerBoundingBox() = %v, %v", r, ok)
 	}
 	if r, ok := g.calculateObjectBBox(); !ok || r != testNonZeroRect(t, 10, 10, 100, 100) {
@@ -290,17 +287,19 @@ func TestGroupBoundingBoxes(t *testing.T) {
 
 	// A filter region takes the place of the layer bounding box.
 	g.filters = []*Filter{{id: "f", rect: testNonZeroRect(t, 0, 0, 300, 300)}}
-	if !g.calculateBoundingBoxes() {
-		t.Fatal("calculateBoundingBoxes failed")
-	}
-	if want := testNonZeroRect(t, 0, 0, 300, 300); g.LayerBoundingBox() != want {
-		t.Errorf("LayerBoundingBox() = %v, want %v", g.LayerBoundingBox(), want)
+	g.calculateBoundingBoxes()
+	if want, got := testNonZeroRect(t, 0, 0, 300, 300), mustNonZeroRect(g.LayerBoundingBox()); got != want {
+		t.Errorf("LayerBoundingBox() = %v, want %v", got, want)
 	}
 
-	// An empty group keeps its dummy boxes.
+	// An empty group has no bounding boxes.
 	empty := emptyGroup()
-	if empty.calculateBoundingBoxes() {
-		t.Error("calculateBoundingBoxes of an empty group succeeded")
+	empty.calculateBoundingBoxes()
+	if _, ok := empty.BoundingBox(); ok {
+		t.Error("BoundingBox of an empty group is set")
+	}
+	if _, ok := empty.LayerBoundingBox(); ok {
+		t.Error("LayerBoundingBox of an empty group is set")
 	}
 	if _, ok := empty.FiltersBoundingBox(); ok {
 		t.Error("FiltersBoundingBox of a group with no filters succeeded")
@@ -385,11 +384,11 @@ func TestImage(t *testing.T) {
 		kind:           ImageKindSVG{Tree: tree},
 		absBoundingBox: testNonZeroRect(t, 1, 2, 3, 4),
 	}
-	if img.BoundingBox() != testRect(t, 0, 0, 3, 2) || img.StrokeBoundingBox() != img.BoundingBox() {
+	if r, ok := NodeStrokeBoundingBox(img); img.BoundingBox() != testRect(t, 0, 0, 3, 2) || !ok || r != img.BoundingBox() {
 		t.Errorf("BoundingBox() = %v", img.BoundingBox())
 	}
-	if img.AbsStrokeBoundingBox() != testRect(t, 1, 2, 3, 4) {
-		t.Errorf("AbsStrokeBoundingBox() = %v", img.AbsStrokeBoundingBox())
+	if r, ok := NodeAbsStrokeBoundingBox(img); !ok || r != testRect(t, 1, 2, 3, 4) {
+		t.Errorf("NodeAbsStrokeBoundingBox() = %v", r)
 	}
 	n := 0
 	img.Subroots(func(*Group) { n++ })

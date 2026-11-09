@@ -1115,8 +1115,11 @@ func (m *Mask) Root() *Group {
 // so the enum becomes an interface (D27). Its cases are *Group, *Path, *Image
 // and *Text, as the Box of each case in upstream, and a type switch takes the
 // place of the Rust match. The methods of the interface are the methods of
-// Node in upstream. Node::abs_layer_bounding_box becomes the function
-// NodeAbsLayerBoundingBox, because Group has a method of that name with
+// Node in upstream. Node::bounding_box, Node::abs_bounding_box,
+// Node::stroke_bounding_box, Node::abs_stroke_bounding_box and
+// Node::abs_layer_bounding_box become the functions NodeBoundingBox,
+// NodeAbsBoundingBox, NodeStrokeBoundingBox, NodeAbsStrokeBoundingBox and
+// NodeAbsLayerBoundingBox, because a case has a method of each name with
 // another result.
 type Node interface {
 	// ID is Node::id in usvg src/tree/mod.rs. It returns node's ID.
@@ -1127,24 +1130,6 @@ type Node interface {
 	//
 	// This method is cheap since absolute transforms are already resolved.
 	AbsTransform() Transform
-
-	// BoundingBox is Node::bounding_box in usvg src/tree/mod.rs. It returns
-	// node's bounding box in object coordinates, if any.
-	BoundingBox() Rect
-
-	// AbsBoundingBox is Node::abs_bounding_box in usvg src/tree/mod.rs. It
-	// returns node's bounding box in canvas coordinates, if any.
-	AbsBoundingBox() Rect
-
-	// StrokeBoundingBox is Node::stroke_bounding_box in usvg
-	// src/tree/mod.rs. It returns node's bounding box, including stroke, in
-	// object coordinates, if any.
-	StrokeBoundingBox() Rect
-
-	// AbsStrokeBoundingBox is Node::abs_stroke_bounding_box in usvg
-	// src/tree/mod.rs. It returns node's bounding box, including stroke, in
-	// canvas coordinates, if any.
-	AbsStrokeBoundingBox() Rect
 
 	// Subroots is Node::subroots in usvg src/tree/mod.rs. It calls a
 	// closure for each subroot this `Node` has.
@@ -1186,6 +1171,74 @@ func (*Image) isNode() {}
 // isNode makes *Text a case of Node.
 func (*Text) isNode() {}
 
+// NodeBoundingBox is Node::bounding_box in usvg src/tree/mod.rs. It returns
+// node's bounding box in object coordinates, if any.
+func NodeBoundingBox(node Node) (Rect, bool) {
+	switch n := node.(type) {
+	case *Group:
+		return n.BoundingBox()
+	case *Path:
+		return n.BoundingBox(), true
+	case *Image:
+		return n.BoundingBox(), true
+	case *Text:
+		return n.BoundingBox(), true
+	}
+	return Rect{}, false
+}
+
+// NodeAbsBoundingBox is Node::abs_bounding_box in usvg src/tree/mod.rs. It
+// returns node's bounding box in canvas coordinates, if any.
+func NodeAbsBoundingBox(node Node) (Rect, bool) {
+	switch n := node.(type) {
+	case *Group:
+		return n.AbsBoundingBox()
+	case *Path:
+		return n.AbsBoundingBox(), true
+	case *Image:
+		return n.AbsBoundingBox(), true
+	case *Text:
+		return n.AbsBoundingBox(), true
+	}
+	return Rect{}, false
+}
+
+// NodeStrokeBoundingBox is Node::stroke_bounding_box in usvg
+// src/tree/mod.rs. It returns node's bounding box, including stroke, in
+// object coordinates, if any.
+func NodeStrokeBoundingBox(node Node) (Rect, bool) {
+	switch n := node.(type) {
+	case *Group:
+		return n.StrokeBoundingBox()
+	case *Path:
+		return n.StrokeBoundingBox(), true
+	// Image cannot be stroked.
+	case *Image:
+		return n.BoundingBox(), true
+	case *Text:
+		return n.StrokeBoundingBox(), true
+	}
+	return Rect{}, false
+}
+
+// NodeAbsStrokeBoundingBox is Node::abs_stroke_bounding_box in usvg
+// src/tree/mod.rs. It returns node's bounding box, including stroke, in
+// canvas coordinates, if any.
+func NodeAbsStrokeBoundingBox(node Node) (Rect, bool) {
+	switch n := node.(type) {
+	case *Group:
+		return n.AbsStrokeBoundingBox()
+	case *Path:
+		return n.AbsStrokeBoundingBox(), true
+	// Image cannot be stroked.
+	case *Image:
+		return n.AbsBoundingBox(), true
+	case *Text:
+		return n.AbsStrokeBoundingBox(), true
+	}
+	return Rect{}, false
+}
+
 // NodeAbsLayerBoundingBox is Node::abs_layer_bounding_box in usvg
 // src/tree/mod.rs. It returns the element's "layer" bounding box in canvas
 // units, if any.
@@ -1197,7 +1250,7 @@ func (*Text) isNode() {}
 func NodeAbsLayerBoundingBox(node Node) (NonZeroRect, bool) {
 	switch n := node.(type) {
 	case *Group:
-		return n.AbsLayerBoundingBox(), true
+		return n.AbsLayerBoundingBox()
 	// Hor/ver path without stroke can return None. This is expected.
 	case *Path:
 		return n.AbsBoundingBox().ToNonZeroRect()
@@ -1207,6 +1260,18 @@ func NodeAbsLayerBoundingBox(node Node) (NonZeroRect, bool) {
 		return n.AbsBoundingBox().ToNonZeroRect()
 	}
 	return NonZeroRect{}, false
+}
+
+// nodeToParentCoordinates is Node::to_parent_coordinates in usvg
+// src/tree/mod.rs. It maps a rect in this node's object coordinates into its
+// parent's coordinates.
+func nodeToParentCoordinates(node Node, rect Rect) Rect {
+	if group, ok := node.(*Group); ok {
+		if r, ok := rect.Transform(group.transform); ok {
+			return r
+		}
+	}
+	return rect
 }
 
 // Group is Group in usvg src/tree/mod.rs. It is a group container.
@@ -1227,12 +1292,12 @@ type Group struct {
 	isContextElement     bool
 	mask                 *Mask
 	filters              []*Filter
-	boundingBox          Rect
-	absBoundingBox       Rect
-	strokeBoundingBox    Rect
-	absStrokeBoundingBox Rect
-	layerBoundingBox     NonZeroRect
-	absLayerBoundingBox  NonZeroRect
+	boundingBox          optional[Rect]
+	absBoundingBox       optional[Rect]
+	strokeBoundingBox    optional[Rect]
+	absStrokeBoundingBox optional[Rect]
+	layerBoundingBox     optional[NonZeroRect]
+	absLayerBoundingBox  optional[NonZeroRect]
 	children             []Node
 }
 
@@ -1277,7 +1342,6 @@ func (g *Group) cloneGroup() Group {
 
 // emptyGroup is Group::empty in usvg src/tree/mod.rs.
 func emptyGroup() *Group {
-	dummy := mustRect(path.RectFromXYWH(0.0, 0.0, 0.0, 0.0))
 	return &Group{
 		id:                   "",
 		transform:            path.DefaultTransform(),
@@ -1289,12 +1353,12 @@ func emptyGroup() *Group {
 		mask:                 nil,
 		filters:              nil,
 		isContextElement:     false,
-		boundingBox:          dummy,
-		absBoundingBox:       dummy,
-		strokeBoundingBox:    dummy,
-		absStrokeBoundingBox: dummy,
-		layerBoundingBox:     mustNonZeroRect(path.NonZeroRectFromXYWH(0.0, 0.0, 1.0, 1.0)),
-		absLayerBoundingBox:  mustNonZeroRect(path.NonZeroRectFromXYWH(0.0, 0.0, 1.0, 1.0)),
+		boundingBox:          optional[Rect]{},
+		absBoundingBox:       optional[Rect]{},
+		strokeBoundingBox:    optional[Rect]{},
+		absStrokeBoundingBox: optional[Rect]{},
+		layerBoundingBox:     optional[NonZeroRect]{},
+		absLayerBoundingBox:  optional[NonZeroRect]{},
 		children:             nil,
 	}
 }
@@ -1376,24 +1440,24 @@ func (g *Group) Filters() []*Filter {
 // `objectBoundingBox` in SVG terms. Meaning it doesn't affected by parent transforms.
 //
 // Can be set to `None` in case of an empty group.
-func (g *Group) BoundingBox() Rect {
-	return g.boundingBox
+func (g *Group) BoundingBox() (Rect, bool) {
+	return g.boundingBox.get()
 }
 
 // AbsBoundingBox is Group::abs_bounding_box in usvg src/tree/mod.rs. It
 // returns the element's bounding box in canvas coordinates.
 //
 // `userSpaceOnUse` in SVG terms.
-func (g *Group) AbsBoundingBox() Rect {
-	return g.absBoundingBox
+func (g *Group) AbsBoundingBox() (Rect, bool) {
+	return g.absBoundingBox.get()
 }
 
 // StrokeBoundingBox is Group::stroke_bounding_box in usvg src/tree/mod.rs. It
 // returns the element's object bounding box including stroke.
 //
 // Similar to `bounding_box`, but includes stroke.
-func (g *Group) StrokeBoundingBox() Rect {
-	return g.strokeBoundingBox
+func (g *Group) StrokeBoundingBox() (Rect, bool) {
+	return g.strokeBoundingBox.get()
 }
 
 // AbsStrokeBoundingBox is Group::abs_stroke_bounding_box in usvg
@@ -1401,8 +1465,8 @@ func (g *Group) StrokeBoundingBox() Rect {
 // user coordinates.
 //
 // Similar to `abs_bounding_box`, but includes stroke.
-func (g *Group) AbsStrokeBoundingBox() Rect {
-	return g.absStrokeBoundingBox
+func (g *Group) AbsStrokeBoundingBox() (Rect, bool) {
+	return g.absStrokeBoundingBox.get()
 }
 
 // LayerBoundingBox is Group::layer_bounding_box in usvg src/tree/mod.rs. It
@@ -1418,17 +1482,15 @@ func (g *Group) AbsStrokeBoundingBox() Rect {
 // For other nodes layer bounding box is the same as stroke bounding box.
 //
 // Unlike other bounding boxes, cannot have zero size.
-//
-// Returns 0x0x1x1 for empty groups.
-func (g *Group) LayerBoundingBox() NonZeroRect {
-	return g.layerBoundingBox
+func (g *Group) LayerBoundingBox() (NonZeroRect, bool) {
+	return g.layerBoundingBox.get()
 }
 
 // AbsLayerBoundingBox is Group::abs_layer_bounding_box in usvg
 // src/tree/mod.rs. It returns the element's "layer" bounding box in canvas
 // units.
-func (g *Group) AbsLayerBoundingBox() NonZeroRect {
-	return g.absLayerBoundingBox
+func (g *Group) AbsLayerBoundingBox() (NonZeroRect, bool) {
+	return g.absLayerBoundingBox.get()
 }
 
 // Children is Group::children in usvg src/tree/mod.rs. It returns the
@@ -1934,27 +1996,6 @@ func (i *Image) AbsBoundingBox() Rect {
 	return i.absBoundingBox.ToRect()
 }
 
-// StrokeBoundingBox is the arm of Node::stroke_bounding_box for an image in
-// usvg src/tree/mod.rs. Image cannot be stroked, so it returns BoundingBox.
-//
-// Port: upstream has no such method on Image. Go needs it, so that *Image
-// implements Node.
-func (i *Image) StrokeBoundingBox() Rect {
-	// Image cannot be stroked.
-	return i.BoundingBox()
-}
-
-// AbsStrokeBoundingBox is the arm of Node::abs_stroke_bounding_box for an
-// image in usvg src/tree/mod.rs. Image cannot be stroked, so it returns
-// AbsBoundingBox.
-//
-// Port: upstream has no such method on Image. Go needs it, so that *Image
-// implements Node.
-func (i *Image) AbsStrokeBoundingBox() Rect {
-	// Image cannot be stroked.
-	return i.AbsBoundingBox()
-}
-
 // Subroots is the private Image::subroots in usvg src/tree/mod.rs, which
 // Node::subroots calls for an image.
 func (i *Image) Subroots(f func(*Group)) {
@@ -2237,119 +2278,113 @@ func (g *Group) collectFilters(filters *[]*Filter) {
 func (g *Group) calculateObjectBBox() (NonZeroRect, bool) {
 	bbox := defaultBBox()
 	for _, child := range g.children {
-		cBBox := child.BoundingBox()
-		if group, ok := child.(*Group); ok {
-			if r, ok := cBBox.Transform(group.transform); ok {
-				cBBox = r
-			}
+		if cBBox, ok := NodeBoundingBox(child); ok {
+			bbox = bbox.expand(bboxFromRect(nodeToParentCoordinates(child, cBBox)))
 		}
-
-		bbox = bbox.expand(bboxFromRect(cBBox))
 	}
 
 	return bbox.toNonZeroRect()
 }
 
 // calculateBoundingBoxes is Group::calculate_bounding_boxes in usvg
-// src/tree/mod.rs. It returns false where upstream returns None.
-func (g *Group) calculateBoundingBoxes() bool {
+// src/tree/mod.rs.
+func (g *Group) calculateBoundingBoxes() {
 	bbox := defaultBBox()
 	absBBox := defaultBBox()
 	strokeBBox := defaultBBox()
 	absStrokeBBox := defaultBBox()
 	layerBBox := defaultBBox()
 	for _, child := range g.children {
-		{
-			cBBox := child.BoundingBox()
-			if group, ok := child.(*Group); ok {
-				if r, ok := cBBox.Transform(group.transform); ok {
-					cBBox = r
-				}
-			}
-
-			bbox = bbox.expand(bboxFromRect(cBBox))
+		if cBBox, ok := NodeBoundingBox(child); ok {
+			bbox = bbox.expand(bboxFromRect(nodeToParentCoordinates(child, cBBox)))
 		}
-
-		absBBox = absBBox.expand(bboxFromRect(child.AbsBoundingBox()))
-
-		{
-			cBBox := child.StrokeBoundingBox()
-			if group, ok := child.(*Group); ok {
-				if r, ok := cBBox.Transform(group.transform); ok {
-					cBBox = r
-				}
-			}
-
-			strokeBBox = strokeBBox.expand(bboxFromRect(cBBox))
+		if cBBox, ok := NodeAbsBoundingBox(child); ok {
+			absBBox = absBBox.expand(bboxFromRect(cBBox))
 		}
-
-		absStrokeBBox = absStrokeBBox.expand(bboxFromRect(child.AbsStrokeBoundingBox()))
+		if cBBox, ok := NodeStrokeBoundingBox(child); ok {
+			strokeBBox = strokeBBox.expand(bboxFromRect(nodeToParentCoordinates(child, cBBox)))
+		}
+		if cBBox, ok := NodeAbsStrokeBoundingBox(child); ok {
+			absStrokeBBox = absStrokeBBox.expand(bboxFromRect(cBBox))
+		}
 
 		if group, ok := child.(*Group); ok {
-			r := group.layerBoundingBox
-			if r, ok := r.Transform(group.transform); ok {
-				layerBBox = layerBBox.expand(bboxFromNonZeroRect(r))
+			if r, ok := group.layerBoundingBox.get(); ok {
+				if r, ok := r.Transform(group.transform); ok {
+					layerBBox = layerBBox.expand(bboxFromNonZeroRect(r))
+				}
 			}
-		} else {
+		} else if cBBox, ok := NodeStrokeBoundingBox(child); ok {
 			// Not a group - no need to transform.
-			layerBBox = layerBBox.expand(bboxFromRect(child.StrokeBoundingBox()))
+			layerBBox = layerBBox.expand(bboxFromRect(cBBox))
 		}
 	}
 
-	// `bbox` can be None for empty groups, but we still have to
-	// calculate `layer_bounding_box after` it.
-	if bbox, ok := bbox.toRect(); ok {
-		g.boundingBox = bbox
-		r, ok := absBBox.toRect()
-		if !ok {
-			return false
-		}
-		g.absBoundingBox = r
-		if r, ok = strokeBBox.toRect(); !ok {
-			return false
-		}
-		g.strokeBoundingBox = r
-		if r, ok = absStrokeBBox.toRect(); !ok {
-			return false
-		}
-		g.absStrokeBoundingBox = r
-	}
+	g.boundingBox = optionalOf(bbox.toRect())
+	g.absBoundingBox = optionalOf(absBBox.toRect())
+	g.strokeBoundingBox = optionalOf(strokeBBox.toRect())
+	g.absStrokeBoundingBox = optionalOf(absStrokeBBox.toRect())
 
 	// Filter bbox has a higher priority than layers bbox.
-	if filterBBox, ok := g.FiltersBoundingBox(); ok {
-		g.layerBoundingBox = filterBBox
-	} else {
-		layerBBox, ok := layerBBox.toNonZeroRect()
-		if !ok {
-			return false
+	g.layerBoundingBox = optionalOf(func() (NonZeroRect, bool) {
+		if filterBBox, ok := g.FiltersBoundingBox(); ok {
+			return filterBBox, true
 		}
-		// Nothing outside the clip path is visible. Filtered groups are excluded above,
-		// because filters are applied before clipping and need their whole region.
+		layerBBox, ok := layerBBox.toRect()
+		if !ok {
+			return NonZeroRect{}, false
+		}
+		// Nothing outside the clip path is visible. Filtered groups use their filter
+		// region instead, because filters are applied before clipping.
 		// The clip's stroke bounding box is used because, unlike the object one,
 		// it covers the glyph outlines of text.
 		if clip := g.clipPath; clip != nil {
-			clipBBox, ok := clip.root.strokeBoundingBox.Transform(clip.transform)
+			clipStrokeBBox, ok := clip.root.strokeBoundingBox.get()
 			if !ok {
-				return false
+				return NonZeroRect{}, false
 			}
-			r, ok := layerBBox.ToRect().Intersect(clipBBox)
+			clipBBox, ok := clipStrokeBBox.Transform(clip.transform)
 			if !ok {
-				return false
+				return NonZeroRect{}, false
 			}
-			if layerBBox, ok = r.ToNonZeroRect(); !ok {
-				return false
+			if layerBBox, ok = layerBBox.Intersect(clipBBox); !ok {
+				return NonZeroRect{}, false
 			}
 		}
-		g.layerBoundingBox = layerBBox
+		return layerBBox.ToNonZeroRect()
+	}())
+	g.absLayerBoundingBox = optional[NonZeroRect]{}
+	if r, ok := g.layerBoundingBox.get(); ok {
+		g.absLayerBoundingBox = optionalOf(r.Transform(g.absTransform))
 	}
+}
 
-	absLayerBBox, ok := g.layerBoundingBox.Transform(g.absTransform)
+// optional is an Option<T> of upstream that a struct holds as a field.
+//
+// Port: Go has no Option type. A function returns (T, bool), and a field
+// holds an optional, so that a struct does not need a pointer for it.
+type optional[T any] struct {
+	value T
+	ok    bool
+}
+
+// optionalOf makes an optional from the result of a function that returns
+// (T, bool).
+func optionalOf[T any](value T, ok bool) optional[T] {
 	if !ok {
-		return false
+		return optional[T]{}
 	}
-	g.absLayerBoundingBox = absLayerBBox
+	return optional[T]{value: value, ok: true}
+}
 
-	return true
+// some is Some(value) of upstream.
+func some[T any](value T) optional[T] {
+	return optional[T]{value: value, ok: true}
+}
+
+// get returns the value and whether it is set.
+func (o optional[T]) get() (T, bool) {
+	return o.value, o.ok
 }
 
 // mustRect is the unwrap of an Option<Rect> that upstream relies on. It

@@ -656,8 +656,10 @@ func updatePaintServers(
 		// current group is a use node.
 		ctxTransform, ctxBBox := contextTransform, contextBBox
 		if group.isContextElement {
-			bbox := group.boundingBox
-			ctxTransform, ctxBBox = group.absTransform, &bbox
+			ctxTransform, ctxBBox = group.absTransform, nil
+			if bbox, ok := group.boundingBox.get(); ok {
+				ctxBBox = &bbox
+			}
 		}
 
 		nodeToUserCoordinates(child, ctxTransform, ctxBBox, textBBox, cache)

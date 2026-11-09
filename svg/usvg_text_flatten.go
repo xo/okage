@@ -207,7 +207,11 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 	group.children = append(group.children, newChildren...)
 
 	group.calculateBoundingBoxes()
-	strokeBBox, ok := group.StrokeBoundingBox().ToNonZeroRect()
+	groupStrokeBBox, ok := group.StrokeBoundingBox()
+	if !ok {
+		return nil, NonZeroRect{}, false
+	}
+	strokeBBox, ok := groupStrokeBBox.ToNonZeroRect()
 	if !ok {
 		return nil, NonZeroRect{}, false
 	}

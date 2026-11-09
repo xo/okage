@@ -639,8 +639,8 @@ func TestNestedSvgAbsBoundingBox(t *testing.T) {
 		t.Fatal("no node with the id path")
 	}
 	want := mustRect(path.RectFromXYWH(10.0, 20.0, 10.0, 10.0))
-	if got := node.AbsBoundingBox(); got != want {
-		t.Errorf("abs bounding box = %v, want %v", got, want)
+	if got, ok := NodeAbsBoundingBox(node); !ok || got != want {
+		t.Errorf("abs bounding box = %v, %v, want %v", got, ok, want)
 	}
 }
 

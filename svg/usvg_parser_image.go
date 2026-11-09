@@ -332,11 +332,11 @@ func convertInner(
 		// clip/mask/filter applied to the `<image>` would be resolved against
 		// the oversized image. See https://github.com/linebender/resvg/issues/1034
 		bbox := rect.ToRect()
-		g2.boundingBox = bbox
-		g2.strokeBoundingBox = bbox
+		g2.boundingBox = some(bbox)
+		g2.strokeBoundingBox = some(bbox)
 		if abs, ok := bbox.Transform(g2.absTransform); ok {
-			g2.absBoundingBox = abs
-			g2.absStrokeBoundingBox = abs
+			g2.absBoundingBox = some(abs)
+			g2.absStrokeBoundingBox = some(abs)
 		}
 
 		parent.children = append(parent.children, g2)
