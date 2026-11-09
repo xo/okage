@@ -103,6 +103,7 @@ func fromDataNested(data []byte, opt *options) (*Tree, error) {
 	//
 	// Port: a Go FontResolver holds functions, which a copy shares.
 	nestedOpt.fontResolver = opt.fontResolver
+	nestedOpt.maxDepth = opt.maxDepth
 
 	return fromData(data, &nestedOpt)
 }
@@ -131,7 +132,7 @@ func fromStr(text string, opt *options) (*Tree, error) {
 	if err != nil {
 		return nil, parsingFailed(err)
 	}
-	doc, err := parseTree(xml, opt.styleSheet, opt)
+	doc, err := parseTree(xml, opt.styleSheet, opt.maxDepth, opt)
 	if err != nil {
 		return nil, parsingFailed(err)
 	}
@@ -145,7 +146,7 @@ func fromStr(text string, opt *options) (*Tree, error) {
 // Port: the function is unexported, because internal/roxmltree is internal
 // and a user cannot make its document (D5).
 func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) { //nolint:unused // the port of a public function of upstream
-	svgDoc, err := parseTree(doc, opt.styleSheet, opt)
+	svgDoc, err := parseTree(doc, opt.styleSheet, opt.maxDepth, opt)
 	if err != nil {
 		return nil, parsingFailed(err)
 	}

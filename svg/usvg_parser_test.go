@@ -682,6 +682,70 @@ func TestResolveFrFromReferencedRadialGradient(t *testing.T) {
 	}
 }
 
+// parseWithMaxDepth is parse_with_max_depth in usvg tests/parser.rs.
+func parseWithMaxDepth(svg string, maxDepth uint32) (*Tree, error) {
+	return FromStr(svg, WithMaxDepth(maxDepth))
+}
+
+// TestMaxDepthLimitsNesting is max_depth_limits_nesting in usvg
+// tests/parser.rs.
+func TestMaxDepthLimitsNesting(t *testing.T) {
+	svg := "<svg xmlns='http://www.w3.org/2000/svg'>" +
+		"<g><g><rect width='1' height='1'/></g></g>" +
+		"</svg>"
+
+	if _, err := parseWithMaxDepth(svg, 3); err != nil {
+		t.Errorf("max depth 3: %v", err)
+	}
+	if _, err := parseWithMaxDepth(svg, 2); !errors.Is(err, okage.ErrSVGParsingFailed) || !errors.Is(err, okage.ErrXMLNodesLimitReached) {
+		t.Errorf("max depth 2: err = %v, want the nodes limit", err)
+	}
+}
+
+// TestMaxDepthCountsUseInstances is max_depth_counts_use_instances in usvg
+// tests/parser.rs.
+func TestMaxDepthCountsUseInstances(t *testing.T) {
+	withoutUse := "<svg xmlns='http://www.w3.org/2000/svg'>" +
+		"<defs><rect id='r' width='1' height='1'/></defs>" +
+		"</svg>"
+	withUse := "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>" +
+		"<defs><rect id='r' width='1' height='1'/></defs>" +
+		"<use xlink:href='#r'/>" +
+		"</svg>"
+
+	if _, err := parseWithMaxDepth(withoutUse, 2); err != nil {
+		t.Errorf("without use: %v", err)
+	}
+	if _, err := parseWithMaxDepth(withUse, 2); !errors.Is(err, okage.ErrSVGParsingFailed) || !errors.Is(err, okage.ErrXMLNodesLimitReached) {
+		t.Errorf("with use: err = %v, want the nodes limit", err)
+	}
+}
+
+// TestMaxDepthAppliesToNestedSvgImages is
+// max_depth_applies_to_nested_svg_images in usvg tests/parser.rs.
+func TestMaxDepthAppliesToNestedSvgImages(t *testing.T) {
+	svg := "<svg xmlns='http://www.w3.org/2000/svg'>" +
+		"<image width='1' height='1' href=\"data:image/svg+xml," +
+		"%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E" +
+		"%3Cg%3E%3Crect width='1' height='1'/%3E%3C/g%3E%3C/svg%3E\"/>" +
+		"</svg>"
+
+	tree, err := parseWithMaxDepth(svg, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !tree.Root().HasChildren() {
+		t.Error("max depth 2: the root has no children")
+	}
+	tree, err = parseWithMaxDepth(svg, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tree.Root().HasChildren() {
+		t.Error("max depth 1: the root has children")
+	}
+}
+
 // TestFromStrHugeArc makes sure that a path with an arc to a huge point ends,
 // with at most kurbo.MaxArcSubdivisions curves for the arc, where usvg does
 // not end (D30).

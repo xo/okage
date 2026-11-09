@@ -32,8 +32,8 @@ const (
 //
 // Port: the empty string is an injected style sheet of None. opt is the
 // options of the parse, for the logger (D20).
-func parseTree(xml *roxmltree.Document, injectedStylesheet string, opt *options) (*document, error) {
-	return parse(xml, injectedStylesheet, opt)
+func parseTree(xml *roxmltree.Document, injectedStylesheet string, maxDepth uint32, opt *options) (*document, error) {
+	return parse(xml, injectedStylesheet, maxDepth, opt)
 }
 
 // append is Document::append in usvg src/parser/svgtree/parse.rs.
@@ -73,7 +73,7 @@ func (d *document) appendAttribute(name AId, value string, important bool) {
 }
 
 // parse is parse in usvg src/parser/svgtree/parse.rs.
-func parse(xml *roxmltree.Document, injectedStylesheet string, opt *options) (*document, error) {
+func parse(xml *roxmltree.Document, injectedStylesheet string, maxDepth uint32, opt *options) (*document, error) {
 	doc := &document{
 		nodes: nil,
 		attrs: nil,
@@ -104,6 +104,7 @@ func parse(xml *roxmltree.Document, injectedStylesheet string, opt *options) (*d
 		&styleSheet,
 		false,
 		0,
+		maxDepth,
 		doc,
 		idMap,
 	)
@@ -174,6 +175,7 @@ func parseXMLNodeChildren(
 	styleSheet *simplecss.StyleSheet,
 	ignoreIDs bool,
 	depth uint32,
+	maxDepth uint32,
 	doc *document,
 	idMap map[string]roxmltree.Node,
 ) error {
@@ -185,6 +187,7 @@ func parseXMLNodeChildren(
 			styleSheet,
 			ignoreIDs,
 			depth,
+			maxDepth,
 			doc,
 			idMap,
 		)
@@ -204,10 +207,11 @@ func parseXMLNode(
 	styleSheet *simplecss.StyleSheet,
 	ignoreIDs bool,
 	depth uint32,
+	maxDepth uint32,
 	doc *document,
 	idMap map[string]roxmltree.Node,
 ) error {
-	if depth > 1024 {
+	if depth > maxDepth {
 		return okage.ErrXMLNodesLimitReached
 	}
 
@@ -234,7 +238,16 @@ func parseXMLNode(
 	case EIdText:
 		return parseSvgTextElement(node, nodeID, styleSheet, doc)
 	case EIdUse:
-		return parseSvgUseElement(node, origin, nodeID, styleSheet, depth+1, doc, idMap)
+		return parseSvgUseElement(
+			node,
+			origin,
+			nodeID,
+			styleSheet,
+			depth+1,
+			maxDepth,
+			doc,
+			idMap,
+		)
 	}
 	return parseXMLNodeChildren(
 		node,
@@ -243,6 +256,7 @@ func parseXMLNode(
 		styleSheet,
 		ignoreIDs,
 		depth+1,
+		maxDepth,
 		doc,
 		idMap,
 	)
@@ -662,6 +676,7 @@ func parseSvgUseElement(
 	parentID nodeID,
 	styleSheet *simplecss.StyleSheet,
 	depth uint32,
+	maxDepth uint32,
 	doc *document,
 	idMap map[string]roxmltree.Node,
 ) error {
@@ -729,6 +744,7 @@ func parseSvgUseElement(
 		styleSheet,
 		true,
 		depth+1,
+		maxDepth,
 		doc,
 		idMap,
 	)

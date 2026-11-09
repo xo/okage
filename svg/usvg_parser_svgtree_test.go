@@ -24,7 +24,7 @@ func mustParseTree(t *testing.T, text string) *document {
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc, err := parseTree(xml, "", newOptions())
+	doc, err := parseTree(xml, "", DefaultMaxDepth, newOptions())
 	if err != nil {
 		t.Fatal(err)
 	}

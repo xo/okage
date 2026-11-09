@@ -69,6 +69,10 @@ type ImageHrefResolver struct {
 	ResolveString ImageHrefStringResolverFn
 }
 
+// DefaultMaxDepth is DEFAULT_MAX_DEPTH in usvg src/parser/options.rs. It
+// is the default nesting limit when parsing.
+const DefaultMaxDepth uint32 = 1024
+
 // Option is an option of the functions that parse an SVG file. It sets a
 // field of the struct Options in usvg src/parser/options.rs (D20).
 type Option func(*options)
@@ -170,6 +174,10 @@ type options struct {
 	// Port: the empty string is None.
 	styleSheet string
 
+	// The maximum nesting allowed while parsing. If this limit is exceeded,
+	// the parser will return an error.
+	maxDepth uint32
+
 	// logger is the logger of WithLogger. Nil logs nothing (D20). Upstream
 	// has no such field, and logs with the crate log.
 	logger *slog.Logger
@@ -194,6 +202,7 @@ func defaultOptions() options {
 		fontdb:            NewFontDatabase(),
 		fontdbOwned:       true,
 		styleSheet:        "",
+		maxDepth:          DefaultMaxDepth,
 		logger:            nil,
 	}
 }
@@ -491,6 +500,17 @@ func WithMonospaceFamily(family string) Option {
 func WithStyleSheet(styleSheet string) Option {
 	return func(o *options) {
 		o.styleSheet = styleSheet
+	}
+}
+
+// WithMaxDepth sets Options::max_depth in usvg src/parser/options.rs: the
+// maximum nesting allowed while parsing. If this limit is exceeded, the
+// parser will return an error that wraps okage.ErrXMLNodesLimitReached.
+//
+// Default: DefaultMaxDepth.
+func WithMaxDepth(depth uint32) Option {
+	return func(o *options) {
+		o.maxDepth = depth
 	}
 }
 
