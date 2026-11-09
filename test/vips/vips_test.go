@@ -123,15 +123,7 @@ func TestVips(t *testing.T) {
 			continue
 		}
 		compared++
-		n := 0
-		for i := 0; i < len(a); i += 4 {
-			for c := range 4 {
-				if d := int(a[i+c]) - int(b[i+c]); d > 32 || d < -32 {
-					n++
-					break
-				}
-			}
-		}
+		n := countApart(a, b)
 		if float64(n) > 0.1*float64(w*h) {
 			listed++
 			t.Logf("%s: %d of %d pixels differ from libvips", f, n, w*h)
