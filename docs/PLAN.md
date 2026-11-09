@@ -26,7 +26,11 @@ speed target of D18:
    TinyGo. okage is about 10 to 20 times slower than the scalar code of
    upstream (D18), and `BACKLOG.md` holds the work that closes the gap.
 
-Phase 5, the commits of tiny-skia after the base commit, comes next.
+5. Phase 5: the three commits of tiny-skia after the base commit, up to
+   `5d475477` on 2026-08-20. One commit is ported, and two are not
+   applicable. The release `v0.1.0` waits for the target of D18 in phase 4.
+
+Phase 6, the parsers that `svg` uses, comes next.
 
 These documents hold the rules and the references that come from this plan:
 

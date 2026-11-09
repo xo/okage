@@ -1,4 +1,4 @@
 upstream	date	status	okage	note
-88c65f6e6dfb31b7ea720e2f1609db7bf154b182	2026-07-31	pending		Fix typo in pattern example (#181). It renames crate_triangle to create_triangle in examples/pattern.rs
-ed266088525b27006e59b28bcec8d926eda331b1	2026-08-20	pending		Drop dependency on arrayref (#185). It changes path/src/dash.rs and src/pipeline/mod.rs
+88c65f6e6dfb31b7ea720e2f1609db7bf154b182	2026-07-31	ported		Fix typo in pattern example (#181). It renames crate_triangle to create_triangle in examples/pattern.rs
+ed266088525b27006e59b28bcec8d926eda331b1	2026-08-20	not-applicable		Drop dependency on arrayref (#185). It changes path/src/dash.rs and src/pipeline/mod.rs to the form that the Go code already has: a slice converted to an array pointer
 5d4754777746eef0828be166896eaf482c49f8f2	2026-08-20	not-applicable		fix wasm CI error unwrap (#183). It changes .github/workflows/main.yml only

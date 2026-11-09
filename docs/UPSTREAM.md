@@ -352,19 +352,24 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-09 two ledgers exist:
+On 2026-11-09 three ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
-   renames a function in `examples/pattern.rs`, and it is `pending`, because
-   okage ports the examples. `ed266088` drops the crate `arrayref`, and it
-   changes `path/src/dash.rs` and `src/pipeline/mod.rs`. It is `pending`.
-   `5d475477` changes the CI of upstream only, and it is `not-applicable`.
+   renames a function in `examples/pattern.rs`, and it is `ported`, because
+   okage ports the examples. `ed266088` drops the crate `arrayref`. It is
+   `not-applicable`, because the Go code already has the form that it gives
+   to `path/src/dash.rs` and `src/pipeline/mod.rs`. `5d475477` changes the CI
+   of upstream only, and it is `not-applicable`. The column `matched` is
+   `5d475477`.
 2. `resvg.tsv` holds the 26 commits after `v0.49.0`, up to `847abd69` on
    2026-11-05. Each one changes code or tests that okage ports, so each one
    is `pending`, and its note says which parts it changes. `e1a4c92d` raises
    harfrust to 0.15 and skrifa to 0.49, and changes `usvg/src/text`. okage
    ports its change to `usvg/src/text`, with go-text in place of the crates,
    and not the new versions of the crates (D9).
+3. `strict-num.tsv` holds the 7 commits after the base commit. None of them
+   changes code that okage ports, so each one is `not-applicable`, and the
+   column `matched` is `76d36feb`.
 
 The ledgers of the other upstreams are made in phase 1, when their checkouts
 exist.

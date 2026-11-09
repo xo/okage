@@ -92,5 +92,5 @@ stage the change for review. A maintainer commits.
 
 ## Releases
 
-A maintainer makes each release. The first tag, `v0.1.0`, comes at the end of
-phase 5, when the port of tiny-skia is done.
+A maintainer makes each release. The first tag, `v0.1.0`, comes when the port
+of tiny-skia is done: at the end of phase 5, and after the gate of phase 4.

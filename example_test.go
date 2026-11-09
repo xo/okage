@@ -338,9 +338,9 @@ func Example_mask() {
 }
 
 // This example ports tiny-skia examples/pattern.rs. It fills a circle with a
-// pattern of a small pixmap. The function crate_triangle of the example is the
-// same as the one of tests/integration/pattern.rs, so the example calls
-// crateTriangle of pattern_integration_test.go.
+// pattern of a small pixmap. The function create_triangle of the example is
+// the same as crate_triangle of tests/integration/pattern.rs, so the example
+// calls crateTriangle of pattern_integration_test.go.
 func Example_pattern() {
 	triangle := crateTriangle()
 
