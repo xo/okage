@@ -49,8 +49,9 @@ WebAssembly, is a goal that the port keeps in mind.
 
 The port of tiny-skia is done, in the root package and in `path`. It gives
 the same bytes as tiny-skia in the scalar build, in the SIMD build and with
-TinyGo, and the 157 integration tests of tiny-skia pass. It is still about 10
-to 20 times slower than tiny-skia. The package `svg` is the port of usvg and
+TinyGo, and the 157 integration tests of tiny-skia pass. It is about 1.2 to
+3 times slower than the scalar code of tiny-skia, and work that makes it
+faster stays open (D35). The package `svg` is the port of usvg and
 resvg. It parses and renders each test file of resvg: without text and
 without a raster image, with the same pixels as resvg, and with text or an
 image, within the tolerance of D31. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
@@ -64,7 +65,7 @@ repositories, and one ledger for each records what okage did with each commit.
 
 ## Installing
 
-When the first release exists, install okage with this command:
+Install okage with this command:
 
 ```sh
 go get github.com/xo/okage
