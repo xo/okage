@@ -606,10 +606,13 @@ func (p *SimplifyingPathParser) prevIsClosePath() bool {
 	return p.hasPrevSimpleSeg && p.prevSimpleSeg.Kind == SimplePathSegmentClosePath
 }
 
-// popFront is self.buffer.remove(0).
+// popFront is self.buffer.remove(0). It shifts the other segments down, as
+// Vec::remove does, so that the buffer keeps its storage and the next append
+// does not allocate.
 func (p *SimplifyingPathParser) popFront() SimplePathSegment {
 	seg := p.buffer[0]
-	p.buffer = p.buffer[1:]
+	n := copy(p.buffer, p.buffer[1:])
+	p.buffer = p.buffer[:n]
 	return seg
 }
 

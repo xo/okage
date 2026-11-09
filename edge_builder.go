@@ -8,6 +8,7 @@ package okage
 
 import (
 	"log/slog"
+	"sync"
 
 	"github.com/xo/okage/path"
 )
@@ -72,11 +73,43 @@ type basicEdgeBuilder struct {
 
 // newBasicEdgeBuilder is BasicEdgeBuilder::new in tiny-skia
 // src/edge_builder.rs.
+//
+// Port: the edges come from edgePool, so that a fill does not allocate a new
+// buffer for each path. The capacity is 64 or more, as upstream asks.
 func newBasicEdgeBuilder(clipShift int32) *basicEdgeBuilder {
 	return &basicEdgeBuilder{
-		edges:     make([]edge, 0, 64), // TODO: stack array + fallback
+		edges:     getEdges(), // TODO: stack array + fallback
 		clipShift: clipShift,
 	}
+}
+
+// edgePool holds the edge buffers of fills that are done. It ports no item of
+// upstream: Rust allocates a Vec for each fill, which is cheap there, and in
+// Go the garbage of a buffer for each path is a large part of the time of a
+// file with many paths.
+var edgePool = sync.Pool{
+	New: func() any {
+		s := make([]edge, 0, 64)
+		return &s
+	},
+}
+
+// getEdges returns an empty edge buffer from edgePool.
+func getEdges() []edge {
+	if s, ok := edgePool.Get().(*[]edge); ok {
+		return (*s)[:0]
+	}
+	return make([]edge, 0, 64)
+}
+
+// putEdges returns the buffer of edges to edgePool. The caller must not use
+// edges afterward.
+func putEdges(edges []edge) {
+	if cap(edges) == 0 {
+		return
+	}
+	edges = edges[:0]
+	edgePool.Put(&edges)
 }
 
 // buildEdges is BasicEdgeBuilder::build_edges in tiny-skia
@@ -95,10 +128,12 @@ func buildEdges(p *Path, clip *shiftedIntRect, clipShift int32, logger *slog.Log
 	builder := newBasicEdgeBuilder(clipShift)
 	if !builder.build(p, clip, canCullToTheRight) {
 		warn(logger, "infinite or NaN segments detected during edges building")
+		putEdges(builder.edges)
 		return nil, false
 	}
 
 	if len(builder.edges) < 2 {
+		putEdges(builder.edges)
 		return nil, false
 	}
 

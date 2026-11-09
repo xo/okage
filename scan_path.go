@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"math"
 	"slices"
+	"sync"
 
 	"github.com/xo/okage/path"
 )
@@ -118,6 +119,70 @@ const edgeHeadY int32 = math.MinInt32
 // src/scan/path.rs.
 const edgeTailY int32 = math.MaxInt32
 
+// edgeKey is the key of an edge in sortEdges: the values that the sort of
+// fill_path_impl in tiny-skia src/scan/path.rs compares, and the index of the
+// edge before the sort.
+type edgeKey struct {
+	firstY int32
+	x      int32
+	index  int32
+}
+
+// edgeKeyPool holds the key buffers of sortEdges.
+var edgeKeyPool = sync.Pool{
+	New: func() any {
+		s := make([]edgeKey, 0, 64)
+		return &s
+	},
+}
+
+// sortEdges is the stable sort of the edges by firstY, then by x, in
+// fill_path_impl in tiny-skia src/scan/path.rs:
+//
+//	edges.sort_by(|a, b| {
+//	    let mut value_a = a.as_line().first_y;
+//	    let mut value_b = b.as_line().first_y;
+//	    if value_a == value_b {
+//	        value_a = a.as_line().x;
+//	        value_b = b.as_line().x;
+//	    }
+//	    value_a.cmp(&value_b)
+//	});
+//
+// Port: Go sorts small keys with the index of each edge as the last key, which
+// gives the order of a stable sort, and then moves each edge once into a
+// buffer of edgePool. A stable sort of the edges themselves moves each edge,
+// which is large, many times. It returns the sorted edges, and puts the
+// buffer of edges back into edgePool.
+func sortEdges(edges []edge) []edge {
+	kp, ok := edgeKeyPool.Get().(*[]edgeKey)
+	if !ok {
+		kp = new([]edgeKey)
+	}
+	keys := (*kp)[:0]
+	for i := range edges {
+		l := edges[i].asLine()
+		keys = append(keys, edgeKey{firstY: l.firstY, x: l.x, index: int32(i)})
+	}
+	slices.SortFunc(keys, func(a, b edgeKey) int {
+		if c := cmp.Compare(a.firstY, b.firstY); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.x, b.x); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.index, b.index)
+	})
+	sorted := getEdges()
+	for _, k := range keys {
+		sorted = append(sorted, edges[k.index])
+	}
+	*kp = keys[:0]
+	edgeKeyPool.Put(kp)
+	putEdges(edges)
+	return sorted
+}
+
 // fillPathImplPath is fill_path_impl in tiny-skia src/scan/path.rs. The name
 // takes the suffix of its module, because src/scan/path_aa.rs has a function
 // of the same name (D10).
@@ -148,17 +213,7 @@ func fillPathImplPath(
 		return // no edges to render, just return
 	}
 
-	slices.SortStableFunc(edges, func(a, b edge) int {
-		valueA := a.asLine().firstY
-		valueB := b.asLine().firstY
-
-		if valueA == valueB {
-			valueA = a.asLine().x
-			valueB = b.asLine().x
-		}
-
-		return cmp.Compare(valueA, valueB)
-	})
+	edges = sortEdges(edges)
 
 	for i := range edges {
 		// 0 will be set later, so start with 1.
@@ -182,6 +237,7 @@ func fillPathImplPath(
 			firstY: edgeTailY,
 		},
 	})
+	defer putEdges(edges)
 
 	startY <<= shiftEdgesUp
 	stopY <<= shiftEdgesUp
