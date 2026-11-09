@@ -316,14 +316,7 @@ func collectChildren(
 			continue
 		}
 
-		filterSubregion, ok := resolvePrimitiveRegion(
-			child,
-			tagName,
-			units,
-			state,
-			objectBBox,
-			filterRegion,
-		)
+		filterSubregion, ok := resolvePrimitiveRegion(child, units, state, objectBBox, filterRegion)
 		if !ok {
 			break
 		}
@@ -395,11 +388,8 @@ func collectChildren(
 
 // resolvePrimitiveRegion is resolve_primitive_region in usvg
 // src/parser/filter.rs.
-//
-// TODO: rewrite/simplify/explain/whatever.
 func resolvePrimitiveRegion(
 	fe svgNode,
-	kind EId,
 	units units,
 	state *converterState,
 	bbox *NonZeroRect,
@@ -409,61 +399,36 @@ func resolvePrimitiveRegion(
 	y, hasY := fe.tryConvertLength(AIdY, units, state)
 	width, hasWidth := fe.tryConvertLength(AIdWidth, units, state)
 	height, hasHeight := fe.tryConvertLength(AIdHeight, units, state)
+
+	if units == unitsObjectBoundingBox {
+		if bbox == nil {
+			return NonZeroRect{}, false
+		}
+		if hasX {
+			x = float32(x*bbox.Width()) + bbox.X()
+		}
+		if hasY {
+			y = float32(y*bbox.Height()) + bbox.Y()
+		}
+		if hasWidth {
+			width *= bbox.Width()
+		}
+		if hasHeight {
+			height *= bbox.Height()
+		}
+	}
+
 	or := func(v float32, ok bool, def float32) float32 {
 		if ok {
 			return v
 		}
 		return def
 	}
-
-	var region NonZeroRect
-	switch kind {
-	case EIdFeFlood, EIdFeImage:
-		// `feImage` uses the object bbox.
-		if units == unitsObjectBoundingBox {
-			if bbox == nil {
-				return NonZeroRect{}, false
-			}
-
-			// TODO: wrong
-			// let ts_bbox = tiny_skia::Rect::new(ts.e, ts.f, ts.a, ts.d).unwrap();
-
-			r, ok := path.NonZeroRectFromXYWH(
-				or(x, hasX, 0.0),
-				or(y, hasY, 0.0),
-				or(width, hasWidth, 1.0),
-				or(height, hasHeight, 1.0),
-			)
-			if !ok {
-				return NonZeroRect{}, false
-			}
-
-			return r.BBoxTransform(*bbox), true
-		}
-		region = filterRegion
-	default:
-		region = filterRegion
-	}
-
-	// TODO: Wrong! Does not account rotate and skew.
-	if units == unitsObjectBoundingBox {
-		subregionBBox, ok := path.NonZeroRectFromXYWH(
-			or(x, hasX, 0.0),
-			or(y, hasY, 0.0),
-			or(width, hasWidth, 1.0),
-			or(height, hasHeight, 1.0),
-		)
-		if !ok {
-			return NonZeroRect{}, false
-		}
-
-		return region.BBoxTransform(subregionBBox), true
-	}
 	return path.NonZeroRectFromXYWH(
-		or(x, hasX, region.X()),
-		or(y, hasY, region.Y()),
-		or(width, hasWidth, region.Width()),
-		or(height, hasHeight, region.Height()),
+		or(x, hasX, filterRegion.X()),
+		or(y, hasY, filterRegion.Y()),
+		or(width, hasWidth, filterRegion.Width()),
+		or(height, hasHeight, filterRegion.Height()),
 	)
 }
 

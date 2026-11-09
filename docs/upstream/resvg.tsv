@@ -1,5 +1,5 @@
 upstream	date	status	okage	note
-0a5a15b4285daed2711ecb8a4cea76ab9f141e09	2026-10-28	pending		Fix filter primitive subregions with `primitiveUnits=objectBoundingBox` (#1188). Port: usvg, tests
+0a5a15b4285daed2711ecb8a4cea76ab9f141e09	2026-10-28	ported		Fix filter primitive subregions with `primitiveUnits=objectBoundingBox` (#1188). Port: usvg, tests
 91455ee06d08ac2bfeab2b035ed2cfbfd0a68614	2026-10-28	pending		Fix spacing and seams in fractional-size SVG patterns (#1171). Port: resvg, tests
 88a0c592e656582fc932a50f74848fdc566cd94e	2026-10-29	pending		Make group bounding boxes optional (#1167). Port: usvg text, usvg, resvg, tests, c-api, not ported
 0c40ddc7eecdb1400a90d365043443a57eb76d38	2026-10-29	pending		Fix `feDisplacementMap` applying `scale` twice (#1157). Port: usvg, resvg, tests
