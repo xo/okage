@@ -6,6 +6,8 @@
 package svg
 
 import (
+	"strings"
+
 	"github.com/xo/okage"
 	"github.com/xo/okage/internal/roxmltree"
 	"github.com/xo/okage/internal/simplecss"
@@ -92,7 +94,8 @@ func parse(xml *roxmltree.Document, injectedStylesheet string, opt *options) (*d
 	// Add a root node.
 	doc.nodes = append(doc.nodes, nodeData{kind: nodeKind{kind: nodeKindRoot}})
 
-	styleSheet := resolveCSS(xml, injectedStylesheet, opt)
+	styleTexts := styleTexts(xml)
+	styleSheet := resolveCSS(styleTexts, injectedStylesheet, opt)
 
 	err := parseXMLNodeChildren(
 		xml.Root(),
@@ -699,11 +702,57 @@ func parseSvgUseElement(
 	)
 }
 
+// styleTexts is style_texts in usvg src/parser/svgtree/parse.rs. It returns
+// the child text content of each CSS `style` element.
+func styleTexts(xml *roxmltree.Document) []string {
+	var texts []string
+	for n := range xml.Descendants() {
+		if !n.HasTagName(roxmltree.ExpandedNameFromStr("style")) {
+			continue
+		}
+		if t, ok := n.Attribute(roxmltree.ExpandedNameFromStr("type")); ok && t != "" && !eqIgnoreASCIICase(t, "text/css") {
+			continue
+		}
+		var b strings.Builder
+		for c := range n.Children() {
+			if !c.IsText() {
+				continue
+			}
+			if text, ok := c.Text(); ok {
+				b.WriteString(text)
+			}
+		}
+		texts = append(texts, b.String())
+	}
+	return texts
+}
+
+// eqIgnoreASCIICase is str::eq_ignore_ascii_case of Rust. Unlike
+// strings.EqualFold, it folds only ASCII letters.
+func eqIgnoreASCIICase(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range len(a) {
+		ca, cb := a[i], b[i]
+		if 'A' <= ca && ca <= 'Z' {
+			ca += 'a' - 'A'
+		}
+		if 'A' <= cb && cb <= 'Z' {
+			cb += 'a' - 'A'
+		}
+		if ca != cb {
+			return false
+		}
+	}
+	return true
+}
+
 // resolveCSS is resolve_css in usvg src/parser/svgtree/parse.rs.
 //
 // Port: the empty string is a style sheet of None. opt gives the logger of
 // simplecss (D20).
-func resolveCSS(xml *roxmltree.Document, styleSheet string, opt *options) simplecss.StyleSheet {
+func resolveCSS(styleTexts []string, styleSheet string, opt *options) simplecss.StyleSheet {
 	sheet := simplecss.NewStyleSheet()
 	var cssOpts []simplecss.Option
 	if opt != nil && opt.logger != nil {
@@ -716,19 +765,7 @@ func resolveCSS(xml *roxmltree.Document, styleSheet string, opt *options) simple
 		sheet.ParseMore(styleSheet, cssOpts...)
 	}
 
-	for node := range xml.Descendants() {
-		if !node.HasTagName(roxmltree.ExpandedNameFromStr("style")) {
-			continue
-		}
-		if typ, ok := node.Attribute(roxmltree.ExpandedNameFromStr("type")); ok && typ != "text/css" {
-			continue
-		}
-
-		text, ok := node.Text()
-		if !ok {
-			continue
-		}
-
+	for _, text := range styleTexts {
 		sheet.ParseMore(text, cssOpts...)
 	}
 
