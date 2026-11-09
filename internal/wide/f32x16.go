@@ -1,7 +1,5 @@
 package wide
 
-import "math"
-
 // This file ports tiny-skia src/wide/f32x16_t.rs. It has no SIMD code in
 // upstream: an f32x16 is two f32x8, and most methods call the method of f32x8
 // on each half.
@@ -31,7 +29,7 @@ func absF32x16(v F32x16) F32x16 {
 	var r F32x16
 	for h := range r {
 		for i := range r[h] {
-			r[h][i] = math.Float32frombits(math.Float32bits(v[h][i]) & 0x7fffffff)
+			r[h][i] = LaneAbs(v[h][i])
 		}
 	}
 	return r
@@ -69,9 +67,29 @@ func normalizeF32x16(v F32x16) F32x16 {
 // differs from F32x8.Floor: NaN, an infinity and a magnitude of 2^23 or more
 // do not change.
 func floorF32x16(v F32x16) F32x16 {
+	var r F32x16
+	for h := range r {
+		for i := range r[h] {
+			r[h][i] = LaneFloor16(v[h][i])
+		}
+	}
+	return r
+}
+
+// LaneFloor16 is one lane of F32x16.Floor. It rounds x with roundLaneF32 and
+// subtracts 1 if that is above x, or 0 if not. A stage that works on one lane
+// at a time calls it in place of F32x16.Floor (D33).
+func LaneFloor16(x float32) float32 {
 	// Yes, Skia does it in the same way.
-	roundtrip := roundF32x16(v)
-	return subF32x16(roundtrip, blendF32x16(cmpGtF32x16(roundtrip, v), SplatF32x16(1.0), SplatF32x16(0.0)))
+	//
+	// Port: upstream subtracts a blend of 1 and 0. The subtraction of 0 stays,
+	// because it makes a signaling NaN quiet, as the vector code does.
+	roundtrip := roundLaneF32(x)
+	var one float32
+	if roundtrip > x {
+		one = 1.0
+	}
+	return roundtrip - one
 }
 
 // sqrtF32x16 is the scalar code of F32x16.Sqrt.

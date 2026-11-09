@@ -47,8 +47,9 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D25 | [okage builds with TinyGo](D025-okage-builds-with-tinygo.md) | Decided |
 | D26 | [The math functions are correctly rounded](D026-the-math-functions-are-correctly-rounded.md) | Proposed |
 | D27 | [A Rust enum with data becomes a struct or an interface](D027-a-rust-enum-with-data-becomes-a-struct-or-an-interface.md) | Proposed |
-| D28 | [The vector types are arrays in both builds](D028-the-vector-types-are-arrays-in-both-builds.md) | Proposed, amends D15 |
+| D28 | [The vector types are arrays in both builds](D028-the-vector-types-are-arrays-in-both-builds.md) | Proposed, amends D15, amended by D33 |
 | D29 | [The filter types of `svg` take the suffix `Filter`](D029-the-filter-types-of-svg-take-the-suffix-filter.md) | Decided |
 | D30 | [An arc makes at most 4,096 curves](D030-an-arc-makes-at-most-4096-curves.md) | Decided |
 | D31 | [Images are compared with the pixel metric of resvg](D031-images-are-compared-with-the-pixel-metric-of-resvg.md) | Proposed |
 | D32 | [`svg` walks the paint graph of COLRv1](D032-svg-walks-the-paint-graph-of-colrv1.md) | Decided, amends D9 |
+| D33 | [A hot stage computes its lanes in one loop](D033-a-hot-stage-computes-its-lanes-in-one-loop.md) | Proposed, amends D28 |

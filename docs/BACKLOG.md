@@ -83,17 +83,23 @@ differences stay:
 
 ### Close the gap to the speed target
 
-From D18 and D28. okage is about 10 to 20 times slower than the scalar code of
-upstream. Measure and try, in this order, keeping the bytes of every test:
+From D18, D28 and D33. D33 wrote the hot stages of lowp and highp as one loop
+on the lanes, and okage is now about 1.2 to 3 times slower than the scalar
+code of upstream on the benchmarks of D18 (see D33). The target of D18 is
+the SIMD build within twice the time of upstream with AVX2, which is still
+about 4 to 6 times away. Measure and try, in this order, keeping the bytes of
+every test:
 
 1. The forms of D17 that are not measured: one loop with a `switch` on the
-   stage, and the color channels in local variables.
-2. Methods of the vector types that the compiler does not inline, and bounds
-   checks in the stages (`go build -gcflags='-m -d=ssa/check_bce'`).
+   stage, and the color channels in local variables. The call of each stage
+   through a function value is now a large part of a fill.
+2. Lane functions that are just over the budget of the inliner, the calls of
+   `blendFn` through a function value, and bounds checks in the stages
+   (`go build -gcflags='-m -d=ssa/check_bce'`).
 3. A copy of the stages that keeps its values in `archsimd` registers through
    a run of stages, written by a tool, for the SIMD build (D17, D28).
-4. Rounding and the like in other vector methods, as done for `Round` and
-   `Floor`, each with a test on all 2^32 values of a lane.
+4. The stages of sRGB and `Powf`, which D33 did not change, because no
+   benchmark covers them.
 
 ### Measure the cost of GOEXPERIMENT=simd in each release of Go
 

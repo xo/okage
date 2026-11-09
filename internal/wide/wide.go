@@ -37,6 +37,20 @@ func fasterMax(v, rhs float32) float32 {
 	return v
 }
 
+// LaneMin is one lane of the Min method of F32x4, F32x8 and F32x16:
+// fasterMin of v and rhs. A stage that works on one lane at a time calls it
+// in place of Min (D33).
+func LaneMin(v, rhs float32) float32 {
+	return fasterMin(v, rhs)
+}
+
+// LaneMax is one lane of the Max method of F32x4, F32x8 and F32x16:
+// fasterMax of v and rhs. A stage that works on one lane at a time calls it
+// in place of Max (D33).
+func LaneMax(v, rhs float32) float32 {
+	return fasterMax(v, rhs)
+}
+
 // maskBits is the bits of a lane that is true in a mask: all bits are 1. The
 // lane of a false mask has all bits 0.
 const maskBits = 0xFFFFFFFF

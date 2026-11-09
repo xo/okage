@@ -111,3 +111,53 @@ func TestFloorExhaustive(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+// TestRoundIntExhaustive checks that LaneRoundInt gives TruncI32 of
+// roundLaneF32, the code of RoundInt before its fast path, for each of the
+// 2^32 values of a lane. It runs with -wide.exhaustive.
+func TestRoundIntExhaustive(t *testing.T) {
+	if !*exhaustive {
+		t.Skip("run with -wide.exhaustive")
+	}
+	exhaustiveLanes(t, "RoundInt", func(x float32) (uint32, uint32) {
+		return uint32(LaneRoundInt(x)), uint32(TruncI32(roundLaneF32(x)))
+	})
+}
+
+// TestFloor16Exhaustive checks that LaneFloor16 gives the bits of the vector
+// code of f32x16::floor for each of the 2^32 values of a lane. It runs with
+// -wide.exhaustive.
+func TestFloor16Exhaustive(t *testing.T) {
+	if !*exhaustive {
+		t.Skip("run with -wide.exhaustive")
+	}
+	exhaustiveLanes(t, "Floor16", func(x float32) (uint32, uint32) {
+		v := SplatF32x8(x)
+		roundtrip := roundF32x8(v)
+		want := subF32x8(roundtrip, blendF32x8(cmpGtF32x8(roundtrip, v), SplatF32x8(1.0), SplatF32x8(0.0)))
+		return math.Float32bits(LaneFloor16(x)), math.Float32bits(want[0])
+	})
+}
+
+// exhaustiveLanes calls f on each of the 2^32 values of a lane, on all the
+// cores, and reports each value where f gives two different results.
+func exhaustiveLanes(t *testing.T, name string, f func(x float32) (got, want uint32)) {
+	t.Helper()
+	var bad atomic.Int64
+	var wg sync.WaitGroup
+	n := runtime.NumCPU()
+	step := uint64(1<<32) / uint64(n)
+	for w := range n {
+		wg.Add(1)
+		go func(lo, hi uint64) {
+			defer wg.Done()
+			for i := lo; i < hi; i++ {
+				x := math.Float32frombits(uint32(i))
+				if got, want := f(x); got != want && bad.Add(1) < 5 {
+					t.Errorf("%s of the bits %08x gives %08x, want %08x", name, uint32(i), got, want)
+				}
+			}
+		}(uint64(w)*step, uint64(w+1)*step)
+	}
+	wg.Wait()
+}

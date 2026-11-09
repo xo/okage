@@ -742,10 +742,13 @@ Each of these was measured on 2026-11-09:
 
 An open question stays here until the maintainers answer it. Then it becomes
 a decision in [`decisions/`](decisions/README.md), and it is deleted from this
-list. The numbers do not repeat. The next question is question 18.
+list. The numbers do not repeat. The next question is question 19.
 
 The maintainers answered questions 1 to 15 and 17 on 2026-11-09, and the
 decisions record the answers. Question 16, how two images are compared
 within a tolerance, has the proposed answer D31.
 
-No question is open.
+18. Can a hot stage of the pipeline compute its lanes in one loop, in place
+    of the methods of the vector types, when the loop gives the same bits?
+    D28 says that a stage indexes a lane only where upstream does. The
+    proposed answer is D33, which the port of lowp already follows.

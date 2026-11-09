@@ -60,13 +60,30 @@ func floorLaneF32(x float32) float32 {
 	return r
 }
 
+// LaneFloor is one lane of the Floor method of F32x4 and F32x8:
+// floorLaneF32 of x. A stage that works on one lane at a time calls it in
+// place of Floor (D33).
+func LaneFloor(x float32) float32 {
+	return floorLaneF32(x)
+}
+
 // absF32x4 is the scalar code of F32x4.Abs.
 //
 // Abs is f32x4::abs in tiny-skia src/wide/f32x4_t.rs. It clears the sign bit
 // of each lane.
 func absF32x4(v F32x4) F32x4 {
-	nonSignBits := SplatF32x4(math.Float32frombits(math.MaxInt32))
-	return andF32x4(v, nonSignBits)
+	var r F32x4
+	for i := range r {
+		r[i] = LaneAbs(v[i])
+	}
+	return r
+}
+
+// LaneAbs is one lane of the Abs method of F32x4, F32x8 and F32x16. It
+// clears the sign bit of x. A stage that works on one lane at a time calls it
+// in place of Abs (D33).
+func LaneAbs(x float32) float32 {
+	return math.Float32frombits(math.Float32bits(x) & math.MaxInt32)
 }
 
 // maxF32x4 is the scalar code of F32x4.Max.
@@ -226,6 +243,35 @@ func roundLaneF32(x float32) float32 {
 	return r
 }
 
+// LaneRound is one lane of the Round method of F32x4 and F32x8:
+// roundLaneF32 of x. A stage that works on one lane at a time calls it in
+// place of Round (D33).
+func LaneRound(x float32) float32 {
+	return roundLaneF32(x)
+}
+
+// LaneRoundInt is one lane of the RoundInt method of F32x4 and F32x8: x
+// rounded with LaneRound and then converted with TruncI32. A stage that works
+// on one lane at a time calls it in place of RoundInt (D33).
+func LaneRoundInt(x float32) int32 {
+	// Port: a value in the range of i32 rounds half to even with
+	// math.RoundToEven, which the Go compiler makes one instruction. It gives
+	// the integer of roundLaneF32, because that rounds the magnitude half to
+	// even and keeps the sign. TestRoundIntExhaustive checks each of the 2^32
+	// values. NaN and a value out of range take the slow path.
+	if x > -2147483648 && x < 2147483648 {
+		return int32(int64(math.RoundToEven(float64(x))))
+	}
+	return laneRoundIntSlow(x)
+}
+
+// laneRoundIntSlow is the path of LaneRoundInt for NaN and for a value out of
+// the range of i32. It is a function of its own, so that the Go compiler can
+// inline LaneRoundInt.
+func laneRoundIntSlow(x float32) int32 {
+	return TruncI32(roundLaneF32(x))
+}
+
 // roundIntF32x4 is the scalar code of F32x4.RoundInt.
 //
 // RoundInt is f32x4::round_int in tiny-skia src/wide/f32x4_t.rs. It rounds
@@ -235,7 +281,11 @@ func roundLaneF32(x float32) float32 {
 // These technically don't have the same semantics for NaN and out of range
 // values, but it doesn't seem to matter as Skia does it the same way.
 func roundIntF32x4(v F32x4) I32x4 {
-	return truncIntF32x4(roundF32x4(v))
+	var r I32x4
+	for i := range r {
+		r[i] = LaneRoundInt(v[i])
+	}
+	return r
 }
 
 // truncIntF32x4 is the scalar code of F32x4.TruncInt.
@@ -297,6 +347,13 @@ func sqrtF32x4(v F32x4) F32x4 {
 // to float32 is the correctly rounded square root of the float32.
 func sqrt32(x float32) float32 {
 	return float32(math.Sqrt(float64(x)))
+}
+
+// LaneSqrt is one lane of the Sqrt method of F32x4, F32x8 and F32x16:
+// sqrt32 of x. A stage that works on one lane at a time calls it in place of
+// Sqrt (D33).
+func LaneSqrt(x float32) float32 {
+	return sqrt32(x)
 }
 
 // toU32x4Bitcast gives the bits of each lane. It is bytemuck::cast from

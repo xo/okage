@@ -1,6 +1,6 @@
 # D28. The vector types are arrays in both builds
 
-Status: Proposed, amends D15.
+Status: Proposed, amends D15, amended by D33.
 
 D15 says that an `F32x8` of the SIMD build is one `archsimd.Float32x8` on
 amd64, and that the pipeline never indexes a lane. The port of tiny-skia

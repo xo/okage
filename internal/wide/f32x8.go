@@ -179,8 +179,11 @@ func blendF32x8(v, t, f F32x8) F32x8 {
 // Abs is f32x8::abs in tiny-skia src/wide/f32x8_t.rs. It clears the sign bit
 // of each lane.
 func absF32x8(v F32x8) F32x8 {
-	nonSignBits := SplatF32x8(math.Float32frombits(math.MaxInt32))
-	return andF32x8(v, nonSignBits)
+	var r F32x8
+	for i := range r {
+		r[i] = LaneAbs(v[i])
+	}
+	return r
 }
 
 // maxF32x8 is the scalar code of F32x8.Max.

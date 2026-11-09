@@ -237,9 +237,12 @@ func (p *lowpPipeline) moveDestinationToSource() {
 
 // premultiply is premultiply in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) premultiply() {
-	p.r = div255(p.r.Mul(p.a))
-	p.g = div255(p.g.Mul(p.a))
-	p.b = div255(p.b.Mul(p.a))
+	for i := range lowpStageWidth {
+		a := p.a[i]
+		p.r[i] = div255l(p.r[i] * a)
+		p.g[i] = div255l(p.g[i] * a)
+		p.b[i] = div255l(p.b[i] * a)
+	}
 
 	p.nextStage()
 }
@@ -389,10 +392,13 @@ func (p *lowpPipeline) maskU8() {
 		return
 	}
 
-	p.r = div255(p.r.Mul(c))
-	p.g = div255(p.g.Mul(c))
-	p.b = div255(p.b.Mul(c))
-	p.a = div255(p.a.Mul(c))
+	// Port (D33): one loop on the lanes.
+	for i := range lowpStageWidth {
+		p.r[i] = div255l(p.r[i] * c[i])
+		p.g[i] = div255l(p.g[i] * c[i])
+		p.b[i] = div255l(p.b[i] * c[i])
+		p.a[i] = div255l(p.a[i] * c[i])
+	}
 
 	p.nextStage()
 }
@@ -401,29 +407,15 @@ func (p *lowpPipeline) maskU8() {
 func (p *lowpPipeline) scaleU8() {
 	// Load u8xTail and cast it to u16x16.
 	data := p.aaMaskCtx.copyAtXY(p.dx, p.dy, p.tail)
-	c := wide.U16x16{
-		uint16(data[0]),
-		uint16(data[1]),
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-	}
+	c := wide.U16x16{uint16(data[0]), uint16(data[1])}
 
-	p.r = div255(p.r.Mul(c))
-	p.g = div255(p.g.Mul(c))
-	p.b = div255(p.b.Mul(c))
-	p.a = div255(p.a.Mul(c))
+	// Port (D33): one loop on the lanes.
+	for i := range lowpStageWidth {
+		p.r[i] = div255l(p.r[i] * c[i])
+		p.g[i] = div255l(p.g[i] * c[i])
+		p.b[i] = div255l(p.b[i] * c[i])
+		p.a[i] = div255l(p.a[i] * c[i])
+	}
 
 	p.nextStage()
 }
@@ -432,51 +424,45 @@ func (p *lowpPipeline) scaleU8() {
 func (p *lowpPipeline) lerpU8() {
 	// Load u8xTail and cast it to u16x16.
 	data := p.aaMaskCtx.copyAtXY(p.dx, p.dy, p.tail)
-	c := wide.U16x16{
-		uint16(data[0]),
-		uint16(data[1]),
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-	}
+	c := wide.U16x16{uint16(data[0]), uint16(data[1])}
 
-	p.r = lerpLowp(p.dr, p.r, c)
-	p.g = lerpLowp(p.dg, p.g, c)
-	p.b = lerpLowp(p.db, p.b, c)
-	p.a = lerpLowp(p.da, p.a, c)
+	// Port (D33): one loop on the lanes.
+	for i := range lowpStageWidth {
+		p.r[i] = lerpl(p.dr[i], p.r[i], c[i])
+		p.g[i] = lerpl(p.dg[i], p.g[i], c[i])
+		p.b[i] = lerpl(p.db[i], p.b[i], c[i])
+		p.a[i] = lerpl(p.da[i], p.a[i], c[i])
+	}
 
 	p.nextStage()
 }
 
 // scale1Float is scale_1_float in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) scale1Float() {
-	c := fromFloat(p.ctx.currentCoverage)
-	p.r = div255(p.r.Mul(c))
-	p.g = div255(p.g.Mul(c))
-	p.b = div255(p.b.Mul(c))
-	p.a = div255(p.a.Mul(c))
+	c := fromFloat(p.ctx.currentCoverage)[0]
+
+	// Port (D33): one loop on the lanes. Each lane of from_float is the same.
+	for i := range lowpStageWidth {
+		p.r[i] = div255l(p.r[i] * c)
+		p.g[i] = div255l(p.g[i] * c)
+		p.b[i] = div255l(p.b[i] * c)
+		p.a[i] = div255l(p.a[i] * c)
+	}
 
 	p.nextStage()
 }
 
 // lerp1Float is lerp_1_float in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) lerp1Float() {
-	c := fromFloat(p.ctx.currentCoverage)
-	p.r = lerpLowp(p.dr, p.r, c)
-	p.g = lerpLowp(p.dg, p.g, c)
-	p.b = lerpLowp(p.db, p.b, c)
-	p.a = lerpLowp(p.da, p.a, c)
+	c := fromFloat(p.ctx.currentCoverage)[0]
+
+	// Port (D33): one loop on the lanes. Each lane of from_float is the same.
+	for i := range lowpStageWidth {
+		p.r[i] = lerpl(p.dr[i], p.r[i], c)
+		p.g[i] = lerpl(p.dg[i], p.g[i], c)
+		p.b[i] = lerpl(p.db[i], p.b[i], c)
+		p.a[i] = lerpl(p.da[i], p.a[i], c)
+	}
 
 	p.nextStage()
 }
@@ -501,10 +487,16 @@ func (p *lowpPipeline) clear() {
 // sourceAtop is the stage source_atop of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) sourceAtop() {
-	p.r = div255(p.r.Mul(p.da).Add(p.dr.Mul(invLowp(p.a))))
-	p.g = div255(p.g.Mul(p.da).Add(p.dg.Mul(invLowp(p.a))))
-	p.b = div255(p.b.Mul(p.da).Add(p.db.Mul(invLowp(p.a))))
-	p.a = div255(p.a.Mul(p.da).Add(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * da + d * inv(sa)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i]*da + p.dr[i]*invl(sa))
+		p.g[i] = div255l(p.g[i]*da + p.dg[i]*invl(sa))
+		p.b[i] = div255l(p.b[i]*da + p.db[i]*invl(sa))
+		p.a[i] = div255l(sa*da + da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -512,10 +504,16 @@ func (p *lowpPipeline) sourceAtop() {
 // destinationAtop is the stage destination_atop of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) destinationAtop() {
-	p.r = div255(p.dr.Mul(p.a).Add(p.r.Mul(invLowp(p.da))))
-	p.g = div255(p.dg.Mul(p.a).Add(p.g.Mul(invLowp(p.da))))
-	p.b = div255(p.db.Mul(p.a).Add(p.b.Mul(invLowp(p.da))))
-	p.a = div255(p.da.Mul(p.a).Add(p.a.Mul(invLowp(p.da))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(d * sa + s * inv(da)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.dr[i]*sa + p.r[i]*invl(da))
+		p.g[i] = div255l(p.dg[i]*sa + p.g[i]*invl(da))
+		p.b[i] = div255l(p.db[i]*sa + p.b[i]*invl(da))
+		p.a[i] = div255l(da*sa + sa*invl(da))
+	}
 
 	p.nextStage()
 }
@@ -523,10 +521,16 @@ func (p *lowpPipeline) destinationAtop() {
 // sourceIn is the stage source_in of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) sourceIn() {
-	p.r = div255(p.r.Mul(p.da))
-	p.g = div255(p.g.Mul(p.da))
-	p.b = div255(p.b.Mul(p.da))
-	p.a = div255(p.a.Mul(p.da))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * da).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i] * da)
+		p.g[i] = div255l(p.g[i] * da)
+		p.b[i] = div255l(p.b[i] * da)
+		p.a[i] = div255l(sa * da)
+	}
 
 	p.nextStage()
 }
@@ -534,10 +538,16 @@ func (p *lowpPipeline) sourceIn() {
 // destinationIn is the stage destination_in of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) destinationIn() {
-	p.r = div255(p.dr.Mul(p.a))
-	p.g = div255(p.dg.Mul(p.a))
-	p.b = div255(p.db.Mul(p.a))
-	p.a = div255(p.da.Mul(p.a))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(d * sa).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.dr[i] * sa)
+		p.g[i] = div255l(p.dg[i] * sa)
+		p.b[i] = div255l(p.db[i] * sa)
+		p.a[i] = div255l(da * sa)
+	}
 
 	p.nextStage()
 }
@@ -545,10 +555,16 @@ func (p *lowpPipeline) destinationIn() {
 // sourceOut is the stage source_out of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) sourceOut() {
-	p.r = div255(p.r.Mul(invLowp(p.da)))
-	p.g = div255(p.g.Mul(invLowp(p.da)))
-	p.b = div255(p.b.Mul(invLowp(p.da)))
-	p.a = div255(p.a.Mul(invLowp(p.da)))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * inv(da)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i] * invl(da))
+		p.g[i] = div255l(p.g[i] * invl(da))
+		p.b[i] = div255l(p.b[i] * invl(da))
+		p.a[i] = div255l(sa * invl(da))
+	}
 
 	p.nextStage()
 }
@@ -556,10 +572,16 @@ func (p *lowpPipeline) sourceOut() {
 // destinationOut is the stage destination_out of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) destinationOut() {
-	p.r = div255(p.dr.Mul(invLowp(p.a)))
-	p.g = div255(p.dg.Mul(invLowp(p.a)))
-	p.b = div255(p.db.Mul(invLowp(p.a)))
-	p.a = div255(p.da.Mul(invLowp(p.a)))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(d * inv(sa)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.dr[i] * invl(sa))
+		p.g[i] = div255l(p.dg[i] * invl(sa))
+		p.b[i] = div255l(p.db[i] * invl(sa))
+		p.a[i] = div255l(da * invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -567,10 +589,16 @@ func (p *lowpPipeline) destinationOut() {
 // sourceOver is the stage source_over of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) sourceOver() {
-	p.r = p.r.Add(div255(p.dr.Mul(invLowp(p.a))))
-	p.g = p.g.Add(div255(p.dg.Mul(invLowp(p.a))))
-	p.b = p.b.Add(div255(p.db.Mul(invLowp(p.a))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + div255(d * inv(sa)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += div255l(p.dr[i] * invl(sa))
+		p.g[i] += div255l(p.dg[i] * invl(sa))
+		p.b[i] += div255l(p.db[i] * invl(sa))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -578,10 +606,16 @@ func (p *lowpPipeline) sourceOver() {
 // destinationOver is the stage destination_over of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) destinationOver() {
-	p.r = p.dr.Add(div255(p.r.Mul(invLowp(p.da))))
-	p.g = p.dg.Add(div255(p.g.Mul(invLowp(p.da))))
-	p.b = p.db.Add(div255(p.b.Mul(invLowp(p.da))))
-	p.a = p.da.Add(div255(p.a.Mul(invLowp(p.da))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// d + div255(s * inv(da)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = p.dr[i] + div255l(p.r[i]*invl(da))
+		p.g[i] = p.dg[i] + div255l(p.g[i]*invl(da))
+		p.b[i] = p.db[i] + div255l(p.b[i]*invl(da))
+		p.a[i] = da + div255l(sa*invl(da))
+	}
 
 	p.nextStage()
 }
@@ -589,10 +623,16 @@ func (p *lowpPipeline) destinationOver() {
 // modulate is the stage modulate of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) modulate() {
-	p.r = div255(p.r.Mul(p.dr))
-	p.g = div255(p.g.Mul(p.dg))
-	p.b = div255(p.b.Mul(p.db))
-	p.a = div255(p.a.Mul(p.da))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * d).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i] * p.dr[i])
+		p.g[i] = div255l(p.g[i] * p.dg[i])
+		p.b[i] = div255l(p.b[i] * p.db[i])
+		p.a[i] = div255l(sa * da)
+	}
 
 	p.nextStage()
 }
@@ -600,40 +640,64 @@ func (p *lowpPipeline) modulate() {
 // multiply is the stage multiply of blend_fn! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) multiply() {
-	p.r = div255(p.r.Mul(invLowp(p.da)).Add(p.dr.Mul(invLowp(p.a))).Add(p.r.Mul(p.dr)))
-	p.g = div255(p.g.Mul(invLowp(p.da)).Add(p.dg.Mul(invLowp(p.a))).Add(p.g.Mul(p.dg)))
-	p.b = div255(p.b.Mul(invLowp(p.da)).Add(p.db.Mul(invLowp(p.a))).Add(p.b.Mul(p.db)))
-	p.a = div255(p.a.Mul(invLowp(p.da)).Add(p.da.Mul(invLowp(p.a))).Add(p.a.Mul(p.da)))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * inv(da) + d * inv(sa) + s * d).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i]*invl(da) + p.dr[i]*invl(sa) + p.r[i]*p.dr[i])
+		p.g[i] = div255l(p.g[i]*invl(da) + p.dg[i]*invl(sa) + p.g[i]*p.dg[i])
+		p.b[i] = div255l(p.b[i]*invl(da) + p.db[i]*invl(sa) + p.b[i]*p.db[i])
+		p.a[i] = div255l(sa*invl(da) + da*invl(sa) + sa*da)
+	}
 
 	p.nextStage()
 }
 
 // screen is the stage screen of blend_fn! in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) screen() {
-	p.r = p.r.Add(p.dr).Sub(div255(p.r.Mul(p.dr)))
-	p.g = p.g.Add(p.dg).Sub(div255(p.g.Mul(p.dg)))
-	p.b = p.b.Add(p.db).Sub(div255(p.b.Mul(p.db)))
-	p.a = p.a.Add(p.da).Sub(div255(p.a.Mul(p.da)))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + d - div255(s * d).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += p.dr[i] - div255l(p.r[i]*p.dr[i])
+		p.g[i] += p.dg[i] - div255l(p.g[i]*p.dg[i])
+		p.b[i] += p.db[i] - div255l(p.b[i]*p.db[i])
+		p.a[i] = sa + da - div255l(sa*da)
+	}
 
 	p.nextStage()
 }
 
 // xor is the stage xor of blend_fn! in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) xor() {
-	p.r = div255(p.r.Mul(invLowp(p.da)).Add(p.dr.Mul(invLowp(p.a))))
-	p.g = div255(p.g.Mul(invLowp(p.da)).Add(p.dg.Mul(invLowp(p.a))))
-	p.b = div255(p.b.Mul(invLowp(p.da)).Add(p.db.Mul(invLowp(p.a))))
-	p.a = div255(p.a.Mul(invLowp(p.da)).Add(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * inv(da) + d * inv(sa)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i]*invl(da) + p.dr[i]*invl(sa))
+		p.g[i] = div255l(p.g[i]*invl(da) + p.dg[i]*invl(sa))
+		p.b[i] = div255l(p.b[i]*invl(da) + p.db[i]*invl(sa))
+		p.a[i] = div255l(sa*invl(da) + da*invl(sa))
+	}
 
 	p.nextStage()
 }
 
 // plus is the stage plus of blend_fn! in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) plus() {
-	p.r = p.r.Add(p.dr).Min(wide.SplatU16x16(255))
-	p.g = p.g.Add(p.dg).Min(wide.SplatU16x16(255))
-	p.b = p.b.Add(p.db).Min(wide.SplatU16x16(255))
-	p.a = p.a.Add(p.da).Min(wide.SplatU16x16(255))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// (s + d).min(&u16x16::splat(255)).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = min(p.r[i]+p.dr[i], 255)
+		p.g[i] = min(p.g[i]+p.dg[i], 255)
+		p.b[i] = min(p.b[i]+p.db[i], 255)
+		p.a[i] = min(sa+da, 255)
+	}
 
 	p.nextStage()
 }
@@ -645,11 +709,16 @@ func (p *lowpPipeline) plus() {
 // darken is the stage darken of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) darken() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = p.r.Add(p.dr).Sub(div255(p.r.Mul(p.da).Max(p.dr.Mul(p.a))))
-	p.g = p.g.Add(p.dg).Sub(div255(p.g.Mul(p.da).Max(p.dg.Mul(p.a))))
-	p.b = p.b.Add(p.db).Sub(div255(p.b.Mul(p.da).Max(p.db.Mul(p.a))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + d - div255((s * da).max(&(d * sa))).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += p.dr[i] - div255l(max(p.r[i]*da, p.dr[i]*sa))
+		p.g[i] += p.dg[i] - div255l(max(p.g[i]*da, p.dg[i]*sa))
+		p.b[i] += p.db[i] - div255l(max(p.b[i]*da, p.db[i]*sa))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -657,11 +726,16 @@ func (p *lowpPipeline) darken() {
 // lighten is the stage lighten of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) lighten() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = p.r.Add(p.dr).Sub(div255(p.r.Mul(p.da).Min(p.dr.Mul(p.a))))
-	p.g = p.g.Add(p.dg).Sub(div255(p.g.Mul(p.da).Min(p.dg.Mul(p.a))))
-	p.b = p.b.Add(p.db).Sub(div255(p.b.Mul(p.da).Min(p.db.Mul(p.a))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + d - div255((s * da).min(&(d * sa))).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += p.dr[i] - div255l(min(p.r[i]*da, p.dr[i]*sa))
+		p.g[i] += p.dg[i] - div255l(min(p.g[i]*da, p.dg[i]*sa))
+		p.b[i] += p.db[i] - div255l(min(p.b[i]*da, p.db[i]*sa))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -669,11 +743,16 @@ func (p *lowpPipeline) lighten() {
 // exclusion is the stage exclusion of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) exclusion() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = p.r.Add(p.dr).Sub(wide.SplatU16x16(2).Mul(div255(p.r.Mul(p.dr))))
-	p.g = p.g.Add(p.dg).Sub(wide.SplatU16x16(2).Mul(div255(p.g.Mul(p.dg))))
-	p.b = p.b.Add(p.db).Sub(wide.SplatU16x16(2).Mul(div255(p.b.Mul(p.db))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + d - u16x16::splat(2) * div255(s * d).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += p.dr[i] - 2*div255l(p.r[i]*p.dr[i])
+		p.g[i] += p.dg[i] - 2*div255l(p.g[i]*p.dg[i])
+		p.b[i] += p.db[i] - 2*div255l(p.b[i]*p.db[i])
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -681,11 +760,16 @@ func (p *lowpPipeline) exclusion() {
 // difference is the stage difference of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) difference() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = p.r.Add(p.dr).Sub(wide.SplatU16x16(2).Mul(div255(p.r.Mul(p.da).Min(p.dr.Mul(p.a)))))
-	p.g = p.g.Add(p.dg).Sub(wide.SplatU16x16(2).Mul(div255(p.g.Mul(p.da).Min(p.dg.Mul(p.a)))))
-	p.b = p.b.Add(p.db).Sub(wide.SplatU16x16(2).Mul(div255(p.b.Mul(p.da).Min(p.db.Mul(p.a)))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// s + d - u16x16::splat(2) * div255((s * da).min(&(d * sa))).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] += p.dr[i] - 2*div255l(min(p.r[i]*da, p.dr[i]*sa))
+		p.g[i] += p.dg[i] - 2*div255l(min(p.g[i]*da, p.dg[i]*sa))
+		p.b[i] += p.db[i] - 2*div255l(min(p.b[i]*da, p.db[i]*sa))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -693,11 +777,16 @@ func (p *lowpPipeline) difference() {
 // hardLight is the stage hard_light of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) hardLight() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = div255(p.r.Mul(invLowp(p.da)).Add(p.dr.Mul(invLowp(p.a))).Add(p.r.Add(p.r).CmpLe(p.a).Blend(wide.SplatU16x16(2).Mul(p.r).Mul(p.dr), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.r)).Mul(p.da.Sub(p.dr))))))
-	p.g = div255(p.g.Mul(invLowp(p.da)).Add(p.dg.Mul(invLowp(p.a))).Add(p.g.Add(p.g).CmpLe(p.a).Blend(wide.SplatU16x16(2).Mul(p.g).Mul(p.dg), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.g)).Mul(p.da.Sub(p.dg))))))
-	p.b = div255(p.b.Mul(invLowp(p.da)).Add(p.db.Mul(invLowp(p.a))).Add(p.b.Add(p.b).CmpLe(p.a).Blend(wide.SplatU16x16(2).Mul(p.b).Mul(p.db), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.b)).Mul(p.da.Sub(p.db))))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * inv(da) + d * inv(sa) + (s + s).cmp_le(&sa).blend(two(s * d), sa * da - two((sa - s) * (da - d)))).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i]*invl(da) + p.dr[i]*invl(sa) + hardLightTerm(p.r[i], p.dr[i], sa, da, p.r[i]+p.r[i] <= sa))
+		p.g[i] = div255l(p.g[i]*invl(da) + p.dg[i]*invl(sa) + hardLightTerm(p.g[i], p.dg[i], sa, da, p.g[i]+p.g[i] <= sa))
+		p.b[i] = div255l(p.b[i]*invl(da) + p.db[i]*invl(sa) + hardLightTerm(p.b[i], p.db[i], sa, da, p.b[i]+p.b[i] <= sa))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -705,11 +794,16 @@ func (p *lowpPipeline) hardLight() {
 // overlay is the stage overlay of blend_fn2! in tiny-skia
 // src/pipeline/lowp.rs.
 func (p *lowpPipeline) overlay() {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = div255(p.r.Mul(invLowp(p.da)).Add(p.dr.Mul(invLowp(p.a))).Add(p.dr.Add(p.dr).CmpLe(p.da).Blend(wide.SplatU16x16(2).Mul(p.r).Mul(p.dr), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.r)).Mul(p.da.Sub(p.dr))))))
-	p.g = div255(p.g.Mul(invLowp(p.da)).Add(p.dg.Mul(invLowp(p.a))).Add(p.dg.Add(p.dg).CmpLe(p.da).Blend(wide.SplatU16x16(2).Mul(p.g).Mul(p.dg), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.g)).Mul(p.da.Sub(p.dg))))))
-	p.b = div255(p.b.Mul(invLowp(p.da)).Add(p.db.Mul(invLowp(p.a))).Add(p.db.Add(p.db).CmpLe(p.da).Blend(wide.SplatU16x16(2).Mul(p.b).Mul(p.db), p.a.Mul(p.da).Sub(wide.SplatU16x16(2).Mul(p.a.Sub(p.b)).Mul(p.da.Sub(p.db))))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, which gives the same bits as the
+	// methods of the vector types. The function of upstream is
+	// div255(s * inv(da) + d * inv(sa) + (d + d).cmp_le(&da).blend(two(s * d), sa * da - two((sa - s) * (da - d)))).
+	for i := range lowpStageWidth {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = div255l(p.r[i]*invl(da) + p.dr[i]*invl(sa) + hardLightTerm(p.r[i], p.dr[i], sa, da, p.dr[i]+p.dr[i] <= da))
+		p.g[i] = div255l(p.g[i]*invl(da) + p.dg[i]*invl(sa) + hardLightTerm(p.g[i], p.dg[i], sa, da, p.dg[i]+p.dg[i] <= da))
+		p.b[i] = div255l(p.b[i]*invl(da) + p.db[i]*invl(sa) + hardLightTerm(p.b[i], p.db[i], sa, da, p.db[i]+p.db[i] <= da))
+		p.a[i] = sa + div255l(da*invl(sa))
+	}
 
 	p.nextStage()
 }
@@ -718,10 +812,14 @@ func (p *lowpPipeline) overlay() {
 func (p *lowpPipeline) sourceOverRgba() {
 	pixels := p.pixmap.slice16AtXY(p.dx, p.dy)
 	load8888Lowp(pixels, &p.dr, &p.dg, &p.db, &p.da)
-	p.r = p.r.Add(div255(p.dr.Mul(invLowp(p.a))))
-	p.g = p.g.Add(div255(p.dg.Mul(invLowp(p.a))))
-	p.b = p.b.Add(div255(p.db.Mul(invLowp(p.a))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, as the stage source_over.
+	for i := range lowpStageWidth {
+		ia := invl(p.a[i])
+		p.r[i] += div255l(p.dr[i] * ia)
+		p.g[i] += div255l(p.dg[i] * ia)
+		p.b[i] += div255l(p.db[i] * ia)
+		p.a[i] += div255l(p.da[i] * ia)
+	}
 	store8888Lowp(&p.r, &p.g, &p.b, &p.a, pixels)
 
 	p.nextStage()
@@ -732,10 +830,14 @@ func (p *lowpPipeline) sourceOverRgba() {
 func (p *lowpPipeline) sourceOverRgbaTail() {
 	pixels := p.pixmap.sliceAtXY(p.dx, p.dy)
 	load8888TailLowp(p.tail, pixels, &p.dr, &p.dg, &p.db, &p.da)
-	p.r = p.r.Add(div255(p.dr.Mul(invLowp(p.a))))
-	p.g = p.g.Add(div255(p.dg.Mul(invLowp(p.a))))
-	p.b = p.b.Add(div255(p.db.Mul(invLowp(p.a))))
-	p.a = p.a.Add(div255(p.da.Mul(invLowp(p.a))))
+	// Port (D33): one loop on the lanes, as the stage source_over.
+	for i := range lowpStageWidth {
+		ia := invl(p.a[i])
+		p.r[i] += div255l(p.dr[i] * ia)
+		p.g[i] += div255l(p.dg[i] * ia)
+		p.b[i] += div255l(p.db[i] * ia)
+		p.a[i] += div255l(p.da[i] * ia)
+	}
 	store8888TailLowp(&p.r, &p.g, &p.b, &p.a, p.tail, pixels)
 
 	p.nextStage()
@@ -745,46 +847,73 @@ func (p *lowpPipeline) sourceOverRgbaTail() {
 func (p *lowpPipeline) transform() {
 	ts := &p.ctx.transform
 
-	x := join(&p.r, &p.g)
-	y := join(&p.b, &p.a)
-
-	nx := madLowp(x, wide.SplatF32x16(ts.SX), madLowp(y, wide.SplatF32x16(ts.KX), wide.SplatF32x16(ts.TX)))
-	ny := madLowp(x, wide.SplatF32x16(ts.KY), madLowp(y, wide.SplatF32x16(ts.SY), wide.SplatF32x16(ts.TY)))
-
-	split(&nx, &p.r, &p.g)
-	split(&ny, &p.b, &p.a)
+	// Port (D33): one loop on the lanes, with joinLane and splitLane for the
+	// floats in r, g and b, a. Upstream: nx = mad(x, sx, mad(y, kx, tx)) and
+	// ny = mad(x, ky, mad(y, sy, ty)).
+	xs := [2]*wide.U16x16{&p.r, &p.g}
+	ys := [2]*wide.U16x16{&p.b, &p.a}
+	for h := range xs {
+		xh, yh := xs[h], ys[h]
+		for i := range 8 {
+			x := joinLane(xh[2*i], xh[2*i+1])
+			y := joinLane(yh[2*i], yh[2*i+1])
+			nx := madLowp(x, ts.SX, madLowp(y, ts.KX, ts.TX))
+			ny := madLowp(x, ts.KY, madLowp(y, ts.SY, ts.TY))
+			xh[2*i], xh[2*i+1] = splitLane(nx)
+			yh[2*i], yh[2*i+1] = splitLane(ny)
+		}
+	}
 
 	p.nextStage()
 }
 
 // padX1 is pad_x1 in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) padX1() {
-	x := join(&p.r, &p.g)
-	x = x.Normalize()
-	split(&x, &p.r, &p.g)
+	// Port (D33): one loop on the lanes. Upstream: x.normalize().
+	xs := [2]*wide.U16x16{&p.r, &p.g}
+	for _, xh := range xs {
+		for i := range 8 {
+			x := joinLane(xh[2*i], xh[2*i+1])
+			x = wide.LaneMin(wide.LaneMax(x, 0), 1.0)
+			xh[2*i], xh[2*i+1] = splitLane(x)
+		}
+	}
 
 	p.nextStage()
 }
 
 // reflectX1 is reflect_x1 in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) reflectX1() {
-	x := join(&p.r, &p.g)
-	one := wide.SplatF32x16(1.0)
-	t := x.Sub(one).Mul(wide.SplatF32x16(0.5)).Floor()
-	x = x.Sub(one).
-		Sub(t.Add(t)). // two(t)
-		Sub(one).
-		Abs().Normalize()
-	split(&x, &p.r, &p.g)
+	// Port (D33): one loop on the lanes. Upstream: t = ((x - 1.0) *
+	// 0.5).floor(), then ((x - 1.0) - two(t) - 1.0).abs().normalize(). The
+	// floor of f32x16 rounds, see wide.LaneFloor16.
+	xs := [2]*wide.U16x16{&p.r, &p.g}
+	for _, xh := range xs {
+		for i := range 8 {
+			x := joinLane(xh[2*i], xh[2*i+1]) - 1.0
+			t := wide.LaneFloor16(float32(x * 0.5))
+			x = wide.LaneAbs(x - (t + t) - 1.0)
+			x = wide.LaneMin(wide.LaneMax(x, 0), 1.0)
+			xh[2*i], xh[2*i+1] = splitLane(x)
+		}
+	}
 
 	p.nextStage()
 }
 
 // repeatX1 is repeat_x1 in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) repeatX1() {
-	x := join(&p.r, &p.g)
-	x = x.Sub(x.Floor()).Normalize()
-	split(&x, &p.r, &p.g)
+	// Port (D33): one loop on the lanes. Upstream:
+	// (x - x.floor()).normalize().
+	xs := [2]*wide.U16x16{&p.r, &p.g}
+	for _, xh := range xs {
+		for i := range 8 {
+			x := joinLane(xh[2*i], xh[2*i+1])
+			x -= wide.LaneFloor16(x)
+			x = wide.LaneMin(wide.LaneMax(x, 0), 1.0)
+			xh[2*i], xh[2*i+1] = splitLane(x)
+		}
+	}
 
 	p.nextStage()
 }
@@ -836,25 +965,40 @@ func b2u16(b bool) uint16 {
 func (p *lowpPipeline) evenlySpaced2StopGradient() {
 	ctx := &p.ctx.evenlySpaced2StopGradient
 
+	// Port (D33): one loop on the lanes after join. Upstream:
+	// round_f32_to_u16 of mad(t, factor.r, bias.r), and the same for g, b
+	// and a.
 	t := join(&p.r, &p.g)
-	roundF32ToU16(
-		madLowp(t, wide.SplatF32x16(ctx.factor.r), wide.SplatF32x16(ctx.bias.r)),
-		madLowp(t, wide.SplatF32x16(ctx.factor.g), wide.SplatF32x16(ctx.bias.g)),
-		madLowp(t, wide.SplatF32x16(ctx.factor.b), wide.SplatF32x16(ctx.bias.b)),
-		madLowp(t, wide.SplatF32x16(ctx.factor.a), wide.SplatF32x16(ctx.bias.a)),
-		&p.r, &p.g, &p.b, &p.a,
-	)
+	f := ctx.factor
+	c := ctx.bias
+	for i := range lowpStageWidth {
+		ti := t[i/8][i%8]
+		p.r[i], p.g[i], p.b[i], p.a[i] = roundF32ToU16(
+			madLowp(ti, f.r, c.r),
+			madLowp(ti, f.g, c.g),
+			madLowp(ti, f.b, c.b),
+			madLowp(ti, f.a, c.a),
+		)
+	}
 
 	p.nextStage()
 }
 
 // xyToRadius is xy_to_radius in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) xyToRadius() {
-	x := join(&p.r, &p.g)
-	y := join(&p.b, &p.a)
-	x = x.Mul(x).Add(y.Mul(y)).Sqrt()
-	split(&x, &p.r, &p.g)
-	split(&y, &p.b, &p.a)
+	// Port (D33): one loop on the lanes. Upstream: (x * x + y * y).sqrt().
+	// y does not change, so the loop does not write b and a.
+	xs := [2]*wide.U16x16{&p.r, &p.g}
+	ys := [2]*wide.U16x16{&p.b, &p.a}
+	for h := range xs {
+		xh, yh := xs[h], ys[h]
+		for i := range 8 {
+			x := joinLane(xh[2*i], xh[2*i+1])
+			y := joinLane(yh[2*i], yh[2*i+1])
+			x = wide.LaneSqrt(float32(x*x) + float32(y*y))
+			xh[2*i], xh[2*i+1] = splitLane(x)
+		}
+	}
 
 	p.nextStage()
 }
@@ -872,50 +1016,38 @@ func gradientLookupLowp(
 	//
 	// Port: the macro gather! of upstream reads one field for each lane. Go
 	// reads all the fields of a lane at once, which gives the same values.
-	var fr, fg, fb, fa, br, bg, bb, ba wide.F32x16
+	//
+	// Port (D33): one loop on the lanes, which also computes
+	// round_f32_to_u16 of mad(t, f, b) for each channel.
 	for i := range lowpStageWidth {
 		f := &ctx.factors[idx[i]]
-		fr[i/8][i%8] = f.r
-		fg[i/8][i%8] = f.g
-		fb[i/8][i%8] = f.b
-		fa[i/8][i%8] = f.a
-	}
-	for i := range lowpStageWidth {
 		c := &ctx.biases[idx[i]]
-		br[i/8][i%8] = c.r
-		bg[i/8][i%8] = c.g
-		bb[i/8][i%8] = c.b
-		ba[i/8][i%8] = c.a
+		ti := t[i/8][i%8]
+		r[i], g[i], b[i], a[i] = roundF32ToU16(
+			madLowp(ti, f.r, c.r),
+			madLowp(ti, f.g, c.g),
+			madLowp(ti, f.b, c.b),
+			madLowp(ti, f.a, c.a),
+		)
 	}
-
-	roundF32ToU16(
-		madLowp(t, fr, br),
-		madLowp(t, fg, bg),
-		madLowp(t, fb, bb),
-		madLowp(t, fa, ba),
-		r, g, b, a,
-	)
 }
 
 // roundF32ToU16 is round_f32_to_u16 in tiny-skia src/pipeline/lowp.rs.
-func roundF32ToU16(
-	rf, gf, bf, af wide.F32x16,
-	r, g, b, a *wide.U16x16,
-) {
+//
+// Port (D33): it works on one lane, because only loops on the lanes call it.
+// Upstream changes r, g, b and a in place. Go returns them.
+func roundF32ToU16(rf, gf, bf, af float32) (r, g, b, a uint16) {
 	// TODO: can produce a slightly different result to Skia
 	//       affects the two_stops_linear_mirror test
 
-	c255 := wide.SplatF32x16(255.0)
-	half := wide.SplatF32x16(0.5)
-	rf = rf.Normalize().Mul(c255).Add(half)
-	gf = gf.Normalize().Mul(c255).Add(half)
-	bf = bf.Normalize().Mul(c255).Add(half)
-	af = af.Mul(c255).Add(half)
+	// Upstream: rf.normalize() * 255.0 + 0.5, the same for gf and bf, and
+	// af * 255.0 + 0.5, each saved with save_to_u16x16.
+	rf = float32(wide.LaneMin(wide.LaneMax(rf, 0), 1.0)*255.0) + 0.5
+	gf = float32(wide.LaneMin(wide.LaneMax(gf, 0), 1.0)*255.0) + 0.5
+	bf = float32(wide.LaneMin(wide.LaneMax(bf, 0), 1.0)*255.0) + 0.5
+	af = float32(af*255.0) + 0.5
 
-	rf.SaveToU16x16(r)
-	gf.SaveToU16x16(g)
-	bf.SaveToU16x16(b)
-	af.SaveToU16x16(a)
+	return wide.TruncU16(rf), wide.TruncU16(gf), wide.TruncU16(bf), wide.TruncU16(af)
 }
 
 // justReturn is just_return in tiny-skia src/pipeline/lowp.rs.
@@ -1005,16 +1137,44 @@ func load8(data *[lowpStageWidth]uint8, a *wide.U16x16) {
 }
 
 // div255 is div255 in tiny-skia src/pipeline/lowp.rs.
+//
+// Port (D33): one loop on the lanes, with div255l for each lane, gives the
+// same bits as (v + 255) >> 8 with the methods of the vector types.
 func div255(v wide.U16x16) wide.U16x16 {
 	// Skia uses `vrshrq_n_u16(vrsraq_n_u16(v, v, 8), 8)` here when NEON is available,
 	// but it does not affect performance much and breaks reproducible result. Ignore it.
 	// NOTE: the compiler does not replace the division with a shift.
-	return v.Add(wide.SplatU16x16(255)).Shr(wide.SplatU16x16(8)) // / u16x16::splat(256)
+	var r wide.U16x16
+	for i := range r {
+		r[i] = div255l(v[i])
+	}
+	return r
+}
+
+// div255l is one lane of div255: (v + 255) / 256, with the sum wrapped to
+// 16 bits as u16 wraps in Rust.
+func div255l(v uint16) uint16 {
+	return (v + 255) >> 8
 }
 
 // invLowp is inv in tiny-skia src/pipeline/lowp.rs.
 func invLowp(v wide.U16x16) wide.U16x16 {
 	return wide.SplatU16x16(255).Sub(v)
+}
+
+// invl is one lane of invLowp.
+func invl(v uint16) uint16 {
+	return 255 - v
+}
+
+// hardLightTerm is one lane of the blend of the stages hard_light and overlay
+// in tiny-skia src/pipeline/lowp.rs: two(s * d) where le holds, and
+// sa * da - two((sa - s) * (da - d)) elsewhere, with u16 wrapped.
+func hardLightTerm(s, d, sa, da uint16, le bool) uint16 {
+	if le {
+		return 2 * s * d
+	}
+	return sa*da - 2*(sa-s)*(da-d)
 }
 
 // fromFloat is from_float in tiny-skia src/pipeline/lowp.rs.
@@ -1023,8 +1183,19 @@ func fromFloat(f float32) wide.U16x16 {
 }
 
 // lerpLowp is lerp in tiny-skia src/pipeline/lowp.rs.
+//
+// Port (D33): one loop on the lanes, with lerpl for each lane.
 func lerpLowp(from, to, t wide.U16x16) wide.U16x16 {
-	return div255(from.Mul(invLowp(t)).Add(to.Mul(t)))
+	var r wide.U16x16
+	for i := range r {
+		r[i] = lerpl(from[i], to[i], t[i])
+	}
+	return r
+}
+
+// lerpl is one lane of lerpLowp: div255(from * inv(t) + to * t).
+func lerpl(from, to, t uint16) uint16 {
+	return div255l(from*invl(t) + to*t)
 }
 
 // split is split in tiny-skia src/pipeline/lowp.rs.
@@ -1046,6 +1217,13 @@ func split(v *wide.F32x16, lo, hi *wide.U16x16) {
 	}
 }
 
+// splitLane is split on one lane (D33). It gives the low and the high half
+// of the bits of v.
+func splitLane(v float32) (uint16, uint16) {
+	bits := math.Float32bits(v)
+	return uint16(bits), uint16(bits >> 16)
+}
+
 // join is join in tiny-skia src/pipeline/lowp.rs.
 //
 // Port: see split.
@@ -1062,7 +1240,17 @@ func join(lo, hi *wide.U16x16) wide.F32x16 {
 }
 
 // madLowp is mad in tiny-skia src/pipeline/lowp.rs.
-func madLowp(f, m, a wide.F32x16) wide.F32x16 {
+//
+// Port (D33): it works on one lane, because only loops on the lanes call it.
+// The conversion rounds the product, so that the Go compiler cannot fuse it
+// with the add (D16).
+func madLowp(f, m, a float32) float32 {
 	// NEON vmlaq_f32 does not seem to affect performance in any way. Ignore it.
-	return f.Mul(m).Add(a)
+	return float32(f*m) + a
+}
+
+// joinLane is join on one lane (D33). It gives the float with the low half
+// lo and the high half hi of its bits.
+func joinLane(lo, hi uint16) float32 {
+	return math.Float32frombits(uint32(lo) | uint32(hi)<<16)
 }

@@ -20,7 +20,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. The speed target of D18 is not met
 yet. `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `847abd69` of resvg. The maintainers accepted the decisions D1
-to D25, D29, D30 and D32, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
+to D25, D29, D30 and D32, and D26 to D28, D31 and D33 wait for them. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -79,7 +79,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. No question is open, and the next question is question 18.
+not repeat. Question 18 is open, and the next question is question 19.
 
 ## Hard rules
 
@@ -119,7 +119,8 @@ not repeat. No question is open, and the next question is question 18.
 8. Only the files of `internal/wide` carry a build tag for SIMD or for an
    architecture (D15). The pipeline and the rest of okage are the same in
    each build. They call the methods of the vector types, and they index a
-   lane only where upstream does (D28). No other code chooses its behavior by platform. Fonts, for example,
+   lane only where upstream does (D28), or in one loop on the lanes of a hot
+   stage that gives the same bits (D33). No other code chooses its behavior by platform. Fonts, for example,
    come from an `fs.FS` that the caller gives (D9).
 9. Keep TinyGo in mind (D25). The packages that a user imports do not use
    `reflect`, `encoding/json`, `encoding/xml` or `runtime/debug`. The pipeline
