@@ -273,7 +273,9 @@ new commit as it arrives, as "The ledger" below says.
    in the scalar build and in the SIMD build. Every test must pass.
 
 10. Set the status of the commit in the ledger to `ported`, with the okage
-    commit.
+    commit. For resvg, also set the `rev` of usvg and resvg in
+    `test/oracle/rust/Cargo.toml` to the commit, so that the Rust oracle
+    answers as upstream does at that commit.
 
 11. Write the full hash of the commit in the column `matched` of
     `docs/upstream/upstreams.tsv`.
