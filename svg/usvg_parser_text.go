@@ -257,7 +257,7 @@ func collectTextChunksImpl(
 					continue
 				}
 
-				v, ok := resolveTextFlow(child, state)
+				v, ok := resolveTextFlow(child, state, cache)
 				if !ok {
 					// Skip an invalid text path and all it's children.
 					// We have to update the chars count,
@@ -463,23 +463,10 @@ func cloneDecorationStyle(s *TextDecorationStyle) *TextDecorationStyle {
 }
 
 // resolveTextFlow is resolve_text_flow in usvg src/parser/text.rs.
-func resolveTextFlow(node svgNode, state *converterState) (TextFlow, bool) {
-	linkedNode, ok := node.attributeNode(AIdHref)
+func resolveTextFlow(node svgNode, state *converterState, cache *converterCache) (TextFlow, bool) {
+	id, p, ok := resolveTextFlowPath(node, state, cache)
 	if !ok {
 		return TextFlow{}, false
-	}
-	p, ok := convertShapes(linkedNode, state)
-	if !ok {
-		return TextFlow{}, false
-	}
-
-	// The reference path's transform needs to be applied
-	transform := linkedNode.resolveTransform(AIdTransform, state)
-	if !transform.IsIdentity() {
-		p, ok = p.Clone().Transform(transform)
-		if !ok {
-			return TextFlow{}, false
-		}
 	}
 
 	startOffsetLength, _ := node.attributeLength(AIdStartOffset)
@@ -493,15 +480,55 @@ func resolveTextFlow(node svgNode, state *converterState) (TextFlow, bool) {
 		startOffset = node.resolveLength(AIdStartOffset, state, 0.0)
 	}
 
-	id, ok := newNonEmptyString(linkedNode.elementID())
-	if !ok {
-		return TextFlow{}, false
-	}
 	return TextFlow{Kind: TextFlowPath, Path: &TextPath{
 		id:          id,
 		startOffset: startOffset,
 		path:        p,
 	}}, true
+}
+
+// resolveTextFlowPath is resolve_text_flow_path in usvg src/parser/text.rs.
+func resolveTextFlowPath(node svgNode, state *converterState, cache *converterCache) (nonEmptyString, *path.Path, bool) {
+	// `path` takes precedence over `href`, unless it yields no path data.
+	if pathData, ok := node.attributeStr(AIdPath); ok {
+		if p, ok := convertPathData(pathData, node.doc.opt); ok {
+			// The writer references text paths by ID, so an inline path needs one too.
+			id, ok := newNonEmptyString(node.elementID())
+			if !ok {
+				id = cache.genTextPathID()
+			}
+			return id, p, true
+		}
+	}
+
+	return resolveTextFlowHref(node, state)
+}
+
+// resolveTextFlowHref is resolve_text_flow_href in usvg src/parser/text.rs.
+func resolveTextFlowHref(node svgNode, state *converterState) (nonEmptyString, *path.Path, bool) {
+	linkedNode, ok := node.attributeNode(AIdHref)
+	if !ok {
+		return "", nil, false
+	}
+	p, ok := convertShapes(linkedNode, state)
+	if !ok {
+		return "", nil, false
+	}
+
+	// The reference path's transform needs to be applied
+	transform := linkedNode.resolveTransform(AIdTransform, state)
+	if !transform.IsIdentity() {
+		p, ok = p.Clone().Transform(transform)
+		if !ok {
+			return "", nil, false
+		}
+	}
+
+	id, ok := newNonEmptyString(linkedNode.elementID())
+	if !ok {
+		return "", nil, false
+	}
+	return id, p, true
 }
 
 // convertFont is convert_font in usvg src/parser/text.rs.

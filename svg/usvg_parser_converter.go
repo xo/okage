@@ -97,6 +97,7 @@ type converterCache struct {
 	radialGradientIndex int
 	patternIndex        int
 	clipPathIndex       int
+	textPathIndex       int
 	maskIndex           int
 	filterIndex         int
 	imageIndex          int
@@ -132,6 +133,7 @@ func newConverterCache(fontdb *FontDatabase) *converterCache {
 		radialGradientIndex: 0,
 		patternIndex:        0,
 		clipPathIndex:       0,
+		textPathIndex:       0,
 		maskIndex:           0,
 		filterIndex:         0,
 		imageIndex:          0,
@@ -174,6 +176,11 @@ func (c *converterCache) genPatternID() nonEmptyString {
 // genClipPathID is Cache::gen_clip_path_id in usvg src/parser/converter.rs.
 func (c *converterCache) genClipPathID() nonEmptyString {
 	return c.genID("clipPath", &c.clipPathIndex)
+}
+
+// genTextPathID is Cache::gen_text_path_id in usvg src/parser/converter.rs.
+func (c *converterCache) genTextPathID() nonEmptyString {
+	return c.genID("textPathPath", &c.textPathIndex)
 }
 
 // genMaskID is Cache::gen_mask_id in usvg src/parser/converter.rs.
@@ -570,13 +577,8 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 	cache.opt = opt
 
 	for node := range svgDoc.descendants() {
-		if tag, ok := node.tagName(); ok {
-			switch tag {
-			case EIdClipPath, EIdFilter, EIdLinearGradient, EIdMask, EIdPattern, EIdRadialGradient, EIdImage:
-				if node.elementID() != "" {
-					cache.allIDs[stringHash(node.elementID())] = struct{}{}
-				}
-			}
+		if node.elementID() != "" {
+			cache.allIDs[stringHash(node.elementID())] = struct{}{}
 		}
 	}
 

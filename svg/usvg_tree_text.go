@@ -625,7 +625,8 @@ type TextPath struct {
 
 // ID is TextPath::id in usvg src/tree/text.rs. It returns the element's ID.
 //
-// Taken from the SVG itself.
+// Taken from the SVG itself or generated internally in case the path
+// has no ID.
 func (p *TextPath) ID() string {
 	return p.id.get()
 }

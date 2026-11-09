@@ -51,12 +51,19 @@ func convertPathShapes(node svgNode) (*path.Path, bool) {
 	if !ok {
 		return nil, false
 	}
+	return convertPathData(value, node.doc.opt)
+}
+
+// convertPathData is convert_path_data in usvg src/parser/shapes.rs.
+//
+// Port: opt gives the logger for the warning (D20).
+func convertPathData(value string, opt *options) (*path.Path, bool) {
 	builder := path.NewPathBuilder()
 	p := svgtypes.NewSimplifyingPathParser(value)
 	for {
 		segment, ok, err := p.Next()
 		if err != nil {
-			node.doc.opt.warnf("Error during path parsing: %v", err)
+			opt.warnf("Error during path parsing: %v", err)
 			break
 		}
 		if !ok {

@@ -4,7 +4,7 @@ upstream	date	status	okage	note
 88a0c592e656582fc932a50f74848fdc566cd94e	2026-10-29	ported		Make group bounding boxes optional (#1167). Port: usvg text, usvg, resvg, tests, c-api, not ported
 0c40ddc7eecdb1400a90d365043443a57eb76d38	2026-10-29	ported		Fix `feDisplacementMap` applying `scale` twice (#1157). Port: usvg, resvg, tests
 88635659450874f10959cb50cc5cc22f1acc9279	2026-10-29	ported		Read all text of a style element, also after an XML comment (#1161). Port: usvg, tests
-3c42a96f08f1ee1ae2067ea0b8b971241ce160c4	2026-10-29	pending		Support `path` attribute on `<textPath>` element (#1020). Port: usvg, tests
+3c42a96f08f1ee1ae2067ea0b8b971241ce160c4	2026-10-29	ported		Support `path` attribute on `<textPath>` element (#1020). Port: usvg, tests
 e1a4c92da6d354a41c402f57d65705ad632eba25	2026-10-30	pending		Upgrade to harfrust 0.15 and skrifa 0.49 (#1156). Port: usvg text. It raises harfrust to 0.15 and skrifa to 0.49, which waits for question 13
 d3c73607c1aa58048a07eae34139b393e3b40700	2026-10-30	pending		Create shaping fonts once per tree (#1195). Port: usvg text, usvg
 b8518ff46ca5047c2affd72d864529e0c6f036d3	2026-10-30	pending		Calculate bounding boxes lazily (#1196). Port: usvg text, usvg, tests
