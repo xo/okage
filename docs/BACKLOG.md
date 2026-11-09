@@ -62,6 +62,17 @@ From phase 6. `examples/select.rs` of simplecss matches selectors against a
 tree of roxmltree. It was not ported while `internal/roxmltree` was being
 written. Port it as an example of `internal/simplecss`, with its output.
 
+## Phase 9
+
+### Decide where the walk of the paint graph of COLRv1 lives
+
+From phase 9 and D9 rule 3. usvg draws a COLRv1 glyph with the paint graph
+that skrifa walks. go-text parses the tables COLR and CPAL, but does not walk
+the graph, so `svg/usvg_text_colr_paint.go` ports the walk of skrifa 0.44
+(`color/mod.rs`, `traversal.rs`, `instance.rs` and `transform.rs`). D9 ports
+no crate of text. A maintainer decides whether the walk stays in `svg`, or
+goes to go-text as a contribution.
+
 ## Phase 4
 
 ### Close the gap to the speed target

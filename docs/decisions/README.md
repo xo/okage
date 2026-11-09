@@ -50,3 +50,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D28 | [The vector types are arrays in both builds](D028-the-vector-types-are-arrays-in-both-builds.md) | Proposed, amends D15 |
 | D29 | [The filter types of `svg` take the suffix `Filter`](D029-the-filter-types-of-svg-take-the-suffix-filter.md) | Decided |
 | D30 | [An arc makes at most 4,096 curves](D030-an-arc-makes-at-most-4096-curves.md) | Decided |
+| D31 | [Images are compared with the pixel metric of resvg](D031-images-are-compared-with-the-pixel-metric-of-resvg.md) | Proposed |

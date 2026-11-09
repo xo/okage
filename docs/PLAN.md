@@ -10,7 +10,7 @@ document.
 
 ## Status
 
-On 2026-11-09 phases 0 to 7 have their code, and every gate holds but the
+On 2026-11-09 phases 0 to 9 have their code, and every gate holds but the
 speed target of D18:
 
 1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
@@ -44,8 +44,20 @@ speed target of D18:
    9. Random mutations of the files give the same trees, but where a mutation
    breaks the data of a raster image, which okage reads with other code (D7).
 
-Phase 8, the renderer of resvg, comes next. It needs the decision of question
-16 first.
+8. Phase 8: `svg` has the port of the renderer of resvg, with its 1,742
+   integration tests and the 15 tests of `extra.rs`, and D31 proposes how the
+   images are compared. Each test file without text and without a raster
+   image gives 0 pixels that differ from the reference image of resvg, and
+   the same bytes as the Rust oracle. The tests with a JPEG image differ in
+   up to 0.4 percent of their pixels, because `image/jpeg` decodes in another
+   way (D7). libvips, the second oracle, runs with the tag `vips`.
+9. Phase 9: the layout of text of usvg is ported on go-text (D9), with a
+   font database that matches fonts as fontdb does. Of the 428 tests with
+   text, 413 give 0 pixels that differ, and 15 differ in less than 1 percent
+   of their pixels (D31): a stack of combining marks, and the variable font
+   of the tests of `font-variation-settings`.
+
+Phase 10, the commits of resvg after the base commit, comes next.
 
 These documents hold the rules and the references that come from this plan:
 
@@ -537,7 +549,7 @@ the tree of `svg`, written as text, is the same as the tree of the Rust oracle
 ### Phase 8. The renderer of resvg, without text
 
 Before this phase, a decision chooses how two images are compared within a
-tolerance (D23, question 16).
+tolerance (D23, D31).
 
 Port resvg into `svg`: the paths with their paints, the clips, the masks, the
 filters and the images.
@@ -726,7 +738,7 @@ a decision in [`decisions/`](decisions/README.md), and it is deleted from this
 list. The numbers do not repeat. The next question is question 18.
 
 The maintainers answered questions 1 to 15 and 17 on 2026-11-09, and the
-decisions record the answers.
+decisions record the answers. Question 16, how two images are compared
+within a tolerance, has the proposed answer D31.
 
-16. How are two images compared within a tolerance (D23)? The answer comes
-    after the port of tiny-skia, before phase 8.
+No question is open.

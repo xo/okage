@@ -753,9 +753,56 @@ func nodeToUserCoordinates(
 		}
 
 		// 2.
-		//
-		// TODO(phase 9): the fills and strokes of Text::layouted, which only
-		// the feature text has.
+		for i := range n.layouted {
+			span := &n.layouted[i]
+			processFill(
+				&span.Fill,
+				n.absTransform,
+				contextTransform,
+				contextBBox,
+				bbox,
+				cache,
+			)
+			processStroke(
+				&span.Stroke,
+				n.absTransform,
+				contextTransform,
+				contextBBox,
+				bbox,
+				cache,
+			)
+
+			processDecoration := func(p *Path) {
+				processFill(
+					&p.fill,
+					n.absTransform,
+					contextTransform,
+					contextBBox,
+					bbox,
+					cache,
+				)
+				processStroke(
+					&p.stroke,
+					n.absTransform,
+					contextTransform,
+					contextBBox,
+					bbox,
+					cache,
+				)
+			}
+
+			if span.Overline != nil {
+				processDecoration(span.Overline)
+			}
+
+			if span.Underline != nil {
+				processDecoration(span.Underline)
+			}
+
+			if span.LineThrough != nil {
+				processDecoration(span.LineThrough)
+			}
+		}
 
 		// 3.
 		if n.flattened != nil {

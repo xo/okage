@@ -50,9 +50,10 @@ WebAssembly, is a goal that the port keeps in mind.
 The port of tiny-skia is done, in the root package and in `path`. It gives
 the same bytes as tiny-skia in the scalar build, in the SIMD build and with
 TinyGo, and the 157 integration tests of tiny-skia pass. It is still about 10
-to 20 times slower than tiny-skia. The package `svg` parses an SVG file into
-the tree of usvg, and gives the same tree as usvg for each test file of
-resvg. It does not lay out text yet, and it does not render yet. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
+to 20 times slower than tiny-skia. The package `svg` is the port of usvg and
+resvg. It parses and renders each test file of resvg: without text and
+without a raster image, with the same pixels as resvg, and with text or an
+image, within the tolerance of D31. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
 open questions.
 
 The port starts from resvg `v0.49.0` and from the versions of the crates that

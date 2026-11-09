@@ -18,9 +18,9 @@ On 2026-11-09 the port of tiny-skia is done in both builds and with TinyGo:
 `path`, the root package, `internal/wide` and `internal/crmath`. The 157
 integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. The speed target of D18 is not met
-yet. `svg` has the tree of usvg without the layout of text, and the
-renderer of resvg has not started. The maintainers accepted the decisions D1
-to D25, D29 and D30, and D26 to D28 wait for them. The open questions are at the end of `docs/PLAN.md`.
+yet. `svg` holds the port of usvg and resvg, with the layout of text on
+go-text (D9), and the commits of resvg after its base wait for phase 10. The maintainers accepted the decisions D1
+to D25, D29 and D30, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -79,7 +79,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. Question 16 is open, and the next question is question 18.
+not repeat. No question is open, and the next question is question 18.
 
 ## Hard rules
 

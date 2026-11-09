@@ -96,6 +96,13 @@ func fromDataNested(data []byte, opt *options) (*Tree, error) {
 	// Port: the logger is not a field of upstream. The nested tree logs to
 	// the same logger (D20).
 	nestedOpt.logger = opt.logger
+	// In the referenced SVG, we start with the unmodified user-provided
+	// fontdb, not the one from the cache.
+	nestedOpt.fontdb = opt.fontdb
+	// Can't clone the resolver, so we create a new one that forwards to it.
+	//
+	// Port: a Go FontResolver holds functions, which a copy shares.
+	nestedOpt.fontResolver = opt.fontResolver
 
 	return fromData(data, &nestedOpt)
 }

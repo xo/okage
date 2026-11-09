@@ -1,11 +1,14 @@
 package oracle
 
 import (
+	"archive/tar"
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -13,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -45,19 +49,104 @@ func TestMain(m *testing.M) {
 // build builds the oracle with cargo into .cache/oracle in the root of the
 // repository. It returns the path of the program, or the reason that it
 // cannot be built.
+//
+// resvg turns on the default features of tiny-skia, and so its SIMD backends,
+// which compute some values in another way than the scalar code that okage
+// ports (D16). build unpacks tiny-skia 0.12.0 from the cache of cargo into
+// .cache/oracle, takes "simd" out of its default features, and patches the
+// oracle to use that copy, so that every answer comes from the scalar code.
 func build() (string, string) {
 	cargo, err := exec.LookPath("cargo")
 	if err != nil {
 		return "", "cargo is not installed"
 	}
-	target := filepath.Join(root, ".cache", "oracle")
+	target, err := filepath.Abs(filepath.Join(root, ".cache", "oracle"))
+	if err != nil {
+		return "", err.Error()
+	}
+	if err := os.MkdirAll(target, 0o755); err != nil {
+		return "", err.Error()
+	}
+	manifest := filepath.Join("rust", "Cargo.toml")
+	// The crates must be in the cache of cargo before the copy of
+	// tiny-skia can be made. cargo fetch reads the network only when a
+	// crate is missing.
+	if out, err := exec.CommandContext(context.Background(), cargo, "fetch", "--quiet",
+		"--manifest-path", manifest).CombinedOutput(); err != nil {
+		return "", fmt.Sprintf("cargo cannot fetch the crates of the oracle: %v\n%s", err, out)
+	}
+	scalar, err := scalarTinySkia(target)
+	if err != nil {
+		return "", fmt.Sprintf("making the scalar copy of tiny-skia: %v", err)
+	}
 	cmd := exec.CommandContext(context.Background(), cargo, "build", "--offline", "--release", "--quiet",
-		"--manifest-path", filepath.Join("rust", "Cargo.toml"), "--target-dir", target)
+		"--manifest-path", manifest, "--target-dir", target,
+		"--config", fmt.Sprintf("patch.crates-io.tiny-skia.path=%q", scalar))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Sprintf("cargo cannot build the oracle: %v\n%s", err, out)
 	}
 	return filepath.Join(target, "release", "okage-oracle"), ""
+}
+
+// scalarTinySkia unpacks the crate tiny-skia 0.12.0 from the cache of cargo
+// into dir, takes "simd" out of its default features, and returns the folder
+// of the copy.
+func scalarTinySkia(dir string) (string, error) {
+	home := os.Getenv("CARGO_HOME")
+	if home == "" {
+		h, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		home = filepath.Join(h, ".cargo")
+	}
+	crates, err := filepath.Glob(filepath.Join(home, "registry", "cache", "*", "tiny-skia-0.12.0.crate"))
+	if err != nil || len(crates) == 0 {
+		return "", errors.New("tiny-skia-0.12.0.crate is not in the cache of cargo")
+	}
+	f, err := os.Open(crates[0])
+	if err != nil {
+		return "", err
+	}
+	defer f.Close() //nolint:errcheck // the file is only read
+	zr, err := gzip.NewReader(f)
+	if err != nil {
+		return "", err
+	}
+	tr := tar.NewReader(zr)
+	for {
+		h, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+		name := filepath.Clean(h.Name)
+		if !strings.HasPrefix(name, "tiny-skia-0.12.0"+string(filepath.Separator)) || h.Typeflag != tar.TypeReg {
+			continue
+		}
+		b, err := io.ReadAll(tr)
+		if err != nil {
+			return "", err
+		}
+		if name == filepath.Join("tiny-skia-0.12.0", "Cargo.toml") {
+			s := strings.Replace(string(b), "default = [\n    \"std\",\n    \"simd\",", "default = [\n    \"std\",", 1)
+			if s == string(b) {
+				return "", errors.New("the default features of tiny-skia are not as expected")
+			}
+			b = []byte(s)
+		}
+		p := filepath.Join(dir, name)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			return "", err
+		}
+		if err := os.WriteFile(p, b, 0o644); err != nil {
+			return "", err
+		}
+	}
+	return filepath.Join(dir, "tiny-skia-0.12.0"), nil
 }
 
 // ask sends each question to the oracle as one line of JSON and returns the

@@ -92,3 +92,17 @@ jobs:
     - name: Compare the SIMD build with the Rust oracle
       working-directory: test
       run: GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=100000
+  vips:
+    name: libvips
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Install libvips
+      run: sudo apt-get update && sudo apt-get install -y libvips-dev
+    - name: Compare with libvips
+      # a report without a gate (D31 rule 5)
+      working-directory: test
+      run: go test -count=1 -tags vips -v ./vips/

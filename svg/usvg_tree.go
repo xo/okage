@@ -1267,8 +1267,7 @@ func (g *Group) cloneGroup() Group {
 			ni := *n
 			c.children[i] = &ni
 		case *Text:
-			nt := *n
-			c.children[i] = &nt
+			c.children[i] = n.clone()
 		default:
 			c.children[i] = child
 		}
@@ -1974,7 +1973,7 @@ type Tree struct {
 	clipPaths       []*ClipPath
 	masks           []*Mask
 	filters         []*Filter
-	// TODO(phase 9): the field fontdb of the feature text.
+	fontdb          *FontDatabase
 }
 
 // Size is Tree::size in usvg src/tree/mod.rs. It returns the image size.
@@ -2007,6 +2006,12 @@ func (t *Tree) NodeByID(id string) (Node, bool) {
 	}
 
 	return nodeByID(&t.root, id)
+}
+
+// FontDB is Tree::fontdb in usvg src/tree/mod.rs. It returns the font
+// database that applies to all text nodes in the tree.
+func (t *Tree) FontDB() *FontDatabase {
+	return t.fontdb
 }
 
 // HasTextNodes is Tree::has_text_nodes in usvg src/tree/mod.rs. It checks if

@@ -494,3 +494,35 @@ pub fn answer_usvg(q: &UsvgQuestion) -> Option<Vec<u8>> {
     };
     Some(s.into_bytes())
 }
+
+#[derive(Deserialize)]
+pub struct RenderQuestion {
+    pub render: String,
+}
+
+/// answer_render renders the SVG file of the question with resvg 0.49.0,
+/// built without its feature `text`, as the normal mode of the integration
+/// tests of resvg does: the tree is scaled to a width of 300 pixels. The
+/// answer is the width and the height as two u32, little-endian, then the
+/// premultiplied RGBA bytes of the pixmap. A file that does not parse, or a
+/// size that does not make a pixmap, gives no answer.
+pub fn answer_render(q: &RenderQuestion) -> Option<Vec<u8>> {
+    let data = std::fs::read(&q.render).ok()?;
+    let opt = usvg::Options {
+        resources_dir: std::path::Path::new(&q.render).parent().map(|p| p.to_owned()),
+        ..usvg::Options::default()
+    };
+    let tree = usvg::Tree::from_data(&data, &opt).ok()?;
+    let size = tree.size().to_int_size().scale_to_width(300)?;
+    let mut pixmap = tiny_skia::Pixmap::new(size.width(), size.height())?;
+    let ts = tiny_skia::Transform::from_scale(
+        size.width() as f32 / tree.size().width() as f32,
+        size.height() as f32 / tree.size().height() as f32,
+    );
+    resvg::render(&tree, ts, &mut pixmap.as_mut());
+    let mut out = Vec::with_capacity(8 + pixmap.data().len());
+    out.extend_from_slice(&size.width().to_le_bytes());
+    out.extend_from_slice(&size.height().to_le_bytes());
+    out.extend_from_slice(pixmap.data());
+    Some(out)
+}

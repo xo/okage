@@ -13,8 +13,8 @@
 //!    strokes, dashes or transforms a path. The answer is the path that
 //!    results, written as `write_path` says, or a length of zero if there is
 //!    no path.
-//! 3. A question of the parsers, with the field "xml", "svgtypes" or
-//!    "usvg", as the module `parsers` says.
+//! 3. A question of the parsers or of the renderer of resvg, with the field
+//!    "xml", "svgtypes", "usvg" or "render", as the module `parsers` says.
 //!
 //! The Go test writes each number as the shortest decimal of a float64 that
 //! gives back the float32. serde_json can read a decimal one unit in the last
@@ -35,6 +35,7 @@ use tiny_skia::{
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum Question {
+    Render(parsers::RenderQuestion),
     Usvg(parsers::UsvgQuestion),
     Xml(parsers::XmlQuestion),
     Svgtypes(parsers::SvgtypesQuestion),
@@ -524,6 +525,9 @@ fn main() {
         }
         let question: Question = serde_json::from_str(&line).expect("parsing a question");
         let data = match &question {
+            Question::Render(q) => {
+                std::panic::catch_unwind(|| parsers::answer_render(q)).unwrap_or_default()
+            }
             Question::Usvg(q) => {
                 std::panic::catch_unwind(|| parsers::answer_usvg(q))
                     .unwrap_or_else(|_| Some(b"panic\n".to_vec()))

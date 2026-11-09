@@ -83,6 +83,8 @@ linters:
             - github.com/xo/okage
             - github.com/go-text/typesetting
             - golang.org/x/image/webp
+            # the vips oracle of the test module only, with the tag vips (D22)
+            - github.com/cshum/vipsgen/v2
     gosec:
       excludes:
         # The port keeps the integer widths of upstream and its conversions

@@ -14,12 +14,12 @@ import (
 	"github.com/xo/okage/internal/roxmltree"
 )
 
-// svgDir is the folder of the SVG files of the tests of resvg, in the
-// checkout of resvg.
-var svgDir = filepath.Join(root, "upstream", "resvg", "crates", "resvg", "tests")
+// svgDir is the folder of the SVG files of the tests of resvg and usvg, as the
+// package svg holds them, so that the tests run without a checkout of resvg.
+var svgDir = filepath.Join(root, "svg", "testdata")
 
 // svgFiles returns the absolute paths of the SVG files of the tests of
-// resvg. The test skips when the checkout of resvg is missing.
+// resvg and usvg. The test skips when the folder is missing.
 func svgFiles(t *testing.T) []string {
 	t.Helper()
 	var files []string
@@ -38,7 +38,7 @@ func svgFiles(t *testing.T) []string {
 	})
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
-		t.Skip("the checkout of resvg is missing")
+		t.Skip("the test files of svg are missing")
 	case err != nil:
 		t.Fatal(err)
 	}

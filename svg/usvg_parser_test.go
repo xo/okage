@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/xo/okage"
@@ -537,7 +538,53 @@ func TestNoTextNodes(t *testing.T) {
 // TestFlattenedTextShouldInheritAbsoluteTransform is
 // flattened_text_should_inherit_absolute_transform in usvg tests/parser.rs.
 func TestFlattenedTextShouldInheritAbsoluteTransform(t *testing.T) {
-	t.Skip("phase 9: text")
+	svg := `
+    <svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'>
+        <g transform='translate(20 20)'>
+            <g transform='translate(20 20)'>
+                <text x='32' y='100'>Text</text>
+            </g>
+        </g>
+    </svg>
+    `
+
+	tree, err := FromStr(svg, WithFontFS(os.DirFS("testdata/fonts")), WithFontFamily("Noto Sans"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	group0, ok := tree.Root().Children()[0].(*Group)
+	if !ok {
+		t.Fatal("unreachable")
+	}
+	group1, ok := group0.Children()[0].(*Group)
+	if !ok {
+		t.Fatal("unreachable")
+	}
+	text, ok := group1.Children()[0].(*Text)
+	if !ok {
+		t.Fatal("unreachable")
+	}
+	p, ok := text.Flattened().Children()[0].(*Path)
+	if !ok {
+		t.Fatal("unreachable")
+	}
+
+	ts := p.AbsTransform()
+
+	if ts.TX != 40.0 {
+		t.Errorf("t.tx = %v, want 40", ts.TX)
+	}
+	if ts.TY != 40.0 {
+		t.Errorf("t.ty = %v, want 40", ts.TY)
+	}
+
+	if p.BoundingBox() == p.AbsBoundingBox() {
+		t.Error("path.bounding_box() == path.abs_bounding_box()")
+	}
+	if r, ok := p.BoundingBox().Transform(ts); !ok || r != p.AbsBoundingBox() {
+		t.Errorf("path.bounding_box().transform(t) = %v, want %v", r, p.AbsBoundingBox())
+	}
 }
 
 // TestUseNodeAbsTransform is use_node_abs_transform in usvg tests/parser.rs.

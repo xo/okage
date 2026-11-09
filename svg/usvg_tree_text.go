@@ -12,16 +12,36 @@ import (
 	"github.com/xo/okage/path"
 )
 
-// This file ports usvg src/tree/text.rs, without the items of the feature
-// text.
+// This file ports usvg src/tree/text.rs.
 //
-// TODO(phase 9): the items of the feature text: the conversions between
-// FontStretch and fontdb::Stretch, between FontStyle and fontdb::Style, the
-// field layouted of Text and the method Text::layouted.
+// Port: the conversions between FontStretch and fontdb::Stretch, and between
+// FontStyle and fontdb::Style, of the feature text have no port. The font
+// database of usvg_text_fontdb.go takes the place of fontdb (D9), and it uses
+// FontStretch and FontStyle themselves.
 
 // FontFamily is the re-export of svgtypes::FontFamily in usvg
 // src/tree/text.rs.
 type FontFamily = svgtypes.FontFamily
+
+// FontFamilyKind is the case of a FontFamily. See svgtypes::FontFamily.
+type FontFamilyKind = svgtypes.FontFamilyKind
+
+// The cases of the enum svgtypes::FontFamily, which usvg src/tree/text.rs
+// exports again.
+const (
+	// FontFamilySerif is FontFamily::Serif.
+	FontFamilySerif = svgtypes.FontFamilySerif
+	// FontFamilySansSerif is FontFamily::SansSerif.
+	FontFamilySansSerif = svgtypes.FontFamilySansSerif
+	// FontFamilyCursive is FontFamily::Cursive.
+	FontFamilyCursive = svgtypes.FontFamilyCursive
+	// FontFamilyFantasy is FontFamily::Fantasy.
+	FontFamilyFantasy = svgtypes.FontFamilyFantasy
+	// FontFamilyMonospace is FontFamily::Monospace.
+	FontFamilyMonospace = svgtypes.FontFamilyMonospace
+	// FontFamilyNamed is FontFamily::Named.
+	FontFamilyNamed = svgtypes.FontFamilyNamed
+)
 
 // FontStretch is FontStretch in usvg src/tree/text.rs. It is a font stretch
 // property.
@@ -750,7 +770,7 @@ type Text struct {
 	strokeBoundingBox    Rect
 	absStrokeBoundingBox Rect
 	flattened            *Group
-	// TODO(phase 9): the field layouted of the feature text.
+	layouted             []Span
 }
 
 // ID is Text::id in usvg src/tree/text.rs. It returns the element's ID.
@@ -877,6 +897,41 @@ func (t *Text) AbsStrokeBoundingBox() Rect {
 //     glyph rendering logic based on the layouted glyphs (see the `layouted` method).
 func (t *Text) Flattened() *Group {
 	return t.flattened
+}
+
+// clone is the derived Clone for Text in usvg src/tree/text.rs. It copies
+// the chunks, the layouted spans and the flattened group, with each fill and
+// stroke, which the conversion of the paint servers changes in place.
+func (t *Text) clone() *Text {
+	c := *t
+	c.chunks = make([]TextChunk, len(t.chunks))
+	for i := range t.chunks {
+		chunk := t.chunks[i]
+		chunk.spans = make([]TextSpan, len(t.chunks[i].spans))
+		for j := range t.chunks[i].spans {
+			chunk.spans[j] = t.chunks[i].spans[j].clone()
+		}
+		c.chunks[i] = chunk
+	}
+	c.layouted = make([]Span, len(t.layouted))
+	for i := range t.layouted {
+		c.layouted[i] = t.layouted[i].clone()
+	}
+	if t.flattened != nil {
+		g := t.flattened.cloneGroup()
+		c.flattened = &g
+	}
+	return &c
+}
+
+// Layouted is Text::layouted in usvg src/tree/text.rs. It returns the
+// positioned glyphs and decoration spans of the text.
+//
+// This should only be used if you need more low-level access
+// to the glyphs that make up the text. If you just need the
+// outlines of the text, you should use `flattened` instead.
+func (t *Text) Layouted() []Span {
+	return t.layouted
 }
 
 // Subroots is Text::subroots in usvg src/tree/text.rs, which Node::subroots

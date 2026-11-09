@@ -16,7 +16,7 @@ upstream.
    oracle (D22).
 4. How to compare two images within a reasonable tolerance is not decided. It
    is chosen after the port of tiny-skia and before phase 8, and a decision
-   records it. Question 16 in `docs/PLAN.md` holds it.
+   records it. D31 proposes it.
 
 The tests of resvg require zero pixels that differ. The tests with no text and
 no raster image record how many still pass with zero pixels that differ.

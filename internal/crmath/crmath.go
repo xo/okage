@@ -1,7 +1,7 @@
 // Package crmath gives correctly rounded results of the math functions that
-// tiny-skia, kurbo and svgtypes call from the C library: acos, cos, sin, tan,
-// atan2, pow, ln and log2 for an f64, and acos, cos, sin, atan2 and pow for
-// an f32.
+// tiny-skia, kurbo, svgtypes and resvg call from the C library: acos, cos,
+// sin, tan, atan2, pow, ln and log2 for an f64, and acos, cos, sin, tan,
+// atan2, pow and hypot for an f32.
 // A correctly rounded result is the exact value rounded to the nearest float,
 // so it is the same on every platform.
 //
@@ -108,6 +108,23 @@ func Sin32(x float32) float32 {
 	return f
 }
 
+// Tan32 is tanf for an f32, correctly rounded. usvg calls it to find the
+// skew of a COLR glyph.
+func Tan32(x float32) float32 {
+	if x != x || math.IsInf(float64(x), 0) {
+		return float32(math.NaN())
+	}
+	if x == 0 {
+		return x
+	}
+	if r, ok := round32(math.Tan(float64(x))); ok {
+		return r
+	}
+	s, c := sinCosBig(float64(x))
+	f, _ := quoP(s, c, wprec).Float32()
+	return f
+}
+
 // Pow32 is powf for an f32, correctly rounded for a finite positive x. Other
 // cases give the result of math.Pow, which follows the special cases of C.
 func Pow32(x, y float32) float32 {
@@ -138,6 +155,32 @@ func Atan2_32(y, x float32) float32 {
 		return r
 	}
 	f, _ := atan2Big(y64, x64).Float32()
+	return f
+}
+
+// Hypot32 is hypotf for an f32, correctly rounded. resvg calls it to find
+// the scale of a group with a filter.
+//
+// The squares of two f32 values are exact in an f64, and their sum and its
+// square root have an error below one unit in the last place of the f64.
+// That result decides the rounding to an f32 unless it is too close to the
+// middle of two f32 values, and then math/big computes it again. glibc 2.44
+// gave the correctly rounded result on 2,000,000 random inputs on 2026-11-09.
+func Hypot32(x, y float32) float32 {
+	x64, y64 := float64(x), float64(y)
+	switch {
+	case math.IsInf(x64, 0) || math.IsInf(y64, 0):
+		return float32(math.Inf(1))
+	case x != x || y != y:
+		return float32(math.NaN())
+	}
+	r := math.Sqrt(float64(x64*x64) + float64(y64*y64))
+	if f, ok := round32(r); ok {
+		return f
+	}
+	bx, by := newFloat(x64), newFloat(y64)
+	s := add(mul(bx, bx), mul(by, by))
+	f, _ := new(big.Float).SetPrec(prec).Sqrt(s).Float32()
 	return f
 }
 

@@ -7,6 +7,7 @@ package svg
 
 import (
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"path/filepath"
 	"slices"
@@ -14,15 +15,16 @@ import (
 	"github.com/xo/okage/path"
 )
 
-// This file ports usvg src/parser/options.rs, without the items of the
-// feature text.
+// This file ports usvg src/parser/options.rs.
 //
 // Port: the struct Options of upstream becomes the private options, with one
 // exported functional option for each field that a user sets (D20). The
 // logger of WithLogger takes the place of the crate log.
 //
-// TODO(phase 9): the fields font_resolver and fontdb, and the method
-// fontdb_mut, of the feature text.
+// The field fontdb holds a FontDatabase of usvg_text_fontdb.go, which takes
+// the place of fontdb::Database (D9). The fonts come from the caller, with
+// WithFontDatabase, WithFontFile or WithFontFS. The method fontdb_mut is
+// fontdbMut, which the options that change the database call.
 
 // ImageHrefDataResolverFn is ImageHrefDataResolverFn in usvg
 // src/parser/image.rs. It is a shorthand for [ImageHrefResolver]'s data
@@ -144,6 +146,24 @@ type options struct {
 	// Default: see type's documentation for details
 	imageHrefResolver ImageHrefResolver
 
+	// Specifies how fonts should be resolved and loaded.
+	fontResolver FontResolver
+
+	// A database of fonts usable by text.
+	//
+	// This is a base database. If a custom `font_resolver` is specified,
+	// additional fonts can be loaded during parsing. Those will be added to a
+	// copy of this database. The full database containing all fonts referenced
+	// in a `Tree` becomes available as [`Tree::fontdb`](crate::Tree::fontdb)
+	// after parsing. If no fonts were loaded dynamically, that database will
+	// be the same as this one.
+	fontdb *FontDatabase
+
+	// fontdbOwned reports whether fontdb is a copy that these options own,
+	// which an option can change. It is the strong count of the Arc that
+	// Arc::make_mut reads in upstream.
+	fontdbOwned bool
+
 	// A CSS stylesheet that should be injected into the SVG. Can be used to overwrite
 	// certain attributes.
 	//
@@ -170,6 +190,9 @@ func defaultOptions() options {
 		imageRendering:    ImageRenderingOptimizeQuality,
 		defaultSize:       mustSize(path.SizeFromWH(100.0, 100.0)),
 		imageHrefResolver: ImageHrefResolver{},
+		fontResolver:      FontResolver{},
+		fontdb:            NewFontDatabase(),
+		fontdbOwned:       true,
 		styleSheet:        "",
 		logger:            nil,
 	}
@@ -197,6 +220,21 @@ func (o *options) getAbsPath(relPath string) string {
 		return relPath
 	}
 	return filepath.Join(o.resourcesDir, relPath)
+}
+
+// fontdbMut is Options::fontdb_mut in usvg src/parser/options.rs. It
+// mutably acquires the database.
+//
+// This clones the database if it is currently shared.
+func (o *options) fontdbMut() *FontDatabase {
+	if !o.fontdbOwned {
+		o.fontdb = o.fontdb.Clone()
+		o.fontdbOwned = true
+	}
+	if o.fontdb.logger == nil {
+		o.fontdb.logger = o.logger
+	}
+	return o.fontdb
 }
 
 // warnf logs the text of a log::warn! of upstream, made with format and args
@@ -336,6 +374,112 @@ func WithDefaultSize(size Size) Option {
 func WithImageHrefResolver(resolver ImageHrefResolver) Option {
 	return func(o *options) {
 		o.imageHrefResolver = resolver
+	}
+}
+
+// WithFontResolver sets Options::font_resolver in usvg
+// src/parser/options.rs: how fonts should be resolved and loaded.
+//
+// Default: the zero FontResolver, which selects fonts with
+// DefaultFontSelector and DefaultFallbackSelector.
+func WithFontResolver(resolver FontResolver) Option {
+	return func(o *options) {
+		o.fontResolver = resolver
+	}
+}
+
+// WithFontDatabase sets Options::fontdb in usvg src/parser/options.rs: a
+// database of fonts usable by text.
+//
+// This is a base database. If a custom font resolver loads more fonts during
+// parsing, they go into a copy of this database, which Tree.FontDB returns.
+// The parse never changes db, so a program can load its fonts once and share
+// db between parses. The options WithFontFile, WithFontFS and the options of
+// the generic families change a copy of db.
+//
+// Default: an empty database (D9).
+func WithFontDatabase(db *FontDatabase) Option {
+	return func(o *options) {
+		o.fontdb = db
+		o.fontdbOwned = false
+	}
+}
+
+// WithFontFile loads a font file, given as its bytes, into the database of
+// Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().load_font_data(data)` does. A collection loads each of
+// its faces. The database keeps data, so the caller must not change it
+// afterwards.
+func WithFontFile(data []byte) Option {
+	return func(o *options) {
+		o.fontdbMut().LoadFontData(data)
+	}
+}
+
+// WithFontFS loads each font file of fsys, in its folders too, into the
+// database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().load_fonts_dir(dir)` does. It reads the files whose
+// names end in .ttf, .ttc, .otf or .otc. Use os.DirFS for a folder of the
+// operating system, and LoadSystemFonts of FontDatabase for the fonts of the
+// system (D9).
+func WithFontFS(fsys fs.FS) Option {
+	return func(o *options) {
+		o.fontdbMut().LoadFontsFS(fsys, ".")
+	}
+}
+
+// WithSerifFamily sets the family of the generic family serif in the
+// database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().set_serif_family(family)` does.
+//
+// Default: Times New Roman.
+func WithSerifFamily(family string) Option {
+	return func(o *options) {
+		o.fontdbMut().SetSerifFamily(family)
+	}
+}
+
+// WithSansSerifFamily sets the family of the generic family sans-serif in
+// the database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().set_sans_serif_family(family)` does.
+//
+// Default: Arial.
+func WithSansSerifFamily(family string) Option {
+	return func(o *options) {
+		o.fontdbMut().SetSansSerifFamily(family)
+	}
+}
+
+// WithCursiveFamily sets the family of the generic family cursive in the
+// database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().set_cursive_family(family)` does.
+//
+// Default: Comic Sans MS.
+func WithCursiveFamily(family string) Option {
+	return func(o *options) {
+		o.fontdbMut().SetCursiveFamily(family)
+	}
+}
+
+// WithFantasyFamily sets the family of the generic family fantasy in the
+// database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().set_fantasy_family(family)` does.
+//
+// Default: Impact.
+func WithFantasyFamily(family string) Option {
+	return func(o *options) {
+		o.fontdbMut().SetFantasyFamily(family)
+	}
+}
+
+// WithMonospaceFamily sets the family of the generic family monospace in the
+// database of Options::fontdb in usvg src/parser/options.rs, as
+// `opt.fontdb_mut().set_monospace_family(family)` does.
+//
+// Default: Courier New.
+func WithMonospaceFamily(family string) Option {
+	return func(o *options) {
+		o.fontdbMut().SetMonospaceFamily(family)
 	}
 }
 

@@ -7,8 +7,7 @@ package svg
 
 import "github.com/xo/okage/internal/xmlwriter"
 
-// This file ports usvg src/lib.rs, without the items of the feature text. The
-// crate documentation of upstream is the package comment in doc.go.
+// This file ports usvg src/lib.rs. The crate documentation of upstream is the package comment in doc.go.
 //
 // The modules parser, tree and writer of upstream are the files
 // usvg_parser_*.go, usvg_tree*.go and usvg_writer.go of this package, so the
@@ -16,9 +15,10 @@ import "github.com/xo/okage/internal/xmlwriter"
 // re-export of the crate roxmltree has no port either, because
 // internal/roxmltree is internal (D5). The re-export of WriteOptions goes in
 // usvg_writer.go, the port of src/writer.rs.
-//
-// TODO(phase 9): the module text and the re-export of the crate fontdb of the
-// feature text.
+// The module text is the files usvg_text*.go, so `pub use text::*` needs no
+// port either. The re-export of the crate fontdb has no port, because okage
+// does not port fontdb (D9). Its place is taken by FontDatabase in
+// usvg_text_fontdb.go.
 
 // Indent is the re-export of xmlwriter::Indent in usvg src/lib.rs. It is an
 // XML node indention.

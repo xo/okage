@@ -15,7 +15,7 @@ import (
 // generation of ids and the conversion of lengths.
 
 func TestGenID(t *testing.T) {
-	c := newConverterCache()
+	c := newConverterCache(NewFontDatabase())
 	c.allIDs[stringHash("linearGradient1")] = struct{}{}
 	c.allIDs[stringHash("mask2")] = struct{}{}
 	for _, tc := range []struct {

@@ -6,6 +6,8 @@
 package svg
 
 import (
+	"encoding/binary"
+	"math"
 	"slices"
 	"strconv"
 
@@ -14,17 +16,12 @@ import (
 	"github.com/xo/okage/path"
 )
 
-// This file ports usvg src/parser/converter.rs, without the items of the
-// feature text.
+// This file ports usvg src/parser/converter.rs.
 //
 // Port: the structs State and Cache are private to the crate. They become
 // converterState and converterCache, because the parser names its local
 // variables state and cache after the Rust code. A shared Arc<T> of upstream
 // is a pointer *T.
-//
-// TODO(phase 9): the fields of Cache and the methods of the feature text:
-// fontdb, the glyph caches, fontdb_svg, fontdb_raster, fontdb_outline,
-// fontdb_colr and has_opsz_axis, and the conversion of a text element.
 
 // converterState is State in usvg src/parser/converter.rs.
 type converterState struct {
@@ -75,6 +72,20 @@ func (s *converterState) clone() *converterState {
 // keeps the ids themselves, so a new id never collides with the hash of
 // another id.
 type converterCache struct {
+	// This fontdb is initialized from [`Options::fontdb`] and then populated
+	// over the course of conversion.
+	//
+	// Port: it is a copy of the database of the options, which the
+	// conversion can change (see FontSelectionFn).
+	fontdb *FontDatabase
+
+	// Port: Go keys each cache with a text that glyphCacheKey makes.
+	cacheOutline map[string]*path.Path
+	cacheColr    map[string]*Tree
+	cacheSvg     map[string]Node
+	cacheRaster  map[string]*bitmapImage
+	cacheHasOpsz map[FontID]bool
+
 	clipPaths map[string]*ClipPath
 	masks     map[string]*Mask
 	filters   map[string]*Filter
@@ -101,8 +112,16 @@ type converterCache struct {
 }
 
 // newConverterCache is Cache::new in usvg src/parser/converter.rs.
-func newConverterCache() *converterCache {
+func newConverterCache(fontdb *FontDatabase) *converterCache {
 	return &converterCache{
+		fontdb: fontdb,
+
+		cacheOutline: map[string]*path.Path{},
+		cacheColr:    map[string]*Tree{},
+		cacheSvg:     map[string]Node{},
+		cacheRaster:  map[string]*bitmapImage{},
+		cacheHasOpsz: map[FontID]bool{},
+
 		clipPaths: map[string]*ClipPath{},
 		masks:     map[string]*Mask{},
 		filters:   map[string]*Filter{},
@@ -241,16 +260,45 @@ func countPaintRefs(root *Group) map[Paint]int {
 					}
 				}
 			case *Text:
+				addFill := func(f *Fill) {
+					if f != nil {
+						add(f.paint)
+					}
+				}
+				addStroke := func(s *Stroke) {
+					if s != nil {
+						add(s.paint)
+					}
+				}
+				addStyle := func(s *TextDecorationStyle) {
+					if s != nil {
+						addFill(s.fill)
+						addStroke(s.stroke)
+					}
+				}
+				addPath := func(p *Path) {
+					if p != nil {
+						addFill(p.fill)
+						addStroke(p.stroke)
+					}
+				}
 				for i := range n.chunks {
 					for j := range n.chunks[i].spans {
 						span := &n.chunks[i].spans[j]
-						if span.fill != nil {
-							add(span.fill.paint)
-						}
-						if span.stroke != nil {
-							add(span.stroke.paint)
-						}
+						addFill(span.fill)
+						addStroke(span.stroke)
+						addStyle(span.decoration.underline)
+						addStyle(span.decoration.overline)
+						addStyle(span.decoration.lineThrough)
 					}
+				}
+				for i := range n.layouted {
+					span := &n.layouted[i]
+					addFill(span.Fill)
+					addStroke(span.Stroke)
+					addPath(span.Overline)
+					addPath(span.Underline)
+					addPath(span.LineThrough)
 				}
 				walk(n.flattened)
 			}
@@ -259,6 +307,76 @@ func countPaintRefs(root *Group) map[Paint]int {
 	}
 	walk(root)
 	return refs
+}
+
+// glyphCacheKey returns the key of a glyph of a font with some
+// variations in a cache of Cache in usvg src/parser/converter.rs, which keys
+// it with the tuple (ID, GlyphId, Vec<FontVariation>).
+func glyphCacheKey(font FontID, glyph GlyphID, variations []FontVariation) string {
+	b := make([]byte, 0, 8+8*len(variations))
+	b = binary.BigEndian.AppendUint32(b, uint32(font))
+	b = binary.BigEndian.AppendUint32(b, uint32(glyph))
+	for _, v := range variations {
+		b = append(b, v.Tag[:]...)
+		b = binary.BigEndian.AppendUint32(b, math.Float32bits(v.Value))
+	}
+	return string(b)
+}
+
+// fontdbSvg is Cache::fontdb_svg in usvg src/parser/converter.rs, which the
+// macro font_lookup makes.
+func (c *converterCache) fontdbSvg(font FontID, glyph GlyphID) (Node, bool) {
+	key := glyphCacheKey(font, glyph, nil)
+	if hit, ok := c.cacheSvg[key]; ok {
+		return hit, hit != nil
+	}
+	lookup, _ := databaseSvg(c.fontdb, font, glyph, c.opt)
+	c.cacheSvg[key] = lookup
+	return lookup, lookup != nil
+}
+
+// fontdbRaster is Cache::fontdb_raster in usvg src/parser/converter.rs,
+// which the macro font_lookup makes.
+func (c *converterCache) fontdbRaster(font FontID, glyph GlyphID) (*bitmapImage, bool) {
+	key := glyphCacheKey(font, glyph, nil)
+	if hit, ok := c.cacheRaster[key]; ok {
+		return hit, hit != nil
+	}
+	lookup, _ := databaseRaster(c.fontdb, font, glyph)
+	c.cacheRaster[key] = lookup
+	return lookup, lookup != nil
+}
+
+// fontdbOutline is Cache::fontdb_outline in usvg src/parser/converter.rs.
+func (c *converterCache) fontdbOutline(font FontID, glyph GlyphID, variations []FontVariation) (*path.Path, bool) {
+	key := glyphCacheKey(font, glyph, variations)
+	if hit, ok := c.cacheOutline[key]; ok {
+		return hit, hit != nil
+	}
+	lookup, _ := databaseOutline(c.fontdb, font, glyph, variations)
+	c.cacheOutline[key] = lookup
+	return lookup, lookup != nil
+}
+
+// fontdbColr is Cache::fontdb_colr in usvg src/parser/converter.rs.
+func (c *converterCache) fontdbColr(font FontID, glyph GlyphID, variations []FontVariation) (*Tree, bool) {
+	key := glyphCacheKey(font, glyph, variations)
+	if hit, ok := c.cacheColr[key]; ok {
+		return hit, hit != nil
+	}
+	lookup, _ := databaseColr(c.fontdb, font, glyph, variations, c.opt)
+	c.cacheColr[key] = lookup
+	return lookup, lookup != nil
+}
+
+// hasOpszAxis is Cache::has_opsz_axis in usvg src/parser/converter.rs.
+func (c *converterCache) hasOpszAxis(font FontID) bool {
+	if cached, ok := c.cacheHasOpsz[font]; ok {
+		return cached
+	}
+	hasOpsz := databaseHasOpszAxis(c.fontdb, font)
+	c.cacheHasOpsz[font] = hasOpsz
+	return hasOpsz
 }
 
 // stringHash is string_hash in usvg src/parser/converter.rs.
@@ -432,6 +550,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 		clipPaths:       nil,
 		masks:           nil,
 		filters:         nil,
+		fontdb:          opt.fontdb,
 	}
 
 	if !svg.isVisibleElement(opt) {
@@ -447,7 +566,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 		opt:            opt,
 	}
 
-	cache := newConverterCache()
+	cache := newConverterCache(opt.fontdb.Clone())
 	cache.opt = opt
 
 	for node := range svgDoc.descendants() {
@@ -505,6 +624,10 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 	tree.root.collectMasks(&tree.masks)
 	tree.root.collectFilters(&tree.filters)
 	tree.root.calculateBoundingBoxes()
+
+	// The fontdb might have been mutated and we want to apply these changes to
+	// the tree's fontdb.
+	tree.fontdb = cache.fontdb
 
 	if restoreViewbox {
 		calculateSvgBBox(tree)
@@ -719,7 +842,7 @@ func convertElementImpl(
 	case EIdImage:
 		convertImage(node, state, cache, parent)
 	case EIdText:
-		// TODO(phase 9): text::convert of the feature text.
+		convertTextNode(node, state, cache, parent)
 	case EIdSvg:
 		// Only the outermost `svg` reaches this point; nested `svg` elements are
 		// handled earlier in `convert_element`. The root `svg` itself is
@@ -785,7 +908,7 @@ func convertClipPathElementsImpl(
 			convertPath(node, p, state, cache, parent)
 		}
 	case EIdText:
-		// TODO(phase 9): text::convert of the feature text.
+		convertTextNode(node, state, cache, parent)
 	default:
 		state.opt.warnf("'%s' is no a valid 'clip-path' child.", tagName)
 	}
