@@ -21,7 +21,7 @@ b01519ef1956dc0e96de39203fa444a030de4d6a	2026-10-31	ported		Cache shape plans pe
 9371cf7a1fb3ffb0c9f02bbdf976e9d1fed4767c	2026-10-31	ported		Allocate the bounding box caches of nodes on first use (#1212). Port: usvg
 cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported		Store path IDs as `Box<str>` (#1213). Port: usvg text, usvg
 107c3128825c11a972961a738a1e9f4de4d79ad6	2026-11-04	ported		fix: check for loops in `HrefIter` (#1218). Port: usvg, tests
-30fda2c3829147e7b95bfe34df89d1e90ef7dd90	2026-11-04	pending		Avoid cloning font data for shared files (#1220). Port: usvg text
+30fda2c3829147e7b95bfe34df89d1e90ef7dd90	2026-11-04	ported		Avoid cloning font data for shared files (#1220). Port: usvg text
 4cc963bde79f92ee3cf738ab2683f4851a07892c	2026-11-04	pending		Fix sbix bitmap placement (#1221). Port: usvg text, tests
 04291b740387ca7310bce66cd7108ee8d7c51ef0	2026-11-04	pending		Use the owned font model for all font lookups (#1222). Port: usvg text, usvg
 847abd69841493b011d07f9202f9f1fa616a82c6	2026-11-05	pending		Make max parsing depth configurable. (#1223). Port: usvg, tests
