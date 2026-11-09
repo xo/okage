@@ -301,7 +301,11 @@ func layoutText(
 		}
 	}
 
-	var spans []Span
+	nSpans := 0
+	for i := range textNode.chunks {
+		nSpans += len(textNode.chunks[i].spans)
+	}
+	spans := make([]Span, 0, nSpans)
 	charOffset := 0
 	var lastX float32
 	var lastY float32
