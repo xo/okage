@@ -1,6 +1,6 @@
 # D9. Text uses go-text, and the layout of text of usvg is ported
 
-Status: Decided.
+Status: Decided, amended by D32.
 
 usvg converts text into paths. It finds fonts with fontdb, shapes text with
 harfrust, reads outlines and color glyphs with skrifa and read-fonts, and

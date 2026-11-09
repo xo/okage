@@ -21,9 +21,9 @@ import (
 // of the glyph and calls the methods of the trait ColorPainter, which
 // GlyphPainter of usvg src/text/colr.rs implements. go-text parses the
 // tables COLR and CPAL, but it does not walk the graph (D9). This file walks
-// it as skrifa does: ColorGlyph::paint of src/color/mod.rs, traverse.rs,
-// instance.rs and transform.rs of src/color. Each item names the item of
-// skrifa that it replaces.
+// it as skrifa does (D32): ColorGlyph::paint of src/color/mod.rs,
+// traverse.rs, instance.rs and transform.rs of src/color. Each item names
+// the item of skrifa that it replaces.
 
 // colrTransform is skrifa::color::Transform, Matrix<f32> of font-types: an
 // affine transform with the elements xx, yx, xy, yy, dx and dy.

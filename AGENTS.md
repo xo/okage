@@ -20,7 +20,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. The speed target of D18 is not met
 yet. `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `847abd69` of resvg. The maintainers accepted the decisions D1
-to D25, D29 and D30, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
+to D25, D29, D30 and D32, and D26 to D28 and D31 wait for them. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -53,7 +53,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7 and D9 |
+| working on images, text or fonts in `svg` | D7, D9 and D32 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -129,7 +129,8 @@ not repeat. No question is open, and the next question is question 18.
     or the shaping of text (D7, D9). The standard library,
     `golang.org/x/image/webp` and `github.com/go-text/typesetting` do that
     work. The layout of text of usvg is still ported, with go-text in place of
-    the crates that it calls.
+    the crates that it calls. The walk of the paint graph of COLRv1 of skrifa
+    is the one part of a crate of text that okage ports (D32).
 11. An option is a functional option whose name starts with `With`, and it
     holds its value in the value that it configures, never in a package
     variable. Log only to the `*slog.Logger` that the caller gives with an
