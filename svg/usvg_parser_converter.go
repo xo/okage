@@ -88,13 +88,14 @@ type converterCache struct {
 	fontdb *FontDatabase
 
 	// Port: Go keys each cache with a text that glyphCacheKey makes.
-	cacheOutline map[string]*path.Path
-	cacheColr    map[string]*Tree
-	cacheSvg     map[string]Node
-	cacheRaster  map[string]*bitmapImage
-	cacheHasOpsz map[FontID]bool
-	fonts        fontsCache
-	shapingFonts shapingFonts
+	cacheOutline     map[string]*path.Path
+	cacheColr        map[string]*Tree
+	cacheSvg         map[string]Node
+	cacheRaster      map[string]*bitmapImage
+	cacheHasOpsz     map[FontID]bool
+	cacheColorTables map[FontID]colorTables
+	fonts            fontsCache
+	shapingFonts     shapingFonts
 
 	clipPaths map[string]*ClipPath
 	masks     map[string]*Mask
@@ -129,13 +130,14 @@ func newConverterCache(svgDoc *document, fontdb *FontDatabase) *converterCache {
 	return &converterCache{
 		fontdb: fontdb,
 
-		cacheOutline: map[string]*path.Path{},
-		cacheColr:    map[string]*Tree{},
-		cacheSvg:     map[string]Node{},
-		cacheRaster:  map[string]*bitmapImage{},
-		cacheHasOpsz: map[FontID]bool{},
-		fonts:        fontsCache{},
-		shapingFonts: shapingFonts{},
+		cacheOutline:     map[string]*path.Path{},
+		cacheColr:        map[string]*Tree{},
+		cacheSvg:         map[string]Node{},
+		cacheRaster:      map[string]*bitmapImage{},
+		cacheHasOpsz:     map[FontID]bool{},
+		cacheColorTables: map[FontID]colorTables{},
+		fonts:            fontsCache{},
+		shapingFonts:     shapingFonts{},
 
 		clipPaths: map[string]*ClipPath{},
 		masks:     map[string]*Mask{},
@@ -347,6 +349,10 @@ func glyphCacheKey(font FontID, glyph GlyphID, variations []FontVariation) strin
 // fontdbSvg is Cache::fontdb_svg in usvg src/parser/converter.rs, which the
 // macro font_lookup makes.
 func (c *converterCache) fontdbSvg(font FontID, glyph GlyphID) (Node, bool) {
+	if !c.colorTables(font).svg {
+		return nil, false
+	}
+
 	key := glyphCacheKey(font, glyph, nil)
 	if hit, ok := c.cacheSvg[key]; ok {
 		return hit, hit != nil
@@ -359,6 +365,10 @@ func (c *converterCache) fontdbSvg(font FontID, glyph GlyphID) (Node, bool) {
 // fontdbRaster is Cache::fontdb_raster in usvg src/parser/converter.rs,
 // which the macro font_lookup makes.
 func (c *converterCache) fontdbRaster(font FontID, glyph GlyphID) (*bitmapImage, bool) {
+	if !c.colorTables(font).bitmaps {
+		return nil, false
+	}
+
 	key := glyphCacheKey(font, glyph, nil)
 	if hit, ok := c.cacheRaster[key]; ok {
 		return hit, hit != nil
@@ -366,6 +376,16 @@ func (c *converterCache) fontdbRaster(font FontID, glyph GlyphID) (*bitmapImage,
 	lookup, _ := databaseRaster(c.fontdb, font, glyph)
 	c.cacheRaster[key] = lookup
 	return lookup, lookup != nil
+}
+
+// colorTables is Cache::color_tables in usvg src/parser/converter.rs.
+func (c *converterCache) colorTables(font FontID) colorTables {
+	if t, ok := c.cacheColorTables[font]; ok {
+		return t
+	}
+	t := databaseColorTables(c.fontdb, font)
+	c.cacheColorTables[font] = t
+	return t
 }
 
 // fontdbOutline is Cache::fontdb_outline in usvg src/parser/converter.rs.
@@ -381,6 +401,10 @@ func (c *converterCache) fontdbOutline(font FontID, glyph GlyphID, variations []
 
 // fontdbColr is Cache::fontdb_colr in usvg src/parser/converter.rs.
 func (c *converterCache) fontdbColr(font FontID, glyph GlyphID, variations []FontVariation) (*Tree, bool) {
+	if !c.colorTables(font).colr {
+		return nil, false
+	}
+
 	key := glyphCacheKey(font, glyph, variations)
 	if hit, ok := c.cacheColr[key]; ok {
 		return hit, hit != nil

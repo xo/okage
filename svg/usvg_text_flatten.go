@@ -438,6 +438,14 @@ type glyphBoundingBox struct {
 	yMax int16
 }
 
+// colorTables is ColorTables in usvg src/text/flatten.rs. It holds the
+// tables a font can contain non-outline glyphs in.
+type colorTables struct {
+	colr    bool
+	svg     bool
+	bitmaps bool
+}
+
 // bitmapImage is BitmapImage in usvg src/text/flatten.rs.
 //
 // Port: a nil glyphBBox is None.
@@ -483,6 +491,30 @@ func databaseHasOpszAxis(fontdb *FontDatabase, id FontID) bool {
 		return false
 	}
 	return hasAxis(pf, opsz)
+}
+
+// databaseColorTables is DatabaseExt::color_tables for Database in usvg
+// src/text/flatten.rs.
+//
+// Port: skrifa reads the tables COLR and SVG and the bitmap strikes. go-text
+// parses the table COLR with the font, tables.ParseSVG parses the table SVG,
+// and bitmapStrikes reads the strikes.
+func databaseColorTables(fontdb *FontDatabase, id FontID) colorTables {
+	pf, ok := fontdb.withFaceData(id)
+	if !ok {
+		return colorTables{}
+	}
+	svgOK := false
+	if raw := pf.rawTable("SVG "); raw != nil {
+		_, _, err := tables.ParseSVG(raw)
+		svgOK = err == nil
+	}
+	strikes, _ := bitmapStrikes(pf)
+	return colorTables{
+		colr:    pf.font.COLR != nil,
+		svg:     svgOK,
+		bitmaps: len(strikes) != 0,
+	}
 }
 
 // bitmapGlyph is BitmapGlyph of skrifa src/bitmap.rs, with the fields that

@@ -16,7 +16,7 @@ a1dd3077f47f28c0f127c627a504caeb675ac0be	2026-10-30	ported		Keep the marker cont
 07a63a75c74ff9ca85c6d8043927c802c982313d	2026-10-30	ported		Borrow the declarations of `style` attributes from the input (#1204). Port: usvg
 4e9c72b8ce9490350aafae4e92091b6e828d2cce	2026-10-30	ported		Drop the XML document before converting the tree (#1206). Port: usvg
 aaaa3550973183aed9a749dbcbae46de787de967	2026-10-30	ported		Resolve the fonts of a text once per tree (#1208). Port: usvg text, usvg
-4ba2462da4ecf1f93731e957fc65d4ccb7c51bed	2026-10-30	pending		Skip color glyph lookups for fonts without color tables (#1209). Port: usvg text, usvg
+4ba2462da4ecf1f93731e957fc65d4ccb7c51bed	2026-10-30	ported		Skip color glyph lookups for fonts without color tables (#1209). Port: usvg text, usvg
 b01519ef1956dc0e96de39203fa444a030de4d6a	2026-10-31	pending		Cache shape plans per font (#1211). Port: usvg text, usvg
 9371cf7a1fb3ffb0c9f02bbdf976e9d1fed4767c	2026-10-31	pending		Allocate the bounding box caches of nodes on first use (#1212). Port: usvg
 cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	pending		Store path IDs as `Box<str>` (#1213). Port: usvg text, usvg
