@@ -37,11 +37,6 @@ From D11 and D12. Clone strict-num, svgtypes, roxmltree, simplecss, kurbo and
 xmlwriter into `upstream/`, and make the ledger of each one from its base
 commit in `docs/upstream/upstreams.tsv`.
 
-### Build the Rust oracle and the test module
-
-From D22. One scene renders in Go and in Rust, and the test compares the
-bytes.
-
 ### Build the prototype of the pipeline
 
 From D17 and D15. The real pipelines of three cases, in `lowp` and `highp`,
@@ -58,10 +53,32 @@ oracles, the comparison of builds and the benchmarks at night.
 
 ## Phase 3
 
-### Measure the math functions of Go against Rust
+### Make the f64 functions of crmath faster
 
-From risk 3 in `docs/PLAN.md` and D16. tiny-skia calls `cos`, `sin`, `acos`
-and `powf`. Compare `math.Cos`, `math.Sin`, `math.Acos` and `math.Pow` of Go
-with the functions that Rust calls on Linux, for the arguments that the tests
-of tiny-skia pass. If the bits differ in a way that changes a pixel, write a
-decision. This belongs to phase 3, before its gate.
+From D26. `crmath.Acos64` and `crmath.Cos64` compute with `math/big` at 160
+bits, about 9 microseconds for each call. Compute them in double-double
+precision first, and use `math/big` only when that result is too close to
+the middle of two `float64` values. Only the clipping of a cubic calls them.
+
+## Phase 4
+
+### Close the gap to the speed target
+
+From D18 and D28. okage is about 10 to 20 times slower than the scalar code of
+upstream. Measure and try, in this order, keeping the bytes of every test:
+
+1. The forms of D17 that are not measured: one loop with a `switch` on the
+   stage, and the color channels in local variables.
+2. Methods of the vector types that the compiler does not inline, and bounds
+   checks in the stages (`go build -gcflags='-m -d=ssa/check_bce'`).
+3. A copy of the stages that keeps its values in `archsimd` registers through
+   a run of stages, written by a tool, for the SIMD build (D17, D28).
+4. Rounding and the like in other vector methods, as done for `Round` and
+   `Floor`, each with a test on all 2^32 values of a lane.
+
+### Measure the cost of GOEXPERIMENT=simd in each release of Go
+
+From D18 and D28. In Go 1.27.3 the plain functions are slower in a build with
+`GOEXPERIMENT=simd`. Measure it again with each release of Go, as the steps
+of "A new release of Go" in `docs/SIMD.md` say, and turn the SIMD paths of
+`internal/wide/internal/widegen` on or off again from the measurements.

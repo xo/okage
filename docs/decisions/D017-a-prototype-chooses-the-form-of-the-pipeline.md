@@ -38,3 +38,15 @@ The fastest form becomes the form of the port, and this decision records the
 measurements. If two forms are within 10 percent of each other in every case,
 the port uses the form that is closer to upstream. All three models said on
 2026-11-09 that a prototype of 10 stages is too small to decide.
+
+## What was measured
+
+On 2026-11-09 the port came before the prototype. The pipeline of the port
+has the form of upstream: a table of `func(*lowpPipeline)` and
+`func(*highpPipeline)`, with the color channels in a struct of arrays. D28
+records how its vector types work in the SIMD build. The benchmarks of D18
+measure the port against upstream.
+
+The other forms of this decision are not measured yet: one loop with a
+`switch`, the channels in local variables, and a copy of the stages that
+keeps its values in `archsimd` registers. `docs/BACKLOG.md` holds that work.

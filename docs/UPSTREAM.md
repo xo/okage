@@ -75,7 +75,7 @@ paths that it changes: Port, then Review, then Not applicable.
 | Upstream path | okage path | Rule |
 | --- | --- | --- |
 | `path/src/<name>.rs` | `path/<name>.go` | Port |
-| `path/src/lib.rs` | `path/path.go` and `path/doc.go` | Port |
+| `path/src/lib.rs` | `path/lib.go`, and the package comment in `path/doc.go`. `path/path.go` is the port of `path/src/path.rs` | Port |
 | `path/src/f32x2_t.rs`, `path/src/f32x4_t.rs` | `path/f32x2.go`, `path/f32x4.go` | Port |
 | `src/<name>.rs` | `<name>.go` in the root | Port |
 | `src/lib.rs` | `doc.go` in the root, and the type aliases of `path` in `okage.go` | Port |
@@ -191,8 +191,7 @@ The idiomatic Go:
     upstream relies on becomes a Go `panic` with the same condition.
 13. A Rust enum without data becomes a typed constant with a `String` method.
     A Rust enum with data becomes a struct with a kind field, or an interface
-    with one type for each case. The port of the first such enum chooses, and
-    a decision records it.
+    with one type for each case, as D27 says.
 14. A checked type, such as `NormalizedF32`, becomes a defined type with a
     constructor that checks the value and returns `(T, bool)`.
 15. A Rust slice stays a Go slice. A fixed Rust array, such as `[f32; 8]`,

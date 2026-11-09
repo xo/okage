@@ -34,7 +34,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided |
 | D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
-| D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided |
+| D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
 | D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided |
 | D17 | [A prototype chooses the form of the pipeline](D017-a-prototype-chooses-the-form-of-the-pipeline.md) | Decided |
 | D18 | [The SIMD build is within twice the time of upstream](D018-the-simd-build-is-within-twice-the-time-of-upstream.md) | Decided |
@@ -45,3 +45,6 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D23 | [The output of `svg` is compared within a tolerance](D023-the-output-of-svg-is-compared-within-a-tolerance.md) | Decided |
 | D24 | [CI tests amd64 on each push, and the other platforms at night](D024-ci-tests-amd64-on-each-push-and-the-other-platforms-at-night.md) | Decided |
 | D25 | [okage builds with TinyGo](D025-okage-builds-with-tinygo.md) | Decided |
+| D26 | [The math functions are correctly rounded](D026-the-math-functions-are-correctly-rounded.md) | Proposed |
+| D27 | [A Rust enum with data becomes a struct or an interface](D027-a-rust-enum-with-data-becomes-a-struct-or-an-interface.md) | Proposed |
+| D28 | [The vector types are arrays in both builds](D028-the-vector-types-are-arrays-in-both-builds.md) | Proposed, amends D15 |

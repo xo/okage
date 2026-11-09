@@ -13,8 +13,9 @@ Before you change anything, read three things:
 Do not decide an open question on your own. Add it to the end of
 `docs/PLAN.md`, and ask a maintainer.
 
-On 2026-11-09 okage is in phase 0. No code exists. Phase 1 starts when the
-consolidated decisions are committed (D3).
+On 2026-11-09 the port of tiny-skia is done, and its speed is the open work.
+The port of resvg has not started. `docs/PLAN.md` holds the status of each
+phase.
 
 ## The upstream checkouts
 

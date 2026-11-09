@@ -1,0 +1,169 @@
+# Lint configuration for the root module.
+#
+# Every linter is on, and a linter that makes idiomatic Go worse is turned off
+# here, with the reason beside it. Only a real fault gets a change in the code.
+# A change made only to quiet a linter leaves code that no reader can explain.
+#
+# The version of golangci-lint in CI is pinned, because `default: all` turns on
+# each new linter that a release adds.
+version: "2"
+
+run:
+  modules-download-mode: readonly
+
+linters:
+  default: all
+  disable:
+    # Complexity metrics count a long table or a long switch as complex code.
+    # The port follows the shape of the upstream functions (D1).
+    - cyclop
+    - funlen
+    - gocognit
+    - gocyclo
+    - maintidx
+    - nestif
+    # Style opinions that argue with gofmt or with plain code.
+    - lll
+    - nlreturn
+    - varnamelen
+    - wsl
+    - wsl_v5
+    - mnd
+    - nilnil
+    - noinlineerr
+    - nonamedreturns
+    # exhaustruct wants every field of every literal named, which buries the
+    # field that matters.
+    - exhaustruct
+    - exhaustruct_v5
+    # err113 and wrapcheck want every error wrapped. The sentinel errors of
+    # okage are constants of a string type in the root package (D21).
+    - err113
+    - wrapcheck
+    # The ported tests share tables with the code on purpose.
+    - paralleltest
+    - testpackage
+    # A package level table is how the port holds the tables of upstream.
+    - gochecknoglobals
+    - gochecknoinits
+    # prealloc rewrites readable loops for a gain that nothing measured.
+    - prealloc
+    # The port keeps the functions of each upstream file in the order of that
+    # file (D1), and funcorder wants the unexported methods last.
+    - funcorder
+    # The port keeps the match arms of upstream, and a match that ends in
+    # `_ =>` becomes a switch with the rest after it.
+    - exhaustive
+    # A Rust method that takes &self becomes a method with a value receiver,
+    # and one that takes &mut self a method with a pointer receiver.
+    - recvcheck
+    # A Rust enum with data becomes an interface with one type for each case.
+    - ireturn
+    # The port keeps the comments of upstream, and some are TODO comments.
+    - godox
+    # depguard holds the rule on dependencies.
+    - gomodguard
+    - gomodguard_v2
+    # The port keeps the names of the Rust locals and parameters, such as min,
+    # max and close, which shadow a predeclared identifier of Go (D1).
+    - predeclared
+    # The ported code keeps the arithmetic of upstream, such as x*y+z written
+    # as float32(x*y)+z to stop a fused multiply and add (D16). unconvert
+    # reports that conversion as unneeded.
+    - unconvert
+  settings:
+    # D6: the goal is no dependency. Each outside package is approved one at
+    # a time, and it is listed here.
+    depguard:
+      rules:
+        main:
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/xo/okage
+            - github.com/go-text/typesetting
+            - golang.org/x/image/webp
+    gosec:
+      excludes:
+        # The port keeps the integer widths of upstream and its conversions
+        # with `as`, which cut a value the same way (D1). G115 reports each
+        # one.
+        - G115
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    gomoddirectives:
+      # The test module builds against the module in the parent folder (D22).
+      replace-local: true
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        # QF1001 rewrites a boolean expression with De Morgan's law. The port
+        # keeps the expressions of upstream (D1).
+        - -QF1001
+    gocritic:
+      disabled-checks:
+        # The port keeps the if and else chains of upstream (D1).
+        - ifElseChain
+    revive:
+      rules:
+        - name: context-as-argument
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        # The port keeps the names of upstream, such as path.PathBuilder, so
+        # that a search for the Rust name finds the Go name (D1).
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+        - name: indent-error-flow
+        - name: package-comments
+        - name: receiver-naming
+        - name: var-naming
+  exclusions:
+    paths:
+      # the upstream checkouts (D11)
+      - upstream
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - goconst
+          # A ported test keeps the shape of the upstream test.
+          - dupl
+          - dupword
+          - unparam
+      # An example prints its result, and go test compares it with the Output
+      # comment of the example.
+      - path: example_test\.go
+        linters:
+          - forbidigo
+      # The JSON of the Rust oracle has the field names of Rust, in snake
+      # case (D22).
+      - path: test/oracle/
+        linters:
+          - tagliatelle
+      # The lowp and highp stages of upstream have the same shapes on
+      # purpose, and the port keeps both (D10).
+      - path: pipeline_(lowp|highp)\.go
+        linters:
+          - dupl
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/xo/okage
+  exclusions:
+    paths:
+      - upstream

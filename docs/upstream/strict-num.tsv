@@ -1,0 +1,8 @@
+upstream	date	status	okage	note
+d4612ddcfa7c2f2d4b6144bd039d9696aa6f9d27	2023-12-20	not-applicable		Implement `serde::Serialize` and `serde::Deserialize` for all types. It adds the feature serde, which okage does not port
+df06d144ada298b71c89caa4642eb5d67376f083	2023-12-23	not-applicable		Version bump. It changes the version and the change log only
+471eba3a757cf7be961eff098cfce8564baf2947	2024-04-21	not-applicable		Fixes an issue in the documentation. It changes the documentation of the crate only
+7f3a7ab50ddacbb027b7ac175fbd0732dbf3c097	2024-04-21	not-applicable		Adds links to the documentation. It changes the documentation of the crate only
+43247e875b6b0416a2fd781756904cc61a9717e0	2024-04-21	not-applicable		Adds a note about feature flags. It changes the documentation of the crate only
+1335e1f5cb5279a21292b6b1e9eaef5ef073a16f	2024-04-21	not-applicable		Solves a Clippy warning. It rewrites two range checks with the same behavior
+76d36febdb73e875ae3e0c6ae1310a084a7860c7	2024-04-25	not-applicable		Merge pull request #4 from dtoniolo/master. It merges the feature serde, which okage does not port

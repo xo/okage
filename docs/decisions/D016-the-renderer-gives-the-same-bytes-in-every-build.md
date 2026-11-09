@@ -42,7 +42,7 @@ is compared.
 
 tiny-skia calls `cos`, `sin`, `acos` and `powf`. If the functions of `math`
 give other bits than the functions that Rust calls on Linux, a pixel can
-differ. Phase 3 measures it, and a decision records what okage does.
+differ. The measurement and what okage does are in D26.
 
 ## Why
 

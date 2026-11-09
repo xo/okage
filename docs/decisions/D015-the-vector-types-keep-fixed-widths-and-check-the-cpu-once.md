@@ -1,6 +1,6 @@
 # D15. The vector types keep fixed widths and check the CPU once
 
-Status: Decided.
+Status: Decided, amended by D28.
 
 ## Fixed widths
 

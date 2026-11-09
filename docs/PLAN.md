@@ -8,6 +8,26 @@ this plan that names a decision follows it. The maintainers accepted the
 decisions D1 to D25 on that date. The open questions are at the end of this
 document.
 
+## Status
+
+On 2026-11-09 phases 0 to 4 have their code, and every gate holds but the
+speed target of D18:
+
+1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
+   the test module, the lint configuration and CI. The prototype of D17 was
+   not built before the port, and D17 records why.
+2. Phase 2: `path`, the port of tiny-skia-path and strict-num. Its tests pass,
+   and the oracle gives the same bits for each path.
+3. Phase 3: the root package, the port of tiny-skia. The 157 integration tests
+   pass, and the oracle gives the same bytes on each random scene with no
+   cubic curve. The math functions are correctly rounded (D26).
+4. Phase 4: the SIMD paths of `internal/wide`, with the CPU check (D15, D28).
+   The tests pass in both builds, on arm64 and on WebAssembly, and with
+   TinyGo. okage is about 10 to 20 times slower than the scalar code of
+   upstream (D18), and `BACKLOG.md` holds the work that closes the gap.
+
+Phase 5, the commits of tiny-skia after the base commit, comes next.
+
 These documents hold the rules and the references that come from this plan:
 
 - [`UPSTREAM.md`](UPSTREAM.md) says how each upstream repository is ported,

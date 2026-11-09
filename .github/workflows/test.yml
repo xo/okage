@@ -1,0 +1,50 @@
+# CI on each push: linux amd64, the scalar build and the SIMD build, without
+# the oracles (D24). The nightly tier is nightly.yml.
+on: [push, pull_request]
+name: Test
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Format
+      run: test -z "$(gofmt -l $(git ls-files '*.go'))"
+    - name: Vet
+      run: go vet ./...
+    - name: Vet the SIMD build
+      run: GOEXPERIMENT=simd go vet ./...
+    - name: Test
+      # the module is pure Go (D1)
+      run: CGO_ENABLED=0 go test -count=1 ./...
+    - name: Test the SIMD build
+      # the SIMD build gives the same bytes as the scalar build (D16)
+      run: GOEXPERIMENT=simd go test -count=1 ./...
+    - name: Race
+      run: go test -race -count=1 ./...
+    - name: Test module
+      # the test module has its own go.mod, so ./... in the root misses it.
+      # Its oracles skip, because CI has no checkout of upstream.
+      working-directory: test
+      run: go vet ./... && go test -count=1 ./...
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    # pinned, because .golangci.yml sets `default: all` and a newer release
+    # can turn on a linter that nobody chose
+    - name: Install golangci-lint
+      run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
+    - name: Lint
+      run: golangci-lint run ./...

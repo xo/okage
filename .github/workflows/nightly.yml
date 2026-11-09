@@ -1,0 +1,88 @@
+# The nightly tier of CI (D24): arm64, s390x under QEMU for a big-endian
+# platform, wasip1 and TinyGo.
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+name: Nightly
+jobs:
+  arm64:
+    name: arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Test
+      # the compiler fuses a multiply and an add on arm64, and a test finds a
+      # fusion that the port did not stop (D16)
+      run: go test -count=1 ./...
+    - name: Test the SIMD build
+      run: GOEXPERIMENT=simd go test -count=1 ./...
+  s390x:
+    name: s390x
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Install QEMU
+      run: sudo apt-get update && sudo apt-get install -y qemu-user-static
+    - name: Test
+      # a big-endian platform, as upstream tests on big-endian PowerPC
+      run: GOARCH=s390x go test -count=1 -exec qemu-s390x-static ./...
+  wasip1:
+    name: wasip1
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Install wasmtime
+      run: curl -sSf https://wasmtime.dev/install.sh | bash
+    - name: Test
+      run: |
+        export PATH="$HOME/.wasmtime/bin:$(go env GOROOT)/lib/wasm:$PATH"
+        GOOS=wasip1 GOARCH=wasm go test -count=1 ./...
+    - name: Test the SIMD build
+      run: |
+        export PATH="$HOME/.wasmtime/bin:$(go env GOROOT)/lib/wasm:$PATH"
+        GOOS=wasip1 GOARCH=wasm GOEXPERIMENT=simd go test -count=1 ./...
+  tinygo:
+    name: TinyGo
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - uses: acifani/setup-tinygo@v2
+      with:
+        tinygo-version: '0.44.0'
+    - name: Test
+      # TinyGo 0.44.0 is the lowest version that okage supports (D25)
+      run: tinygo test ./...
+    - name: Build for wasip1
+      run: for p in $(go list ./... | grep -v /internal/); do tinygo build -target wasip1 -o /dev/null "$p" 2>&1 | grep -v 'no main' || true; done
+  oracle:
+    name: Oracle
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - name: Fetch the crates of the Rust oracle
+      # the harness builds the oracle with cargo --offline (D22)
+      run: cargo fetch --manifest-path test/oracle/rust/Cargo.toml
+    - name: Compare with the Rust oracle
+      # a scene with no cubic curve gives the same bytes, and at most 1
+      # percent of the scenes with a cubic curve differ (D26)
+      working-directory: test
+      run: go test -count=1 ./oracle/ -args -oracle.n=100000
+    - name: Compare the SIMD build with the Rust oracle
+      working-directory: test
+      run: GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=100000

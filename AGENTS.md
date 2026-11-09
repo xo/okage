@@ -14,9 +14,13 @@ build has (D15). The renderer gives the same bytes as tiny-skia in both builds
 (D16). A build with TinyGo, most of all for WebAssembly, is a distant goal
 that each implementation keeps in mind (D25).
 
-On 2026-11-09 okage is in phase 0. The plan, the rules and the decisions
-exist, and no code exists (D3). The maintainers accepted the decisions D1 to
-D25 on that date. The open questions are at the end of `docs/PLAN.md`.
+On 2026-11-09 the port of tiny-skia is done in both builds and with TinyGo:
+`path`, the root package, `internal/wide` and `internal/crmath`. The 157
+integration tests of upstream pass, and the Rust oracle gives the same bytes
+on each random scene with no cubic curve. The speed target of D18 is not met
+yet. The port of resvg has not started. The maintainers accepted the
+decisions D1 to D25, and D26 to D28 wait for them. The open questions are at
+the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -114,8 +118,8 @@ not repeat. Question 16 is open, and the next question is question 18.
      with a bare conversion where the value can be out of range.
 8. Only the files of `internal/wide` carry a build tag for SIMD or for an
    architecture (D15). The pipeline and the rest of okage are the same in
-   each build. They call the methods of the vector types and never index a
-   lane. No other code chooses its behavior by platform. Fonts, for example,
+   each build. They call the methods of the vector types, and they index a
+   lane only where upstream does (D28). No other code chooses its behavior by platform. Fonts, for example,
    come from an `fs.FS` that the caller gives (D9).
 9. Keep TinyGo in mind (D25). The packages that a user imports do not use
    `reflect`, `encoding/json`, `encoding/xml` or `runtime/debug`. The pipeline
@@ -214,18 +218,21 @@ Before you stage a change to a document, make sure of these facts:
 2. A new document is in the table of this file and in the list of `README.md`.
 3. A new decision has a row in `docs/decisions/README.md`.
 
-When code exists, the commands that must pass before you stage a change to Go
-code go here. Phase 1 writes them. They will cover the scalar build, the SIMD
-build, TinyGo and the test module:
+These commands must pass before you stage a change to Go code. They cover
+the scalar build, the SIMD build, TinyGo, the test module with the Rust
+oracle, and the benchmarks. The benchmarks take some minutes:
 
 ```sh
-test -z "$(gofmt -l $(git ls-files '*.go'))"
-go vet ./...
+test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
+go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test ./...
+tinygo test . ./path ./internal/...
 golangci-lint run ./...
 (cd test && go vet ./... && go test -count=1 ./... && golangci-lint run ./...)
+(cd test && GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=10000)
+go test -run xxx -bench . -benchtime 100x .
+GOEXPERIMENT=simd go test -run xxx -bench . -benchtime 100x .
 ```
 
 ## Writing documentation

@@ -47,10 +47,12 @@ WebAssembly, is a goal that the port keeps in mind.
 
 ## Status
 
-okage is in phase 0. The plan, the rules for following upstream and the
-decisions exist. No code exists yet, and no code is written until the plan is
-accepted. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the open
-questions.
+The port of tiny-skia is done, in the root package and in `path`. It gives
+the same bytes as tiny-skia in the scalar build, in the SIMD build and with
+TinyGo, and the 157 integration tests of tiny-skia pass. It is still about 10
+to 20 times slower than tiny-skia. The port of resvg, the package `svg`, has
+not started. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
+open questions.
 
 The port starts from resvg `v0.49.0` and from the versions of the crates that
 it uses, such as tiny-skia `v0.12.0`. After each base port, okage follows each
