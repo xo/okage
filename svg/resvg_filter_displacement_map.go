@@ -15,13 +15,14 @@ import "github.com/xo/okage/internal/wide"
 //   - `map` pixels should have a **unpremultiplied alpha**.
 //   - `src` pixels can have any alpha method.
 //
-// `sx` and `sy` indicate canvas scale.
+// `scale_x` and `scale_y` are the `scale` attribute already converted
+// into the canvas coordinate system, i.e. the maximum displacement in pixels.
 //
 // `src`, `map` and `dest` dimensions must match.
 func applyFilterDisplacementMap(
 	fe *DisplacementMapFilter,
-	sx float32,
-	sy float32,
+	scaleX float32,
+	scaleY float32,
 	src imageRef,
 	m imageRef,
 	dest imageRefMut,
@@ -50,8 +51,8 @@ func applyFilterDisplacementMap(
 
 		dx := calcOffset(fe.XChannelSelector())
 		dy := calcOffset(fe.YChannelSelector())
-		ox := wide.TruncI32(round32(float32(x) + float32(float32(dx*sx)*fe.Scale())))
-		oy := wide.TruncI32(round32(float32(y) + float32(float32(dy*sy)*fe.Scale())))
+		ox := wide.TruncI32(round32(float32(x) + float32(dx*scaleX)))
+		oy := wide.TruncI32(round32(float32(y) + float32(dy*scaleY)))
 
 		// TODO: we should use some kind of anti-aliasing when offset is on a pixel border
 

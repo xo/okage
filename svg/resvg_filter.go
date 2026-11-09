@@ -1267,6 +1267,9 @@ func applyDisplacementMap(
 		return imageFilter{}, err
 	}
 
+	// The displacement map must be read using non-premultiplied color values.
+	demultiplyAlpha(pixmap2.DataMut())
+
 	pixmap, err := pixmapTryCreate(region.Width(), region.Height(), opt)
 	if err != nil {
 		return imageFilter{}, err

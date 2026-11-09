@@ -868,8 +868,8 @@ func convertDisplacementMap(fe svgNode, scale Size, primitives []PrimitiveFilter
 		return ColorChannelFilterA
 	}
 
-	// TODO: should probably split scale to scale_x and scale_y,
-	//       but resvg doesn't support displacement map anyway...
+	// TODO: should probably split scale to scale_x and scale_y
+	//       to handle `primitiveUnits=objectBoundingBox` with a non-square bbox.
 	s := (scale.Width() + scale.Height()) / 2.0
 
 	return &DisplacementMapFilter{
