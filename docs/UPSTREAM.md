@@ -364,11 +364,10 @@ On 2026-11-09 eight ledgers exist:
    of upstream only, and it is `not-applicable`. The column `matched` is
    `5d475477`.
 2. `resvg.tsv` holds the 26 commits after `v0.49.0`, up to `847abd69` on
-   2026-11-05. Each one changes code or tests that okage ports, so each one
-   is `pending`, and its note says which parts it changes. `e1a4c92d` raises
-   harfrust to 0.15 and skrifa to 0.49, and changes `usvg/src/text`. okage
-   ports its change to `usvg/src/text`, with go-text in place of the crates,
-   and not the new versions of the crates (D9).
+   2026-11-05. Each one is `ported`, with its okage commit, and the column
+   `matched` is `847abd69`. `e1a4c92d` raises harfrust to 0.15 and skrifa to
+   0.49. okage ports its change to `usvg/src/text`, with go-text in place of
+   the crates, and not the new versions of the crates (D9).
 3. `strict-num.tsv` holds the 7 commits after the base commit. None of them
    changes code that okage ports, so each one is `not-applicable`, and the
    column `matched` is `76d36feb`.

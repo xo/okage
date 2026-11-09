@@ -10,7 +10,7 @@ document.
 
 ## Status
 
-On 2026-11-09 phases 0 to 9 have their code, and every gate holds but the
+On 2026-11-09 phases 0 to 10 have their code, and every gate holds but the
 speed target of D18:
 
 1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
@@ -57,7 +57,14 @@ speed target of D18:
    of their pixels (D31): a stack of combining marks, and the variable font
    of the tests of `font-variation-settings`.
 
-Phase 10, the commits of resvg after the base commit, comes next.
+10. Phase 10: the 26 commits of resvg after `v0.49.0`, up to `847abd69` on
+    2026-11-05, each in its own okage commit. The Rust oracle links usvg and
+    resvg at that commit and gives the same trees and the same pixels. The
+    commits of the crates under `internal/` after their base wait until resvg
+    raises their versions (D12).
+
+okage now follows its upstreams when a maintainer asks. The release `v0.1.0`
+waits for the target of D18 in phase 4.
 
 These documents hold the rules and the references that come from this plan:
 
