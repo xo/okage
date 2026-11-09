@@ -250,6 +250,8 @@ func renderPatternPixmap(
 		return nil, Transform{}, false
 	}
 
+	sx = float32(imgSize.Width()) / rect.Width()
+	sy = float32(imgSize.Height()) / rect.Height()
 	transform = path.TransformFromScale(sx, sy)
 	m := pixmap.AsMut()
 	renderNodes(pattern.Root(), ctx, transform, &m)
