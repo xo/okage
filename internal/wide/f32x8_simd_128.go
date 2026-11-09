@@ -105,6 +105,7 @@ func roundIntF32x8SIMD(a F32x8) I32x8 {
 
 // powfF32x8Lanes4 is powfF32x8SIMD for 4 lanes.
 func powfF32x8Lanes4(x archsimd.Float32x4, exp float32) archsimd.Float32x4 {
+	x = archsimd.BroadcastUint32x4(powfNaNBits).BitsToFloat32().IfElse(x.NotEqual(x), x)
 	e := x.ToBits().BitsToInt32().ConvertToFloat32().Mul(archsimd.BroadcastFloat32x4(1.0 / (1 << 23)))
 	m := x.ToBits().And(archsimd.BroadcastUint32x4(0x007fffff)).Or(archsimd.BroadcastUint32x4(0x3f000000)).BitsToFloat32()
 	log2X := e.Sub(archsimd.BroadcastFloat32x4(124.225514990))

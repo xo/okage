@@ -266,3 +266,22 @@ func TestF32x8Not(t *testing.T) {
 func TestF32x8Equal(t *testing.T) {
 	runEqual(t, f32x8Vec, F32x8.Equal)
 }
+
+// TestF32x8PowfNaN checks that Powf gives the same bits for each NaN,
+// whatever its payload and its sign, as for the NaN of powfNaNBits (D34).
+func TestF32x8PowfNaN(t *testing.T) {
+	nans := []uint32{0x7fc00000, 0xffc00000, 0x7fc00001, 0x7f800001, 0xffffffff, 0x7fabcdef}
+	for _, exp := range []float32{2.2, 0.45454545, 2.4, 0.416666666} {
+		var in, ref F32x8
+		for i := range in {
+			in[i] = math.Float32frombits(nans[i%len(nans)])
+			ref[i] = math.Float32frombits(powfNaNBits)
+		}
+		got, want := in.Powf(exp), ref.Powf(exp)
+		for i := range got {
+			if math.Float32bits(got[i]) != math.Float32bits(want[i]) {
+				t.Errorf("Powf(%#08x, %v) = %#08x, want %#08x", nans[i%len(nans)], exp, math.Float32bits(got[i]), math.Float32bits(want[i]))
+			}
+		}
+	}
+}

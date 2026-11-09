@@ -159,7 +159,8 @@ func (v F32x8) Sqrt() F32x8 {
 
 // Powf is f32x8::powf in tiny-skia src/wide/f32x8_t.rs. It gives an
 // approximation of v to the power exp, from an approximation of log2 and of
-// exp2. A lane that is 0 or 1 does not change.
+// exp2. A lane that is 0 or 1 does not change. A NaN lane is first replaced
+// with the NaN of powfNaNBits (D34).
 func (v F32x8) Powf(exp float32) F32x8 {
 	return powfF32x8(v, exp)
 }

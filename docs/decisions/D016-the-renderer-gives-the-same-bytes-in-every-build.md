@@ -1,6 +1,6 @@
 # D16. The renderer gives the same bytes in every build
 
-Status: Decided.
+Status: Decided, amended by D34.
 
 The packages of tiny-skia, which are the root package, `path` and
 `internal/wide`, give the same bytes as the scalar build of upstream, which is

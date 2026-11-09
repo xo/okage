@@ -1,6 +1,6 @@
 # D33. A hot stage computes its lanes in one loop
 
-Status: Proposed, amends D28.
+Status: Decided, amends D28.
 
 D28 keeps the channels of the pipeline in arrays, and its rule says that a
 stage calls the methods of the vector types and indexes a lane only where

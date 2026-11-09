@@ -66,6 +66,7 @@ func roundIntF32x8SIMD(a F32x8) I32x8 {
 func powfF32x8SIMD(a F32x8, exp float32) F32x8 {
 	var r F32x8
 	x := ldF8(a[:])
+	x = archsimd.BroadcastUint32x8(powfNaNBits).BitsToFloat32().IfElse(x.NotEqual(x), x)
 	e := x.ToBits().BitsToInt32().ConvertToFloat32().Mul(archsimd.BroadcastFloat32x8(1.0 / (1 << 23)))
 	m := x.ToBits().And(archsimd.BroadcastUint32x8(0x007fffff)).Or(archsimd.BroadcastUint32x8(0x3f000000)).BitsToFloat32()
 	log2X := e.Sub(archsimd.BroadcastFloat32x8(124.225514990))

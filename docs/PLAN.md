@@ -737,6 +737,10 @@ Each of these was measured on 2026-11-09:
 4. Astra and DeepSeek Pro said to port zune-jpeg if the bytes of `svg` must
    match. The maintainers chose to port no image decoder (D7), and to compare
    the output of `svg` within a tolerance (D23).
+5. GoAT, which compiles C into Go assembly, was considered on 2026-11-09 to
+   reach the target of D18. The maintainers did not take it. It needs a
+   copy of the pipeline in C beside the Go code, against D1, and its
+   assembly cannot be reviewed.
 
 ## Open questions
 
@@ -744,11 +748,8 @@ An open question stays here until the maintainers answer it. Then it becomes
 a decision in [`decisions/`](decisions/README.md), and it is deleted from this
 list. The numbers do not repeat. The next question is question 19.
 
-The maintainers answered questions 1 to 15 and 17 on 2026-11-09, and the
+The maintainers answered questions 1 to 15, 17 and 18 on 2026-11-09, and the
 decisions record the answers. Question 16, how two images are compared
 within a tolerance, has the proposed answer D31.
 
-18. Can a hot stage of the pipeline compute its lanes in one loop, in place
-    of the methods of the vector types, when the loop gives the same bits?
-    D28 says that a stage indexes a lane only where upstream does. The
-    proposed answer is D33, which the port of lowp already follows.
+No question is open.

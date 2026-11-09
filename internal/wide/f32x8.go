@@ -307,8 +307,10 @@ func sqrtF32x8(v F32x8) F32x8 {
 //
 // Powf is f32x8::powf in tiny-skia src/wide/f32x8_t.rs. It gives an
 // approximation of v to the power exp, from an approximation of log2 and of
-// exp2. A lane that is 0 or 1 does not change.
+// exp2. A lane that is 0 or 1 does not change. A NaN lane is first replaced
+// with the NaN of powfNaNBits (D34).
 func powfF32x8(v F32x8, exp float32) F32x8 {
+	v = powfNaN(v)
 	x := v
 	// We assume sign(x) is positive so we can use vectorized i32->f32
 	// conversions.
@@ -327,6 +329,24 @@ func powfF32x8(v F32x8, exp float32) F32x8 {
 	x = toF32x8BitcastI32x8(roundIntF32x8(minF32x8(maxF32x8(a, SplatF32x8(0.0)), infBits)))
 	skip := orF32x8(cmpEqF32x8(v, SplatF32x8(0.0)), cmpEqF32x8(v, SplatF32x8(1.0)))
 	return blendF32x8(skip, v, x)
+}
+
+// powfNaNBits is the bits of the NaN that Powf reads in place of any NaN
+// lane (D34). It is the NaN that x86 makes for an invalid operation, such as
+// 0/0, which is what the oracle of upstream gives on amd64.
+const powfNaNBits = 0xffc00000
+
+// powfNaN replaces each NaN lane of v with the NaN of powfNaNBits (D34).
+// Powf reads the bits of each lane, so the result for a NaN depends on its
+// payload, which differs between architectures, and between orders of the
+// operands of an addition. It ports no upstream function.
+func powfNaN(v F32x8) F32x8 {
+	for i, x := range v {
+		if x != x {
+			v[i] = math.Float32frombits(powfNaNBits)
+		}
+	}
+	return v
 }
 
 // addF32x8 is the scalar code of F32x8.Add.

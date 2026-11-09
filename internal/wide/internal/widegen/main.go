@@ -157,6 +157,7 @@ var table = map[string][]kernel{
 			"shiftU := x.ToBits().ShiftAllLeft(1).And(expMask)",
 			"shiftU.Equal(expMask).ToInt32x{W}().Not().ToBits().BitsToFloat32()"),
 		unary("Powf", true, 'F',
+			"x = archsimd.BroadcastUint32x{W}(powfNaNBits).BitsToFloat32().IfElse(x.NotEqual(x), x)",
 			"e := x.ToBits().BitsToInt32().ConvertToFloat32().Mul(archsimd.BroadcastFloat32x{W}(1.0 / (1 << 23)))",
 			"m := x.ToBits().And(archsimd.BroadcastUint32x{W}(0x007fffff)).Or(archsimd.BroadcastUint32x{W}(0x3f000000)).BitsToFloat32()",
 			"log2X := e.Sub(archsimd.BroadcastFloat32x{W}(124.225514990))",

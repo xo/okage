@@ -121,6 +121,8 @@ okage differs from upstream only where a decision says so:
 5. An elliptical arc makes at most 4,096 cubic curves. kurbo has no limit, so
    an arc with a radius of about 4.23e20 or more does not end in upstream
    (D30).
+6. The gamma stages give one result for every NaN. Upstream reads the bits
+   of a NaN there, and they differ between x86 and ARM (D34).
 
 okage also adds APIs that upstream does not have:
 
