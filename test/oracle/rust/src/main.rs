@@ -13,10 +13,14 @@
 //!    strokes, dashes or transforms a path. The answer is the path that
 //!    results, written as `write_path` says, or a length of zero if there is
 //!    no path.
+//! 3. A question of the parsers, with the field "xml" or "svgtypes", as
+//!    the module `parsers` says.
 //!
 //! The Go test writes each number as the shortest decimal of a float64 that
 //! gives back the float32. serde_json can read a decimal one unit in the last
 //! place of a float64 off, and the conversion to f32 still gives the float32.
+
+mod parsers;
 
 use std::io::{self, BufRead, Write};
 
@@ -31,6 +35,8 @@ use tiny_skia::{
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum Question {
+    Xml(parsers::XmlQuestion),
+    Svgtypes(parsers::SvgtypesQuestion),
     Path(PathQuestion),
     Scene(Scene),
 }
@@ -506,6 +512,8 @@ fn answer_path(q: &PathQuestion) -> Option<Vec<u8>> {
 }
 
 fn main() {
+    // A panic of svgtypes is an answer, so its message is not printed.
+    std::panic::set_hook(Box::new(|_| {}));
     let stdin = io::stdin();
     let mut out = io::BufWriter::new(io::stdout().lock());
     for line in stdin.lock().lines() {
@@ -515,6 +523,11 @@ fn main() {
         }
         let question: Question = serde_json::from_str(&line).expect("parsing a question");
         let data = match &question {
+            Question::Xml(q) => parsers::answer_xml(q),
+            Question::Svgtypes(q) => {
+                std::panic::catch_unwind(|| parsers::answer_svgtypes(q))
+                    .unwrap_or_else(|_| Some(b"panic\n".to_vec()))
+            }
             Question::Path(q) => answer_path(q),
             Question::Scene(s) => render(s),
         }

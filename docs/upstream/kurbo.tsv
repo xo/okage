@@ -1,0 +1,7 @@
+upstream	date	status	okage	note
+11cb7f11064da32b33eb5164535a2f4cbf9f5b5a	2026-06-29	not-applicable		`serde` and `schemars` support for `Axis` (#591). It changes kurbo/src/axis.rs, which is not in the subset
+fcc5e97be10d0581bc16c7ef0c211151ac6b4ade	2026-07-16	not-applicable		Add more context to polycool unit test failure messages (#595). It changes polycool only
+ca273499e3e48bd2de6f02aa8e99a148984e45f3	2026-07-23	not-applicable		ci: Update to stable Rust 1.97.1, typos 1.48.0 (#596). It changes the CI, and the message of a test assertion in kurbo/src/cubicbez.rs
+3286440db6df3ff1f905ec398407b1d0e7cff955	2026-09-24	not-applicable		ci: Update to stable Rust 1.98.1 (#608). It changes the CI, and factor_quartic_inner in kurbo/src/common.rs, which is not in the subset
+9366cda80ebb56f41e5d09509a89dbfe81bc4f5b	2026-10-08	not-applicable		ci: Update to stable Rust 1.99.0, typos 1.50.3 (#612). It changes the CI and polycool only
+a5f97ff4070773fe01be92c6a607120e49da4e6f	2026-10-30	not-applicable		feat: add Clone and Debug to ArcAppendIter (#614). It derives Clone and Debug for ArcAppendIter, which has no Go form

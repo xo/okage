@@ -1,0 +1,9 @@
+upstream	date	status	okage	note
+d20c5e06eb72da9f87407341dde89ebd9bf271d6	2025-02-21	not-applicable		ci: update to stable Rust 1.85, typos 1.29.9 (#30). It changes the CI only
+b41b748203187e986d68ee9c10cf4d8b458db87a	2025-04-04	not-applicable		Add Taplo formatting for TOML files (#31). It changes the CI and .taplo.toml only
+e20a096584261ee28cf69243e4aa63fe5e49c732	2025-04-04	not-applicable		Be more `no_std` (#33). It adds extern crate std to src/lib.rs, which has no Go form
+f545d4adb2b9afa6bf4a63c5d747accff417d9c2	2025-04-04	not-applicable		ci: Update stable Rust to 1.86, typos to 1.31.1 (#32). It changes the CI only
+e0e43604e4d46031b3ac85ecf9210b241f27c889	2025-05-17	not-applicable		Fix `clippy::uninlined_format_args` lints (#34). It inlines the arguments of format strings, which gives the same strings
+38355ce0ab1fc07d204d1eb175f0182be54699ff	2025-05-17	not-applicable		ci: update to stable Rust 1.87, typos 1.32.0 (#35). It changes the CI only
+46470825823a8c9c0daf91e7893958ebdce9d6a7	2025-06-27	not-applicable		ci: Update to stable Rust 1.88, typos 1.33.1 (#36). It changes the CI only
+8a29c421a838b937db847a86b50650900658cb8c	2025-12-21	pending		Support parsing `@font-face` (#39). It changes src/lib.rs and tests/stylesheet.rs

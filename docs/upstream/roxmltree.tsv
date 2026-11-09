@@ -1,0 +1,12 @@
+upstream	date	status	okage	note
+e8a27a70867b13db1db8cee7c99586cda8b2a2ae	2026-05-23	pending		Fix a typo in and reword for clarity the docstring for `EntityResolver`. It changes a doc comment in src/parse.rs
+3f5c78dea57662b43a2f41961397b1f5ffe27166	2026-09-22	pending		Parse element content iteratively. It changes src/parse.rs, src/tokenizer.rs and tests/api.rs
+b04f75f6a0d17c6248de3eb1b1013bf1bbac44ae	2026-10-24	not-applicable		Bump version for maintenance release.. It raises the version, and its change to src/lib.rs gives the same result in a form that the Go code already has
+800fd72ed63b1a1b65e12bdfd14f213fab1b36e5	2026-10-24	pending		Reject an element with more than u16::MAX attributes.. It changes src/parse.rs and tests/api.rs
+37931a222b691d9b07d0d50a35271443df753ffa	2026-10-31	pending		Validate ASCII attribute values without an early exit. It changes src/tokenizer.rs
+20bdedb144b473808e01639ca34c589ef9f2908c	2026-11-04	pending		Fix allow_dtd docs about empty DTDs. It changes src/parse.rs and tests/api.rs
+fd4b6bb80a297837ff9672dc22bbb29c7ecf2888	2026-11-04	not-applicable		Drop the changelog entry for the allow_dtd docs fix. It changes CHANGELOG.md only
+4468a3547dd53565c7a51f6aad8476cf169b8e6f	2026-11-05	pending		Store attribute qname and equal-sign lengths as u32. It changes src/lib.rs, src/parse.rs, src/tokenizer.rs and tests/api.rs
+66690b5d7cb7230f5fb50c3775288b563e9d8cc6	2026-11-06	pending		Check inherited namespaces only against the element's own declarations. It changes src/lib.rs, src/parse.rs and tests/api.rs
+f9e593987e009443aec2c5dfeaf0f79656c0fdde	2026-11-08	pending		Compare local names first when checking for duplicate attributes. It changes src/parse.rs and tests/api.rs
+d646f5040f6ca6abb604955bb9f03f9b273d45f4	2026-11-08	pending		Bound the initial node and attribute reservation (#171). It changes src/parse.rs

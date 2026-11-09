@@ -14,8 +14,8 @@ Do not decide an open question on your own. Add it to the end of
 `docs/PLAN.md`, and ask a maintainer.
 
 On 2026-11-09 the port of tiny-skia is done, and its speed is the open work.
-The port of resvg has not started. `docs/PLAN.md` holds the status of each
-phase.
+The port of resvg has its parsers in `internal/`, and `svg` has not started.
+`docs/PLAN.md` holds the status of each phase.
 
 ## The upstream checkouts
 

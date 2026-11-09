@@ -141,7 +141,7 @@ func DecodePNG(data []byte, opts ...Option) (*Pixmap, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrDecodingPNG, err)
 	}
-	if cfg.Width < 0 || cfg.Height < 0 || cfg.Width > math.MaxUint32 || cfg.Height > math.MaxUint32 {
+	if cfg.Width < 0 || cfg.Height < 0 || uint64(cfg.Width) > math.MaxUint32 || uint64(cfg.Height) > math.MaxUint32 {
 		return nil, ErrInvalidImageSize
 	}
 	if size, ok := path.IntSizeFromWH(uint32(cfg.Width), uint32(cfg.Height)); ok {

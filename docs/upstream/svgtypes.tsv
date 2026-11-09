@@ -1,0 +1,8 @@
+upstream	date	status	okage	note
+3ee4db5bcbfe8db817d87b55a3ae4f889bf2d3fa	2026-05-13	pending		Support actual angles for HSL/HSLA colors (#62). It changes src/angle.rs and src/color.rs
+e7134d267dad4bc39f4b3d9e449ff025cad2db7a	2026-10-30	pending		perf: remove vec in paint_order.rs (#69). It changes src/paint_order.rs
+b64a8609a0c20c9a7346a82e6d124996c439ddc2	2026-10-31	pending		Return an error instead of panicking on invalid transform-origin (#65). It changes src/transform_origin.rs
+1cba369c752bc4b4ad08d0e0addf8fae66b76bf8	2026-10-31	pending		Skip possible '/' before alpha parameter to rgb, hsl and friends (#64). It changes src/color.rs
+c0948449af2a709a18aac68678684d3d737912bf	2026-10-31	pending		Use the CSS non-ASCII ident code point ranges in identifiers (#71). It changes src/font.rs and src/stream.rs
+cf6f6da3c40e8cd3cfa7c23e979fe8fb36551b0f	2026-10-31	pending		Add support for hwb() (#63). It changes src/color.rs
+90a7f12f898dc69cabe98f6c2fd105ae52747919	2026-11-04	not-applicable		Prepare v0.16.2 release (#72). It raises the version in Cargo.toml and changes CHANGELOG.md only

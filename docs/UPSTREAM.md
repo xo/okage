@@ -352,7 +352,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-09 three ledgers exist:
+On 2026-11-09 eight ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -370,9 +370,12 @@ On 2026-11-09 three ledgers exist:
 3. `strict-num.tsv` holds the 7 commits after the base commit. None of them
    changes code that okage ports, so each one is `not-applicable`, and the
    column `matched` is `76d36feb`.
-
-The ledgers of the other upstreams are made in phase 1, when their checkouts
-exist.
+4. `svgtypes.tsv`, `roxmltree.tsv`, `simplecss.tsv`, `kurbo.tsv` and
+   `xmlwriter.tsv` hold the commits after the base commits of phase 6. Each
+   commit that changes ported code or tests is `pending`, and its note says
+   which files it changes. The others are `not-applicable`, with the
+   reason. okage ports the pending commits in phase 10, after usvg raises the
+   version of the crate.
 
 ## A difference from upstream
 

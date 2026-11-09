@@ -1,7 +1,8 @@
 // Package crmath gives correctly rounded results of the math functions that
-// tiny-skia calls from the C library: acos and cos for an f64, and acos, cos,
-// sin and pow for an f32. A correctly rounded result is the exact value
-// rounded to the nearest float, so it is the same on every platform.
+// tiny-skia, kurbo and svgtypes call from the C library: acos, cos, sin, tan,
+// atan2, pow, ln and log2 for an f64, and acos, cos, sin and pow for an f32.
+// A correctly rounded result is the exact value rounded to the nearest float,
+// so it is the same on every platform.
 //
 // Rust calls the C library for these functions, and the C libraries differ.
 // On 2026-11-09, glibc 2.44 gave the correctly rounded result of acos and cos
@@ -10,8 +11,9 @@
 //
 // The functions of an f32 compute the result for an f64 with the package math,
 // and round it to an f32. If that result is too close to the middle of two
-// f32 values to decide the rounding, they compute it again with math/big. The
-// functions of an f64 compute with math/big at 160 bits of precision.
+// f32 values to decide the rounding, they compute it again with math/big.
+// Acos64 computes with math/big at 160 bits of precision, and the other
+// functions of an f64, in f64.go, at 192 bits.
 package crmath
 
 import (
@@ -57,13 +59,10 @@ func Acos64(x float64) float64 {
 	return f
 }
 
-// Cos64 is cos for an f64, correctly rounded.
+// Cos64 is cos for an f64, correctly rounded. It reduces the argument with
+// as many bits of pi as the exponent of x needs, in f64.go.
 func Cos64(x float64) float64 {
-	if x != x || math.IsInf(x, 0) {
-		return math.NaN()
-	}
-	f, _ := cosBig(newFloat(x)).Float64()
-	return f
+	return cos64(x)
 }
 
 // Acos32 is acosf for an f32, correctly rounded.

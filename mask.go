@@ -286,7 +286,7 @@ func DecodeMaskPNG(data []byte, opts ...Option) (*Mask, error) {
 		return nil, ErrUnsupportedPNG
 	}
 
-	if b.Dx() > math.MaxUint32 || b.Dy() > math.MaxUint32 {
+	if uint64(b.Dx()) > math.MaxUint32 || uint64(b.Dy()) > math.MaxUint32 {
 		return nil, ErrInvalidImageSize
 	}
 	size, ok := path.IntSizeFromWH(uint32(b.Dx()), uint32(b.Dy()))

@@ -10,7 +10,7 @@ document.
 
 ## Status
 
-On 2026-11-09 phases 0 to 4 have their code, and every gate holds but the
+On 2026-11-09 phases 0 to 6 have their code, and every gate holds but the
 speed target of D18:
 
 1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
@@ -25,12 +25,19 @@ speed target of D18:
    The tests pass in both builds, on arm64 and on WebAssembly, and with
    TinyGo. okage is about 10 to 20 times slower than the scalar code of
    upstream (D18), and `BACKLOG.md` holds the work that closes the gap.
-
 5. Phase 5: the three commits of tiny-skia after the base commit, up to
    `5d475477` on 2026-08-20. One commit is ported, and two are not
    applicable. The release `v0.1.0` waits for the target of D18 in phase 4.
+6. Phase 6: `internal/roxmltree`, `internal/simplecss`, `internal/xmlwriter`,
+   `internal/svgtypes` and the subset of kurbo in `internal/kurbo`, with
+   every test of upstream. `internal/crmath` has the correctly rounded f64
+   functions that kurbo needs (D26). The oracle gives the same tree for each
+   of the 1,780 SVG files of the tests of resvg, and the same bits for each
+   value that svgtypes parses in them. Random mutations of the files and of
+   the values give the same results, but where glibc is not correctly
+   rounded (D26).
 
-Phase 6, the parsers that `svg` uses, comes next.
+Phase 7, the tree of usvg without text, comes next.
 
 These documents hold the rules and the references that come from this plan:
 

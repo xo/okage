@@ -65,8 +65,14 @@ jobs:
     - name: Test
       # TinyGo 0.44.0 is the lowest version that okage supports (D25)
       run: tinygo test ./...
-    - name: Build for wasip1
-      run: for p in $(go list ./... | grep -v /internal/); do tinygo build -target wasip1 -o /dev/null "$p" 2>&1 | grep -v 'no main' || true; done
+    - name: Build the tests for wasip1
+      # tinygo build needs a main package, so the step builds the test
+      # program of each package, and any error fails the step
+      run: |
+        set -e
+        for p in $(go list ./... | grep -v /widegen); do
+          tinygo test -c -target wasip1 -o "$RUNNER_TEMP/test.wasm" "$p"
+        done
   oracle:
     name: Oracle
     runs-on: ubuntu-latest

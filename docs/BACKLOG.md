@@ -31,12 +31,6 @@ an upstream after its base commit has no line, or when the column `matched`
 is past a commit that is `pending`. It skips an upstream whose checkout is
 missing.
 
-### Make the checkouts and the ledgers of the other upstreams
-
-From D11 and D12. Clone strict-num, svgtypes, roxmltree, simplecss, kurbo and
-xmlwriter into `upstream/`, and make the ledger of each one from its base
-commit in `docs/upstream/upstreams.tsv`.
-
 ### Build the prototype of the pipeline
 
 From D17 and D15. The real pipelines of three cases, in `lowp` and `highp`,
@@ -59,6 +53,23 @@ From D26. `crmath.Acos64` and `crmath.Cos64` compute with `math/big` at 160
 bits, about 9 microseconds for each call. Compute them in double-double
 precision first, and use `math/big` only when that result is too close to
 the middle of two `float64` values. Only the clipping of a cubic calls them.
+
+## Phase 6
+
+### Decide what svg does with an arc that kurbo splits into too many curves
+
+From phase 6. `Arc::append_iter` of kurbo splits an arc into a number of
+curves that grows with its radius. For an arc to a point such as `1e50`, the
+number is near 2^64, so upstream and okage both run until the memory is
+gone. okage keeps the fault (D1), and the oracle skips such values. usvg
+calls the same code for each path with an arc, so phase 7 must find out
+whether usvg limits the values before kurbo sees them.
+
+### Port the example select of simplecss
+
+From phase 6. `examples/select.rs` of simplecss matches selectors against a
+tree of roxmltree. It was not ported while `internal/roxmltree` was being
+written. Port it as an example of `internal/simplecss`, with its output.
 
 ## Phase 4
 

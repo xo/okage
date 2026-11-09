@@ -18,9 +18,9 @@ On 2026-11-09 the port of tiny-skia is done in both builds and with TinyGo:
 `path`, the root package, `internal/wide` and `internal/crmath`. The 157
 integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. The speed target of D18 is not met
-yet. The port of resvg has not started. The maintainers accepted the
-decisions D1 to D25, and D26 to D28 wait for them. The open questions are at
-the end of `docs/PLAN.md`.
+yet. The parsers of resvg are ported in `internal/`, and `svg` has not
+started. The maintainers accepted the decisions D1 to D25, and D26 to D28
+wait for them. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg

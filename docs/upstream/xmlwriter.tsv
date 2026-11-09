@@ -1,0 +1,7 @@
+upstream	date	status	okage	note
+e4946b2b9877d4a8308e30b0733a965746bb81fe	2021-07-03	not-applicable		Move to GitHub Actions.. It changes the CI and README.md only
+a5214cc9045373193655cf83a11abb4603b96507	2022-08-28	pending		Add `write_cdata_text` method.. It changes src/lib.rs and tests/tests.rs
+9912b2ac79b58e8b1b28db092d0e515eebb19ab0	2022-08-28	not-applicable		Add Clone Debug to XmlWriter.. It derives Clone and Debug for XmlWriter, which has no Go form
+39278996f8ce472b0861a865df12a3af2aeae74b	2022-08-28	pending		Rework code to replace the internal buffer with io::Write and escape more chars.. It changes src/lib.rs and tests/tests.rs
+82038ca0f94862ce512b072c123ca93a94f80e82	2023-04-13	pending		Fix merge errors.. It changes src/lib.rs and tests/tests.rs
+a40b0aab8ce2aea6be2ff22a94081c763ffe56a0	2023-10-25	pending		Add option for disabling self-closing tags.. It changes src/lib.rs and tests/tests.rs

@@ -27,6 +27,9 @@ jobs:
       run: GOEXPERIMENT=simd go test -count=1 ./...
     - name: Race
       run: go test -race -count=1 ./...
+    - name: Test with a 32-bit int
+      # TinyGo for wasip1 has a 32-bit int, and GOARCH=386 finds the same faults
+      run: GOARCH=386 go test -count=1 ./...
     - name: Test module
       # the test module has its own go.mod, so ./... in the root misses it.
       # Its oracles skip, because CI has no checkout of upstream.

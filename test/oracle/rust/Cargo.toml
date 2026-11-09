@@ -1,6 +1,8 @@
 # The Rust oracle of okage (D22). It links tiny-skia 0.12.0, the base version
 # of the port (D12), with its scalar code (D16), and it renders the scenes that
-# the Go tests of the test module write as JSON.
+# the Go tests of the test module write as JSON. It also links roxmltree
+# 0.21.1 and svgtypes 0.16.1, the base versions of phase 6, and answers the
+# questions of the parsers.
 [package]
 name = "okage-oracle"
 version = "0.0.0"
@@ -9,6 +11,8 @@ publish = false
 
 [dependencies]
 tiny-skia = { version = "=0.12.0", default-features = false, features = ["std"] }
+roxmltree = "=0.21.1"
+svgtypes = "=0.16.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
