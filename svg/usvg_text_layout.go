@@ -1978,9 +1978,14 @@ func guessScript(runes []rune) language.Script {
 //
 // This function will do the BIDI reordering and text shaping.
 //
-// Port: upstream returns None when the font does not load, which each
-// caller takes as no glyphs, so Go returns nil. harfrust becomes the package harfbuzz of go-text, with a face whose
-// coordinates are the variations, and unicode-bidi becomes visualRuns.
+// Port: upstream returns None when the font does not load, or when
+// harfrust::shape fails, which each caller takes as no glyphs, so Go returns
+// nil. harfrust becomes the package harfbuzz of go-text, with a face whose
+// coordinates are the variations, and unicode-bidi becomes visualRuns. The
+// shaping of go-text does not fail. Upstream gives harfrust::Font owned font
+// data and copies the data of a font that is not in memory. The parsed face
+// of go-text already holds the data, so Go copies nothing. Upstream finds the
+// opsz axis in the table fvar, and hasAxis reads that table too.
 func shapeTextWithFont(
 	text string,
 	font *resolvedFont,
