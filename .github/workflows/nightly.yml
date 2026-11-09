@@ -29,10 +29,12 @@ jobs:
       with:
         go-version-file: go.mod
     - name: Install QEMU
-      run: sudo apt-get update && sudo apt-get install -y qemu-user-static
+      # Ubuntu 26 has no package qemu-user-static. qemu-user has qemu-s390x
+      # on Ubuntu 24 and on Ubuntu 26.
+      run: sudo apt-get update && sudo apt-get install -y qemu-user
     - name: Test
       # a big-endian platform, as upstream tests on big-endian PowerPC
-      run: GOARCH=s390x go test -count=1 -exec qemu-s390x-static ./...
+      run: GOARCH=s390x go test -count=1 -exec qemu-s390x ./...
   wasip1:
     name: wasip1
     runs-on: ubuntu-latest
