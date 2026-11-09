@@ -7,7 +7,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/cshum/vipsgen/v2/vips"
@@ -21,20 +23,51 @@ import (
 // them.
 var svgDir = filepath.Join("..", "..", "svg", "testdata", "tests")
 
+// fontDB holds the fonts of the tests of resvg, as GLOBAL_FONTDB of resvg
+// tests/integration/main.rs and the integration tests of svg load them, in
+// the same order and with the same generic families.
+var fontDB = sync.OnceValue(func() *svg.FontDatabase {
+	db := svg.NewFontDatabase()
+	dir := filepath.Join("..", "..", "svg", "testdata", "fonts")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return db
+	}
+	var names []string
+	for _, e := range entries {
+		switch strings.ToLower(filepath.Ext(e.Name())) {
+		case ".ttf", ".ttc", ".otf", ".otc":
+			names = append(names, filepath.Join(dir, e.Name()))
+		}
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		if data, err := os.ReadFile(name); err == nil {
+			db.LoadFontData(data)
+		}
+	}
+	db.SetSerifFamily("Noto Serif")
+	db.SetSansSerifFamily("Noto Sans")
+	db.SetCursiveFamily("Yellowtail")
+	db.SetFantasyFamily("Sedgwick Ave Display")
+	db.SetMonospaceFamily("Noto Mono")
+	return db
+})
+
 func TestMain(m *testing.M) {
 	vips.Startup(nil)
 	os.Exit(m.Run())
 }
 
 // renderOkage renders file as the normal mode of the integration tests of
-// resvg does, at a width of 300 pixels, and returns its RGBA bytes without
-// premultiplied alpha.
+// resvg does, with the fonts of the tests, at a width of 300 pixels. It
+// returns the RGBA bytes without premultiplied alpha.
 func renderOkage(file string) (int, int, []byte, bool) {
 	data, err := os.ReadFile(file)
 	if err != nil {
 		return 0, 0, nil, false
 	}
-	tree, err := svg.FromData(data, svg.WithResourcesDir(filepath.Dir(file)))
+	tree, err := svg.FromData(data, svg.WithResourcesDir(filepath.Dir(file)), svg.WithFontDatabase(fontDB()))
 	if err != nil {
 		return 0, 0, nil, false
 	}

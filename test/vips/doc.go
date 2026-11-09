@@ -9,9 +9,11 @@
 //	go test -tags vips ./vips/
 //
 // TestVipsPage writes an HTML page that shows the reference image of resvg,
-// the image of okage and the image of libvips of each test side by side:
+// the image of okage, the image of libvips and the SVG file as the browser
+// renders it, with the fonts of the tests embedded, side by side:
 //
 //	go test -tags vips -run TestVipsPage ./vips/ -args -vips.page=../.cache/vips-page
+//	python3 -m http.server -d ../.cache/vips-page
 //
 // The package has no code of its own.
 package vips
