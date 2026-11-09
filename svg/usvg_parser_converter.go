@@ -92,8 +92,10 @@ type converterCache struct {
 	filters   map[string]*Filter
 	paint     map[string]Paint
 
+	// Generated IDs must not collide with the IDs of this document's elements.
+	svgDoc *document
+
 	// used for ID generation
-	allIDs              map[string]struct{}
 	linearGradientIndex int
 	radialGradientIndex int
 	patternIndex        int
@@ -114,7 +116,7 @@ type converterCache struct {
 }
 
 // newConverterCache is Cache::new in usvg src/parser/converter.rs.
-func newConverterCache(fontdb *FontDatabase) *converterCache {
+func newConverterCache(svgDoc *document, fontdb *FontDatabase) *converterCache {
 	return &converterCache{
 		fontdb: fontdb,
 
@@ -130,7 +132,7 @@ func newConverterCache(fontdb *FontDatabase) *converterCache {
 		filters:   map[string]*Filter{},
 		paint:     map[string]Paint{},
 
-		allIDs:              map[string]struct{}{},
+		svgDoc:              svgDoc,
 		linearGradientIndex: 0,
 		radialGradientIndex: 0,
 		patternIndex:        0,
@@ -151,7 +153,7 @@ func (c *converterCache) genID(prefix string, index *int) nonEmptyString {
 	for {
 		*index++
 		newID := prefix + strconv.Itoa(*index)
-		if _, ok := c.allIDs[stringHash(newID)]; !ok {
+		if _, ok := c.svgDoc.elementByID(newID); !ok {
 			id, _ := newNonEmptyString(newID)
 			return id
 		}
@@ -388,15 +390,6 @@ func (c *converterCache) hasOpszAxis(font FontID) bool {
 	return hasOpsz
 }
 
-// stringHash is string_hash in usvg src/parser/converter.rs.
-//
-// TODO: is there a simpler way?
-//
-// Port: Go keeps the string itself in the set, so the hash is the string.
-func stringHash(s string) string {
-	return s
-}
-
 // convertLength is SvgNode::convert_length in usvg src/parser/converter.rs.
 func (n svgNode) convertLength(
 	aid AId,
@@ -575,14 +568,8 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 		opt:            opt,
 	}
 
-	cache := newConverterCache(opt.fontdb.Clone())
+	cache := newConverterCache(svgDoc, opt.fontdb.Clone())
 	cache.opt = opt
-
-	for node := range svgDoc.descendants() {
-		if node.elementID() != "" {
-			cache.allIDs[stringHash(node.elementID())] = struct{}{}
-		}
-	}
 
 	// The root transform wraps the viewBox mapping, so its origin is resolved
 	// against the viewport rather than the viewBox.

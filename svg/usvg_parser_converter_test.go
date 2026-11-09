@@ -15,9 +15,8 @@ import (
 // generation of ids and the conversion of lengths.
 
 func TestGenID(t *testing.T) {
-	c := newConverterCache(NewFontDatabase())
-	c.allIDs[stringHash("linearGradient1")] = struct{}{}
-	c.allIDs[stringHash("mask2")] = struct{}{}
+	doc := mustParseTree(t, `<svg xmlns="http://www.w3.org/2000/svg"><g id="linearGradient1"/><g id="mask2"/></svg>`)
+	c := newConverterCache(doc, NewFontDatabase())
 	for _, tc := range []struct {
 		gen  func() nonEmptyString
 		want string
