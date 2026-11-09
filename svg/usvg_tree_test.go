@@ -51,9 +51,7 @@ func testStroke(paint Paint, width float32) *Stroke {
 		linecap:    LineCapButt,
 		linejoin:   LineJoinMiter,
 		contextElement: &contextElement{
-			kind:      contextElementPathNode,
-			transform: path.DefaultTransform(),
-			bbox:      nil,
+			kind: contextElementPathNode,
 		},
 	}
 }

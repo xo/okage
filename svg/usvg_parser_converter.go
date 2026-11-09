@@ -33,7 +33,12 @@ type converterState struct {
 	//
 	// Port: nil is None.
 	contextElement *contextFillStroke
-	feImageLink    bool
+	// The transform and bounding box of the path element whose markers
+	// are being converted.
+	//
+	// Port: nil is None.
+	contextPath *contextPath
+	feImageLink bool
 	// A viewBox of the parent SVG element.
 	viewBox NonZeroRect
 	// A size of the parent `use` element.
@@ -47,6 +52,13 @@ type converterState struct {
 	hasUseWidth  bool
 	hasUseHeight bool
 	opt          *options
+}
+
+// contextPath is the (Transform, Option<NonZeroRect>) of the field
+// context_path of State in usvg src/parser/converter.rs. A nil bbox is None.
+type contextPath struct {
+	transform Transform
+	bbox      *NonZeroRect
 }
 
 // contextFillStroke is the (Option<Fill>, Option<Stroke>) of the field
@@ -67,10 +79,6 @@ func (s *converterState) clone() *converterState {
 }
 
 // converterCache is Cache in usvg src/parser/converter.rs.
-//
-// Port: upstream keeps the hash of each id in all_ids, a HashSet<u64>. Go
-// keeps the ids themselves, so a new id never collides with the hash of
-// another id.
 type converterCache struct {
 	// This fontdb is initialized from [`Options::fontdb`] and then populated
 	// over the course of conversion.
@@ -562,6 +570,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 	state := &converterState{
 		parentClipPath: nil,
 		contextElement: nil,
+		contextPath:    nil,
 		parentMarkers:  nil,
 		feImageLink:    false,
 		viewBox:        vb.rect,
@@ -655,6 +664,7 @@ func resolveSvgSize(svg svgNode, opt *options) (Size, error, bool) { //nolint:re
 	state := &converterState{
 		parentClipPath: nil,
 		contextElement: nil,
+		contextPath:    nil,
 		parentMarkers:  nil,
 		feImageLink:    false,
 		viewBox:        mustNonZeroRect(path.NonZeroRectFromXYWH(0.0, 0.0, 100.0, 100.0)),
@@ -1097,16 +1107,16 @@ func convertPath(
 
 	bounds := tinySkiaPath.Bounds()
 	if hasFill {
-		if ce := fill.contextElement; ce != nil && ce.kind == contextElementPathNode {
+		if ce, cp := fill.contextElement, state.contextPath; ce != nil && ce.kind == contextElementPathNode && cp != nil {
 			var contextBBox *Rect
-			if ce.bbox != nil {
-				r := ce.bbox.ToRect()
+			if cp.bbox != nil {
+				r := cp.bbox.ToRect()
 				contextBBox = &r
 			}
 			processPaint(
 				&fill.paint,
 				true,
-				ce.transform,
+				cp.transform,
 				contextBBox,
 				pathTransform,
 				&bounds,
@@ -1117,16 +1127,16 @@ func convertPath(
 	}
 
 	if hasStroke {
-		if ce := stroke.contextElement; ce != nil && ce.kind == contextElementPathNode {
+		if ce, cp := stroke.contextElement, state.contextPath; ce != nil && ce.kind == contextElementPathNode && cp != nil {
 			var contextBBox *Rect
-			if ce.bbox != nil {
-				r := ce.bbox.ToRect()
+			if cp.bbox != nil {
+				r := cp.bbox.ToRect()
 				contextBBox = &r
 			}
 			processPaint(
 				&stroke.paint,
 				true,
-				ce.transform,
+				cp.transform,
 				contextBBox,
 				pathTransform,
 				&bounds,
@@ -1153,16 +1163,17 @@ func convertPath(
 		ctx := &contextFillStroke{}
 		if hasFill {
 			f := *fill
-			f.contextElement = &contextElement{kind: contextElementPathNode, transform: pathTransform, bbox: bbox}
+			f.contextElement = &contextElement{kind: contextElementPathNode}
 			ctx.fill = &f
 		}
 		if hasStroke {
 			s := *stroke
-			s.contextElement = &contextElement{kind: contextElementPathNode, transform: pathTransform, bbox: bbox}
+			s.contextElement = &contextElement{kind: contextElementPathNode}
 			ctx.stroke = &s
 		}
 
 		markerState.contextElement = ctx
+		markerState.contextPath = &contextPath{transform: pathTransform, bbox: bbox}
 
 		convertMarker(
 			node,

@@ -890,14 +890,10 @@ const (
 
 // contextElement is ContextElement in usvg src/tree/mod.rs.
 //
-// Port: only the case PathNode holds data, so the enum becomes a struct with
-// a kind (D27).
+// Port: the enum holds no data. It stays a struct with a kind, so that a
+// nil *contextElement is None, as in the fields of Fill and Stroke.
 type contextElement struct {
 	kind contextElementKind
-	// transform is the first field of PathNode.
-	transform Transform
-	// bbox is the second field of PathNode. Nil is None.
-	bbox *NonZeroRect
 }
 
 // Fill is Fill in usvg src/tree/mod.rs. It is a fill style.
