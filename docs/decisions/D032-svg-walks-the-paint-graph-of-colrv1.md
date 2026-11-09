@@ -11,7 +11,7 @@ the methods of the trait `ColorPainter`, which `GlyphPainter` of usvg
 go-text parses the tables COLR and CPAL, but it does not walk the graph.
 D9 ports no crate of text, so rule 3 of D9 put the gap in
 `docs/BACKLOG.md`. Phase 9 ported the walk of skrifa 0.44 into
-`svg/usvg_text_colr_paint.go`, so that the tests could pass, and asked the
+`svg/usvg_text_colr_paint.go`, so that the tests pass, and asked the
 maintainers where the walk lives: in `svg`, or in go-text as a contribution.
 
 ## The decision
