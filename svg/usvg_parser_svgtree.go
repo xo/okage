@@ -7,6 +7,7 @@ package svg
 
 import (
 	"iter"
+	"slices"
 	"strings"
 
 	"github.com/xo/okage/internal/svgtypes"
@@ -695,6 +696,7 @@ func (n svgNode) hrefIter() iter.Seq[svgNode] {
 		doc := n.document()
 		origin := n.id
 		curr := n.id
+		visited := newVisitedLinks(n.id)
 
 		if !yield(doc.get(curr)) {
 			return
@@ -705,20 +707,66 @@ func (n svgNode) hrefIter() iter.Seq[svgNode] {
 			if !ok {
 				return
 			}
-			if link.id == curr || link.id == origin {
+			if !visited.insert(link.id) {
 				doc.opt.warnf(
-					"Element '#%s' cannot reference itself via 'xlink:href'.",
+					"Element '#%s' has a circular 'xlink:href' reference.",
 					doc.get(origin).elementID(),
 				)
 				return
 			}
 
 			curr = link.id
-			if !yield(doc.get(curr)) {
+			if !yield(link) {
 				return
 			}
 		}
 	}
+}
+
+// visitedLinks is VisitedLinks in usvg src/parser/svgtree/mod.rs. It holds
+// the elements an `xlink:href` chain has visited so far.
+//
+// Port: the enum becomes a struct. Up to four IDs live in inline, which is
+// the case Inline, and heap is the case Heap when it is not nil.
+type visitedLinks struct {
+	inline [4]nodeID
+	n      int
+	heap   map[nodeID]struct{}
+}
+
+// newVisitedLinks is VisitedLinks::new in usvg src/parser/svgtree/mod.rs.
+func newVisitedLinks(id nodeID) *visitedLinks {
+	return &visitedLinks{inline: [4]nodeID{id}, n: 1}
+}
+
+// insert is VisitedLinks::insert in usvg src/parser/svgtree/mod.rs. It
+// returns `false` if `id` was already visited.
+func (v *visitedLinks) insert(id nodeID) bool {
+	if v.heap != nil {
+		if _, ok := v.heap[id]; ok {
+			return false
+		}
+		v.heap[id] = struct{}{}
+		return true
+	}
+
+	if slices.Contains(v.inline[:v.n], id) {
+		return false
+	}
+
+	if v.n < len(v.inline) {
+		v.inline[v.n] = id
+		v.n++
+	} else {
+		set := make(map[nodeID]struct{}, len(v.inline)+1)
+		for _, i := range v.inline {
+			set[i] = struct{}{}
+		}
+		set[id] = struct{}{}
+		v.heap = set
+	}
+
+	return true
 }
 
 // String is the impl Debug for SvgNode in usvg src/parser/svgtree/mod.rs.
