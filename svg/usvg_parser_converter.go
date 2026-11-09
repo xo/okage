@@ -552,7 +552,7 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 
 	tree := &Tree{
 		size:            size,
-		root:            *emptyGroup(),
+		root:            emptyGroupValue(),
 		linearGradients: nil,
 		radialGradients: nil,
 		patterns:        nil,
@@ -604,7 +604,6 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 		g.transform = rootTs
 		g.absTransform = rootTs
 		convertChildren(svgDoc.root(), state, cache, g)
-		g.calculateBoundingBoxes()
 		tree.root.children = append(tree.root.children, g)
 	}
 
@@ -627,7 +626,6 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 	tree.root.collectClipPaths(&tree.clipPaths)
 	tree.root.collectMasks(&tree.masks)
 	tree.root.collectFilters(&tree.filters)
-	tree.root.calculateBoundingBoxes()
 
 	// The fontdb might have been mutated and we want to apply these changes to
 	// the tree's fontdb.
@@ -656,10 +654,7 @@ func backgroundPath(backgroundColor svgtypes.Color, area Rect) (*Path, bool) {
 	)
 	fill.opacity = opacity
 
-	res, ok := newSimplePath(p)
-	if !ok {
-		return nil, false
-	}
+	res := newSimplePath(p)
 	res.fill = &fill
 
 	return res, true
@@ -984,32 +979,25 @@ func convertGroup(
 	}
 
 	absTransform := parent.absTransform.PreConcat(transform)
-	g := &Group{
-		id:                   id,
-		transform:            transform,
-		absTransform:         absTransform,
-		opacity:              opacity,
-		blendMode:            blendMode,
-		isolate:              isolate,
-		clipPath:             nil,
-		mask:                 nil,
-		filters:              nil,
-		isContextElement:     false,
-		boundingBox:          optional[Rect]{},
-		absBoundingBox:       optional[Rect]{},
-		strokeBoundingBox:    optional[Rect]{},
-		absStrokeBoundingBox: optional[Rect]{},
-		layerBoundingBox:     optional[NonZeroRect]{},
-		absLayerBoundingBox:  optional[NonZeroRect]{},
-		children:             nil,
-	}
+	g := emptyGroup()
+	g.id = id
+	g.transform = transform
+	g.absTransform = absTransform
+	g.opacity = opacity
+	g.blendMode = blendMode
+	g.isolate = isolate
+	g.clipPath = nil
+	g.mask = nil
+	g.filters = nil
+	g.isContextElement = false
 	collectChildren(cache, g)
 
-	// We need to know group's bounding box before converting
-	// clipPaths, masks and filters.
-	var objectBBox *NonZeroRect
-	if r, ok := g.calculateObjectBBox(); ok {
-		objectBBox = &r
+	objectBBox := func() (NonZeroRect, bool) {
+		r, ok := g.BoundingBox()
+		if !ok {
+			return NonZeroRect{}, false
+		}
+		return r.ToNonZeroRect()
 	}
 
 	// `mask` and `filter` cannot be set on `clipPath` children.
@@ -1038,7 +1026,11 @@ func convertGroup(
 		if v, ok := node.attributeStr(AIdFilter); ok && v == "none" {
 			// Do nothing.
 		} else if node.hasAttribute(AIdFilter) {
-			f, ok := convertFilter(node, state, objectBBox, cache)
+			var bbox *NonZeroRect
+			if r, ok := objectBBox(); ok {
+				bbox = &r
+			}
+			f, ok := convertFilter(node, state, bbox, cache)
 			if !ok {
 				// A filter that not a link or a filter with a link to a non existing element.
 				//
@@ -1076,9 +1068,6 @@ func convertGroup(
 	g.clipPath = clipPath
 	g.mask = mask
 	g.filters = filters
-
-	// Must be called after we set Group::filters
-	g.calculateBoundingBoxes()
 
 	return g, true
 }
@@ -1119,6 +1108,7 @@ func convertPath(
 		visible = false
 	}
 
+	bounds := tinySkiaPath.Bounds()
 	if hasFill {
 		if ce := fill.contextElement; ce != nil && ce.kind == contextElementPathNode {
 			var contextBBox *Rect
@@ -1132,7 +1122,7 @@ func convertPath(
 				ce.transform,
 				contextBBox,
 				pathTransform,
-				tinySkiaPath.Bounds(),
+				&bounds,
 				cache,
 			)
 			fill.contextElement = nil
@@ -1152,7 +1142,7 @@ func convertPath(
 				ce.transform,
 				contextBBox,
 				pathTransform,
-				tinySkiaPath.Bounds(),
+				&bounds,
 				cache,
 			)
 			stroke.contextElement = nil
@@ -1194,7 +1184,6 @@ func convertPath(
 			cache,
 			markerGroup,
 		)
-		markerGroup.calculateBoundingBoxes()
 		marker = markerGroup
 	}
 
@@ -1210,7 +1199,7 @@ func convertPath(
 	if !hasStroke {
 		stroke = nil
 	}
-	p, ok := newPath(
+	p := newPath(
 		id,
 		visible,
 		fill,
@@ -1220,9 +1209,6 @@ func convertPath(
 		tinySkiaPath,
 		pathTransform,
 	)
-	if !ok {
-		return
-	}
 
 	order := rawPaintOrder.Order
 	switch {
@@ -1247,17 +1233,17 @@ func appendSinglePaintPath(paintOrderKind svgtypes.PaintOrderKind, p *Path, pare
 	switch paintOrderKind {
 	case svgtypes.PaintOrderKindFill:
 		if p.fill != nil {
-			fillPath := *p
+			fillPath := p.clone()
 			fillPath.stroke = nil
 			fillPath.id = ""
-			parent.children = append(parent.children, &fillPath)
+			parent.children = append(parent.children, fillPath)
 		}
 	case svgtypes.PaintOrderKindStroke:
 		if p.stroke != nil {
-			strokePath := *p
+			strokePath := p.clone()
 			strokePath.fill = nil
 			strokePath.id = ""
-			parent.children = append(parent.children, &strokePath)
+			parent.children = append(parent.children, strokePath)
 		}
 	}
 }

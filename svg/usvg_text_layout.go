@@ -234,10 +234,10 @@ func clonePath(p *Path) *Path {
 	if p == nil {
 		return nil
 	}
-	c := *p
+	c := p.clone()
 	c.fill = cloneFill(p.fill)
 	c.stroke = cloneStroke(p.stroke)
-	return &c
+	return c
 }
 
 // glyphCluster is GlyphCluster in usvg src/text/layout.rs.
@@ -622,7 +622,7 @@ func convertDecoration(
 		DefaultShapeRendering(),
 		pathData,
 		path.DefaultTransform(),
-	)
+	), true
 }
 
 // decorationSpan is DecorationSpan in usvg src/text/layout.rs. It is a text

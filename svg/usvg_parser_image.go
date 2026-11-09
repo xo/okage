@@ -294,20 +294,15 @@ func convertInner(
 	})
 	g.transform = imageTs
 	g.absTransform = absTransform
-	g.calculateBoundingBoxes()
 
 	if aspect.Slice {
 		// Image slice acts like a rectangular clip.
-		clipShape, ok := newSimplePath(path.PathFromRect(rect.ToRect()))
-		if !ok {
-			panic("svg: called Option::unwrap() on a None value")
-		}
+		clipShape := newSimplePath(path.PathFromRect(rect.ToRect()))
 		fill := DefaultFill()
 		clipShape.fill = &fill
 
 		clip := emptyClipPath(cache.genClipPathID())
 		clip.root.children = append(clip.root.children, clipShape)
-		clip.root.calculateBoundingBoxes()
 
 		// Clip path should not be affected by the image viewbox transform.
 		// The final structure should look like:
@@ -322,21 +317,20 @@ func convertInner(
 		g2.absTransform = parent.absTransform
 		g2.clipPath = clip
 		g2.children = append(g2.children, g)
-		g2.calculateBoundingBoxes()
 
 		// With `slice`, the image is scaled to *cover* the viewport and the
 		// overflow is cut away by the rectangular clip above. The bounding box
 		// of the element is therefore its `rect` (the viewport), not the
-		// larger scaled-to-cover image that `calculate_bounding_boxes` derives
-		// from the children. Without this correction an `objectBoundingBox`
+		// larger scaled-to-cover image that the children's bounding boxes
+		// would give. Without this correction an `objectBoundingBox`
 		// clip/mask/filter applied to the `<image>` would be resolved against
 		// the oversized image. See https://github.com/linebender/resvg/issues/1034
 		bbox := rect.ToRect()
-		g2.boundingBox = some(bbox)
-		g2.strokeBoundingBox = some(bbox)
+		g2.boundingBox.set(some(bbox))
+		g2.strokeBoundingBox.set(some(bbox))
 		if abs, ok := bbox.Transform(g2.absTransform); ok {
-			g2.absBoundingBox = some(abs)
-			g2.absStrokeBoundingBox = some(abs)
+			g2.absBoundingBox.set(some(abs))
+			g2.absStrokeBoundingBox.set(some(abs))
 		}
 
 		parent.children = append(parent.children, g2)

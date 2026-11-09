@@ -179,15 +179,11 @@ func resolveMarker(
 
 		clipPath = emptyClipPath(cache.genClipPathID())
 
-		clipShape, ok := newSimplePath(path.PathFromRect(clipRect.ToRect()))
-		if !ok {
-			return
-		}
+		clipShape := newSimplePath(path.PathFromRect(clipRect.ToRect()))
 		fill := DefaultFill()
 		clipShape.fill = &fill
 
 		clipPath.root.children = append(clipPath.root.children, clipShape)
-		clipPath.root.calculateBoundingBoxes()
 	}
 
 	// TODO: avoid allocation
@@ -254,7 +250,6 @@ func resolveMarker(
 		markerState := state.clone()
 		markerState.parentMarkers = append(markerState.parentMarkers, markerNode)
 		convertChildren(markerNode, markerState, cache, g)
-		g.calculateBoundingBoxes()
 
 		if g.HasChildren() {
 			parent.children = append(parent.children, g)

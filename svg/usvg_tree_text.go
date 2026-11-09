@@ -919,8 +919,7 @@ func (t *Text) clone() *Text {
 		c.layouted[i] = t.layouted[i].clone()
 	}
 	if t.flattened != nil {
-		g := t.flattened.cloneGroup()
-		c.flattened = &g
+		c.flattened = t.flattened.cloneGroup()
 	}
 	return &c
 }

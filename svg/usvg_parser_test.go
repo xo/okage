@@ -579,11 +579,13 @@ func TestFlattenedTextShouldInheritAbsoluteTransform(t *testing.T) {
 		t.Errorf("t.ty = %v, want 40", ts.TY)
 	}
 
-	if p.BoundingBox() == p.AbsBoundingBox() {
+	bbox, _ := p.BoundingBox()
+	absBBox, _ := p.AbsBoundingBox()
+	if bbox == absBBox {
 		t.Error("path.bounding_box() == path.abs_bounding_box()")
 	}
-	if r, ok := p.BoundingBox().Transform(ts); !ok || r != p.AbsBoundingBox() {
-		t.Errorf("path.bounding_box().transform(t) = %v, want %v", r, p.AbsBoundingBox())
+	if r, ok := mustRect(p.BoundingBox()).Transform(ts); !ok || r != mustRect(p.AbsBoundingBox()) {
+		t.Errorf("path.bounding_box().unwrap().transform(t) = %v, want %v", r, absBBox)
 	}
 }
 
@@ -618,8 +620,8 @@ func TestUseNodeAbsTransform(t *testing.T) {
 		t.Errorf("path scale = (%v, %v), want (0.5, 0.5)", sx, sy)
 	}
 	want := mustRect(path.RectFromXYWH(20.0, 30.0, 50.0, 50.0))
-	if got := pathNode.AbsBoundingBox(); got != want {
-		t.Errorf("abs bounding box = %v, want %v", got, want)
+	if got, ok := pathNode.AbsBoundingBox(); !ok || got != want {
+		t.Errorf("abs bounding box = %v, %v, want %v", got, ok, want)
 	}
 }
 

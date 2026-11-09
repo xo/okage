@@ -1012,7 +1012,6 @@ func convertImageInner(
 		if !root.HasChildren() {
 			return nil, false
 		}
-		root.calculateBoundingBoxes()
 		updatePaintServers(
 			root,
 			path.DefaultTransform(),
@@ -1040,7 +1039,9 @@ func convertImageInner(
 			}
 		}
 
-		return &ImageFilter{root: *root}, true
+		f := &ImageFilter{}
+		root.moveInto(&f.root)
+		return f, true
 	}
 
 	href, ok := nodeTryAttribute(fe, AIdHref, fromValueStr)
@@ -1080,9 +1081,10 @@ func convertImageInner(
 		cache,
 		root,
 	)
-	root.calculateBoundingBoxes()
 
-	return &ImageFilter{root: *root}, true
+	f := &ImageFilter{}
+	root.moveInto(&f.root)
+	return f, true
 }
 
 // convertDiffuseLighting is convert_diffuse_lighting in usvg

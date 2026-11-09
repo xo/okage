@@ -64,19 +64,18 @@ func pushOutlinePaths(
 	b := *builder
 	*builder = path.NewPathBuilder()
 
-	if p, ok := b.Finish(); ok {
-		if p, ok := newPath(
+	if data, ok := b.Finish(); ok {
+		p := newPath(
 			"",
 			span.Visible,
 			cloneFill(span.Fill),
 			cloneStroke(span.Stroke),
 			span.PaintOrder,
 			renderingMode,
-			p,
+			data,
 			absTransform,
-		); ok {
-			*newChildren = append(*newChildren, p)
-		}
+		)
+		*newChildren = append(*newChildren, p)
 	}
 }
 
@@ -120,8 +119,7 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 				// TODO: Probably need to update abs_transform of children? Same
 				// for SVG and bitmap glyphs.
 				root := tree.root.cloneGroup()
-				group.children = append(group.children, &root)
-				group.calculateBoundingBoxes()
+				group.children = append(group.children, root)
 
 				newChildren = append(newChildren, group)
 			} else if node, ok := cache.fontdbSvg(glyph.Font, glyph.ID); ok {
@@ -137,7 +135,6 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 				group := emptyGroup()
 				group.transform = glyph.SvgTransform()
 				group.children = append(group.children, cloneNode(node))
-				group.calculateBoundingBoxes()
 
 				newChildren = append(newChildren, group)
 			} else if img, ok := cache.fontdbRaster(glyph.Font, glyph.ID); ok {
@@ -172,7 +169,6 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 				group.transform = transform
 				image := img.image
 				group.children = append(group.children, &image)
-				group.calculateBoundingBoxes()
 
 				newChildren = append(newChildren, group)
 			} else {
@@ -206,7 +202,6 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 
 	group.children = append(group.children, newChildren...)
 
-	group.calculateBoundingBoxes()
 	groupStrokeBBox, ok := group.StrokeBoundingBox()
 	if !ok {
 		return nil, NonZeroRect{}, false
@@ -221,7 +216,7 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 // cloneNode is the derived Clone for Node in usvg src/tree/mod.rs: a copy of
 // the node, with a copy of each fill and stroke, as cloneGroup makes it.
 func cloneNode(node Node) Node {
-	g := Group{children: []Node{node}}
+	g := &Group{children: []Node{node}}
 	return g.cloneGroup().children[0]
 }
 
@@ -913,8 +908,7 @@ func databaseSvg(fontdb *FontDatabase, id FontID, glyphID GlyphID, opt *options)
 	// but the best we have for now.
 	var node Node
 	if docRecord.StartGlyphID == docRecord.EndGlyphID {
-		root := tree.root
-		node = &root
+		node = &tree.root
 	} else {
 		n, ok := tree.NodeByID("glyph" + strconv.FormatUint(uint64(glyphID), 10))
 		if !ok {

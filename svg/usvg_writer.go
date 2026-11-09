@@ -623,9 +623,9 @@ func writeDefs(tree *Tree, opt *writeOptions, xml svgWriter, writeTextPaths bool
 	xml.EndElement() // end EId::Defs
 }
 
-// textPathAsPath is the Path::new of a text path that has_text_paths and
-// write_text_path_paths in usvg src/writer.rs make.
-func textPathAsPath(textPath *TextPath) (*Path, bool) {
+// textPathAsPath is the Path::new of a text path that
+// write_text_path_paths in usvg src/writer.rs makes.
+func textPathAsPath(textPath *TextPath) *Path {
 	return newPath(
 		textPath.ID(),
 		true,
@@ -650,9 +650,7 @@ func hasTextPaths(parent *Group) bool {
 			for i := range n.chunks {
 				chunk := &n.chunks[i]
 				if chunk.textFlow.Kind == TextFlowPath {
-					if _, ok := textPathAsPath(chunk.textFlow.Path); ok {
-						return true
-					}
+					return true
 				}
 			}
 		}
@@ -680,9 +678,8 @@ func writeTextPathPaths(parent *Group, opt *writeOptions, xml svgWriter) {
 			for i := range n.chunks {
 				chunk := &n.chunks[i]
 				if chunk.textFlow.Kind == TextFlowPath {
-					if p, ok := textPathAsPath(chunk.textFlow.Path); ok {
-						writePath(p, false, path.DefaultTransform(), "", false, opt, xml)
-					}
+					p := textPathAsPath(chunk.textFlow.Path)
+					writePath(p, false, path.DefaultTransform(), "", false, opt, xml)
 				}
 			}
 		}

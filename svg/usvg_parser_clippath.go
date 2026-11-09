@@ -14,11 +14,11 @@ import (
 
 // convertClipPath is convert in usvg src/parser/clippath.rs.
 //
-// Port: a nil objectBBox is None.
+// Port: objectBBox returns false for None.
 func convertClipPath(
 	node svgNode,
 	state *converterState,
-	objectBBox *NonZeroRect,
+	objectBBox func() (NonZeroRect, bool),
 	cache *converterCache,
 ) (*ClipPath, bool) {
 	// A `clip-path` attribute must reference a `clipPath` element.
@@ -50,12 +50,13 @@ func convertClipPath(
 	}
 
 	if units == unitsObjectBoundingBox {
-		if objectBBox == nil {
+		objectBBox, ok := objectBBox()
+		if !ok {
 			state.opt.warnf("Clipping of zero-sized shapes is not allowed.")
 			return nil, false
 		}
 
-		ts := path.TransformFromBBox(*objectBBox)
+		ts := path.TransformFromBBox(objectBBox)
 		transform = transform.PreConcat(ts)
 	}
 
@@ -84,7 +85,7 @@ func convertClipPath(
 		id:        id,
 		transform: transform,
 		clipPath:  clipPath,
-		root:      *emptyGroup(),
+		root:      emptyGroupValue(),
 	}
 
 	clipState := state.clone()
@@ -92,7 +93,6 @@ func convertClipPath(
 	convertClipPathElements(node, clipState, cache, &clip.root)
 
 	if clip.root.HasChildren() {
-		clip.root.calculateBoundingBoxes()
 		cache.clipPaths[idCopy] = clip
 		return clip, true
 	}

@@ -38,11 +38,7 @@ func testNonZeroRect(t *testing.T, x, y, w, h float32) NonZeroRect {
 
 func testPath(t *testing.T, id string, rect Rect, fill *Fill, stroke *Stroke, ts Transform) *Path {
 	t.Helper()
-	p, ok := newPath(id, true, fill, stroke, PaintOrderFillAndStroke, DefaultShapeRendering(), path.PathFromRect(rect), ts)
-	if !ok {
-		t.Fatalf("newPath(%q) failed", id)
-	}
-	return p
+	return newPath(id, true, fill, stroke, PaintOrderFillAndStroke, DefaultShapeRendering(), path.PathFromRect(rect), ts)
 }
 
 func testStroke(paint Paint, width float32) *Stroke {
@@ -204,27 +200,27 @@ func TestPaintEquality(t *testing.T) {
 func TestNewPath(t *testing.T) {
 	r := testRect(t, 10, 20, 30, 40)
 	p := testPath(t, "p", r, nil, nil, path.TransformFromTranslate(5, 5))
-	if p.BoundingBox() != r || p.StrokeBoundingBox() != r {
-		t.Errorf("bounding boxes = %v, %v, want %v", p.BoundingBox(), p.StrokeBoundingBox(), r)
+	if bbox, sbbox := mustRect(p.BoundingBox()), mustRect(p.StrokeBoundingBox()); bbox != r || sbbox != r {
+		t.Errorf("bounding boxes = %v, %v, want %v", bbox, sbbox, r)
 	}
-	if want := testRect(t, 15, 25, 30, 40); p.AbsBoundingBox() != want || p.AbsStrokeBoundingBox() != want {
-		t.Errorf("abs bounding boxes = %v, %v, want %v", p.AbsBoundingBox(), p.AbsStrokeBoundingBox(), want)
+	if want, abs, sabs := testRect(t, 15, 25, 30, 40), mustRect(p.AbsBoundingBox()), mustRect(p.AbsStrokeBoundingBox()); abs != want || sabs != want {
+		t.Errorf("abs bounding boxes = %v, %v, want %v", abs, sabs, want)
 	}
 
 	// A stroke grows the stroke bounding box by half of its width.
 	p = testPath(t, "p", r, nil, testStroke(ColorBlack(), 2.0), path.DefaultTransform())
-	if want := testRect(t, 9, 19, 32, 42); p.StrokeBoundingBox() != want {
-		t.Errorf("StrokeBoundingBox() = %v, want %v", p.StrokeBoundingBox(), want)
+	if want, got := testRect(t, 9, 19, 32, 42), mustRect(p.StrokeBoundingBox()); got != want {
+		t.Errorf("StrokeBoundingBox() = %v, want %v", got, want)
 	}
 
 	// A skew transforms the path, not its bounding box.
 	p = testPath(t, "p", r, nil, nil, path.TransformFromSkew(1, 0))
-	if want := testRect(t, 30, 20, 70, 40); p.AbsBoundingBox() != want {
-		t.Errorf("AbsBoundingBox() = %v, want %v", p.AbsBoundingBox(), want)
+	if want, got := testRect(t, 30, 20, 70, 40), mustRect(p.AbsBoundingBox()); got != want {
+		t.Errorf("AbsBoundingBox() = %v, want %v", got, want)
 	}
 
-	if _, ok := newSimplePath(path.PathFromRect(r)); !ok {
-		t.Error("newSimplePath failed")
+	if p := newSimplePath(path.PathFromRect(r)); p.data == nil {
+		t.Error("newSimplePath has no data")
 	}
 }
 
@@ -239,13 +235,12 @@ func testTree(t *testing.T) (*Tree, *Path, *Group) {
 		contentUnits: unitsUserSpaceOnUse,
 		rect:         testNonZeroRect(t, 0, 0, 10, 10),
 		viewBox:      &viewBox{rect: testNonZeroRect(t, 0, 0, 10, 10)},
-		root:         *emptyGroup(),
+		root:         emptyGroupValue(),
 	}
 	pattern.root.children = []Node{testPath(t, "inpatt", testRect(t, 0, 0, 5, 5), &Fill{paint: lg}, nil, path.DefaultTransform())}
 
 	clip := emptyClipPath("clip")
 	clip.root.children = []Node{testPath(t, "inclip", testRect(t, 0, 0, 50, 50), nil, nil, path.DefaultTransform())}
-	clip.root.calculateBoundingBoxes()
 
 	p1 := testPath(t, "p1", testRect(t, 10, 10, 100, 100), &Fill{paint: lg}, testStroke(pattern, 2), path.DefaultTransform())
 	g := emptyGroup()
@@ -254,9 +249,8 @@ func testTree(t *testing.T) (*Tree, *Path, *Group) {
 	g.isContextElement = true
 	p1.fill.contextElement = &contextElement{kind: contextElementUseNode}
 	g.children = []Node{p1}
-	g.calculateBoundingBoxes()
 
-	tree := &Tree{root: *emptyGroup()}
+	tree := &Tree{root: emptyGroupValue()}
 	tree.root.children = []Node{g}
 	tree.size, _ = path.SizeFromWH(200, 200)
 	return tree, p1, g
@@ -278,23 +272,19 @@ func TestGroupBoundingBoxes(t *testing.T) {
 	if r, ok := NodeAbsLayerBoundingBox(g); !ok || r != absLayer {
 		t.Errorf("NodeAbsLayerBoundingBox() = %v, %v", r, ok)
 	}
-	if r, ok := g.calculateObjectBBox(); !ok || r != testNonZeroRect(t, 10, 10, 100, 100) {
-		t.Errorf("calculateObjectBBox() = %v, %v", r, ok)
-	}
 	if !g.ShouldIsolate() || !g.HasChildren() {
 		t.Error("ShouldIsolate or HasChildren is wrong")
 	}
 
 	// A filter region takes the place of the layer bounding box.
+	_, _, g = testTree(t)
 	g.filters = []*Filter{{id: "f", rect: testNonZeroRect(t, 0, 0, 300, 300)}}
-	g.calculateBoundingBoxes()
 	if want, got := testNonZeroRect(t, 0, 0, 300, 300), mustNonZeroRect(g.LayerBoundingBox()); got != want {
 		t.Errorf("LayerBoundingBox() = %v, want %v", got, want)
 	}
 
 	// An empty group has no bounding boxes.
 	empty := emptyGroup()
-	empty.calculateBoundingBoxes()
 	if _, ok := empty.BoundingBox(); ok {
 		t.Error("BoundingBox of an empty group is set")
 	}
@@ -398,4 +388,94 @@ func TestImage(t *testing.T) {
 	if got := ImageKindPNG(nil).String(); got != "ImageKind::PNG(..)" {
 		t.Errorf("String() = %q", got)
 	}
+}
+
+// assertNoBoundingBoxes is assert_no_bounding_boxes in the tests of usvg
+// src/tree/mod.rs.
+func assertNoBoundingBoxes(t *testing.T, group *Group) {
+	t.Helper()
+	for _, set := range []bool{
+		group.boundingBox.done.Load(),
+		group.absBoundingBox.done.Load(),
+		group.strokeBoundingBox.done.Load(),
+		group.absStrokeBoundingBox.done.Load(),
+		group.layerBoundingBox.done.Load(),
+		group.absLayerBoundingBox.done.Load(),
+	} {
+		if set {
+			t.Errorf("group %q has a bounding box", group.id)
+		}
+	}
+
+	for _, child := range group.Children() {
+		switch n := child.(type) {
+		case *Group:
+			assertNoBoundingBoxes(t, n)
+		case *Path:
+			if n.boundingBox.done.Load() ||
+				n.absBoundingBox.done.Load() ||
+				n.strokeBoundingBox.done.Load() ||
+				n.absStrokeBoundingBox.done.Load() {
+				t.Errorf("path %q has a bounding box", n.id)
+			}
+		}
+	}
+}
+
+// TestPathsInGroupsDontCalculateBoundingBoxes is
+// paths_in_groups_dont_calculate_bounding_boxes in the tests of usvg
+// src/tree/mod.rs.
+func TestPathsInGroupsDontCalculateBoundingBoxes(t *testing.T) {
+	tree := mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                <g transform="translate(10 20)" opacity="0.5">
+                    <path d="M 20 20 C 80 0 120 200 180 180" fill="green" stroke="black" stroke-width="10"/>
+                    <g transform="rotate(30)">
+                        <rect x="20" y="20" width="100" height="100" stroke="blue"/>
+                    </g>
+                </g>
+            </svg>`)
+	assertNoBoundingBoxes(t, tree.Root())
+}
+
+// TestUserSpaceClipPathsDontCalculateBoundingBoxes is
+// user_space_clip_paths_dont_calculate_bounding_boxes in the tests of usvg
+// src/tree/mod.rs.
+func TestUserSpaceClipPathsDontCalculateBoundingBoxes(t *testing.T) {
+	tree := mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                <clipPath id="clip">
+                    <rect x="20" y="20" width="160" height="160"/>
+                </clipPath>
+                <g clip-path="url(#clip)">
+                    <path d="M 20 20 C 80 0 120 200 180 180" fill="green" stroke="black" stroke-width="10"/>
+                </g>
+            </svg>`)
+	assertNoBoundingBoxes(t, tree.Root())
+}
+
+// TestUseElementsDontCalculateBoundingBoxes is
+// use_elements_dont_calculate_bounding_boxes in the tests of usvg
+// src/tree/mod.rs.
+func TestUseElementsDontCalculateBoundingBoxes(t *testing.T) {
+	tree := mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">
+                <defs>
+                    <path id="shape" d="M 20 20 C 80 0 120 200 180 180" stroke="black" stroke-width="10"/>
+                </defs>
+                <use xlink:href="#shape" fill="green"/>
+                <use xlink:href="#shape" x="10" y="10" fill="blue"/>
+            </svg>`)
+	assertNoBoundingBoxes(t, tree.Root())
+}
+
+// TestUserSpacePaintServersDontCalculateBoundingBoxes is
+// user_space_paint_servers_dont_calculate_bounding_boxes in the tests of
+// usvg src/tree/mod.rs.
+func TestUserSpacePaintServersDontCalculateBoundingBoxes(t *testing.T) {
+	tree := mustFromStr(t, `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                <linearGradient id="lg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="200" y2="0">
+                    <stop offset="0" stop-color="white"/>
+                    <stop offset="1" stop-color="black"/>
+                </linearGradient>
+                <path d="M 20 20 C 80 0 120 200 180 180" fill="url(#lg)" stroke="url(#lg)" stroke-width="10"/>
+            </svg>`)
+	assertNoBoundingBoxes(t, tree.Root())
 }

@@ -238,7 +238,7 @@ func convertPattern(
 		transform:    transform,
 		rect:         rect,
 		viewBox:      vb,
-		root:         *emptyGroup(),
+		root:         emptyGroupValue(),
 	}
 
 	// We can apply viewbox transform only for user space coordinates.
@@ -255,7 +255,6 @@ func convertPattern(
 			return serverOrColor{}, false
 		}
 
-		g.calculateBoundingBoxes()
 		patt.root.children = append(patt.root.children, g)
 	} else {
 		convertChildren(nodeWithChildren, state, cache, &patt.root)
@@ -264,7 +263,6 @@ func convertPattern(
 		}
 	}
 
-	patt.root.calculateBoundingBoxes()
 	updatePaintServers(&patt.root, path.DefaultTransform(), nil, nil, cache)
 
 	return serverOrColor{server: patt}, true
@@ -651,19 +649,65 @@ func updatePaintServers(
 	textBBox *Rect,
 	cache *converterCache,
 ) {
-	for _, child := range group.children {
-		// Set context transform and bbox if applicable if the
-		// current group is a use node.
-		ctxTransform, ctxBBox := contextTransform, contextBBox
-		if group.isContextElement {
-			ctxTransform, ctxBBox = group.absTransform, nil
-			if bbox, ok := group.boundingBox.get(); ok {
-				ctxBBox = &bbox
+	// Set context transform and bbox if applicable if the
+	// current group is a use node.
+	if group.isContextElement {
+		var bbox *Rect
+		if usesContextBBox(group) {
+			if r, ok := group.BoundingBox(); ok {
+				bbox = &r
 			}
 		}
-
-		nodeToUserCoordinates(child, ctxTransform, ctxBBox, textBBox, cache)
+		contextTransform, contextBBox = group.absTransform, bbox
 	}
+
+	for _, child := range group.children {
+		nodeToUserCoordinates(child, contextTransform, contextBBox, textBBox, cache)
+	}
+}
+
+// usesContextBBox is uses_context_bbox in usvg src/parser/paint_server.rs.
+func usesContextBBox(group *Group) bool {
+	uses := func(paint Paint, ce *contextElement) bool {
+		return ce != nil && ce.kind == contextElementUseNode && usesObjectBoundingBox(paint)
+	}
+	fillUses := func(fill *Fill) bool { return fill != nil && uses(fill.paint, fill.contextElement) }
+	strokeUses := func(stroke *Stroke) bool { return stroke != nil && uses(stroke.paint, stroke.contextElement) }
+	decorationUses := func(style *TextDecorationStyle) bool {
+		return style != nil && (fillUses(style.fill) || strokeUses(style.stroke))
+	}
+
+	for _, node := range group.children {
+		switch n := node.(type) {
+		case *Group:
+			// A nested `use` element is the context element of its own children.
+			if !n.isContextElement && usesContextBBox(n) {
+				return true
+			}
+		case *Path:
+			if fillUses(n.fill) || strokeUses(n.stroke) {
+				return true
+			}
+		case *Image:
+			if tree, ok := n.kind.(ImageKindSVG); ok && usesContextBBox(&tree.Tree.root) {
+				return true
+			}
+		case *Text:
+			for i := range n.chunks {
+				for j := range n.chunks[i].spans {
+					span := &n.chunks[i].spans[j]
+					if fillUses(span.fill) ||
+						strokeUses(span.stroke) ||
+						decorationUses(span.decoration.underline) ||
+						decorationUses(span.decoration.overline) ||
+						decorationUses(span.decoration.lineThrough) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }
 
 // nodeToUserCoordinates is node_to_user_coordinates in usvg
@@ -691,9 +735,19 @@ func nodeToUserCoordinates(
 	case *Path:
 		// Paths inside `Text::flattened` are special and must use text's bounding box
 		// instead of their own.
-		bbox := n.boundingBox
-		if textBBox != nil {
-			bbox = *textBBox
+		usesBBox := func(paint Paint, ce *contextElement) bool {
+			return !(ce != nil && ce.kind == contextElementUseNode) &&
+				usesObjectBoundingBox(paint)
+		}
+		fillUsesBBox := n.fill != nil && usesBBox(n.fill.paint, n.fill.contextElement)
+		strokeUsesBBox := n.stroke != nil && usesBBox(n.stroke.paint, n.stroke.contextElement)
+		var bbox *Rect
+		if fillUsesBBox || strokeUsesBBox {
+			if textBBox != nil {
+				bbox = textBBox
+			} else if r, ok := n.BoundingBox(); ok {
+				bbox = &r
+			}
 		}
 
 		processFill(
@@ -720,7 +774,8 @@ func nodeToUserCoordinates(
 		// By the SVG spec, `tspan` doesn't have a bbox and uses the parent `text` bbox.
 		// Therefore we have to use text's bbox when converting tspan and flatted text
 		// paint servers.
-		bbox := n.boundingBox
+		textBoundingBox := n.boundingBox
+		bbox := &textBoundingBox
 
 		// We need to update three things:
 		// 1. The fills/strokes of the original elements in the usvg tree.
@@ -812,7 +867,7 @@ func nodeToUserCoordinates(
 				n.flattened,
 				contextTransform,
 				contextBBox,
-				&bbox,
+				bbox,
 				cache,
 			)
 		}
@@ -827,7 +882,7 @@ func processFill(
 	pathTransform Transform,
 	contextTransform Transform,
 	contextBBox *Rect,
-	bbox Rect,
+	bbox *Rect,
 	cache *converterCache,
 ) {
 	ok := false
@@ -857,7 +912,7 @@ func processStroke(
 	pathTransform Transform,
 	contextTransform Transform,
 	contextBBox *Rect,
-	bbox Rect,
+	bbox *Rect,
 	cache *converterCache,
 ) {
 	ok := false
@@ -950,8 +1005,8 @@ func processContextPaint(
 			transform:    transform,
 			rect:         p.rect,
 			viewBox:      p.viewBox,
-			root:         p.root.cloneGroup(),
 		}
+		p.root.cloneGroupInto(&newPaint.root)
 		cache.replacePaint(*paint, newPaint)
 		*paint = newPaint
 	}
@@ -968,19 +1023,18 @@ func processPaint(
 	contextTransform Transform,
 	contextBBox *Rect,
 	pathTransform Transform,
-	bbox Rect,
+	bbox *Rect,
 	cache *converterCache,
 ) bool {
-	if paintUnits(*paint) == unitsObjectBoundingBox ||
-		paintContentUnits(*paint) == unitsObjectBoundingBox {
+	if usesObjectBoundingBox(*paint) {
 		if hasContext {
-			if contextBBox == nil {
-				return false
-			}
-			bbox = *contextBBox
+			bbox = contextBBox
+		}
+		if bbox == nil {
+			return false
 		}
 
-		if !paintToUserCoordinates(paint, bbox, cache) {
+		if !paintToUserCoordinates(paint, *bbox, cache) {
 			return false
 		}
 	}
@@ -992,11 +1046,17 @@ func processPaint(
 	return true
 }
 
+// usesObjectBoundingBox is uses_object_bounding_box in usvg
+// src/parser/paint_server.rs.
+func usesObjectBoundingBox(paint Paint) bool {
+	return paintUnits(paint) == unitsObjectBoundingBox || paintContentUnits(paint) == unitsObjectBoundingBox
+}
+
 // processTextDecoration is process_text_decoration in usvg
 // src/parser/paint_server.rs.
 //
-// Port: a nil style is None.
-func processTextDecoration(style *TextDecorationStyle, bbox Rect, cache *converterCache) {
+// Port: a nil style is None, and a nil rect is None.
+func processTextDecoration(style *TextDecorationStyle, bbox *Rect, cache *converterCache) {
 	if style != nil {
 		processFill(
 			&style.fill,
@@ -1104,31 +1164,31 @@ func paintToUserCoordinates(paint *Paint, bbox Rect, cache *converterCache) bool
 
 			p.contentUnits = unitsUserSpaceOnUse
 		} else {
-			var root Group
-			if p.contentUnits == unitsObjectBoundingBox && p.viewBox == nil {
-				// No need to shift patterns.
-				transform := path.TransformFromScale(nzBBox.Width(), nzBBox.Height())
-
-				g := p.root.cloneGroup()
-				pushPatternTransform(&g, transform)
-				root = g
-			} else {
-				root = p.root.cloneGroup()
-			}
-
-			if p.viewBox != nil {
-				pushPatternTransform(&root, p.viewBox.toTransform(rect.Size()))
-			}
-
+			// Port: the new pattern holds the root, so that the root is not
+			// copied by value.
 			newPaint := &Pattern{
-				id:           cache.genPatternID(),
 				units:        unitsUserSpaceOnUse,
 				contentUnits: unitsUserSpaceOnUse,
 				transform:    p.transform,
 				rect:         rect,
 				viewBox:      p.viewBox,
-				root:         root,
 			}
+			root := &newPaint.root
+			if p.contentUnits == unitsObjectBoundingBox && p.viewBox == nil {
+				// No need to shift patterns.
+				transform := path.TransformFromScale(nzBBox.Width(), nzBBox.Height())
+
+				p.root.cloneGroupInto(root)
+				pushPatternTransform(root, transform)
+			} else {
+				p.root.cloneGroupInto(root)
+			}
+
+			if p.viewBox != nil {
+				pushPatternTransform(root, p.viewBox.toTransform(rect.Size()))
+			}
+
+			newPaint.id = cache.genPatternID()
 			cache.replacePaint(p, newPaint)
 			*paint = newPaint
 		}
@@ -1142,13 +1202,12 @@ func paintToUserCoordinates(paint *Paint, bbox Rect, cache *converterCache) bool
 func pushPatternTransform(root *Group, transform Transform) {
 	// TODO: we should update abs_transform in all descendants as well
 	g := new(Group)
-	*g = *root
-	*root = *emptyGroup()
+	root.moveInto(g)
+	*root = emptyGroupValue()
 	g.transform = transform
 	g.absTransform = transform
 
 	root.children = append(root.children, g)
-	root.calculateBoundingBoxes()
 }
 
 // paintUnits is Paint::units in usvg src/parser/paint_server.rs.

@@ -14,11 +14,11 @@ import (
 
 // convertMask is convert in usvg src/parser/mask.rs.
 //
-// Port: a nil objectBBox is None.
+// Port: objectBBox returns false for None.
 func convertMask(
 	node svgNode,
 	state *converterState,
-	objectBBox *NonZeroRect,
+	objectBBox func() (NonZeroRect, bool),
 	cache *converterCache,
 ) (*Mask, bool) {
 	// A `mask` attribute must reference a `mask` element.
@@ -63,8 +63,8 @@ func convertMask(
 
 	maskAll := false
 	if units == unitsObjectBoundingBox {
-		if objectBBox != nil {
-			rect = rect.BBoxTransform(*objectBBox)
+		if bbox, ok := objectBBox(); ok {
+			rect = rect.BBoxTransform(bbox)
 		} else {
 			// When mask units are `objectBoundingBox` and bbox is zero-sized - the whole
 			// element should be masked.
@@ -89,7 +89,7 @@ func convertMask(
 			rect: rect,
 			kind: MaskTypeLuminance,
 			mask: nil,
-			root: *emptyGroup(),
+			root: emptyGroupValue(),
 		}
 		cache.masks[idCopy] = mask
 		return mask, true
@@ -116,20 +116,21 @@ func convertMask(
 		rect: rect,
 		kind: kind,
 		mask: linked,
-		root: *emptyGroup(),
+		root: emptyGroupValue(),
 	}
 
 	// To emulate content `objectBoundingBox` units we have to put
 	// mask children into a group with a transform.
 	var subroot *Group
 	if contentUnits == unitsObjectBoundingBox {
-		if objectBBox == nil {
+		objectBBox, ok := objectBBox()
+		if !ok {
 			state.opt.warnf("Masking of zero-sized shapes is not allowed.")
 			return nil, false
 		}
 
 		g := emptyGroup()
-		g.transform = path.TransformFromBBox(*objectBBox)
+		g.transform = path.TransformFromBBox(objectBBox)
 		// Make sure to set `abs_transform`, because it must propagate to all children.
 		g.absTransform = g.transform
 
@@ -152,11 +153,9 @@ func convertMask(
 	}
 
 	if subroot != nil {
-		subroot.calculateBoundingBoxes()
 		mask.root.children = append(mask.root.children, subroot)
 	}
 
-	mask.root.calculateBoundingBoxes()
 	updatePaintServers(
 		&mask.root,
 		path.DefaultTransform(),
