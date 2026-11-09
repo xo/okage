@@ -214,7 +214,7 @@ func (r FontResolver) String() string {
 //     as decoration spans).
 //  2. We convert all of the positioned glyphs into outlines.
 func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool {
-	textFragments, bbox, ok := layoutText(text, resolver, cache.fontdb, cache.opt)
+	textFragments, bbox, ok := layoutText(text, resolver, cache.fontdb, cache.shapingFonts, cache.opt)
 	if !ok {
 		return false
 	}

@@ -281,6 +281,7 @@ func layoutText(
 	textNode *Text,
 	resolver *FontResolver,
 	fontdb *FontDatabase,
+	shapingFonts shapingFonts,
 	opt *options,
 ) ([]Span, NonZeroRect, bool) {
 	fontsCache := fontsCache{}
@@ -321,7 +322,7 @@ func layoutText(
 			x, y = 0.0, 0.0
 		}
 
-		clusters := processChunk(chunk, fontsCache, resolver, fontdb, opt)
+		clusters := processChunk(chunk, fontsCache, resolver, fontdb, shapingFonts, opt)
 		if len(clusters) == 0 {
 			charOffset += utf8.RuneCountInString(chunk.text)
 			continue
@@ -1084,6 +1085,7 @@ func processChunk(
 	fontsCache fontsCache,
 	resolver *FontResolver,
 	fontdb *FontDatabase,
+	shapingFonts shapingFonts,
 	opt *options,
 ) []glyphCluster {
 	// The way this function works is a bit tricky.
@@ -1140,6 +1142,7 @@ func processChunk(
 			span.fontOpticalSizing,
 			resolver,
 			fontdb,
+			shapingFonts,
 			opt,
 		)
 
@@ -1763,6 +1766,7 @@ func shapeText(
 	fontOpticalSizing FontOpticalSizing,
 	resolver *FontResolver,
 	fontdb *FontDatabase,
+	shapingFonts shapingFonts,
 	opt *options,
 ) []glyph {
 	glyphs := shapeTextWithFont(
@@ -1774,6 +1778,7 @@ func shapeText(
 		fontSize,
 		fontOpticalSizing,
 		fontdb,
+		shapingFonts,
 	)
 
 	// Remember all fonts used for shaping.
@@ -1815,6 +1820,7 @@ outer:
 			fontSize,
 			fontOpticalSizing,
 			fontdb,
+			shapingFonts,
 		)
 
 		allMatched := !slices.ContainsFunc(fallbackGlyphs, func(g glyph) bool { return g.isMissing() })
@@ -1973,6 +1979,32 @@ func guessScript(runes []rune) language.Script {
 	return 0
 }
 
+// shapingFonts is ShapingFonts in usvg src/text/layout.rs.
+//
+// Port: harfrust::Font becomes the font of the package harfbuzz of go-text,
+// which holds the accelerators of the lookups of the face. The parsed face
+// itself is already cached by the font database.
+type shapingFonts = map[FontID]*harfbuzz.Font
+
+// shapingFont is shaping_font in usvg src/text/layout.rs.
+//
+// Port: go-text shares the font data of the parsed face, so Go copies
+// nothing.
+func shapingFont(id FontID, fontdb *FontDatabase, shapingFonts shapingFonts) (*harfbuzz.Font, bool) {
+	if font, ok := shapingFonts[id]; ok {
+		return font, true
+	}
+
+	// Share the font data if it is already in memory, otherwise copy it.
+	pf, ok := fontdb.withFaceData(id)
+	if !ok {
+		return nil, false
+	}
+	font := harfbuzz.NewFont(gotextNewFace(pf))
+	shapingFonts[id] = font
+	return font, true
+}
+
 // shapeTextWithFont is shape_text_with_font in usvg src/text/layout.rs. It
 // converts a text into a list of glyph IDs.
 //
@@ -1982,10 +2014,10 @@ func guessScript(runes []rune) language.Script {
 // harfrust::shape fails, which each caller takes as no glyphs, so Go returns
 // nil. harfrust becomes the package harfbuzz of go-text, with a face whose
 // coordinates are the variations, and unicode-bidi becomes visualRuns. The
-// shaping of go-text does not fail. Upstream gives harfrust::Font owned font
-// data and copies the data of a font that is not in memory. The parsed face
-// of go-text already holds the data, so Go copies nothing. Upstream finds the
-// opsz axis in the table fvar, and hasAxis reads that table too.
+// shaping of go-text does not fail. Upstream finds the opsz axis in the table
+// fvar, and hasAxis reads that table too. A font of go-text cannot change the
+// variations of its face, so a font with variations is a new font, as the
+// instance of upstream is.
 func shapeTextWithFont(
 	text string,
 	font *resolvedFont,
@@ -1995,7 +2027,12 @@ func shapeTextWithFont(
 	fontSize float32,
 	fontOpticalSizing FontOpticalSizing,
 	fontdb *FontDatabase,
+	shapingFonts shapingFonts,
 ) []glyph {
+	hbFont, ok := shapingFont(font.id, fontdb, shapingFonts)
+	if !ok {
+		return nil
+	}
 	pf, ok := fontdb.withFaceData(font.id)
 	if !ok {
 		return nil
@@ -2017,11 +2054,11 @@ func shapeTextWithFont(
 	var glyphs []glyph
 
 	// A shaper instance is only needed to apply variations.
-	face := gotextNewFace(pf)
 	if len(vars) != 0 {
+		face := gotextNewFace(pf)
 		face.SetVariations(toGoTextVariations(vars))
+		hbFont = harfbuzz.NewFont(face)
 	}
-	hbFont := harfbuzz.NewFont(face)
 
 	var features []harfbuzz.Feature
 	if smallCaps {

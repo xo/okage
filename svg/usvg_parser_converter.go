@@ -85,6 +85,7 @@ type converterCache struct {
 	cacheSvg     map[string]Node
 	cacheRaster  map[string]*bitmapImage
 	cacheHasOpsz map[FontID]bool
+	shapingFonts shapingFonts
 
 	clipPaths map[string]*ClipPath
 	masks     map[string]*Mask
@@ -122,6 +123,7 @@ func newConverterCache(fontdb *FontDatabase) *converterCache {
 		cacheSvg:     map[string]Node{},
 		cacheRaster:  map[string]*bitmapImage{},
 		cacheHasOpsz: map[FontID]bool{},
+		shapingFonts: shapingFonts{},
 
 		clipPaths: map[string]*ClipPath{},
 		masks:     map[string]*Mask{},
