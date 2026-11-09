@@ -48,3 +48,5 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D26 | [The math functions are correctly rounded](D026-the-math-functions-are-correctly-rounded.md) | Proposed |
 | D27 | [A Rust enum with data becomes a struct or an interface](D027-a-rust-enum-with-data-becomes-a-struct-or-an-interface.md) | Proposed |
 | D28 | [The vector types are arrays in both builds](D028-the-vector-types-are-arrays-in-both-builds.md) | Proposed, amends D15 |
+| D29 | [The filter types of `svg` take the suffix `Filter`](D029-the-filter-types-of-svg-take-the-suffix-filter.md) | Decided |
+| D30 | [An arc makes at most 4,096 curves](D030-an-arc-makes-at-most-4096-curves.md) | Decided |

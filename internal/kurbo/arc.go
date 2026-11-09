@@ -69,6 +69,17 @@ func (a Arc) angleAt(t float64) float64 {
 	return a.StartAngle + float64(a.SweepAngle*t)
 }
 
+// MaxArcSubdivisions is the largest number of cubic curves that AppendIter
+// makes for one arc (D30). Upstream has no limit. The number of curves is at
+// most the ceiling of (1.1163 * r / tolerance)^(1/6), where r is the larger
+// radius. It reaches 4,096 only when r / tolerance is about 4.23e21 or more:
+// at the tolerance 0.1 of svgtypes, a radius of about 4.23e20. A smaller arc
+// gives the same curves as upstream. A larger arc still covers its whole
+// sweep, with fewer curves and an error larger than the tolerance. The limit
+// is not higher because each curve calls the correctly rounded sine and
+// cosine of internal/crmath, which take microseconds (D26).
+const MaxArcSubdivisions = 1 << 12
+
 // AppendIter is Arc::append_iter in kurbo kurbo/src/arc.rs.
 //
 // Create an iterator generating Bezier path elements.
@@ -81,6 +92,12 @@ func (a Arc) AppendIter(tolerance float64) *ArcAppendIter {
 	// Note: this may slightly underestimate the error for quadrants.
 	nErr := maxF64(Powf(1.1163*scaledErr, 1.0/6.0), 3.999_999)
 	nf := Ceil(nErr * Abs(a.SweepAngle) * (1.0 / (2.0 * pi)))
+	// okage: upstream has no limit, so an arc with a huge radius makes up to
+	// 2^64 curves and does not end. okage makes at most MaxArcSubdivisions
+	// curves (D30).
+	if nf > MaxArcSubdivisions {
+		nf = MaxArcSubdivisions
+	}
 	angleStep := a.SweepAngle / nf
 	n := f64ToUsize(nf)
 	armLen := (4.0 / 3.0) * Abs(Tan(0.25*angleStep)) * sign

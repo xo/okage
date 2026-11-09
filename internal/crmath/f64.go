@@ -93,6 +93,12 @@ func Atan2_64(y, x float64) float64 {
 		// constant.
 		return math.Atan2(y, x)
 	}
+	f, _ := atan2Big(y, x).Float64()
+	return f
+}
+
+// atan2Big is atan2(y, x) with math/big, for a finite non-zero x and y.
+func atan2Big(y, x float64) *big.Float {
 	initWide()
 	t := quoP(fP(y, wprec), fP(x, wprec), wprec)
 	r := atanBigP(t)
@@ -104,8 +110,7 @@ func Atan2_64(y, x float64) float64 {
 			r = subP(r, pi, wprec)
 		}
 	}
-	f, _ := r.Float64()
-	return f
+	return r
 }
 
 // Pow64 is pow for an f64, correctly rounded.

@@ -332,3 +332,35 @@ const (
 	// in svgtypes src/filter_functions.rs. Usually an empty url.
 	ErrSVGTypesFilterInvalidURL Error = "parsing svg value: an invalid url"
 )
+
+// Each message of the following errors is "parsing svg: " and the Display
+// text of usvg 0.49.0. ErrSVGParsingFailed wraps the error of
+// internal/roxmltree.
+
+// The sentinel errors of the enum Error in usvg src/parser/mod.rs. The case
+// SvgzFeatureNotEnabled has no port, because okage always reads SVGZ data.
+const (
+	// ErrSVGNotAnUTF8Str is Error::NotAnUtf8Str in usvg src/parser/mod.rs.
+	// Only UTF-8 content are supported.
+	ErrSVGNotAnUTF8Str Error = "parsing svg: provided data has not an UTF-8 encoding"
+
+	// ErrSVGMalformedGZip is Error::MalformedGZip in usvg
+	// src/parser/mod.rs. Compressed SVG must use the GZip algorithm.
+	ErrSVGMalformedGZip Error = "parsing svg: provided data has a malformed GZip content"
+
+	// ErrSVGElementsLimitReached is Error::ElementsLimitReached in usvg
+	// src/parser/mod.rs. usvg does not allow SVG with more than 1_000_000
+	// elements for security reasons.
+	ErrSVGElementsLimitReached Error = "parsing svg: the maximum number of SVG elements has been reached"
+
+	// ErrSVGInvalidSize is Error::InvalidSize in usvg src/parser/mod.rs. SVG
+	// does not have a valid size. It occurs when width and/or height are
+	// <= 0, and also if width, height and viewBox are not set.
+	ErrSVGInvalidSize Error = "parsing svg: SVG has an invalid size"
+
+	// ErrSVGParsingFailed is Error::ParsingFailed in usvg
+	// src/parser/mod.rs. It failed to parse an SVG data. The error wraps
+	// the error of internal/roxmltree. Upstream gives "SVG data parsing
+	// failed cause " and the error of roxmltree.
+	ErrSVGParsingFailed Error = "parsing svg: SVG data parsing failed"
+)

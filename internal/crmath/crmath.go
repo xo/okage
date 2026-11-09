@@ -1,6 +1,7 @@
 // Package crmath gives correctly rounded results of the math functions that
 // tiny-skia, kurbo and svgtypes call from the C library: acos, cos, sin, tan,
-// atan2, pow, ln and log2 for an f64, and acos, cos, sin and pow for an f32.
+// atan2, pow, ln and log2 for an f64, and acos, cos, sin, atan2 and pow for
+// an f32.
 // A correctly rounded result is the exact value rounded to the nearest float,
 // so it is the same on every platform.
 //
@@ -120,6 +121,23 @@ func Pow32(x, y float32) float32 {
 	}
 	initConsts()
 	f, _ := expBig(mul(lnBig(newFloat(float64(x))), newFloat(float64(y)))).Float32()
+	return f
+}
+
+// Atan2_32 is atan2f for an f32, correctly rounded. usvg calls it to find the
+// angle of a marker.
+func Atan2_32(y, x float32) float32 {
+	y64, x64 := float64(y), float64(x)
+	if y != y || x != x || y == 0 || x == 0 || math.IsInf(y64, 0) || math.IsInf(x64, 0) {
+		// math.Atan2 follows C99 Annex F for these values. Each result is
+		// zero, NaN or a multiple of pi/4, which no f64 result puts on the
+		// middle of two f32 values.
+		return float32(math.Atan2(y64, x64))
+	}
+	if r, ok := round32(math.Atan2(y64, x64)); ok {
+		return r
+	}
+	f, _ := atan2Big(y64, x64).Float32()
 	return f
 }
 

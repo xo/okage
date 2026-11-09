@@ -50,9 +50,9 @@ WebAssembly, is a goal that the port keeps in mind.
 The port of tiny-skia is done, in the root package and in `path`. It gives
 the same bytes as tiny-skia in the scalar build, in the SIMD build and with
 TinyGo, and the 157 integration tests of tiny-skia pass. It is still about 10
-to 20 times slower than tiny-skia. The port of resvg has its parsers: XML,
-CSS and the SVG values, in packages under `internal/`. The package `svg`
-itself has not started. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
+to 20 times slower than tiny-skia. The package `svg` parses an SVG file into
+the tree of usvg, and gives the same tree as usvg for each test file of
+resvg. It does not lay out text yet, and it does not render yet. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
 open questions.
 
 The port starts from resvg `v0.49.0` and from the versions of the crates that
@@ -116,6 +116,9 @@ okage differs from upstream only where a decision says so:
    [`go-text/typesetting`][typesetting], in place of the crates of resvg. Its
    text can differ from the text of resvg (D9).
 4. Each package logs to a `*slog.Logger` that the caller gives (D20).
+5. An elliptical arc makes at most 4,096 cubic curves. kurbo has no limit, so
+   an arc with a radius of about 4.23e20 or more does not end in upstream
+   (D30).
 
 okage also adds APIs that upstream does not have:
 

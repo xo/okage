@@ -1,0 +1,369 @@
+// Copyright 2018 the Resvg Authors
+//
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
+
+package svg
+
+import (
+	"fmt"
+	"log/slog"
+	"path/filepath"
+	"slices"
+
+	"github.com/xo/okage/path"
+)
+
+// This file ports usvg src/parser/options.rs, without the items of the
+// feature text.
+//
+// Port: the struct Options of upstream becomes the private options, with one
+// exported functional option for each field that a user sets (D20). The
+// logger of WithLogger takes the place of the crate log.
+//
+// TODO(phase 9): the fields font_resolver and fontdb, and the method
+// fontdb_mut, of the feature text.
+
+// ImageHrefDataResolverFn is ImageHrefDataResolverFn in usvg
+// src/parser/image.rs. It is a shorthand for [ImageHrefResolver]'s data
+// function.
+//
+// The function is called with the mime type and the decoded base64 data. It
+// returns false where upstream returns None.
+//
+// Port: upstream also passes the parsing options. Go does not, because the
+// options are private (D20).
+type ImageHrefDataResolverFn func(mime string, data []byte) (ImageKind, bool)
+
+// ImageHrefStringResolverFn is ImageHrefStringResolverFn in usvg
+// src/parser/image.rs. It is a shorthand for [ImageHrefResolver]'s string
+// function.
+//
+// The function is called with the value of `xlink:href`. It returns false
+// where upstream returns None.
+//
+// Port: upstream also passes the parsing options. Go does not, because the
+// options are private (D20).
+type ImageHrefStringResolverFn func(href string) (ImageKind, bool)
+
+// ImageHrefResolver is ImageHrefResolver in usvg src/parser/image.rs. It is
+// an `xlink:href` resolver for `<image>` elements.
+//
+// This type can be useful if you want to have an alternative `xlink:href` handling
+// to the default one. For example, you can forbid access to local files (which is allowed by default)
+// or add support for resolving actual URLs (usvg doesn't do any network requests).
+//
+// Port: a nil function is the default resolver of upstream,
+// DefaultDataResolver or DefaultStringResolver in usvg_parser_image.go, with
+// the options of the parser. The zero value is the impl Default of upstream.
+type ImageHrefResolver struct {
+	// Resolver function that will be used when `xlink:href` contains a
+	// [Data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs).
+	//
+	// A function would be called with mime and decoded base64 data.
+	ResolveData ImageHrefDataResolverFn
+
+	// Resolver function that will be used to handle an arbitrary string in `xlink:href`.
+	ResolveString ImageHrefStringResolverFn
+}
+
+// Option is an option of the functions that parse an SVG file. It sets a
+// field of the struct Options in usvg src/parser/options.rs (D20).
+type Option func(*options)
+
+// options is Options in usvg src/parser/options.rs. It holds the processing
+// options.
+type options struct {
+	// Directory that will be used during relative paths resolving.
+	//
+	// Expected to be the same as the directory that contains the SVG file,
+	// but can be set to any.
+	//
+	// Default: `None`. Port: the empty string is None.
+	resourcesDir string
+
+	// Target DPI.
+	//
+	// Impacts units conversion.
+	//
+	// Default: 96.0
+	dpi float32
+
+	// A default font family.
+	//
+	// Will be used when no `font-family` attribute is set in the SVG.
+	//
+	// Default: Times New Roman
+	fontFamily string
+
+	// A default font size.
+	//
+	// Will be used when no `font-size` attribute is set in the SVG.
+	//
+	// Default: 12
+	fontSize float32
+
+	// A list of languages.
+	//
+	// Will be used to resolve a `systemLanguage` conditional attribute.
+	//
+	// Format: en, en-US.
+	//
+	// Default: `[en]`
+	languages []string
+
+	// Specifies the default shape rendering method.
+	//
+	// Will be used when an SVG element's `shape-rendering` property is set to `auto`.
+	//
+	// Default: GeometricPrecision
+	shapeRendering ShapeRendering
+
+	// Specifies the default text rendering method.
+	//
+	// Will be used when an SVG element's `text-rendering` property is set to `auto`.
+	//
+	// Default: OptimizeLegibility
+	textRendering TextRendering
+
+	// Specifies the default image rendering method.
+	//
+	// Will be used when an SVG element's `image-rendering` property is set to `auto`.
+	//
+	// Default: OptimizeQuality
+	imageRendering ImageRendering
+
+	// Default viewport size to assume if there is no `viewBox` attribute and
+	// the `width` or `height` attributes are relative.
+	//
+	// Default: `(100, 100)`
+	defaultSize Size
+
+	// Specifies the way `xlink:href` in `<image>` elements should be handled.
+	//
+	// Default: see type's documentation for details
+	imageHrefResolver ImageHrefResolver
+
+	// A CSS stylesheet that should be injected into the SVG. Can be used to overwrite
+	// certain attributes.
+	//
+	// Port: the empty string is None.
+	styleSheet string
+
+	// logger is the logger of WithLogger. Nil logs nothing (D20). Upstream
+	// has no such field, and logs with the crate log.
+	logger *slog.Logger
+}
+
+// defaultOptions is the impl Default for Options in usvg
+// src/parser/options.rs.
+func defaultOptions() options {
+	return options{
+		resourcesDir: "",
+		dpi:          96.0,
+		// Default font is user-agent dependent so we can use whichever we like.
+		fontFamily:        "Times New Roman",
+		fontSize:          12.0,
+		languages:         []string{"en"},
+		shapeRendering:    DefaultShapeRendering(),
+		textRendering:     DefaultTextRendering(),
+		imageRendering:    ImageRenderingOptimizeQuality,
+		defaultSize:       mustSize(path.SizeFromWH(100.0, 100.0)),
+		imageHrefResolver: ImageHrefResolver{},
+		styleSheet:        "",
+		logger:            nil,
+	}
+}
+
+// newOptions returns the default options with each option of opts applied
+// in order.
+func newOptions(opts ...Option) *options {
+	o := defaultOptions()
+	for _, opt := range opts {
+		opt(&o)
+	}
+	return &o
+}
+
+// getAbsPath is Options::get_abs_path in usvg src/parser/options.rs. It
+// converts a relative path into absolute relative to the SVG file itself.
+//
+// If `Options::resources_dir` is not set, returns itself.
+//
+// Port: Rust joins with PathBuf::join, which returns relPath when it is
+// absolute. Go does the same, and cleans the result with filepath.Join.
+func (o *options) getAbsPath(relPath string) string {
+	if o.resourcesDir == "" || filepath.IsAbs(relPath) {
+		return relPath
+	}
+	return filepath.Join(o.resourcesDir, relPath)
+}
+
+// warnf logs the text of a log::warn! of upstream, made with format and args
+// as fmt.Sprintf makes it, to the logger of WithLogger. Without the option,
+// it logs nothing (D20).
+func (o *options) warnf(format string, args ...any) {
+	if o == nil || o.logger == nil {
+		return
+	}
+	o.logger.Warn(fmt.Sprintf(format, args...))
+}
+
+// debugf logs the text of a log::debug! of upstream, made with format and
+// args as fmt.Sprintf makes it, to the logger of WithLogger. Without the
+// option, it logs nothing (D20).
+func (o *options) debugf(format string, args ...any) {
+	if o == nil || o.logger == nil {
+		return
+	}
+	o.logger.Debug(fmt.Sprintf(format, args...))
+}
+
+// WithResourcesDir sets Options::resources_dir in usvg src/parser/options.rs:
+// the directory that will be used during relative paths resolving.
+//
+// Expected to be the same as the directory that contains the SVG file,
+// but can be set to any.
+//
+// Default: none. The empty string is none.
+func WithResourcesDir(dir string) Option {
+	return func(o *options) {
+		o.resourcesDir = dir
+	}
+}
+
+// WithDPI sets Options::dpi in usvg src/parser/options.rs: the target DPI.
+//
+// Impacts units conversion.
+//
+// Default: 96.0.
+func WithDPI(dpi float32) Option {
+	return func(o *options) {
+		o.dpi = dpi
+	}
+}
+
+// WithFontFamily sets Options::font_family in usvg src/parser/options.rs: a
+// default font family.
+//
+// Will be used when no `font-family` attribute is set in the SVG.
+//
+// Default: Times New Roman.
+func WithFontFamily(family string) Option {
+	return func(o *options) {
+		o.fontFamily = family
+	}
+}
+
+// WithFontSize sets Options::font_size in usvg src/parser/options.rs: a
+// default font size.
+//
+// Will be used when no `font-size` attribute is set in the SVG.
+//
+// Default: 12.
+func WithFontSize(size float32) Option {
+	return func(o *options) {
+		o.fontSize = size
+	}
+}
+
+// WithLanguages sets Options::languages in usvg src/parser/options.rs: a list
+// of languages.
+//
+// Will be used to resolve a `systemLanguage` conditional attribute.
+//
+// Format: en, en-US.
+//
+// Default: `[en]`.
+func WithLanguages(languages ...string) Option {
+	return func(o *options) {
+		o.languages = slices.Clone(languages)
+	}
+}
+
+// WithShapeRendering sets Options::shape_rendering in usvg
+// src/parser/options.rs: the default shape rendering method.
+//
+// Will be used when an SVG element's `shape-rendering` property is set to `auto`.
+//
+// Default: GeometricPrecision.
+func WithShapeRendering(rendering ShapeRendering) Option {
+	return func(o *options) {
+		o.shapeRendering = rendering
+	}
+}
+
+// WithTextRendering sets Options::text_rendering in usvg
+// src/parser/options.rs: the default text rendering method.
+//
+// Will be used when an SVG element's `text-rendering` property is set to `auto`.
+//
+// Default: OptimizeLegibility.
+func WithTextRendering(rendering TextRendering) Option {
+	return func(o *options) {
+		o.textRendering = rendering
+	}
+}
+
+// WithImageRendering sets Options::image_rendering in usvg
+// src/parser/options.rs: the default image rendering method.
+//
+// Will be used when an SVG element's `image-rendering` property is set to `auto`.
+//
+// Default: OptimizeQuality.
+func WithImageRendering(rendering ImageRendering) Option {
+	return func(o *options) {
+		o.imageRendering = rendering
+	}
+}
+
+// WithDefaultSize sets Options::default_size in usvg src/parser/options.rs:
+// the default viewport size to assume if there is no `viewBox` attribute and
+// the `width` or `height` attributes are relative.
+//
+// Default: `(100, 100)`.
+func WithDefaultSize(size Size) Option {
+	return func(o *options) {
+		o.defaultSize = size
+	}
+}
+
+// WithImageHrefResolver sets Options::image_href_resolver in usvg
+// src/parser/options.rs: the way `xlink:href` in `<image>` elements should
+// be handled.
+//
+// Default: see the documentation of ImageHrefResolver.
+func WithImageHrefResolver(resolver ImageHrefResolver) Option {
+	return func(o *options) {
+		o.imageHrefResolver = resolver
+	}
+}
+
+// WithStyleSheet sets Options::style_sheet in usvg src/parser/options.rs: a
+// CSS stylesheet that should be injected into the SVG. Can be used to
+// overwrite certain attributes.
+//
+// Default: none. The empty string is none.
+func WithStyleSheet(styleSheet string) Option {
+	return func(o *options) {
+		o.styleSheet = styleSheet
+	}
+}
+
+// WithLogger sets the logger that takes the warnings and the debug messages
+// that upstream logs with the crate log (D20). Without this option, the
+// package logs nothing. Upstream has no such field.
+func WithLogger(logger *slog.Logger) Option {
+	return func(o *options) {
+		o.logger = logger
+	}
+}
+
+// mustSize is the unwrap of an Option<Size> that upstream relies on. It
+// panics when ok is false.
+func mustSize(s Size, ok bool) Size {
+	if !ok {
+		panic("svg: called Option::unwrap() on a None value")
+	}
+	return s
+}

@@ -519,9 +519,10 @@ func usesLibm(q svgtypesQuestion) bool {
 }
 
 // hugeArc reports whether q asks the simplifying parser for a path with an
-// arc and a number that has an exponent or more than 8 digits. kurbo, and so
-// okage, split such an arc into a number of curves that can be near 2^64, and
-// neither ends in a useful time (BACKLOG.md).
+// arc and a number that has an exponent or more than 8 digits. kurbo splits
+// such an arc into a number of curves that can be near 2^64, and the oracle
+// does not end. okage makes at most 4,096 curves (D30), so it is not compared
+// on such values.
 func hugeArc(q svgtypesQuestion) bool {
 	if q.Parser != "simple_path" || !strings.ContainsAny(q.Value, "Aa") {
 		return false

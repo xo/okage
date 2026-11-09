@@ -10,6 +10,9 @@ each type has the methods that the trait gives it.
 paths start at `crates/usvg/src`. A use that is marked "for the subset" comes
 from another item of the subset, not from svgtypes or usvg.
 
+The port differs from upstream in one place: `Arc.AppendIter` makes at most
+`MaxArcSubdivisions` curves for one arc, where kurbo has no limit (D30).
+
 ## point.rs, in point.go
 
 | Item | Go | Used by |
@@ -86,7 +89,7 @@ from another item of the subset, not from svgtypes or usvg.
 | `Arc` | `Arc` | svgtypes `path.rs`, usvg `parser/shapes.rs` |
 | `Arc::new`, `Arc::reversed` | `NewArc`, `Arc.Reversed` | the tests of `arc.rs` |
 | `Arc::angle_at` | `Arc.angleAt` | for the subset |
-| `Arc::append_iter`, `ArcAppendIter` | `Arc.AppendIter`, `ArcAppendIter` | for the subset: `Arc::to_cubic_beziers` |
+| `Arc::append_iter`, `ArcAppendIter` | `Arc.AppendIter`, `ArcAppendIter`, with the limit `MaxArcSubdivisions` of D30 | for the subset: `Arc::to_cubic_beziers` |
 | `Arc::to_cubic_beziers` | `Arc.ToCubicBeziers` | svgtypes `path.rs`, usvg `parser/shapes.rs` |
 | `sample_ellipse`, `rotate_pt` | `sampleEllipse`, `rotatePt` | for the subset |
 | `impl ParamCurve for Arc` | `Arc.Eval`, `Subsegment`, `Subdivide`, `Start`, `End` | the tests of `arc.rs` |

@@ -100,3 +100,31 @@ func TestSubsegmentTinySweepMatchesOriginal(t *testing.T) {
 	arc := NewArc(NewPoint(0.0, 0.0), NewVec2(2.0, 1.0), 1.0, 1e-9, fracPi4)
 	assertSubsegmentMatches(t, arc, 0.25, 0.75)
 }
+
+// TestAppendIterLimit makes sure that an arc with a huge radius ends with
+// MaxArcSubdivisions curves that reach the end of the arc, where upstream does
+// not end (D30), and that an arc just below the limit is not changed.
+func TestAppendIterLimit(t *testing.T) {
+	for _, r := range []float64{1e50, 1e300, math.MaxFloat64} {
+		a := Arc{Center: Point{0, 0}, Radii: Vec2{r, r}, StartAngle: 0, SweepAngle: math.Pi}
+		n := 0
+		var last Point
+		a.ToCubicBeziers(0.1, func(_, _, p3 Point) {
+			n++
+			last = p3
+		})
+		if n != MaxArcSubdivisions {
+			t.Errorf("radius %g: %d curves, expected %d", r, n, MaxArcSubdivisions)
+		}
+		end := sampleEllipse(a.Radii, a.XRotation, a.StartAngle+a.SweepAngle)
+		if want := a.Center.Add(end); math.Abs(last.X-want.X) > 1e-6*r || math.Abs(last.Y-want.Y) > 1e-6*r {
+			t.Errorf("radius %g: the last point is %v, expected %v", r, last, want)
+		}
+	}
+	// A full circle of radius 4e20 needs fewer curves than the limit, and
+	// the limit changes nothing for it.
+	a := Arc{Center: Point{0, 0}, Radii: Vec2{4e20, 4e20}, StartAngle: 0, SweepAngle: 2 * math.Pi}
+	if it := a.AppendIter(0.1); it.n >= MaxArcSubdivisions {
+		t.Errorf("radius 4e20: %d curves, expected fewer than %d", it.n, MaxArcSubdivisions)
+	}
+}

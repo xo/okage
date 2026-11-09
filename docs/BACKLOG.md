@@ -56,15 +56,6 @@ the middle of two `float64` values. Only the clipping of a cubic calls them.
 
 ## Phase 6
 
-### Decide what svg does with an arc that kurbo splits into too many curves
-
-From phase 6. `Arc::append_iter` of kurbo splits an arc into a number of
-curves that grows with its radius. For an arc to a point such as `1e50`, the
-number is near 2^64, so upstream and okage both run until the memory is
-gone. okage keeps the fault (D1), and the oracle skips such values. usvg
-calls the same code for each path with an arc, so phase 7 must find out
-whether usvg limits the values before kurbo sees them.
-
 ### Port the example select of simplecss
 
 From phase 6. `examples/select.rs` of simplecss matches selectors against a

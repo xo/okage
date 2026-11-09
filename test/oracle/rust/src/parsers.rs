@@ -1,4 +1,5 @@
-//! The questions of the parsers of phase 6: roxmltree and svgtypes.
+//! The questions of the parsers of phases 6 and 7: roxmltree, svgtypes and
+//! usvg.
 //!
 //! An XML question names a file. The oracle parses it with roxmltree 0.21.1
 //! and the options of usvg, and answers with the tree, written as the test
@@ -458,5 +459,38 @@ pub fn answer_svgtypes(question: &SvgtypesQuestion) -> Option<Vec<u8>> {
         s.push_str(&line);
         s.push('\n');
     }
+    Some(s.into_bytes())
+}
+
+#[derive(Deserialize)]
+pub struct UsvgQuestion {
+    pub usvg: String,
+}
+
+/// answer_usvg parses the SVG file of the question with usvg 0.49.0, built
+/// without its feature `text`, as the tests of resvg do: with the folder of
+/// the file as the folder of resources. The answer is the tree, written by
+/// the writer of usvg with its default options, or `error: ` and the name of
+/// the case of `usvg::Error`.
+pub fn answer_usvg(q: &UsvgQuestion) -> Option<Vec<u8>> {
+    let data = std::fs::read(&q.usvg).ok()?;
+    let opt = usvg::Options {
+        resources_dir: std::path::Path::new(&q.usvg).parent().map(|p| p.to_owned()),
+        ..usvg::Options::default()
+    };
+    let s = match usvg::Tree::from_data(&data, &opt) {
+        Ok(tree) => tree.to_string(&usvg::WriteOptions::default()),
+        Err(e) => {
+            let name = match e {
+                usvg::Error::NotAnUtf8Str => "NotAnUtf8Str",
+                usvg::Error::SvgzFeatureNotEnabled => "SvgzFeatureNotEnabled",
+                usvg::Error::MalformedGZip => "MalformedGZip",
+                usvg::Error::ElementsLimitReached => "ElementsLimitReached",
+                usvg::Error::InvalidSize => "InvalidSize",
+                usvg::Error::ParsingFailed(_) => "ParsingFailed",
+            };
+            format!("error: {}", name)
+        }
+    };
     Some(s.into_bytes())
 }

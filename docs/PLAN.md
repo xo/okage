@@ -10,7 +10,7 @@ document.
 
 ## Status
 
-On 2026-11-09 phases 0 to 6 have their code, and every gate holds but the
+On 2026-11-09 phases 0 to 7 have their code, and every gate holds but the
 speed target of D18:
 
 1. Phase 1: the tests of the repository and of the ledgers, the Rust oracle in
@@ -32,12 +32,20 @@ speed target of D18:
    `internal/svgtypes` and the subset of kurbo in `internal/kurbo`, with
    every test of upstream. `internal/crmath` has the correctly rounded f64
    functions that kurbo needs (D26). The oracle gives the same tree for each
-   of the 1,780 SVG files of the tests of resvg, and the same bits for each
+   of the 1,766 SVG files of the tests of resvg, and the same bits for each
    value that svgtypes parses in them. Random mutations of the files and of
    the values give the same results, but where glibc is not correctly
    rounded (D26).
+7. Phase 7: `svg` has the port of usvg without the layout of text: the tree,
+   the parser and the writer, with the tests of usvg that need no text. The
+   oracle gives the same tree, written by the writer of usvg, for each of the
+   1,766 SVG files of the tests of resvg. The files with text agree because
+   usvg without its feature `text` drops the text, as `svg` does until phase
+   9. Random mutations of the files give the same trees, but where a mutation
+   breaks the data of a raster image, which okage reads with other code (D7).
 
-Phase 7, the tree of usvg without text, comes next.
+Phase 8, the renderer of resvg, comes next. It needs the decision of question
+16 first.
 
 These documents hold the rules and the references that come from this plan:
 
