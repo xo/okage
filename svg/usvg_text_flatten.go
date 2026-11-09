@@ -149,15 +149,11 @@ func flatten(text *Text, cache *converterCache) (*Group, NonZeroRect, bool) {
 
 				var transform Transform
 				if img.isSbix {
-					var xMin, yMin int16
-					if img.glyphBBox != nil {
-						xMin, yMin = img.glyphBBox.xMin, img.glyphBBox.yMin
-					}
 					transform = glyph.SbixTransform(
 						float32(img.x),
 						float32(img.y),
-						float32(xMin),
-						float32(yMin),
+						img.bearingX,
+						img.bearingY,
 						float32(img.pixelsPerEm),
 						img.image.size.Height(),
 					)
@@ -430,14 +426,6 @@ func skrifaSegments(segments []font.Segment, flags [][2]bool) []font.Segment {
 	return out
 }
 
-// glyphBoundingBox is BoundingBox<i16> of read-fonts.
-type glyphBoundingBox struct {
-	xMin int16
-	yMin int16
-	xMax int16
-	yMax int16
-}
-
 // colorTables is ColorTables in usvg src/text/flatten.rs. It holds the
 // tables a font can contain non-outline glyphs in.
 type colorTables struct {
@@ -447,14 +435,13 @@ type colorTables struct {
 }
 
 // bitmapImage is BitmapImage in usvg src/text/flatten.rs.
-//
-// Port: a nil glyphBBox is None.
 type bitmapImage struct {
 	image       Image
 	x           int16
 	y           int16
 	pixelsPerEm uint16
-	glyphBBox   *glyphBoundingBox
+	bearingX    float32
+	bearingY    float32
 	isSbix      bool
 }
 
@@ -521,6 +508,8 @@ func databaseColorTables(fontdb *FontDatabase, id FontID) colorTables {
 // usvg reads, for a glyph with PNG data.
 type bitmapGlyph struct {
 	png           []byte
+	bearingX      float32
+	bearingY      float32
 	innerBearingX float32
 	innerBearingY float32
 	ppemY         float32
@@ -568,8 +557,18 @@ func bitmapStrikes(pf *parsedFace) ([]bitmapStrike, bool) {
 						if len(g.Data) < 24 {
 							return bitmapGlyph{}, false
 						}
+						// Note that this calculation does not entirely correspond to the description in
+						// the specification, but it's implemented this way in Skia (https://github.com/google/skia/blob/02cd0561f4f756bf4f7b16641d8fc4c61577c765/src/ports/fontations/src/bitmap.rs#L161-L178),
+						// the implementation of which has been tested against behavior in CoreText.
+						var lsb, yMin float32
+						if y, ok := glyfYMin(pf, glyphID); ok {
+							lsb, _ = leftSideBearing(pf, glyphID)
+							yMin = float32(y)
+						}
 						return bitmapGlyph{
 							png:           g.Data,
+							bearingX:      lsb,
+							bearingY:      yMin,
 							innerBearingX: float32(g.OriginOffsetX),
 							innerBearingY: float32(g.OriginOffsetY),
 							ppemX:         ppem,
@@ -739,85 +738,71 @@ func glyphForSize(strikes []bitmapStrike, glyphID GlyphID) (bitmapGlyph, bool) {
 	return best, hasBest
 }
 
-// controlBoundsPen is ControlBoundsPen of skrifa: the bounding box of the
-// points of an outline, with its control points.
-type controlBoundsPen struct {
-	box glyphBoundingBox32
-	has bool
-}
-
-// glyphBoundingBox32 is BoundingBox<f32> of read-fonts.
-type glyphBoundingBox32 struct {
-	xMin, yMin, xMax, yMax float32
-}
-
-// add adds a point to the bounding box.
-func (p *controlBoundsPen) add(x, y float32) {
-	if !p.has {
-		p.box = glyphBoundingBox32{x, y, x, y}
-		p.has = true
-		return
-	}
-	p.box.xMin = minF32(p.box.xMin, x)
-	p.box.yMin = minF32(p.box.yMin, y)
-	p.box.xMax = maxF32(p.box.xMax, x)
-	p.box.yMax = maxF32(p.box.yMax, y)
-}
-
-func (p *controlBoundsPen) moveTo(x, y float32)           { p.add(x, y) }
-func (p *controlBoundsPen) lineTo(x, y float32)           { p.add(x, y) }
-func (p *controlBoundsPen) quadTo(cx0, cy0, x, y float32) { p.add(cx0, cy0); p.add(x, y) }
-func (p *controlBoundsPen) curveTo(cx0, cy0, cx1, cy1, x, y float32) {
-	p.add(cx0, cy0)
-	p.add(cx1, cy1)
-	p.add(x, y)
-}
-func (p *controlBoundsPen) close() {}
-
-// glyphBounds is GlyphMetrics::bounds of skrifa src/metrics.rs, for an
-// unscaled size and the default location, which usvg calls with
-// font.glyph_metrics. A font with a table gvar, CFF or CFF2 takes the
-// bounding box of the points of the outline. Another font takes the box of
-// the glyph in the table glyf, and an empty glyph has an empty box. It
-// returns false for no bounding box.
-func glyphBounds(pf *parsedFace, glyphID GlyphID) (glyphBoundingBox32, bool) {
-	if pf.ld.HasTable(ot.MustNewTag("gvar")) || pf.hasCFF() {
-		var pen controlBoundsPen
-		if !drawOutline(pf, font.NewFace(pf.font), glyphID, &pen) {
-			return glyphBoundingBox32{}, false
-		}
-		return pen.box, pen.has
-	}
+// glyfGlyph returns the data of a glyph in the table glyf, as Loca::get_glyf
+// of read-fonts finds it. The data is empty for an empty glyph, and holds at
+// least the header of 10 bytes otherwise.
+func glyfGlyph(pf *parsedFace, glyphID GlyphID) ([]byte, bool) {
 	head, loca, glyf := pf.rawTable("head"), pf.rawTable("loca"), pf.rawTable("glyf")
 	if len(head) < headMinSize || loca == nil || glyf == nil {
-		return glyphBoundingBox32{}, false
+		return nil, false
 	}
 	var start, end int
 	if int16(binary.BigEndian.Uint16(head[50:])) == 0 {
 		i := int(glyphID) * 2
 		if i+4 > len(loca) {
-			return glyphBoundingBox32{}, false
+			return nil, false
 		}
 		start = int(binary.BigEndian.Uint16(loca[i:])) * 2
 		end = int(binary.BigEndian.Uint16(loca[i+2:])) * 2
 	} else {
 		i := int(glyphID) * 4
 		if i+8 > len(loca) {
-			return glyphBoundingBox32{}, false
+			return nil, false
 		}
 		start = int(binary.BigEndian.Uint32(loca[i:]))
 		end = int(binary.BigEndian.Uint32(loca[i+4:]))
 	}
 	if end == start {
-		// Empty glyphs have an empty bounding box
-		return glyphBoundingBox32{}, true
+		return []byte{}, true
 	}
 	if end < start || start+10 > len(glyf) {
-		return glyphBoundingBox32{}, false
+		return nil, false
 	}
-	g := glyf[start:]
-	i16 := func(off int) float32 { return float32(int16(binary.BigEndian.Uint16(g[off:]))) }
-	return glyphBoundingBox32{i16(2), i16(4), i16(6), i16(8)}, true
+	return glyf[start:], true
+}
+
+// glyfYMin is GlyphMetrics::glyf_y_min of skrifa 0.49: the yMin of a glyph
+// of the table glyf that has contours.
+func glyfYMin(pf *parsedFace, glyphID GlyphID) (int16, bool) {
+	g, ok := glyfGlyph(pf, glyphID)
+	if !ok || len(g) == 0 {
+		return 0, false
+	}
+	if int16(binary.BigEndian.Uint16(g)) == 0 {
+		return 0, false
+	}
+	return int16(binary.BigEndian.Uint16(g[4:])), true
+}
+
+// leftSideBearing is GlyphMetrics::left_side_bearing of skrifa at the
+// unscaled size and the default location: the left side bearing of the
+// table hmtx, in font units.
+func leftSideBearing(pf *parsedFace, glyphID GlyphID) (float32, bool) {
+	hhea, hmtx := pf.rawTable("hhea"), pf.rawTable("hmtx")
+	if len(hhea) < hheaMinSize || hmtx == nil {
+		return 0, false
+	}
+	numberOfHMetrics := int(binary.BigEndian.Uint16(hhea[34:]))
+	var off int
+	if int(glyphID) < numberOfHMetrics {
+		off = int(glyphID)*4 + 2
+	} else {
+		off = numberOfHMetrics*4 + (int(glyphID)-numberOfHMetrics)*2
+	}
+	if off+2 > len(hmtx) {
+		return 0, false
+	}
+	return float32(int16(binary.BigEndian.Uint16(hmtx[off:]))), true
 }
 
 // databaseRaster is DatabaseExt::raster for Database in usvg
@@ -835,14 +820,28 @@ func databaseRaster(fontdb *FontDatabase, id FontID, glyphID GlyphID) (*bitmapIm
 		return nil, false
 	}
 
-	var boundingBox *glyphBoundingBox
-	if bbox, ok := glyphBounds(pf, glyphID); ok {
-		boundingBox = &glyphBoundingBox{
-			xMin: asI16(bbox.xMin),
-			yMin: asI16(bbox.yMin),
-			xMax: asI16(bbox.xMax),
-			yMax: asI16(bbox.yMax),
+	// Follows vello:
+	// https://github.com/linebender/vello/blob/717a485dabd16249fae739a755a3da3ea4a8f69a/glifo/src/glyph.rs#L1322-L1367
+	isAppleColorEmoji := false
+	if names, ok := parseNameTable(pf.rawTable("name")); ok {
+		for _, name := range names {
+			if name.nameID != nameIDPostScriptName {
+				continue
+			}
+			if s, ok := nameToUnicode(name); ok && s == "AppleColorEmoji" {
+				isAppleColorEmoji = true
+				break
+			}
 		}
+	}
+	bearingX, bearingY := image.bearingX, image.bearingY
+	if isAppleColorEmoji {
+		head := pf.rawTable("head")
+		if len(head) < headMinSize {
+			return nil, false
+		}
+		unitsPerEm := binary.BigEndian.Uint16(head[18:])
+		bearingX, bearingY = 0.0, -float32(unitsPerEm)/8.0
 	}
 
 	size, ok := path.SizeFromWH(float32(image.width), float32(image.height))
@@ -872,7 +871,8 @@ func databaseRaster(fontdb *FontDatabase, id FontID, glyphID GlyphID) (*bitmapIm
 		x:           asI16(image.innerBearingX),
 		y:           asI16(image.innerBearingY),
 		pixelsPerEm: wideTruncU16(image.ppemX),
-		glyphBBox:   boundingBox,
+		bearingX:    bearingX,
+		bearingY:    bearingY,
 		isSbix:      isSbix,
 	}, true
 }

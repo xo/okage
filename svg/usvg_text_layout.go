@@ -112,33 +112,13 @@ func (g *PositionedGlyph) CbdtTransform(x, y, pixelsPerEm float32) Transform {
 func (g *PositionedGlyph) SbixTransform(
 	x float32,
 	y float32,
-	xMin float32,
-	yMin float32,
+	bearingX float32,
+	bearingY float32,
 	pixelsPerEm float32,
 	height float32,
 ) Transform {
-	// In contrast to CBDT, we also need to look at the outline bbox of the glyph and add a shift if necessary.
-	bboxXShift := -xMin
-
-	var bboxYShift float32
-	if ApproxZeroUlps32(yMin, 4) {
-		// For unknown reasons, using Apple Color Emoji will lead to a vertical shift on MacOS, but this shift
-		// doesn't seem to be coming from the font and most likely is somehow hardcoded. On Windows,
-		// this shift will not be applied. However, if this shift is not applied the emojis are a bit
-		// too high up when being together with other text, so we try to imitate this.
-		// See also https://github.com/harfbuzz/harfbuzz/issues/2679#issuecomment-1345595425
-		// So whenever the y-shift is 0, we approximate this vertical shift that seems to be produced by it.
-		// This value seems to be pretty close to what is happening on MacOS.
-		// We can still remove this if it turns out to be a problem, but Apple Color Emoji is pretty
-		// much the only `sbix` font out there and they all seem to have a y-shift of 0, so it
-		// makes sense to keep it.
-		bboxYShift = 0.128 * float32(g.unitsPerEm)
-	} else {
-		bboxYShift = -yMin
-	}
-
 	return g.Transform().
-		PreConcat(path.TransformFromTranslate(bboxXShift, bboxYShift)).
+		PreTranslate(bearingX, -bearingY).
 		PreConcat(path.TransformFromScale(
 			float32(g.unitsPerEm)/pixelsPerEm,
 			float32(g.unitsPerEm)/pixelsPerEm,
