@@ -13,8 +13,10 @@
 // The functions of an f32 compute the result for an f64 with the package math,
 // and round it to an f32. If that result is too close to the middle of two
 // f32 values to decide the rounding, they compute it again with math/big.
-// Acos64 computes with math/big at 160 bits of precision, and the other
-// functions of an f64, in f64.go, at 192 bits.
+// Sin64, Cos64, SinCos64, Tan64, Atan2_64 and Pow64 do the same in
+// double-double precision, in sincos_dd.go, atan2_dd.go and pow_dd.go, and
+// compute with math/big at 192 bits only when they cannot decide. Acos64
+// computes with math/big at 160 bits, and Ln64 and Log2_64 at 192 bits.
 package crmath
 
 import (

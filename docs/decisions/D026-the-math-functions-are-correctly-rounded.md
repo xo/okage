@@ -40,8 +40,13 @@ under the LGPL, into a package under the BSD-3-Clause license.
 2. A function for an `f32` computes with the package `math` in `float64`, and
    computes again with `math/big` only when that result is too close to the
    middle of two `f32` values to decide the rounding. It takes about 11 ns.
-3. A function for an `f64` computes with `math/big` at 160 bits. It takes
-   about 9 microseconds. Only the clipping of a cubic calls it.
+3. A function for an `f64` computes in double-double precision first, with a
+   bound of its error, and computes again with `math/big` only when that
+   result is too close to the middle of two `f64` values. A double-double
+   value is the sum of two `f64` values, with about 106 bits of precision.
+   `Sin64`, `Cos64`, `SinCos64`, `Tan64`, `Atan2_64` and `Pow64` do this, and
+   each takes well under 1 microsecond. `Acos64`, `Ln64` and `Log2_64` compute
+   with `math/big` only, at about 9 microseconds.
 4. The tests that compare okage with the Rust oracle on Linux expect a
    difference only where glibc is not correctly rounded. A scene with no
    cubic curve must give the same bytes. A scene with a cubic curve can
@@ -54,5 +59,4 @@ The results of `math.Acos` and `math.Cos` of Go are not used, because they
 miss the rounded result more often: by three units in the last place for
 `math.Acos(0.9831809036248165)`.
 
-A faster `f64` path, with arithmetic in double-double precision and the same
-fallback, is in `docs/BACKLOG.md`.
+The same path for `Acos64`, `Ln64` and `Log2_64` is in `docs/BACKLOG.md`.

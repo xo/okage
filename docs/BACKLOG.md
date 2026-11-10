@@ -16,10 +16,10 @@ None.
 
 ### Make the f64 functions of crmath faster
 
-From D26. `crmath.Acos64` and `crmath.Cos64` compute with `math/big` at 160
-bits, about 9 microseconds for each call. Compute them in double-double
-precision first, and use `math/big` only when that result is too close to
-the middle of two `float64` values. Only the clipping of a cubic calls them.
+From D26. `crmath.Acos64`, `crmath.Ln64` and `crmath.Log2_64` compute with
+`math/big` only, about 9 microseconds for each call. Give them the fast path
+in double-double precision that `Sin64`, `Cos64`, `Tan64`, `Atan2_64` and
+`Pow64` have. Only the clipping of a cubic calls `Acos64`.
 
 ## Phase 4
 

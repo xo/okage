@@ -6,7 +6,9 @@ package crmath
 //
 // Each function handles the special values (zeros, infinities and NaN) as C99
 // Annex F says, and computes every other value with math/big at the precision
-// wprec. A correctly rounded f64 needs about 120 bits in the worst known
+// wprec. Sin64, Cos64 and Tan64 first try the fast path of sincos_dd.go,
+// and Pow64 the fast path of pow_dd.go. Each fast path gives the same result
+// without math/big for almost every argument. A correctly rounded f64 needs about 120 bits in the worst known
 // cases, so wprec leaves a wide margin. The argument of sin, cos and tan is
 // reduced with a value of pi that has enough bits for the exponent of the
 // argument, so that a large argument also gives the right result.
@@ -54,18 +56,51 @@ func Sin64(x float64) float64 {
 	if x != x || math.IsInf(x, 0) {
 		return math.NaN()
 	}
-	if x == 0 {
+	if math.Abs(x) < ddTinyArg {
+		// sin(x) = x - x^3/6 + ..., and x^3/6 is below half an ulp of x.
 		return x
+	}
+	if f, _, ok, _ := sinCosDD(x); ok {
+		return f
 	}
 	s, _ := sinCosBig(x)
 	f, _ := s.Float64()
 	return f
 }
 
+// SinCos64 returns Sin64(x) and Cos64(x). It computes the reduction and the
+// fast path once for both.
+func SinCos64(x float64) (float64, float64) {
+	if x != x || math.IsInf(x, 0) {
+		return math.NaN(), math.NaN()
+	}
+	if math.Abs(x) < ddTinyArg {
+		return x, 1
+	}
+	s, c, okS, okC := sinCosDD(x)
+	if !okS || !okC {
+		bs, bc := sinCosBig(x)
+		if !okS {
+			s, _ = bs.Float64()
+		}
+		if !okC {
+			c, _ = bc.Float64()
+		}
+	}
+	return s, c
+}
+
 // cos64 is cos for an f64, correctly rounded. Cos64 calls it.
 func cos64(x float64) float64 {
 	if x != x || math.IsInf(x, 0) {
 		return math.NaN()
+	}
+	if math.Abs(x) < ddTinyArg {
+		// cos(x) = 1 - x^2/2 + ..., and x^2/2 is below half an ulp below 1.
+		return 1
+	}
+	if _, f, _, ok := sinCosDD(x); ok {
+		return f
 	}
 	_, c := sinCosBig(x)
 	f, _ := c.Float64()
@@ -77,8 +112,12 @@ func Tan64(x float64) float64 {
 	if x != x || math.IsInf(x, 0) {
 		return math.NaN()
 	}
-	if x == 0 {
+	if math.Abs(x) < ddTinyArg {
+		// tan(x) = x + x^3/3 + ..., and x^3/3 is below half an ulp of x.
 		return x
+	}
+	if f, ok := tanDD(x); ok {
+		return f
 	}
 	s, c := sinCosBig(x)
 	f, _ := quoP(s, c, wprec).Float64()
@@ -92,6 +131,9 @@ func Atan2_64(y, x float64) float64 {
 		// zero, NaN or a multiple of pi/4 that Go rounds correctly as a
 		// constant.
 		return math.Atan2(y, x)
+	}
+	if f, ok := atan2DD(y, x); ok {
+		return f
 	}
 	f, _ := atan2Big(y, x).Float64()
 	return f
@@ -131,27 +173,33 @@ func Pow64(x, y float64) float64 {
 		}
 		x = -x
 	}
-	var r *big.Float
-	if y == math.Trunc(y) && math.Abs(y) <= 64 {
-		r = powIntBig(x, int(y))
-	} else {
-		initWide()
-		e := mulP(lnBigP(x), fP(y, wprec), wprec)
-		// exp(e) overflows or underflows an f64 when |e| is larger than
-		// about 745. Stop early, so that the exponent stays small.
-		if e.Cmp(fP(1000, wprec)) > 0 {
-			r = fP(math.Inf(1), wprec)
-		} else if e.Cmp(fP(-1000, wprec)) < 0 {
-			r = fP(0, wprec)
-		} else {
-			r = expBigP(e)
-		}
+	f, ok := powDD(x, y)
+	if !ok {
+		f, _ = powBig(x, y).Float64()
 	}
 	if neg {
-		r.Neg(r)
+		return -f
 	}
-	f, _ := r.Float64()
 	return f
+}
+
+// powBig is x^y with math/big, for a finite positive x other than 1 and a
+// finite non-zero y.
+func powBig(x, y float64) *big.Float {
+	if y == math.Trunc(y) && math.Abs(y) <= 64 {
+		return powIntBig(x, int(y))
+	}
+	initWide()
+	e := mulP(lnBigP(x), fP(y, wprec), wprec)
+	// exp(e) overflows or underflows an f64 when |e| is larger than about
+	// 745. Stop early, so that the exponent stays small.
+	switch {
+	case e.Cmp(fP(1000, wprec)) > 0:
+		return fP(math.Inf(1), wprec)
+	case e.Cmp(fP(-1000, wprec)) < 0:
+		return fP(0, wprec)
+	}
+	return expBigP(e)
 }
 
 // Ln64 is ln, the natural logarithm, for an f64, correctly rounded.

@@ -115,9 +115,10 @@ func Sin(x float64) float64 {
 }
 
 // SinCos is FloatFuncs::sin_cos in kurbo kurbo/src/common.rs. The Rust
-// standard library computes it as (sin(x), cos(x)).
+// standard library computes it as (sin(x), cos(x)). crmath.SinCos64 gives
+// the same two results, and computes them together.
 func SinCos(x float64) (float64, float64) {
-	return Sin(x), Cos(x)
+	return crmath.SinCos64(x)
 }
 
 // Sqrt is FloatFuncs::sqrt in kurbo kurbo/src/common.rs.
