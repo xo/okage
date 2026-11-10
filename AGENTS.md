@@ -20,7 +20,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `847abd69` of resvg. The maintainers accepted the decisions D1
-to D36. The open questions are at the end of `docs/PLAN.md`.
+to D37. The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -53,7 +53,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9, D32 and D36 |
+| working on images, text or fonts in `svg` | D7, D9, D32, D36 and D37 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |

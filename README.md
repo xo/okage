@@ -134,6 +134,9 @@ okage also adds APIs that upstream does not have:
    system on its first call, and sets each generic family to the first of a
    list of common fonts that is installed. The package registers the format
    `svg` with `image.RegisterFormat`, so `image.Decode` reads SVG data (D36).
+3. `svg.ShapeText` lays out a run of text with the fonts, the fallback and
+   the shaping of `svg`, and gives its advance width and the outlines of its
+   glyphs as a path, so that a program can draw text without SVG data (D37).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

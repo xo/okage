@@ -28,6 +28,10 @@
 // svg with image.RegisterFormat, so image.Decode reads SVG data after a
 // program imports the package.
 //
+// ShapeText lays out a run of text without SVG data, and gives its advance
+// width and the outlines of its glyphs as a path, with the same fonts,
+// fallback and shaping as a <text> element (D37).
+//
 // The functions of the parser, such as FromData, read no font of the system.
 // They lay out text with the fonts of a FontDatabase, which the caller gives
 // with WithFontDatabase (D9). To use the fonts of a system with them, load the

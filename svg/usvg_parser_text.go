@@ -538,6 +538,47 @@ func convertFont(node svgNode, state *converterState) Font {
 	weight := resolveFontWeight(node)
 	variations := parseFontVariationSettings(node, state.opt)
 
+	variations = autoFontVariations(variations, weight, stretch, style)
+
+	fontFamilies := ""
+	for n := range node.ancestors() {
+		if n.hasAttribute(AIdFontFamily) {
+			fontFamilies, _ = n.attributeStr(AIdFontFamily)
+			break
+		}
+	}
+
+	parsed, err := svgtypes.ParseFontFamilies(fontFamilies)
+	families, _ := logNone(parsed, err == nil, func() {
+		state.opt.warnf(
+			"Failed to parse %s value: '%s'. Falling back to %s.",
+			AIdFontFamily,
+			fontFamilies,
+			state.opt.fontFamily,
+		)
+	})
+	if err != nil {
+		families = nil
+	}
+
+	if len(families) == 0 {
+		families = append(families, FontFamily{Kind: FontFamilyNamed, Name: state.opt.fontFamily})
+	}
+
+	return Font{
+		families:   families,
+		style:      style,
+		stretch:    stretch,
+		weight:     weight,
+		variations: variations,
+	}
+}
+
+// autoFontVariations is the part of convert_font in usvg src/parser/text.rs
+// that maps font-weight, font-stretch and font-style to the axes of a
+// variable font, when the variations do not set them. ShapeText of
+// text_run.go calls it too (D37).
+func autoFontVariations(variations []FontVariation, weight uint16, stretch FontStretch, style FontStyle) []FontVariation {
 	// Auto-map standard font properties to variation axes if not explicitly set.
 	// This allows variable fonts to work with regular font-weight/font-stretch properties.
 	hasTag := func(tag string) bool {
@@ -593,38 +634,7 @@ func convertFont(node svgNode, state *converterState) Font {
 		variations = append(variations, NewFontVariation([4]byte{'s', 'l', 'n', 't'}, -12.0))
 	}
 
-	fontFamilies := ""
-	for n := range node.ancestors() {
-		if n.hasAttribute(AIdFontFamily) {
-			fontFamilies, _ = n.attributeStr(AIdFontFamily)
-			break
-		}
-	}
-
-	parsed, err := svgtypes.ParseFontFamilies(fontFamilies)
-	families, _ := logNone(parsed, err == nil, func() {
-		state.opt.warnf(
-			"Failed to parse %s value: '%s'. Falling back to %s.",
-			AIdFontFamily,
-			fontFamilies,
-			state.opt.fontFamily,
-		)
-	})
-	if err != nil {
-		families = nil
-	}
-
-	if len(families) == 0 {
-		families = append(families, FontFamily{Kind: FontFamilyNamed, Name: state.opt.fontFamily})
-	}
-
-	return Font{
-		families:   families,
-		style:      style,
-		stretch:    stretch,
-		weight:     weight,
-		variations: variations,
-	}
+	return variations
 }
 
 // parseFontVariationSettings is parse_font_variation_settings in usvg

@@ -376,3 +376,14 @@ const (
 	// on an axis.
 	ErrSVGInvalidRenderScale Error = "rendering svg: invalid scale"
 )
+
+// The sentinel errors of ShapeText of svg (D37).
+const (
+	// ErrSVGTextInvalidSize is the error of ShapeText when the font size is
+	// not larger than 0.
+	ErrSVGTextInvalidSize Error = "shaping text: invalid font size"
+
+	// ErrSVGTextNoFont is the error of ShapeText when no font of the
+	// database draws the text.
+	ErrSVGTextNoFont Error = "shaping text: no font draws the text"
+)
