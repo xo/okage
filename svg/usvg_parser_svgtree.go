@@ -1145,9 +1145,28 @@ func fromValuePaintOrder(_ svgNode, _ AId, value string) (svgtypes.PaintOrder, b
 
 // fromValueColor is the impl FromValue for svgtypes::Color in usvg
 // src/parser/svgtree/mod.rs.
-func fromValueColor(_ svgNode, _ AId, value string) (svgtypes.Color, bool) {
-	v, err := svgtypes.ParseColor(value)
-	return v, err == nil
+func fromValueColor(node svgNode, aid AId, value string) (svgtypes.Color, bool) {
+	// TODO: Let svgtypes parse `currentColor` as part of a `<color>` type that `Paint` and
+	// `drop-shadow()` can share, instead of matching the keyword in several places.
+	if value != "currentColor" {
+		v, err := svgtypes.ParseColor(value)
+		return v, err == nil
+	}
+
+	// In `color`, `currentColor` resolves to the inherited value.
+	var color svgtypes.Color
+	ok := false
+	if aid == AIdColor {
+		if parent, found := node.parentElement(); found {
+			color, ok = nodeFindAttribute(parent, AIdColor, fromValueColor)
+		}
+	} else {
+		color, ok = nodeFindAttribute(node, AIdColor, fromValueColor)
+	}
+	if !ok {
+		color = svgtypes.ColorBlack()
+	}
+	return color, true
 }
 
 // fromValueAngle is the impl FromValue for svgtypes::Angle in usvg

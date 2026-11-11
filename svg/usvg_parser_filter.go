@@ -1133,25 +1133,12 @@ func convertSpecularLighting(fe svgNode, primitives []PrimitiveFilter) (KindFilt
 // src/parser/filter.rs.
 func convertLightingColor(node svgNode) Color {
 	// Color's alpha doesn't affect lighting-color. Simply skip it.
-	value, ok := node.attributeStr(AIdLightingColor)
-	switch {
-	case ok && value == "currentColor":
-		c, ok := nodeFindAttribute(node, AIdColor, fromValueColor)
-		if !ok {
-			// Yes, a missing `currentColor` resolves to black and not white.
-			c = svgtypes.ColorBlack()
-		}
-		color, _ := splitAlpha(c)
-		return color
-	case ok:
-		if c, err := svgtypes.ParseColor(value); err == nil {
-			color, _ := splitAlpha(c)
-			return color
-		}
-		node.doc.opt.warnf("Failed to parse lighting-color value: '%s'.", value)
+	c, ok := nodeAttribute(node, AIdLightingColor, fromValueColor)
+	if !ok {
 		return ColorWhite()
 	}
-	return ColorWhite()
+	color, _ := splitAlpha(c)
+	return color
 }
 
 // convertLightSource is convert_light_source in usvg src/parser/filter.rs.

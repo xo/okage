@@ -373,20 +373,8 @@ func convertStops(grad svgNode, state *converterState) []Stop {
 			prevOffset = svgtypes.NewLengthNumber(offsetNumber)
 			offset32 := f32Bound(0.0, float32(offsetNumber), 1.0)
 
-			var svgColor svgtypes.Color
-			if value, ok := stop.attributeStr(AIdStopColor); ok {
-				if value == "currentColor" {
-					svgColor, ok = nodeFindAttribute(stop, AIdColor, fromValueColor)
-					if !ok {
-						svgColor = svgtypes.ColorBlack()
-					}
-				} else if c, err := svgtypes.ParseColor(value); err == nil {
-					svgColor = c
-				} else {
-					state.opt.warnf("Failed to parse stop-color value: '%s'.", value)
-					svgColor = svgtypes.ColorBlack()
-				}
-			} else {
+			svgColor, ok := nodeAttribute(stop, AIdStopColor, fromValueColor)
+			if !ok {
 				svgColor = svgtypes.ColorBlack()
 			}
 			color, opacity := splitAlpha(svgColor)
