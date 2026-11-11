@@ -39,6 +39,17 @@ func NewColorRGB(red, green, blue uint8) Color {
 	}
 }
 
+// newColorRGBF32 is Color::new_rgb_f32 in svgtypes src/color.rs. It
+// constructs a new `Color` from RGB values in the range 0..1.
+func newColorRGBF32(red, green, blue float32) Color {
+	return Color{
+		Red:   f32ToU8(roundF32(red * 255.0)),
+		Green: f32ToU8(roundF32(green * 255.0)),
+		Blue:  f32ToU8(roundF32(blue * 255.0)),
+		Alpha: 255,
+	}
+}
+
 // NewColorRGBA is Color::new_rgba in svgtypes src/color.rs.
 //
 // Constructs a new `Color` from RGBA values.
@@ -295,6 +306,45 @@ func (s *Stream) ParseColor() (Color, error) {
 			if err := s.ConsumeByte(')'); err != nil {
 				return Color{}, err
 			}
+		case "hwb":
+			if err := s.ConsumeByte('('); err != nil {
+				return Color{}, err
+			}
+
+			angle, err := s.ParseAngle()
+			if err != nil {
+				return Color{}, err
+			}
+			hue := angle.ToDegrees()
+			hue = math.Mod(math.Mod(hue, 360.0)+360.0, 360.0)
+
+			w, err := s.parseHwbComponent()
+			if err != nil {
+				return Color{}, err
+			}
+			white := f64Bound(0.0, w, 1.0)
+			b, err := s.parseHwbComponent()
+			if err != nil {
+				return Color{}, err
+			}
+			black := f64Bound(0.0, b, 1.0)
+
+			color = hwbToRGB(float32(hue)/60.0, float32(white), float32(black))
+
+			s.SkipSpaces()
+			if s.IsCurrByteEq('/') {
+				s.Advance(1)
+				a, err := s.ParseNumberOrPercent()
+				if err != nil {
+					return Color{}, err
+				}
+				color.Alpha = f64ToU8(kurbo.Round(a * 255.0))
+			}
+
+			s.SkipSpaces()
+			if err := s.ConsumeByte(')'); err != nil {
+				return Color{}, err
+			}
 		default:
 			c, ok := fromStr(name)
 			if !ok {
@@ -339,6 +389,15 @@ func hexPair(c1, c2 byte) byte {
 // `hue` is in a 0..6 range, while `saturation` and `lightness` are in a 0..=1 range.
 // Based on https://www.w3.org/TR/css-color-3/#hsl-color
 func hslToRGB(hue, saturation, lightness float32) Color {
+	red, green, blue := hslToRGBF32(hue, saturation, lightness)
+	return newColorRGBF32(red, green, blue)
+}
+
+// hslToRGBF32 is hsl_to_rgb_f32 in svgtypes src/color.rs.
+//
+// `hue` is in a 0..6 range, while `saturation` and `lightness` are in a 0..1 range.
+// Based on https://www.w3.org/TR/css-color-3/#hsl-color
+func hslToRGBF32(hue, saturation, lightness float32) (float32, float32, float32) {
 	var t2 float32
 	if lightness <= 0.5 {
 		t2 = lightness * (saturation + 1.0)
@@ -350,11 +409,7 @@ func hslToRGB(hue, saturation, lightness float32) Color {
 	red := hueToRGB(t1, t2, hue+2.0)
 	green := hueToRGB(t1, t2, hue)
 	blue := hueToRGB(t1, t2, hue-2.0)
-	return NewColorRGB(
-		f32ToU8(roundF32(red*255.0)),
-		f32ToU8(roundF32(green*255.0)),
-		f32ToU8(roundF32(blue*255.0)),
-	)
+	return red, green, blue
 }
 
 // hueToRGB is hue_to_rgb in svgtypes src/color.rs.
@@ -376,6 +431,36 @@ func hueToRGB(t1, t2, hue float32) float32 {
 	default:
 		return t1
 	}
+}
+
+// hwbToRGB is hwb_to_rgb in svgtypes src/color.rs.
+//
+// `hue` is in a 0..6 range, while `white` and `black` are in a 0..1 range.
+// Based on https://www.w3.org/TR/css-color-4/#hwb-to-rgb
+func hwbToRGB(hue, white, black float32) Color {
+	if white+black >= 1.0 {
+		gray := white / (white + black)
+		return newColorRGBF32(gray, gray, gray)
+	}
+	factor := 1.0 - white - black
+	red, green, blue := hslToRGBF32(hue, 1.0, 0.5)
+	red = float32(red*factor) + white
+	green = float32(green*factor) + white
+	blue = float32(blue*factor) + white
+	return newColorRGBF32(red, green, blue)
+}
+
+// parseHwbComponent is Stream::parse_hwb_component in svgtypes
+// src/color.rs.
+func (s *Stream) parseHwbComponent() (float64, error) {
+	n, err := s.ParseNumber()
+	if err != nil {
+		return 0, err
+	}
+	if s.StartsWith("%") {
+		s.Advance(1)
+	}
+	return n / 100.0, nil
 }
 
 // f64Bound is f64_bound in svgtypes src/color.rs. It is f64::clamp, which

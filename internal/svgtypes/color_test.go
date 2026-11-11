@@ -65,6 +65,16 @@ func TestParseColor(t *testing.T) {
 		{"hsl_with_hue_deg_and_numbers", "hsl(90deg, 1, 0.5)", NewColorRGBA(128, 255, 0, 255)},
 		{"hsla_with_hue_deg_percentages", "hsla(120deg, 75%, 75%, 100%)", NewColorRGBA(143, 239, 143, 255)},
 		{"hsla_with_hue_deg_above_360", "hsla(480deg, 75%, 75%, 100%)", NewColorRGBA(143, 239, 143, 255)},
+		// Examples from https://www.w3.org/TR/css-color-4/#the-hwb-notation
+		{"hwb_doc_example_22", "hwb(150 20% 10%)", NewColorRGBA(51, 230, 140, 255)},
+		{"hwb_doc_example_22_alpha", "hwb(150 20% 10% / 0.2)", NewColorRGBA(51, 230, 140, 51)},
+		{"hwb_doc_example_23", "hwb(45 40% 80%)", NewColorRGBA(85, 85, 85, 255)},
+		{"hwb_doc_example_23_alpha", "hwb(45 40% 80% / 0.9)", NewColorRGBA(85, 85, 85, 230)},
+		// Random examples generated with
+		// https://www.w3schools.com/colors/colors_hwb.asp
+		{"hwb_generated_1", "hwb(360 82% 2%)", NewColorRGBA(250, 209, 209, 255)},
+		{"hwb_generated_2", "hwb(74 9% 13%)", NewColorRGBA(175, 222, 23, 255)},
+		{"hwb_with_numbers", "hwb(150 20 10)", NewColorRGBA(51, 230, 140, 255)},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -89,6 +99,7 @@ func TestParseColorErr(t *testing.T) {
 		{"invalid_input_2", "#9ߞpx! ;", "invalid value"},
 		{"rgba_with_percent_alpha", "rgba(10, 20, 30, 5%)", "expected ')' not '%' at position 19"},
 		{"rgb_mixed_units", "rgb(140%, -10mm, 130pt)", "invalid number at position 14"},
+		{"hwb_with_commas", "hwb(150, 20%, 10%)", "invalid number at position 8"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
