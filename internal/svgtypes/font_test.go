@@ -54,6 +54,7 @@ func TestParseFontFamilies(t *testing.T) {
 			[]FontFamily{named("简体中文"), sansSerif, named("日本語フォント"), named("Arial")}, //nolint:gosmopolitan // the text of the upstream test
 		},
 		{"font_family_16", "", []FontFamily{}},
+		{"font_family_17", "México, café, sans-serif", []FontFamily{named("México"), named("café"), sansSerif}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,6 +78,7 @@ func TestParseFontFamiliesErr(t *testing.T) {
 		{"font_family_err_4", "test@foo, sans-serif", "invalid ident"},
 		{"font_family_err_5", "#POUND, sans-serif", "invalid ident"},
 		{"font_family_err_6", "Hawaii 5-0, sans-serif", "invalid ident"},
+		{"font_family_err_7", "Arial×Bold, sans-serif", "invalid ident"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

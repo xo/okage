@@ -71,7 +71,7 @@ func isNameStart(c rune) bool {
 	case c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'):
 		return true
 	default:
-		return isNonASCII(c) || isEscape(c)
+		return isNonASCIIIdent(c) || isEscape(c)
 	}
 }
 
@@ -81,14 +81,33 @@ func isNameChar(c rune) bool {
 	case c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-':
 		return true
 	default:
-		return isNonASCII(c) || isEscape(c)
+		return isNonASCIIIdent(c) || isEscape(c)
 	}
 }
 
-// isNonASCII is CharExt::is_non_ascii in svgtypes src/stream.rs. Upstream
-// compares the code point with 237, not 127, and the port keeps it.
-func isNonASCII(c rune) bool {
-	return uint32(c) > 237
+// isNonASCIIIdent is CharExt::is_non_ascii_ident in svgtypes src/stream.rs.
+// It reports whether c is a non-ASCII ident code point of CSS:
+// <https://www.w3.org/TR/css-syntax-3/#non-ascii-ident-code-point>
+func isNonASCIIIdent(c rune) bool {
+	switch {
+	case c == 0xB7,
+		c >= 0xC0 && c <= 0xD6,
+		c >= 0xD8 && c <= 0xF6,
+		c >= 0xF8 && c <= 0x37D,
+		c >= 0x37F && c <= 0x1FFF,
+		c == 0x200C,
+		c == 0x200D,
+		c == 0x203F,
+		c == 0x2040,
+		c >= 0x2070 && c <= 0x218F,
+		c >= 0x2C00 && c <= 0x2FEF,
+		c >= 0x3001 && c <= 0xD7FF,
+		c >= 0xF900 && c <= 0xFDCF,
+		c >= 0xFDF0 && c <= 0xFFFD,
+		c >= 0x10000:
+		return true
+	}
+	return false
 }
 
 // isEscape is CharExt::is_escape in svgtypes src/stream.rs.
