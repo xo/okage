@@ -53,6 +53,8 @@ func TestParseTransformOriginErr(t *testing.T) {
 		{"parse_err_3", "center some", "transform origin has invalid parameters"},
 		{"parse_err_4", "left right", "transform origin has invalid parameters"},
 		{"parse_err_5", "left top 3%", "z-index cannot be a percentage"},
+		{"parse_err_6", " ", "transform origin doesn't have enough parameters"},
+		{"parse_err_7", "-", "transform origin has invalid parameters"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -60,15 +62,4 @@ func TestParseTransformOriginErr(t *testing.T) {
 			errText(t, err, tt.want)
 		})
 	}
-}
-
-// TestParseTransformOriginUnreachable checks that the port panics where
-// upstream reaches unreachable!(). This case is not an upstream test.
-func TestParseTransformOriginUnreachable(t *testing.T) {
-	defer func() {
-		if recover() == nil {
-			t.Error("got no panic")
-		}
-	}()
-	_, _ = ParseTransformOrigin(" ")
 }

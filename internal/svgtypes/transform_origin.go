@@ -81,6 +81,7 @@ func NewTransformOrigin(xOffset, yOffset, zOffset Length) TransformOrigin {
 // ",5". The port keeps this fault of upstream.
 func ParseTransformOrigin(text string) (TransformOrigin, error) {
 	stream := NewStream(text)
+	stream.SkipSpaces()
 
 	if stream.AtEnd() {
 		return TransformOrigin{}, okage.ErrSVGTypesTransformOriginMissingParameters
@@ -95,7 +96,10 @@ func ParseTransformOrigin(text string) (TransformOrigin, error) {
 		return position{}, false
 	}
 
-	firstArg, hasFirst := parsePart(&stream)
+	p1, ok := parsePart(&stream)
+	if !ok {
+		return TransformOrigin{}, okage.ErrSVGTypesTransformOriginInvalidParameters
+	}
 	var secondArg position
 	hasSecond := false
 	var thirdArg Length
@@ -131,18 +135,17 @@ func ParseTransformOrigin(text string) (TransformOrigin, error) {
 
 	var result TransformOrigin
 	switch {
-	case hasFirst && !hasSecond && !hasThird:
-		p := firstArg
+	case !hasSecond:
 		var xOffset, yOffset Length
-		if p.isHorizontal() {
-			xOffset, yOffset = lengthFromPosition(p), LengthFromDirectionalPosition(DirectionalPositionCenter)
+		if p1.isHorizontal() {
+			xOffset, yOffset = lengthFromPosition(p1), LengthFromDirectionalPosition(DirectionalPositionCenter)
 		} else {
-			xOffset, yOffset = LengthFromDirectionalPosition(DirectionalPositionCenter), lengthFromPosition(p)
+			xOffset, yOffset = LengthFromDirectionalPosition(DirectionalPositionCenter), lengthFromPosition(p1)
 		}
 
 		result = NewTransformOrigin(xOffset, yOffset, NewLength(0.0, LengthUnitPx))
-	case hasFirst && hasSecond:
-		p1, p2 := firstArg, secondArg
+	default:
+		p2 := secondArg
 		if hasThird {
 			if thirdArg.Unit == LengthUnitPercent {
 				return TransformOrigin{}, okage.ErrSVGTypesTransformOriginZIndexIsPercentage
@@ -176,8 +179,6 @@ func ParseTransformOrigin(text string) (TransformOrigin, error) {
 				return TransformOrigin{}, okage.ErrSVGTypesTransformOriginInvalidParameters
 			}
 		}
-	default:
-		panic("svgtypes: internal error: entered unreachable code")
 	}
 
 	return result, nil
