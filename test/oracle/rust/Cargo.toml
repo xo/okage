@@ -1,7 +1,7 @@
 # The Rust oracle of okage (D22). It links tiny-skia 0.12.0, the base version
 # of the port (D12), with its scalar code (D16), and it renders the scenes that
 # the Go tests of the test module write as JSON. It also links roxmltree
-# 0.21.1 and svgtypes 0.16.1, the base versions of phase 6, and usvg and resvg
+# 0.21.1 and svgtypes 0.16.2, the versions that usvg uses, and usvg and resvg
 # without their feature text, at the commit of resvg in the column matched of
 # docs/upstream/upstreams.tsv, and answers the questions of the parsers and of
 # the renderer. The rev of usvg and resvg moves with that column.
@@ -14,7 +14,7 @@ publish = false
 [dependencies]
 tiny-skia = { version = "=0.12.0", default-features = false, features = ["std"] }
 roxmltree = "=0.21.1"
-svgtypes = "=0.16.1"
+svgtypes = "=0.16.2"
 usvg = { git = "https://github.com/linebender/resvg", rev = "847abd69841493b011d07f9202f9f1fa616a82c6", default-features = false, features = ["svgz", "writer"] }
 resvg = { git = "https://github.com/linebender/resvg", rev = "847abd69841493b011d07f9202f9f1fa616a82c6", default-features = false, features = ["raster-images"] }
 serde = { version = "1", features = ["derive"] }
