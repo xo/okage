@@ -76,16 +76,11 @@ func PaintOrderFromArray(order [3]PaintOrderKind) PaintOrder {
 //
 // Never returns an error and fallbacks to the default value instead.
 func ParsePaintOrder(text string) PaintOrder {
-	var order []PaintOrderKind
-
-	left := []PaintOrderKind{
-		PaintOrderKindFill,
-		PaintOrderKindStroke,
-		PaintOrderKindMarkers,
-	}
+	order := DefaultPaintOrder().Order
 
 	s := NewStream(text)
-	for !s.AtEnd() && len(order) < 3 {
+	count := 0
+	for !s.AtEnd() && count < 3 {
 		s.SkipSpaces()
 		ident := s.ConsumeASCIIIdent()
 		s.SkipSpaces()
@@ -104,11 +99,15 @@ func ParsePaintOrder(text string) PaintOrder {
 			return DefaultPaintOrder()
 		}
 
-		if index := slices.Index(left, name); index >= 0 {
-			left = slices.Delete(left, index, index+1)
+		index := slices.Index(order[count:], name)
+		if index < 0 {
+			return DefaultPaintOrder()
 		}
-
-		order = append(order, name)
+		// Port: slice::rotate_right(1) of order[count..=count+index] moves
+		// the found kind to the position count.
+		copy(order[count+1:count+index+1], order[count:count+index])
+		order[count] = name
+		count++
 	}
 
 	s.SkipSpaces()
@@ -117,23 +116,5 @@ func ParsePaintOrder(text string) PaintOrder {
 		return DefaultPaintOrder()
 	}
 
-	if len(order) == 0 {
-		return DefaultPaintOrder()
-	}
-
-	// Any missing values should be added in the original order.
-	for len(order) < 3 && len(left) != 0 {
-		order = append(order, left[0])
-		left = left[1:]
-	}
-
-	// Any duplicates is an error.
-	if order[0] == order[1] || order[0] == order[2] || order[1] == order[2] {
-		// Any trailing data is an error.
-		return DefaultPaintOrder()
-	}
-
-	return PaintOrder{
-		Order: [3]PaintOrderKind{order[0], order[1], order[2]},
-	}
+	return PaintOrder{Order: order}
 }

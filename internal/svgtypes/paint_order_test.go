@@ -36,6 +36,7 @@ func TestParsePaintOrder(t *testing.T) {
 			PaintOrderKindStroke, PaintOrderKindFill, PaintOrderKindMarkers,
 		})},
 		{"parse_11", "stroke stroke stroke stroke", DefaultPaintOrder()},
+		{"parse_12", "stroke stroke markers", DefaultPaintOrder()},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -43,5 +44,26 @@ func TestParsePaintOrder(t *testing.T) {
 				t.Errorf("ParsePaintOrder(%q) = %v, want %v", tt.text, got, tt.want)
 			}
 		})
+	}
+}
+
+// TestAllPaintOrderCombinations is test_all_paint_order_combinations in
+// svgtypes src/paint_order.rs.
+func TestAllPaintOrderCombinations(t *testing.T) {
+	fill, stroke, markers := PaintOrderKindFill, PaintOrderKindStroke, PaintOrderKindMarkers
+	for _, c := range []struct {
+		text string
+		want [3]PaintOrderKind
+	}{
+		{"fill stroke markers", [3]PaintOrderKind{fill, stroke, markers}},
+		{"fill markers stroke", [3]PaintOrderKind{fill, markers, stroke}},
+		{"stroke fill markers", [3]PaintOrderKind{stroke, fill, markers}},
+		{"stroke markers fill", [3]PaintOrderKind{stroke, markers, fill}},
+		{"markers fill stroke", [3]PaintOrderKind{markers, fill, stroke}},
+		{"markers stroke fill", [3]PaintOrderKind{markers, stroke, fill}},
+	} {
+		if got := ParsePaintOrder(c.text); got != PaintOrderFromArray(c.want) {
+			t.Errorf("ParsePaintOrder(%q) = %v, want %v", c.text, got, PaintOrderFromArray(c.want))
+		}
 	}
 }
