@@ -56,6 +56,12 @@ func TestParseColor(t *testing.T) {
 		{"hsl_to_rgb_red_round_up", "hsl(230, 57%, 54%)", NewColorRGBA(71, 93, 205, 255)},
 		{"hsl_with_hue_float", "hsl(120.152, 100%, 75%)", NewColorRGBA(128, 255, 128, 255)},
 		{"hsla_with_hue_float", "hsla(120.152, 100%, 75%, 0.5)", NewColorRGBA(128, 255, 128, 128)},
+		{"hsl_hue_1turn", "hsl(1turn, 100%, 100%)", NewColorRGBA(255, 255, 255, 255)},
+		{"hsl_with_hue_turn_and_percentages", "hsl(0.25turn, 100%, 50%)", NewColorRGBA(128, 255, 0, 255)},
+		{"hsl_with_hue_deg_and_percentages", "hsl(90deg, 100%, 50%)", NewColorRGBA(128, 255, 0, 255)},
+		{"hsl_with_hue_deg_and_numbers", "hsl(90deg, 1, 0.5)", NewColorRGBA(128, 255, 0, 255)},
+		{"hsla_with_hue_deg_percentages", "hsla(120deg, 75%, 75%, 100%)", NewColorRGBA(143, 239, 143, 255)},
+		{"hsla_with_hue_deg_above_360", "hsla(480deg, 75%, 75%, 100%)", NewColorRGBA(143, 239, 143, 255)},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

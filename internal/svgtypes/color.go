@@ -254,10 +254,11 @@ func (s *Stream) ParseColor() (Color, error) {
 				return Color{}, err
 			}
 
-			hue, err := s.ParseListNumber()
+			angle, err := s.ParseListAngle()
 			if err != nil {
 				return Color{}, err
 			}
+			hue := angle.ToDegrees()
 			hue = math.Mod(math.Mod(hue, 360.0)+360.0, 360.0)
 
 			sat, err := s.ParseListNumberOrPercent()
@@ -275,7 +276,7 @@ func (s *Stream) ParseColor() (Color, error) {
 
 			s.SkipSpaces()
 			if !s.StartsWith(")") {
-				a, err := s.ParseListNumber()
+				a, err := s.ParseListNumberOrPercent()
 				if err != nil {
 					return Color{}, err
 				}

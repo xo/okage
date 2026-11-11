@@ -5,6 +5,8 @@
 
 package svgtypes
 
+import "github.com/xo/okage"
+
 // This file ports svgtypes src/angle.rs.
 
 // AngleUnit is AngleUnit in svgtypes src/angle.rs.
@@ -124,6 +126,22 @@ func (s *Stream) ParseAngle() (Angle, error) {
 	}
 
 	return NewAngle(n, u), nil
+}
+
+// ParseListAngle is Stream::parse_list_angle in svgtypes src/angle.rs. It
+// parses angle from a list of numbers.
+func (s *Stream) ParseListAngle() (Angle, error) {
+	if s.AtEnd() {
+		return Angle{}, okage.ErrSVGTypesUnexpectedEndOfStream
+	}
+
+	a, err := s.ParseAngle()
+	if err != nil {
+		return Angle{}, err
+	}
+	s.SkipSpaces()
+	s.parseListSeparator()
+	return a, nil
 }
 
 // The functions below have no Rust source. They are methods of f64 in the
