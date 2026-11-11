@@ -118,37 +118,15 @@ func parse(xml *roxmltree.Document, injectedStylesheet string, maxDepth uint32, 
 		return nil, okage.ErrXMLNoRootNode
 	}
 
-	// Collect all elements with `id` attribute, and all elements that
-	// can be referenced recursively.
 	links := map[string]nodeID{}
-	var patterns, clipPaths, masks, filters, feImages []nodeID
 	for node := range doc.descendants() {
 		if id, ok := node.attributeStr(AIdId); ok {
 			links[id] = node.id
 		}
-
-		if tag, ok := node.tagName(); ok {
-			switch tag {
-			case EIdPattern:
-				patterns = append(patterns, node.id)
-			case EIdClipPath:
-				clipPaths = append(clipPaths, node.id)
-			case EIdMask:
-				masks = append(masks, node.id)
-			case EIdFilter:
-				filters = append(filters, node.id)
-			case EIdFeImage:
-				feImages = append(feImages, node.id)
-			}
-		}
 	}
 	doc.links = links
 
-	fixRecursivePatterns(patterns, doc)
-	fixRecursiveLinks(clipPaths, AIdClipPath, doc)
-	fixRecursiveLinks(masks, AIdMask, doc)
-	fixRecursiveLinks(filters, AIdFilter, doc)
-	fixRecursiveFeImage(feImages, doc)
+	doc.circularReferences = findCircularReferences(doc)
 
 	return doc, nil
 }
@@ -876,160 +854,291 @@ func (x xmlNode2) PseudoClassMatches(class simplecss.PseudoClass) bool {
 	return false // Since we are querying a static SVG we can ignore other pseudo-classes.
 }
 
-// fixRecursivePatterns is fix_recursive_patterns in usvg
+// findCircularReferences is find_circular_references in usvg
 // src/parser/svgtree/parse.rs.
-func fixRecursivePatterns(patterns []nodeID, doc *document) {
-	for {
-		nodeID, ok := findRecursivePattern(AIdFill, patterns, doc)
-		if !ok {
-			break
+func findCircularReferences(doc *document) map[circularReference]struct{} {
+	search := newCycleSearch()
+	for node := range doc.descendants() {
+		if isResource(node) {
+			search.visit(node)
 		}
-		idx := mustAttributeID(doc.get(nodeID).attributeID(AIdFill))
-		doc.attrs[idx].value = "none"
 	}
 
-	for {
-		nodeID, ok := findRecursivePattern(AIdStroke, patterns, doc)
-		if !ok {
-			break
-		}
-		idx := mustAttributeID(doc.get(nodeID).attributeID(AIdStroke))
-		doc.attrs[idx].value = "none"
+	return search.circularReferences
+}
+
+// visitState is Visit in usvg src/parser/svgtree/parse.rs.
+type visitState uint8
+
+// The values of visitState.
+const (
+	visitInProgress visitState = iota
+	visitDone
+)
+
+// cycleSearch is CycleSearch in usvg src/parser/svgtree/parse.rs.
+type cycleSearch struct {
+	visits             map[nodeID]visitState
+	templates          map[nodeID]nodeID
+	chain              []nodeID
+	circularReferences map[circularReference]struct{}
+}
+
+// newCycleSearch is the derived Default for CycleSearch in usvg
+// src/parser/svgtree/parse.rs.
+func newCycleSearch() *cycleSearch {
+	return &cycleSearch{
+		visits:             map[nodeID]visitState{},
+		templates:          map[nodeID]nodeID{},
+		circularReferences: map[circularReference]struct{}{},
 	}
 }
 
-// findRecursivePattern is find_recursive_pattern in usvg
+// referenceFrame is an entry of the stack of CycleSearch::visit: a node and
+// the references of it that are left.
+type referenceFrame struct {
+	id   nodeID
+	refs []reference
+}
+
+// visit is CycleSearch::visit in usvg src/parser/svgtree/parse.rs.
+func (c *cycleSearch) visit(node svgNode) {
+	node = c.withContent(node)
+	if _, ok := c.visits[node.id]; ok {
+		return
+	}
+
+	c.visits[node.id] = visitInProgress
+	stack := []referenceFrame{{node.id, references(node)}}
+	for len(stack) > 0 {
+		top := &stack[len(stack)-1]
+		if len(top.refs) == 0 {
+			c.visits[top.id] = visitDone
+			stack = stack[:len(stack)-1]
+			continue
+		}
+		ref := top.refs[0]
+		top.refs = top.refs[1:]
+
+		content := c.withContent(ref.target)
+		switch v, ok := c.visits[content.id]; {
+		case ok && v == visitInProgress:
+			node.doc.opt.warnf(
+				"Circular reference to '%s' via '%s' ignored.",
+				ref.target.elementID(),
+				ref.aid,
+			)
+			c.circularReferences[circularReference{ref.user.id, ref.aid}] = struct{}{}
+		case ok:
+		default:
+			c.visits[content.id] = visitInProgress
+			stack = append(stack, referenceFrame{content.id, references(content)})
+		}
+	}
+}
+
+// withContent is CycleSearch::with_content in usvg
 // src/parser/svgtree/parse.rs.
-func findRecursivePattern(aid AId, patterns []nodeID, doc *document) (nodeID, bool) {
-	for _, id := range patterns {
-		patternNode := doc.get(id)
-		for node := range patternNode.descendants() {
-			value, ok := node.attributeStr(aid)
-			if !ok {
-				continue
-			}
+//
+// Returns the first element in the `xlink:href` chain of a pattern or filter that has
+// children, since its children are used instead. Elements sharing a template are resolved to
+// the same element, so its content is only walked once, and results are cached along the
+// chain.
+func (c *cycleSearch) withContent(node svgNode) svgNode {
+	if tag, ok := node.tagName(); !ok || (tag != EIdPattern && tag != EIdFilter) {
+		return node
+	}
 
-			paint, err := svgtypes.ParsePaint(value)
-			if err != nil || paint.Kind != svgtypes.PaintFuncIRI {
-				continue
-			}
-			linkID := paint.FuncIRI
-			if linkID == patternNode.elementID() {
-				// If a pattern child has a link to the pattern itself
-				// then we have to replace it with `none`.
-				// Otherwise we will get endless loop/recursion and stack overflow.
-				return node.id, true
-			}
-			// Check that linked node children doesn't link this pattern.
-			linkedNode, ok := doc.elementByID(linkID)
-			if !ok {
-				continue
-			}
-			for node2 := range linkedNode.descendants() {
-				value2, ok := node2.attributeStr(aid)
-				if !ok {
-					continue
+	current := node
+	var content svgNode
+	for {
+		if id, ok := c.templates[current.id]; ok {
+			content = node.document().get(id)
+			break
+		}
+
+		if current.hasChildren() {
+			content = current
+			break
+		}
+
+		// Resolves to `node` until the chain is done, which also ends an `xlink:href` cycle.
+		c.templates[current.id] = node.id
+		c.chain = append(c.chain, current.id)
+		link, ok := current.nodeAttribute(AIdHref)
+		if !ok || !sameTagName(link, node) {
+			content = node
+			break
+		}
+		current = link
+	}
+
+	for _, id := range c.chain {
+		c.templates[id] = content.id
+	}
+	c.chain = c.chain[:0]
+
+	return content
+}
+
+// sameTagName reports whether a and b have the same tag name, as the
+// comparison of two Option<EId> of upstream does.
+func sameTagName(a, b svgNode) bool {
+	ta, oka := a.tagName()
+	tb, okb := b.tagName()
+	return oka == okb && ta == tb
+}
+
+// reference is Reference in usvg src/parser/svgtree/parse.rs: the element
+// that uses the reference, the attribute, and the referenced element.
+type reference struct {
+	user   svgNode
+	aid    AId
+	target svgNode
+}
+
+// references is references in usvg src/parser/svgtree/parse.rs.
+//
+// Returns the references that are followed when rendering `node`,
+// as `(element that uses the reference, attribute, referenced element)`.
+func references(node svgNode) []reference {
+	var refs []reference
+	tag, _ := node.tagName()
+	switch tag {
+	// Masks, filters, paint servers and markers are ignored inside clip paths.
+	case EIdClipPath:
+		pushLink(node, AIdClipPath, EIdClipPath, &refs)
+		forEachContentDescendant(node, func(child svgNode) {
+			pushLink(child, AIdClipPath, EIdClipPath, &refs)
+		})
+	case EIdMask:
+		pushLink(node, AIdMask, EIdMask, &refs)
+		forEachContentDescendant(node, func(child svgNode) { pushReferences(child, &refs) })
+	case EIdPattern:
+		forEachContentDescendant(node, func(child svgNode) { pushReferences(child, &refs) })
+	case EIdFilter:
+		for child := range node.descendants() {
+			if t, ok := child.tagName(); ok && t == EIdFeImage {
+				if link, ok := child.nodeAttribute(AIdHref); ok {
+					if lt, ok := link.tagName(); ok && (lt.IsGraphic() || lt == EIdG || lt == EIdSwitch || lt == EIdSvg) {
+						refs = append(refs, reference{child, AIdHref, link})
+					}
 				}
+			}
+		}
+	case EIdMarker:
+		forEachContentDescendant(node, func(child svgNode) { pushReferences(child, &refs) })
+	// An element referenced by `feImage`.
+	default:
+		pushReferences(node, &refs)
+		forEachContentDescendant(node, func(child svgNode) { pushReferences(child, &refs) })
+	}
 
-				paint2, err := svgtypes.ParsePaint(value2)
-				if err == nil && paint2.Kind == svgtypes.PaintFuncIRI {
-					if paint2.FuncIRI == patternNode.elementID() {
-						return node2.id, true
+	return refs
+}
+
+// forEachContentDescendant is for_each_content_descendant in usvg
+// src/parser/svgtree/parse.rs.
+//
+// Calls `f` for each descendant of `node`, skipping nested resources and other definitions.
+// Those are only rendered where they are referenced, and resources are visited on their own.
+func forEachContentDescendant(node svgNode, f func(svgNode)) {
+	nodeTag, nodeOK := node.tagName()
+	for child := range node.children() {
+		// A `use` stores a copy of the `symbol` it references as its child.
+		tag, ok := child.tagName()
+		isDefinition := isResource(child) ||
+			(ok && tag == EIdDefs) ||
+			(ok && tag == EIdSymbol && (!nodeOK || nodeTag != EIdUse))
+		if !isDefinition {
+			f(child)
+			forEachContentDescendant(child, f)
+		}
+	}
+}
+
+// isResource is is_resource in usvg src/parser/svgtree/parse.rs.
+func isResource(node svgNode) bool {
+	tag, ok := node.tagName()
+	if !ok {
+		return false
+	}
+	switch tag {
+	case EIdClipPath, EIdMask, EIdPattern, EIdFilter, EIdMarker:
+		return true
+	}
+	return false
+}
+
+// pushReferences is push_references in usvg src/parser/svgtree/parse.rs.
+func pushReferences(node svgNode, refs *[]reference) {
+	if !node.isElement() {
+		return
+	}
+
+	pushLink(node, AIdClipPath, EIdClipPath, refs)
+	pushLink(node, AIdMask, EIdMask, refs)
+
+	if value, ok := node.attributeStr(AIdFilter); ok {
+		for filter, err := range svgtypes.NewFilterValueListParser(value).All() {
+			if err != nil || filter.Kind != svgtypes.FilterValueURL {
+				continue
+			}
+			if link, ok := node.document().elementByID(filter.URL); ok {
+				if t, ok := link.tagName(); ok && t == EIdFilter {
+					*refs = append(*refs, reference{node, AIdFilter, link})
+				}
+			}
+		}
+	}
+
+	// Paint and markers are inherited, so they have to be resolved like during conversion.
+	for _, aid := range []AId{AIdFill, AIdStroke} {
+		if value, ok := nodeFindAttribute(node, aid, fromValueStr); ok {
+			if paint, err := svgtypes.ParsePaint(value); err == nil && paint.Kind == svgtypes.PaintFuncIRI {
+				if link, ok := node.document().elementByID(paint.FuncIRI); ok {
+					if t, ok := link.tagName(); ok && t == EIdPattern {
+						*refs = append(*refs, reference{node, aid, link})
 					}
 				}
 			}
 		}
 	}
 
-	return 0, false
-}
-
-// fixRecursiveLinks is fix_recursive_links in usvg
-// src/parser/svgtree/parse.rs.
-func fixRecursiveLinks(nodes []nodeID, aid AId, doc *document) {
-	for {
-		nodeID, ok := findRecursiveLink(nodes, aid, doc)
-		if !ok {
-			break
-		}
-		idx := mustAttributeID(doc.get(nodeID).attributeID(aid))
-		doc.attrs[idx].value = "none"
+	tag, _ := node.tagName()
+	isShape := false
+	switch tag {
+	case EIdRect, EIdCircle, EIdEllipse, EIdLine, EIdPolyline, EIdPolygon, EIdPath:
+		isShape = true
 	}
-}
-
-// findRecursiveLink is find_recursive_link in usvg
-// src/parser/svgtree/parse.rs.
-func findRecursiveLink(nodes []nodeID, aid AId, doc *document) (nodeID, bool) {
-	for _, id := range nodes {
-		node := doc.get(id)
-		for child := range node.descendants() {
-			link, ok := child.nodeAttribute(aid)
-			if !ok {
-				continue
-			}
-			if link == node {
-				// If an element child has a link to the element itself
-				// then we have to replace it with `none`.
-				// Otherwise we will get endless loop/recursion and stack overflow.
-				return child.id, true
-			}
-			// Check that linked node children doesn't link this element.
-			for node2 := range link.descendants() {
-				if link2, ok := node2.nodeAttribute(aid); ok && link2 == node {
-					return node2.id, true
+	// Markers are never drawn inside a clip path.
+	if isShape && !insideClipPath(node) {
+		for _, aid := range []AId{AIdMarkerStart, AIdMarkerMid, AIdMarkerEnd} {
+			if link, ok := nodeFindAttribute(node, aid, fromValueSvgNode); ok {
+				if t, ok := link.tagName(); ok && t == EIdMarker {
+					*refs = append(*refs, reference{node, aid, link})
 				}
 			}
 		}
 	}
-
-	return 0, false
 }
 
-// fixRecursiveFeImage is fix_recursive_fe_image in usvg
-// src/parser/svgtree/parse.rs. It detects cases like:
-//
-//	<filter id="filter1">
-//	  <feImage xlink:href="#rect1"/>
-//	</filter>
-//	<rect id="rect1" x="36" y="36" width="120" height="120" fill="green" filter="url(#filter1)"/>
-func fixRecursiveFeImage(feImages []nodeID, doc *document) {
-	var ids []nodeID
-	for _, id := range feImages {
-		feNode := doc.get(id)
-		link, ok := feNode.nodeAttribute(AIdHref)
-		if !ok {
-			continue
-		}
-		filterURI, ok := link.attributeStr(AIdFilter)
-		if !ok {
-			continue
-		}
-		p, ok := feNode.parent()
-		if !ok {
-			panic("svg: called Option::unwrap() on a None value")
-		}
-		filterID := p.elementID()
-		for fn, err := range svgtypes.NewFilterValueListParser(filterURI).All() {
-			if err != nil {
-				continue
-			}
-			if fn.Kind == svgtypes.FilterValueURL && fn.URL == filterID {
-				ids = append(ids, link.id)
-			}
+// insideClipPath reports whether node or one of its ancestors is a
+// clipPath element, as `node.ancestors().any(...)` of push_references does.
+func insideClipPath(node svgNode) bool {
+	for n := range node.ancestors() {
+		if t, ok := n.tagName(); ok && t == EIdClipPath {
+			return true
 		}
 	}
-
-	for _, id := range ids {
-		idx := mustAttributeID(doc.get(id).attributeID(AIdFilter))
-		doc.attrs[idx].value = "none"
-	}
+	return false
 }
 
-// mustAttributeID is the unwrap of an Option<usize> that upstream relies on.
-// It panics when ok is false.
-func mustAttributeID(idx int, ok bool) int {
-	if !ok {
-		panic("svg: called Option::unwrap() on a None value")
+// pushLink is push_link in usvg src/parser/svgtree/parse.rs.
+func pushLink(node svgNode, aid AId, tagName EId, refs *[]reference) {
+	if link, ok := node.nodeAttribute(aid); ok {
+		if t, ok := link.tagName(); ok && t == tagName {
+			*refs = append(*refs, reference{node, aid, link})
+		}
 	}
-	return idx
 }

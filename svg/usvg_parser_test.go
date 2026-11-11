@@ -9,7 +9,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/xo/okage"
@@ -754,5 +756,19 @@ func TestFromStrHugeArc(t *testing.T) {
 		`<path d="M 30 40 A 40 30 20 1 1 1e50 100" fill="none" stroke="black"/></svg>`
 	if _, err := FromStr(text); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestLongClipPathChain is long_clip_path_chain in usvg tests/parser.rs.
+func TestLongClipPathChain(t *testing.T) {
+	var svg strings.Builder
+	svg.WriteString("<svg xmlns='http://www.w3.org/2000/svg'><defs>")
+	for i := range 100_000 {
+		fmt.Fprintf(&svg, "<clipPath id='c%d' clip-path='url(#c%d)'><rect/></clipPath>", i, i+1)
+	}
+	svg.WriteString("<clipPath id='c100000' clip-path='url(#c0)'><rect/></clipPath></defs></svg>")
+
+	if _, err := FromStr(svg.String()); err != nil {
+		t.Error(err)
 	}
 }

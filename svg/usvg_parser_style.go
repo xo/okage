@@ -78,8 +78,8 @@ func resolveFill(
 	subOpacity := path.NormalizedF32One
 	var paint Paint
 	var contextElement *contextElement
-	if n, ok := findAncestorWithAttribute(node, AIdFill); ok {
-		value, ok := n.attributeStr(AIdFill)
+	if _, ok := findAncestorWithAttribute(node, AIdFill); ok {
+		value, ok := nodeFindAttribute(node, AIdFill, fromValueStr)
 		if !ok {
 			return nil, false
 		}
@@ -137,11 +137,7 @@ func resolveStroke(
 	}
 
 	subOpacity := path.NormalizedF32One
-	n, ok := findAncestorWithAttribute(node, AIdStroke)
-	if !ok {
-		return nil, false
-	}
-	value, ok := n.attributeStr(AIdStroke)
+	value, ok := nodeFindAttribute(node, AIdStroke, fromValueStr)
 	if !ok {
 		return nil, false
 	}

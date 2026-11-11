@@ -265,7 +265,7 @@ dependencies = [
 [[package]]
 name = "resvg"
 version = "0.49.0"
-source = "git+https://github.com/linebender/resvg?rev=4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e#4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e"
+source = "git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4#500d8605a28ac092c1b146c06ec65c0e70e99ec4"
 dependencies = [
  "bytemuck",
  "gif",
@@ -273,7 +273,7 @@ dependencies = [
  "log",
  "pico-args",
  "rgb",
- "svgtypes 0.16.2 (git+https://github.com/linebender/resvg?rev=4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e)",
+ "svgtypes 0.16.2 (git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4)",
  "tiny-skia",
  "usvg",
  "zune-jpeg",
@@ -389,7 +389,7 @@ dependencies = [
 [[package]]
 name = "svgtypes"
 version = "0.16.2"
-source = "git+https://github.com/linebender/resvg?rev=4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e#4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e"
+source = "git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4#500d8605a28ac092c1b146c06ec65c0e70e99ec4"
 dependencies = [
  "kurbo",
  "siphasher",
@@ -439,7 +439,7 @@ checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 [[package]]
 name = "usvg"
 version = "0.49.0"
-source = "git+https://github.com/linebender/resvg?rev=4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e#4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e"
+source = "git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4#500d8605a28ac092c1b146c06ec65c0e70e99ec4"
 dependencies = [
  "base64",
  "data-url",
@@ -452,7 +452,7 @@ dependencies = [
  "simplecss",
  "siphasher",
  "strict-num",
- "svgtypes 0.16.2 (git+https://github.com/linebender/resvg?rev=4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e)",
+ "svgtypes 0.16.2 (git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4)",
  "tiny-skia-path",
  "xmlwriter",
 ]

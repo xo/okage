@@ -27,4 +27,4 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 847abd69841493b011d07f9202f9f1fa616a82c6	2026-11-05	ported	4593e7f	Make max parsing depth configurable. (#1223). Port: usvg, tests
 7479da343f8c1a1496d4611c51b45454fe3d9acb	2026-11-09	ported		Move `svgtypes` into the workspace (#1227). It moves svgtypes 0.16.2, which okage follows, into crates/svgtypes. Port: docs/UPSTREAM.md, test
 4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e	2026-11-09	ported		Resolve currentColor in flood-color (#1217). Port: usvg, tests
-500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	pending		Properly recognize and reject recursive references (#1225)
+500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported		Properly recognize and reject recursive references (#1225). Port: usvg, tests

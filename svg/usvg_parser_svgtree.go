@@ -43,7 +43,17 @@ type document struct {
 	nodes []nodeData
 	attrs []attribute
 	links map[string]nodeID
-	opt   *options
+	// Keyed by the element that uses a reference rather than the one that sets it, so that an
+	// inherited reference stays valid outside the cycle it closes.
+	circularReferences map[circularReference]struct{}
+	opt                *options
+}
+
+// circularReference is the key (NodeId, AId) of
+// Document::circular_references in usvg src/parser/svgtree/mod.rs.
+type circularReference struct {
+	id  nodeID
+	aid AId
 }
 
 // root is Document::root in usvg src/parser/svgtree/mod.rs. It returns the
@@ -335,6 +345,17 @@ type fromValue[T any] func(node svgNode, aid AId, value string) (T, bool)
 // nodeAttribute is SvgNode::attribute in usvg src/parser/svgtree/mod.rs. It
 // returns an attribute value, parsed by parse.
 func nodeAttribute[T any](n svgNode, aid AId, parse fromValue[T]) (T, bool) {
+	if n.hasCircularReference(aid) {
+		var zero T
+		return zero, false
+	}
+
+	return nodeAttributeImpl(n, aid, parse)
+}
+
+// nodeAttributeImpl is SvgNode::attribute_impl in usvg
+// src/parser/svgtree/mod.rs.
+func nodeAttributeImpl[T any](n svgNode, aid AId, parse fromValue[T]) (T, bool) {
 	var zero T
 	value, ok := n.rawAttribute(aid)
 	if !ok {
@@ -412,12 +433,24 @@ func (n svgNode) attributeNode(aid AId) (svgNode, bool) {
 //
 // Same as `SvgNode::attribute`, but doesn't show a warning.
 func nodeTryAttribute[T any](n svgNode, aid AId, parse fromValue[T]) (T, bool) {
+	if n.hasCircularReference(aid) {
+		var zero T
+		return zero, false
+	}
+
 	value, ok := n.rawAttribute(aid)
 	if !ok {
 		var zero T
 		return zero, false
 	}
 	return parse(n, aid, value)
+}
+
+// hasCircularReference is SvgNode::has_circular_reference in usvg
+// src/parser/svgtree/mod.rs.
+func (n svgNode) hasCircularReference(aid AId) bool {
+	_, ok := n.doc.circularReferences[circularReference{n.id, aid}]
+	return ok
 }
 
 // nodeAttribute is SvgNode::node_attribute in usvg
@@ -467,20 +500,6 @@ func (n svgNode) attributes() []attribute {
 	return nil
 }
 
-// attributeID is SvgNode::attribute_id in usvg src/parser/svgtree/mod.rs.
-func (n svgNode) attributeID(aid AId) (int, bool) {
-	k := &n.d().kind
-	if k.kind != nodeKindElement {
-		return 0, false
-	}
-	for idx, attr := range n.attributes() {
-		if attr.name == aid {
-			return int(k.attributes.start) + idx, true
-		}
-	}
-	return 0, false
-}
-
 // nodeFindAttribute is SvgNode::find_attribute in usvg
 // src/parser/svgtree/mod.rs. It finds a [`Node`] that contains the required
 // attribute, and returns the value parsed by parse.
@@ -491,12 +510,18 @@ func (n svgNode) attributeID(aid AId) (int, bool) {
 // For non-inheritable attributes checks only the current node and the parent one.
 // As per SVG spec.
 func nodeFindAttribute[T any](n svgNode, aid AId, parse fromValue[T]) (T, bool) {
-	node, ok := n.findAttributeImpl(aid)
-	if !ok {
-		var zero T
+	var zero T
+	if n.hasCircularReference(aid) {
 		return zero, false
 	}
-	return nodeAttribute(node, aid, parse)
+
+	// A circular reference on the declaring element doesn't apply to the ones inheriting it,
+	// which are checked on their own.
+	node, ok := n.findAttributeImpl(aid)
+	if !ok {
+		return zero, false
+	}
+	return nodeAttributeImpl(node, aid, parse)
 }
 
 // findAttributeImpl is SvgNode::find_attribute_impl in usvg

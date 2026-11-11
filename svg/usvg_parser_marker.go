@@ -7,7 +7,6 @@ package svg
 
 import (
 	"math"
-	"slices"
 
 	"github.com/xo/okage/internal/crmath"
 	"github.com/xo/okage/internal/svgtypes"
@@ -81,13 +80,6 @@ func convertMarker(
 		}
 
 		if hasMarker {
-			// TODO: move to svgtree
-			// Check for recursive marker.
-			if slices.Contains(state.parentMarkers, marker) {
-				state.opt.warnf("Recursive marker detected: %s", marker.elementID())
-				continue
-			}
-
 			resolveMarker(node, p, marker, item.kind, state, cache, parent)
 		}
 	}
@@ -248,7 +240,7 @@ func resolveMarker(
 		g.clipPath = clipPath
 
 		markerState := state.clone()
-		markerState.parentMarkers = append(markerState.parentMarkers, markerNode)
+		markerState.insideMarker = true
 		convertChildren(markerNode, markerState, cache, g)
 
 		if g.HasChildren() {
