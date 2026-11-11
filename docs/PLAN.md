@@ -59,7 +59,8 @@ closes the speed target of D18:
    of the tests of `font-variation-settings`.
 
 10. Phase 10: the 26 commits of resvg after `v0.49.0`, up to `847abd69` on
-    2026-11-05, each in its own okage commit. The Rust oracle links usvg and
+    2026-11-05, each in its own okage commit. On 2026-11-11 okage follows
+    resvg up to `500d8605`, with svgtypes 0.16.2. The Rust oracle links usvg and
     resvg at that commit and gives the same trees and the same pixels. The
     commits of the crates under `internal/` after their base wait until resvg
     raises their versions (D12).

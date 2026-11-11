@@ -25,6 +25,6 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 4cc963bde79f92ee3cf738ab2683f4851a07892c	2026-11-04	ported	fc0a198	Fix sbix bitmap placement (#1221). Port: usvg text, tests
 04291b740387ca7310bce66cd7108ee8d7c51ef0	2026-11-04	ported	e63afe3	Use the owned font model for all font lookups (#1222). Port: usvg text, usvg
 847abd69841493b011d07f9202f9f1fa616a82c6	2026-11-05	ported	4593e7f	Make max parsing depth configurable. (#1223). Port: usvg, tests
-7479da343f8c1a1496d4611c51b45454fe3d9acb	2026-11-09	ported		Move `svgtypes` into the workspace (#1227). It moves svgtypes 0.16.2, which okage follows, into crates/svgtypes. Port: docs/UPSTREAM.md, test
-4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e	2026-11-09	ported		Resolve currentColor in flood-color (#1217). Port: usvg, tests
-500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported		Properly recognize and reject recursive references (#1225). Port: usvg, tests
+7479da343f8c1a1496d4611c51b45454fe3d9acb	2026-11-09	ported	c038a8e	Move `svgtypes` into the workspace (#1227). It moves svgtypes 0.16.2, which okage follows, into crates/svgtypes. Port: docs/UPSTREAM.md, test
+4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e	2026-11-09	ported	a237122	Resolve currentColor in flood-color (#1217). Port: usvg, tests
+500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported	27ab339	Properly recognize and reject recursive references (#1225). Port: usvg, tests

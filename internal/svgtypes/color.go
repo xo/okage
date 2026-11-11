@@ -465,7 +465,7 @@ func (s *Stream) parseHwbComponent() (float64, error) {
 
 // f64Bound is f64_bound in svgtypes src/color.rs. It is f64::clamp, which
 // keeps NaN.
-func f64Bound(min, val, max float64) float64 {
+func f64Bound(min, val, max float64) float64 { //nolint:unparam // the signature of f64_bound in upstream
 	x := val
 	if x < min {
 		x = min

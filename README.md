@@ -59,8 +59,8 @@ open questions.
 
 The port starts from resvg `v0.49.0` and from the versions of the crates that
 it uses, such as tiny-skia `v0.12.0`. After each base port, okage follows each
-upstream commit. On 2026-11-09 okage follows resvg up to its commit `847abd69`
-of 2026-11-05. `docs/upstream/upstreams.tsv` lists the upstream
+upstream commit. On 2026-11-11 okage follows resvg up to its commit `500d8605`
+of 2026-11-10. `docs/upstream/upstreams.tsv` lists the upstream
 repositories, and one ledger for each records what okage did with each commit.
 
 ## Installing

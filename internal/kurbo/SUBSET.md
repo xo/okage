@@ -6,7 +6,7 @@ item that those items need. The traits `ParamCurve`, `ParamCurveDeriv` and
 `ParamCurveArclen` are ported in full for each type of the subset, so that
 each type has the methods that the trait gives it.
 
-`svgtypes` means svgtypes 0.16.1. `usvg` means usvg in resvg 0.49.0, and the
+`svgtypes` means svgtypes 0.16.2. `usvg` means usvg in resvg 0.49.0, and the
 paths start at `crates/usvg/src`. A use that is marked "for the subset" comes
 from another item of the subset, not from svgtypes or usvg.
 
