@@ -116,6 +116,9 @@ paths that it changes: Port, then Review, then Not applicable.
 | `crates/usvg/tests/<name>.rs` | `svg/usvg_<name>_test.go` | Port |
 | `crates/usvg/tests/files/**` | `svg/testdata/usvg/**`, copied byte for byte | Port |
 | `crates/usvg/codegen/**` | none | Review. It writes `parser/svgtree/names.rs`, which okage ports as a Go `map` (D7) |
+| `crates/svgtypes/src/<name>.rs` | `internal/svgtypes/<name>.go` | Port |
+| `crates/svgtypes/tests/**` | `internal/svgtypes/<name>_test.go` | Port |
+| `crates/svgtypes/Cargo.toml`, `crates/svgtypes/CHANGELOG.md`, `crates/svgtypes/LICENSE*` | none | Review |
 | `crates/c-api/**` | none | Not applicable |
 | `Cargo.toml`, `Cargo.lock`, `crates/*/Cargo.toml` | none | Review. A new version of a crate of D7 starts the steps of "A new version of a dependency" |
 | `CHANGELOG.md`, `LICENSE-*`, `docs/**` | none | Review |
@@ -124,7 +127,10 @@ paths that it changes: Port, then Review, then Not applicable.
 ### The crates under `internal/`
 
 For `svgtypes`, `roxmltree`, `simplecss` and `xmlwriter`, the rule is the same
-for each one:
+for each one. Since resvg `7479da34`, svgtypes 0.16.2 is in `crates/svgtypes`
+of resvg, and a change to svgtypes comes as a commit of resvg, with the rows
+of `crates/svgtypes` in the table of resvg. The ledger of svgtypes ends at
+0.16.2.
 
 | Upstream path | okage path | Rule |
 | --- | --- | --- |
