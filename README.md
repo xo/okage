@@ -101,6 +101,7 @@ When Go makes SIMD a standard feature, the SIMD build becomes the default.
 | [docs/UPSTREAM.md](docs/UPSTREAM.md) | the rules for porting each upstream repository and each change that it makes |
 | [docs/SIMD.md](docs/SIMD.md) | the rules for the vector code, the two builds and the SIMD packages of Go |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | the work that is known and not done |
+| [docs/FORMATS.md](docs/FORMATS.md) | a survey of the work to support other vector formats, such as PDF, EPS and DWG |
 | [docs/decisions/](docs/decisions/README.md) | every decision, one file each, with an index |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | how to change okage |
 | [AGENTS.md](AGENTS.md) | the rules for a coding agent, which also hold for a person |

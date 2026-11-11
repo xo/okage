@@ -63,6 +63,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | adding a dependency to the test module, or a comparison with another library | D22 |
 | moving to a new release of Go | "A new release of Go" in [docs/SIMD.md](docs/SIMD.md) |
 | looking for work that is known and not done | [docs/BACKLOG.md](docs/BACKLOG.md) |
+| discussing support for another vector format, such as PDF, EPS or DWG | [docs/FORMATS.md](docs/FORMATS.md) |
 | writing a document, a code comment, an error message or a commit message | the `simple-english` skill. Load it first. Then "Writing documentation" below |
 | writing or reviewing Go code | the `go-pedantry` skill. Load it first. Then "Hard rules" below |
 | adding or updating an agent skill | "Agent skills" in [CONTRIBUTING.md](CONTRIBUTING.md) |
@@ -192,6 +193,7 @@ files:
 | `docs/UPSTREAM.md` | the rules for porting each upstream and each change that it makes |
 | `docs/SIMD.md` | the rules for the vector code and the two implementations |
 | `docs/BACKLOG.md` | the work that is known and not done |
+| `docs/FORMATS.md` | a survey of the work to support other vector formats |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
 | `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). `tiny-skia.tsv` and `resvg.tsv` exist |
