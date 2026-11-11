@@ -238,6 +238,10 @@ func (s *Stream) ParseColor() (Color, error) {
 
 			s.SkipSpaces()
 			if !s.StartsWith(")") {
+				if s.IsCurrByteEq('/') {
+					s.Advance(1)
+					s.SkipSpaces()
+				}
 				a, err := s.ParseListNumber()
 				if err != nil {
 					return Color{}, err
@@ -276,6 +280,10 @@ func (s *Stream) ParseColor() (Color, error) {
 
 			s.SkipSpaces()
 			if !s.StartsWith(")") {
+				if s.IsCurrByteEq('/') {
+					s.Advance(1)
+					s.SkipSpaces()
+				}
 				a, err := s.ParseListNumberOrPercent()
 				if err != nil {
 					return Color{}, err
