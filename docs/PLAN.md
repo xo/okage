@@ -67,6 +67,10 @@ closes the speed target of D18:
 
 okage now follows its upstreams when a maintainer asks.
 
+On 2026-11-11 the package `html` parses and lays out the HTML-like labels of
+Graphviz for zuzu (D38). It ports no upstream. The test module compares its
+layout with `dot` of Graphviz 16.1.0.
+
 These documents hold the rules and the references that come from this plan:
 
 - [`UPSTREAM.md`](UPSTREAM.md) says how each upstream repository is ported,

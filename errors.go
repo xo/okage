@@ -387,3 +387,16 @@ const (
 	// database draws the text.
 	ErrSVGTextNoFont Error = "shaping text: no font draws the text"
 )
+
+// The sentinel errors of html.
+const (
+	// ErrHTMLSyntax is the error of html.Parse for a label that is not valid
+	// XML, or that breaks the grammar of the HTML-like labels of Graphviz.
+	// html returns an *html.SyntaxError that wraps it, with the position in
+	// the label.
+	ErrHTMLSyntax Error = "parsing html: syntax error"
+
+	// ErrHTMLMeasure is the error of html.Label.Layout when the measure of
+	// text returns an error. html wraps that error with this one.
+	ErrHTMLMeasure Error = "laying out html: measuring text"
+)

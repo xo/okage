@@ -20,7 +20,9 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `500d8605` of resvg. The maintainers accepted the decisions D1
-to D37. The open questions are at the end of `docs/PLAN.md`.
+to D38. The package `html` parses and lays out the HTML-like labels of
+Graphviz, with `dot` as its oracle (D38). The open questions are at the end
+of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -54,6 +56,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
 | working on images, text or fonts in `svg` | D7, D9, D32, D36 and D37 |
+| working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -201,11 +204,12 @@ When code exists, the code goes here:
 | `*.go` in the root | the package `okage`, the port of the crate `tiny-skia`, with the sentinel errors of every package. A file of a folder of `src` starts with the name of the folder, such as `scan_path_aa.go` |
 | `path/` | the package `path`, the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg/` | the package `svg`, the port of the crates `usvg` and `resvg`. A file starts with the name of its crate, such as `usvg_parser_svgtree.go` |
+| `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz. It ports no upstream (D38) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
 | `testdata/images/` | the reference images of tiny-skia, byte for byte |
 | `svg/testdata/` | the tests, the resources and the fonts of resvg, byte for byte |
-| `test/` | the test module: the Rust oracle, the vips oracle, the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22) |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22) |
 
 ## Before you stage
 

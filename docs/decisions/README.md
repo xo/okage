@@ -24,7 +24,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided |
 | D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided |
@@ -57,3 +57,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D35 | [Speed has no target, and stays open work](D035-speed-has-no-target-and-stays-open-work.md) | Decided, amends D18 |
 | D36 | [`svg` has a renderer that loads the system fonts](D036-svg-has-a-renderer-that-loads-the-system-fonts.md) | Decided, amends D9 |
 | D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided |
+| D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5 |

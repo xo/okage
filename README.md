@@ -137,6 +137,9 @@ okage also adds APIs that upstream does not have:
 3. `svg.ShapeText` lays out a run of text with the fonts, the fallback and
    the shaping of `svg`, and gives its advance width and the outlines of its
    glyphs as a path, so that a program can draw text without SVG data (D37).
+4. `html.Parse` parses an HTML-like label of Graphviz, `label=<...>` in DOT,
+   and `Label.Layout` lays it out as `dot` does: the boxes of the tables and
+   the cells, the rules, the runs of text and the ports (D38).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
@@ -147,7 +150,8 @@ tiny-skia.
 The root package and `path` are under the BSD-3-Clause license of tiny-skia.
 See [LICENSE](LICENSE), which keeps the copyright lines of upstream. The
 package `svg` and the packages that it uses take the MIT license of resvg and
-of its crates, in a `LICENSE` file in each folder (D13).
+of its crates, in a `LICENSE` file in each folder (D13). The package `html`
+ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38).
 
 <div align="center">
   <a href="https://github.com/xo/usql" title="A command line client for many databases">usql</a> |

@@ -1,12 +1,13 @@
 # D5. The packages follow the crates
 
-Status: Decided.
+Status: Decided, amended by D38.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
 | `github.com/xo/okage` | `okage` | the port of the crate `tiny-skia`, with the edges, the scan converters, the shaders and the raster pipeline, and the sentinel errors of every package (D21) |
 | `path` | `path` | the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg` | `svg` | the port of the crates `usvg` and `resvg`, as one package |
+| `html` | `html` | the parser and the layout of the HTML-like labels of Graphviz, which port no upstream (D38) |
 | `internal/wide` | `wide` | the vector types of `src/wide` of tiny-skia (D15) |
 | `internal/svgtypes` | `svgtypes` | the parsers of SVG values: lengths, colors, path data, transforms, filter functions and the font shorthand |
 | `internal/roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |
