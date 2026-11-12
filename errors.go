@@ -400,3 +400,25 @@ const (
 	// text returns an error. html wraps that error with this one.
 	ErrHTMLMeasure Error = "laying out html: measuring text"
 )
+
+// The sentinel errors of lottie (D41).
+const (
+	// ErrLottieParse is the error of lottie.Parse for data that is not a
+	// Lottie file that velato reads. lottie wraps the error of the JSON
+	// decoder with this one.
+	ErrLottieParse Error = "parsing lottie"
+
+	// ErrLottieInvalid is the error of lottie.Parse for a file with an
+	// invalid value, such as a frame rate that is not finite and positive.
+	ErrLottieInvalid Error = "parsing lottie: invalid value"
+
+	// ErrLottieUnsupported is the error of lottie.Parse for a file with a
+	// feature that velato does not support, where velato panics.
+	ErrLottieUnsupported Error = "parsing lottie: unsupported feature"
+
+	// ErrLottieEvaluation is the error of the evaluation of a frame for a
+	// file whose layers cannot be evaluated, such as a cycle of parents or
+	// a missing asset. lottie returns an *lottie.EvaluationError that wraps
+	// it.
+	ErrLottieEvaluation Error = "evaluating lottie"
+)

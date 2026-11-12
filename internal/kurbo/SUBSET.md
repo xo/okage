@@ -1,13 +1,15 @@
 # The subset of kurbo
 
 okage ports a subset of kurbo 0.13.1, from the commit `838b69ef` (D7). The
-subset holds each type and function that svgtypes and usvg call, and each
-item that those items need. The traits `ParamCurve`, `ParamCurveDeriv` and
+subset holds each type and function that svgtypes, usvg and velato call, and
+each item that those items need. velato 0.12 asks for kurbo 0.13, so the
+subset serves it too (D41). The traits `ParamCurve`, `ParamCurveDeriv` and
 `ParamCurveArclen` are ported in full for each type of the subset, so that
 each type has the methods that the trait gives it.
 
 `svgtypes` means svgtypes 0.16.2. `usvg` means usvg in resvg 0.49.0, and the
-paths start at `crates/usvg/src`. A use that is marked "for the subset" comes
+paths start at `crates/usvg/src`. `velato` means velato at the commit
+`83336b65`, and the paths start at `src`. A use that is marked "for the subset" comes
 from another item of the subset, not from svgtypes or usvg.
 
 The port differs from upstream in one place: `Arc.AppendIter` makes at most
@@ -95,7 +97,61 @@ The port differs from upstream in one place: `Arc.AppendIter` makes at most
 | `impl ParamCurve for Arc` | `Arc.Eval`, `Subsegment`, `Subdivide`, `Start`, `End` | the tests of `arc.rs` |
 
 `ArcAppendIter::next` returns the three points of the only path element that
-it makes, `PathEl::CurveTo`, because okage does not port `PathEl`.
+it makes, `PathEl::CurveTo`. `Arc.PathElements` makes the path elements.
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `impl Shape for Arc` (`path_elements`) | `Arc.PathElements` | for the subset: `Ellipse::path_elements` |
+
+## affine.rs, in affine.go
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `Affine`, `Affine::new`, `IDENTITY` | `Affine`, `NewAffine`, `IdentityAffine` | velato `runtime/render.rs`, `runtime/model/mod.rs` |
+| `Affine::scale`, `scale_non_uniform`, `rotate`, `translate`, `skew` | `AffineScale`, `AffineScaleNonUniform`, `AffineRotate`, `AffineTranslate`, `AffineSkew` | velato `runtime/model/mod.rs`, `runtime/model/fixed.rs` |
+| `impl Mul for Affine`, `impl Mul<Point> for Affine` | `Affine.Mul`, `Affine.MulPoint` | velato `runtime/render.rs`, `runtime/evaluate.rs` |
+| `Affine::translation`, `determinant`, `inverse`, `transform_rect_bbox`, `is_finite`, `svd` | `Affine.Translation`, `Determinant`, `Inverse`, `TransformRectBbox`, `IsFinite`, `svd` | velato `runtime/render.rs`, and `Ellipse::path_elements` |
+
+## bezpath.rs, in bezpath.go
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `PathEl`, `impl Mul<PathEl> for Affine` | `PathEl`, with `MoveTo`, `LineTo`, `QuadTo`, `CurveTo`, `ClosePath`, and `Affine.MulPathEl` | velato, the paths of every shape |
+| `PathSeg`, with its impls of `ParamCurve` and `ParamCurveArclen`, `as_path_el`, `reverse` | `PathSeg` and its methods | velato `runtime/trim.rs` |
+| `segments`, `Segments` | `Segments` | velato `runtime/trim.rs` |
+
+`PathEl` and `PathSeg` are structs with a kind (D27). `Segments` returns a
+slice, and a `ClosePath` before any point gives no segment, where kurbo
+panics.
+
+## rect.rs and size.rs, in rect.go
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `Rect`, `Rect::new`, `from_points`, `width`, `height`, `abs`, `union`, `union_pt` | `Rect`, `NewRect`, `RectFromPoints` and its methods | velato `runtime/render.rs`, and the extrema |
+| `impl Shape for Rect` (`path_elements`) | `Rect.PathElements` | velato `runtime/render.rs` |
+| `Size`, `Size::new` | `Size`, `NewSize` | velato `runtime/model/animated.rs` |
+
+## ellipse.rs and rounded_rect.rs, in ellipse.go and rounded_rect.go
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `Ellipse`, `Ellipse::new`, `center`, `impl Shape for Ellipse` | `Ellipse`, `NewEllipse`, `Ellipse.Center`, `Ellipse.PathElements` | velato `runtime/model/animated.rs` |
+| `RoundedRect::new`, `impl Shape for RoundedRect` | `NewRoundedRect`, `RoundedRect.PathElements` | velato `runtime/model/animated.rs` |
+
+`RoundedRect` holds one radius, because velato gives the same radius to the
+four corners.
+
+## The solvers and the extrema, in solve.go
+
+| Item | Go | Used by |
+| --- | --- | --- |
+| `solve_cubic`, `solve_quadratic` | `SolveCubic`, `SolveQuadratic` | velato `runtime/model/value.rs` |
+| `impl ParamCurveExtrema for QuadBez`, `bounding_box` | `QuadBez.Extrema`, `QuadBez.BoundingBox` | velato `runtime/model/position.rs` |
+| `is_finite` of `Point`, `Vec2`, `QuadBez` and `CubicBez`, `Vec2::cross` | `IsFinite`, `Vec2.Cross` | velato `runtime/model/position.rs` |
+
+`SolveCubic` takes the cube root from `math.Cbrt`, where Rust calls the C
+library, so a root can differ in the last bit.
 
 ## param_curve.rs, in param_curve.go
 
@@ -121,8 +177,9 @@ helpers `maxF64`, `minF64`, `remF64` and `f64ToUsize`, which follow `f64::max`,
 
 ## What is not in the subset
 
-The rest of `src/` is Not applicable (D7): among others `BezPath`, `PathEl`,
-`Shape`, `Affine`, `Rect`, `Ellipse`, the traits `ParamCurveArea`,
-`ParamCurveNearest`, `ParamCurveCurvature` and `ParamCurveExtrema`, the
-polynomial solvers and the conversion of a cubic to quadratic Beziers. The
+The rest of `src/` is Not applicable (D7): among others `BezPath`, the trait
+`Shape` for the other shapes, the traits `ParamCurveArea`,
+`ParamCurveNearest` and `ParamCurveCurvature`, the extrema of the other
+curves, the quartic solver and the conversion of a cubic to quadratic
+Beziers. The
 upstream tests of these items are not ported.

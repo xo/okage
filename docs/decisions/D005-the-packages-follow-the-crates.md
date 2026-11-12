@@ -1,6 +1,6 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38.
+Status: Decided, amended by D38 and D41.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
@@ -8,6 +8,7 @@ Status: Decided, amended by D38.
 | `path` | `path` | the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg` | `svg` | the port of the crates `usvg` and `resvg`, as one package |
 | `html` | `html` | the parser and the layout of the HTML-like labels of Graphviz, which port no upstream (D38) |
+| `lottie` | `lottie` | the port of the crate `velato`, which renders Lottie animations (D41) |
 | `internal/wide` | `wide` | the vector types of `src/wide` of tiny-skia (D15) |
 | `internal/svgtypes` | `svgtypes` | the parsers of SVG values: lengths, colors, path data, transforms, filter functions and the font shorthand |
 | `internal/roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |

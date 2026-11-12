@@ -367,7 +367,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-09 eight ledgers exist:
+On 2026-11-12 nine ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -394,6 +394,9 @@ On 2026-11-09 eight ledgers exist:
    version of the crate. On 2026-11-11 each commit of svgtypes up to 0.16.2
    is `ported` or `not-applicable`, and the column `matched` of svgtypes is
    `90a7f12f`.
+5. `velato.tsv` holds no commit yet. The base commit of velato is
+   `83336b65`, the head of main on 2026-11-12, and the column `matched` is
+   the same commit (D41).
 
 ## A difference from upstream
 

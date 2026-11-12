@@ -15,11 +15,14 @@
 //!    no path.
 //! 3. A question of the parsers or of the renderer of resvg, with the field
 //!    "xml", "svgtypes", "usvg" or "render", as the module `parsers` says.
+//! 4. A question of velato, with the field "lottie", as the module `lottie`
+//!    says (D41).
 //!
 //! The Go test writes each number as the shortest decimal of a float64 that
 //! gives back the float32. serde_json can read a decimal one unit in the last
 //! place of a float64 off, and the conversion to f32 still gives the float32.
 
+mod lottie;
 mod parsers;
 
 use std::io::{self, BufRead, Write};
@@ -40,6 +43,7 @@ enum Question {
     Xml(parsers::XmlQuestion),
     Svgtypes(parsers::SvgtypesQuestion),
     Path(PathQuestion),
+    Lottie(lottie::LottieQuestion),
     Scene(Scene),
 }
 
@@ -538,6 +542,8 @@ fn main() {
                     .unwrap_or_else(|_| Some(b"panic\n".to_vec()))
             }
             Question::Path(q) => answer_path(q),
+            Question::Lottie(q) => std::panic::catch_unwind(|| lottie::answer_lottie(q))
+                .unwrap_or_else(|_| Some(b"panic\n".to_vec())),
             Question::Scene(s) => render(s),
         }
         .unwrap_or_default();

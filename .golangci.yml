@@ -85,6 +85,8 @@ linters:
             - golang.org/x/image/webp
             # the vips oracle of the test module only, with the tag vips (D22)
             - github.com/cshum/vipsgen/v2
+            # the ThorVG oracle of lottie in the test module only (D42, D43)
+            - github.com/xo/lottie
     gosec:
       excludes:
         # The port keeps the integer widths of upstream and its conversions

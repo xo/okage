@@ -4,7 +4,9 @@
 # 0.21.1 and svgtypes 0.16.2, the versions that usvg uses, and usvg and resvg
 # without their feature text, at the commit of resvg in the column matched of
 # docs/upstream/upstreams.tsv, and answers the questions of the parsers and of
-# the renderer. The rev of usvg and resvg moves with that column.
+# the renderer. The rev of usvg and resvg moves with that column. It links
+# velato at the commit in the column matched of the row velato, for the
+# questions of lottie (D41).
 [package]
 name = "okage-oracle"
 version = "0.0.0"
@@ -17,6 +19,9 @@ roxmltree = "=0.21.1"
 svgtypes = "=0.16.2"
 usvg = { git = "https://github.com/linebender/resvg", rev = "500d8605a28ac092c1b146c06ec65c0e70e99ec4", default-features = false, features = ["svgz", "writer"] }
 resvg = { git = "https://github.com/linebender/resvg", rev = "500d8605a28ac092c1b146c06ec65c0e70e99ec4", default-features = false, features = ["raster-images"] }
+velato = { git = "https://github.com/linebender/velato", rev = "83336b6519ac7289beea53fcc2ec1e9603f25124", default-features = false }
+kurbo = "0.13"
+peniko = "0.6"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

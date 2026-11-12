@@ -27,7 +27,7 @@ estimates are in months of work for one person.
 | DXF | [dxf-rs][dxf-rs] (MIT, 0.7 MB) | 1 | 8 to 14 | The parser is easy. Blocks, line types, hatches, dimensions, SHX fonts and paper space take most of the time |
 | DWG | [acadrust][acadrust] (MPL-2.0, DXF and DWG from R12 to R2018 and later, read and write). [unitedrhino/go-cad][go-cad] (Apache-2.0, pure Go, 2.4 MB, imports `x/image` and `x/text`). [LibreDWG][libredwg] is GPL-3, and okage cannot use it | 1.5 | 24 to 42 | acadrust makes this a port, not reverse engineering. It is still large. Read its notice about the source of its DWG code first |
 | EMF, EMF+ and WMF | [metafile-rs][metafile-rs] (Apache-2.0, 0.5 MB, 3 stars). [emfsdk][emfsdk] has 0 stars | 1 | 12 to 22 | The work is to replay the state of GDI and GDI+. Some raster operations need the pixels of the target |
-| Lottie | [velato][velato] (Apache-2.0, 0.27 MB, from linebender) | 1.5 | 6 to 10 | Small and clean. It needs a parameter for time, because the tree of `svg` does not change over time |
+| Lottie | [velato][velato] (Apache-2.0, 0.27 MB, from linebender) | 1.5 | 6 to 10 | Small and clean. It needs a parameter for time, because the tree of `svg` does not change over time. The package `lottie` is the port, as [D41][D41] decides, with the changes of D42 and D43 |
 | XPS, VSDX and CDR | No good source. [libcdr][libcdr] is C++ under MPL | 1 to 3 each | 7 to 12 for XPS | Low value. Do them last |
 
 ## What matters more than the estimates
@@ -89,4 +89,5 @@ with the smallest ports and the cleanest licenses first:
 [D6]: decisions/D006-the-goal-is-no-dependencies.md
 [D7]: decisions/D007-each-crate-has-a-policy-port-subset-replace-or-none.md
 [D9]: decisions/D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md
+[D41]: decisions/D041-lottie-renders-lottie-animations-as-a-port-of-velato.md
 [D22]: decisions/D022-the-test-module-holds-the-oracles-and-the-comparisons.md

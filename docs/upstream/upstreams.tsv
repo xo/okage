@@ -7,3 +7,4 @@ roxmltree	https://github.com/RazrFalcon/roxmltree	upstream/roxmltree	roxmltree 0
 simplecss	https://github.com/linebender/simplecss	upstream/simplecss	simplecss 0.2.2	internal/simplecss	port	6eacb39ca5c4c2390bfde374ed0651f0e35c9d8d	
 kurbo	https://github.com/linebender/kurbo	upstream/kurbo	kurbo 0.13.1	internal/kurbo	subset	838b69ef35f3381cefc007d86aa8364f5a6dc673	
 xmlwriter	https://github.com/RazrFalcon/xmlwriter	upstream/xmlwriter	xmlwriter 0.1.0	internal/xmlwriter	port	5fdcff47da7d71896b55a1bc0e4b561171e232d6	
+velato	https://github.com/linebender/velato	upstream/velato	velato 0.12.0	lottie	port	83336b6519ac7289beea53fcc2ec1e9603f25124	83336b6519ac7289beea53fcc2ec1e9603f25124

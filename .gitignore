@@ -18,3 +18,8 @@
 # The build cache of the Rust oracle of the test module (D22). cargo builds it
 # offline from the crates in the local cache of cargo.
 /.cache
+
+# The Noto animated emoji that test/lottie/fetch-corpus.sh downloads for the
+# comparison of lottie with ThorVG and velato (D41). The corpus is fetched,
+# not source.
+/test/lottie/testdata/emoji

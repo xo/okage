@@ -35,6 +35,8 @@
    package and the package `path`.
 2. resvg renders SVG files with tiny-skia. okage ports it into the package
    `svg`.
+3. [velato][velato] renders Lottie animations. okage ports it into the package
+   `lottie`, which draws with okage (D41).
 
 Today [`xo/resvg`][xoresvg] wraps resvg through cgo and a static archive for
 each platform. A program that imports okage needs the Go toolchain and nothing
@@ -54,7 +56,10 @@ TinyGo, and the 157 integration tests of tiny-skia pass. It is about 1.2 to
 faster stays open (D35). The package `svg` is the port of usvg and
 resvg. It parses and renders each test file of resvg: without text and
 without a raster image, with the same pixels as resvg, and with text or an
-image, within the tolerance of D31. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
+image, within the tolerance of D31. The package `lottie` is the port of
+velato. It gives the same calls to its sink as velato for each of the 879
+Noto animated emoji, and each sampled frame of them is within the tolerance of
+D43 of ThorVG. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
 open questions.
 
 The port starts from resvg `v0.49.0` and from the versions of the crates that
@@ -135,8 +140,16 @@ okage differs from upstream only where a decision says so:
    "©️" in a text font, and an emoji sequence that the font draws as several
    glyphs. Upstream falls back only for a missing glyph (D40).
 
+9. `lottie` draws as ThorVG where velato differs: the opacity, the opacity
+   stops, the radius and the highlight of gradients, solid layers, time
+   remap, easing, spatial positions, the closing of animated shapes, the
+   opacity and the blend mode of layers, masks and stroke dashes (D43).
+   `Renderer.MergePaths` draws merge paths by compositing, which velato and
+   ThorVG do not, and it is off by default (D42).
+
 When upstream changes the code of a difference, okage removes its own code
-and ports the change of upstream. D40 gives the steps for items 7 and 8.
+and ports the change of upstream. D40 gives the steps for items 7 and 8, and
+D42 and D43 give them for item 9.
 
 okage also adds APIs that upstream does not have:
 
@@ -155,6 +168,9 @@ okage also adds APIs that upstream does not have:
 4. `html.Parse` parses an HTML-like label of Graphviz, `label=<...>` in DOT,
    and `Label.Layout` lays it out as `dot` does: the boxes of the tables and
    the cells, the rules, the runs of text and the ports (D38).
+5. `lottie.Parse` reads a Lottie file, and `lottie.RenderFrame` draws a
+   frame of it onto an okage pixmap through `PixmapSink`, the sink of
+   `lottie` that draws with okage (D41).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
@@ -166,7 +182,10 @@ The root package and `path` are under the BSD-3-Clause license of tiny-skia.
 See [LICENSE](LICENSE), which keeps the copyright lines of upstream. The
 package `svg` and the packages that it uses take the MIT license of resvg and
 of its crates, in a `LICENSE` file in each folder (D13). The package `html`
-ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38).
+ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38). The
+package `lottie` takes the MIT license of velato, in
+[lottie/LICENSE](lottie/LICENSE). Its test files are Noto animated emoji
+under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.
 
 <div align="center">
   <a href="https://github.com/xo/usql" title="A command line client for many databases">usql</a> |
@@ -184,6 +203,7 @@ ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38).
 [ts]: https://github.com/linebender/tiny-skia
 [skia]: https://skia.org
 [resvg]: https://github.com/linebender/resvg
+[velato]: https://github.com/linebender/velato
 [xoresvg]: https://github.com/xo/resvg
 [tinygo]: https://tinygo.org
 [typesetting]: https://github.com/go-text/typesetting

@@ -24,9 +24,9 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38 |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38 and D41 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided |
-| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided |
+| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41 |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided |
 | D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32 and D36 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
@@ -60,3 +60,6 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
 | D40 | [Text falls back for an emoji that the font does not draw as an emoji](D040-text-falls-back-for-an-emoji-that-the-font-does-not-draw-as-emoji.md) | Decided, amends D39 |
+| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42 and D43 |
+| D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 |
+| D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |

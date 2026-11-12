@@ -57,6 +57,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
+name = "color"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ec7c5eb7a16992b1904d76c517d170ab353b0e0b3d5a0c81a8a0cd1037893cf"
+
+[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -157,6 +163,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "linebender_resource_handle"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4a5ff6bcca6c4867b1c4fd4ef63e4db7436ef363e0ad7531d1558856bae64f4"
+
+[[package]]
 name = "log"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -201,6 +213,8 @@ dependencies = [
 name = "okage-oracle"
 version = "0.0.0"
 dependencies = [
+ "kurbo",
+ "peniko",
  "resvg",
  "roxmltree",
  "serde",
@@ -208,6 +222,19 @@ dependencies = [
  "svgtypes 0.16.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny-skia",
  "usvg",
+ "velato",
+]
+
+[[package]]
+name = "peniko"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "839c8299360d2e998bdb106dc0a6cd71dcc5f4df51df1b620361bf50e283cca6"
+dependencies = [
+ "color",
+ "kurbo",
+ "linebender_resource_handle",
+ "smallvec",
 ]
 
 [[package]]
@@ -341,6 +368,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_repr"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d3b1629de253c70a0508c3899572da79ca359fdab27c7920ff00406df418906"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "simd-adler32"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -455,6 +493,18 @@ dependencies = [
  "svgtypes 0.16.2 (git+https://github.com/linebender/resvg?rev=500d8605a28ac092c1b146c06ec65c0e70e99ec4)",
  "tiny-skia-path",
  "xmlwriter",
+]
+
+[[package]]
+name = "velato"
+version = "0.12.0"
+source = "git+https://github.com/linebender/velato?rev=83336b6519ac7289beea53fcc2ec1e9603f25124#83336b6519ac7289beea53fcc2ec1e9603f25124"
+dependencies = [
+ "kurbo",
+ "peniko",
+ "serde",
+ "serde_json",
+ "serde_repr",
 ]
 
 [[package]]

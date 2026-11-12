@@ -12,6 +12,24 @@ When the change is committed, delete the claim.
 
 None.
 
+## lottie
+
+From D41, D42 and D43. The port of velato draws each sampled frame of the 879
+Noto animated emoji within the tolerance of ThorVG. These parts of Lottie are
+not done:
+
+1. Expressions. velato and okage ignore them. 29 files of the corpus have
+   expressions, and they still pass, because their values are close to the
+   values that the keyframes give.
+2. The Gaussian blur, the drop shadow and the effect Set Matte in the
+   `PixmapSink`. No file of the corpus uses the first two. 21 layers use Set
+   Matte, which velato does not convert, and they still pass.
+3. Image assets. `PixmapSink.DrawImage` draws nothing, and velato leaves the
+   images to the sink.
+4. Text layers, which velato does not parse. A file with one is an error.
+5. The geometric boolean operations of merge paths, for a stroke or a trim
+   after a merge path of mode 2 to 5 (D42).
+
 ## Phase 3
 
 ### Make the f64 functions of crmath faster
