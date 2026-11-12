@@ -245,7 +245,8 @@ const (
 type resolvedPaint struct {
 	kind resolvedPaintKind
 
-	layers []tables.PaintTable
+	layers     []tables.PaintTable
+	firstLayer uint32
 
 	paletteIndex uint16
 	alpha        float32
@@ -282,7 +283,7 @@ func resolvePaint(inst *colrInstance, paint tables.PaintTable) (resolvedPaint, b
 		if err != nil {
 			return resolvedPaint{}, false
 		}
-		return resolvedPaint{kind: resolvedColrLayers, layers: layers}, true
+		return resolvedPaint{kind: resolvedColrLayers, layers: layers, firstLayer: p.FirstLayerIndex}, true
 	case tables.PaintSolid:
 		return resolvedPaint{kind: resolvedSolid, paletteIndex: p.PaletteIndex, alpha: f2dot14(p.Alpha)}, true
 	case tables.PaintVarSolid:
@@ -487,8 +488,11 @@ const maxTraversalDepth = 64
 // paintDecycler is PaintDecycler of skrifa src/color/traversal.rs: the ids
 // of the paints that the traversal is in, to find a cycle.
 //
-// Port: skrifa takes the offset of a paint as its id. The traversal takes
-// the index of a layer, or the glyph of a base glyph above 1<<32.
+// Port: skrifa takes the offset of a paint as its id. go-text gives no
+// offsets, so the traversal takes the index of a layer in the LayerList, or
+// the glyph of a base glyph above 1<<32. The index is in the whole LayerList,
+// not in one PaintColrLayers, because a PaintColrLayers inside another one,
+// as in a ZWJ sequence of Noto Color Emoji, starts again at 0.
 type paintDecycler struct {
 	stack []uint64
 }
@@ -626,7 +630,7 @@ func traverseWithCallbacks(
 	switch paint.kind {
 	case resolvedColrLayers:
 		for i, layerPaint := range paint.layers {
-			leave, ok := decycler.enter(uint64(i))
+			leave, ok := decycler.enter(uint64(paint.firstLayer) + uint64(i))
 			if !ok {
 				return false
 			}

@@ -390,7 +390,5 @@ On 2026-11-09 eight ledgers exist:
 
 okage differs from upstream only where a decision says so. Each difference
 is in the list "Differences from upstream" in `README.md`, with its decision.
-On 2026-11-09 the list holds three differences: the SIMD build computes a
-reciprocal exactly, where the SIMD backends of tiny-skia approximate it
-(D16), `svg` decodes images with other code (D7), and `svg` lays out text
-with go-text (D9).
+That list is the full list of differences, so this document does not repeat
+it.

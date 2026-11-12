@@ -127,7 +127,9 @@ okage differs from upstream only where a decision says so:
    of a NaN there, and they differ between x86 and ARM (D34).
 7. The fallback of text skips a character that no font draws, and goes on
    with the characters after it. Upstream stops at that character, so the
-   characters after it get no fallback (D39).
+   characters after it get no fallback (D39). The fallback also replaces
+   whole clusters, where upstream copies glyphs one by one, so an emoji
+   sequence such as a flag falls back with the text around it (D39).
 
 okage also adds APIs that upstream does not have:
 

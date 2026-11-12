@@ -1867,23 +1867,12 @@ outer:
 			break outer
 		}
 
-		// We assume, that shaping with an any font will produce the same amount of glyphs.
-		// This is incorrect, but good enough for now.
-		if len(glyphs) != len(fallbackGlyphs) {
-			// Port: upstream stops here. okage excludes this font and tries
-			// the next fallback font (D39).
-			usedFonts = append(usedFonts, fallbackFont.id)
-			continue
-		}
-
-		// TODO: Replace clusters and not glyphs. This should be more accurate.
-
-		// Copy new glyphs.
-		for i := range glyphs {
-			if glyphs[i].isMissing() && !fallbackGlyphs[i].isMissing() {
-				glyphs[i] = fallbackGlyphs[i]
-			}
-		}
+		// Port: upstream copies the glyphs one by one, and only when both fonts
+		// give the same number of glyphs, with "TODO: Replace clusters and not
+		// glyphs". okage replaces clusters, so that an emoji sequence that is
+		// one glyph in the fallback font replaces the glyphs of the first font
+		// (D39).
+		glyphs = replaceMissingClusters(glyphs, fallbackGlyphs)
 
 		// Remember this font.
 		usedFonts = append(usedFonts, fallbackFont.id)
@@ -1899,6 +1888,66 @@ outer:
 	}
 
 	return glyphs
+}
+
+// replaceMissingClusters returns glyphs, where each segment that has a
+// missing glyph in glyphs and none in fallback has the glyphs of fallback. A
+// segment starts at each byte index where both glyphs and fallback start a
+// cluster, so it holds whole clusters of both. Both have the glyphs of each
+// visual run in visual order, and each visual run starts a segment, so the
+// glyphs of a segment are together in both.
+//
+// Port: this replaces the copy of the glyphs one by one in shape_text of
+// usvg (D39).
+func replaceMissingClusters(glyphs, fallback []glyph) []glyph {
+	starts := make(map[byteIndex]bool, len(glyphs))
+	for _, g := range glyphs {
+		starts[g.byteIdx] = true
+	}
+	var bounds []int
+	for _, g := range fallback {
+		if starts[g.byteIdx] {
+			bounds = append(bounds, g.byteIdx.value())
+			delete(starts, g.byteIdx)
+		}
+	}
+	slices.Sort(bounds)
+	segment := func(g glyph) int {
+		i, found := slices.BinarySearch(bounds, g.byteIdx.value())
+		if !found {
+			i--
+		}
+		return i
+	}
+
+	// The glyphs of each segment of fallback.
+	fallbackSegments := map[int][]glyph{}
+	for i := 0; i < len(fallback); {
+		seg, j := segment(fallback[i]), i+1
+		for j < len(fallback) && segment(fallback[j]) == seg {
+			j++
+		}
+		fallbackSegments[seg] = fallback[i:j]
+		i = j
+	}
+
+	isMissing := func(g glyph) bool { return g.isMissing() }
+	out := make([]glyph, 0, len(glyphs))
+	for i := 0; i < len(glyphs); {
+		seg, j := segment(glyphs[i]), i+1
+		for j < len(glyphs) && segment(glyphs[j]) == seg {
+			j++
+		}
+		own := glyphs[i:j]
+		other, ok := fallbackSegments[seg]
+		if ok && slices.ContainsFunc(own, isMissing) && !slices.ContainsFunc(other, isMissing) {
+			out = append(out, other...)
+		} else {
+			out = append(out, own...)
+		}
+		i = j
+	}
+	return out
 }
 
 // bidiRun is a run of text of one embedding level, as BidiInfo::visual_runs

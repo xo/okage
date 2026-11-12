@@ -155,3 +155,29 @@ func TestShapeTextFallbackPastMissing(t *testing.T) {
 		t.Errorf("the glyphs are %v, want a glyph for each character but %s", ids, missing)
 	}
 }
+
+// TestShapeTextFallbackSequence checks that an emoji sequence, which is
+// several glyphs in Noto Sans and one glyph in the color font, falls back
+// with the text around it, whichever font comes first (D39).
+func TestShapeTextFallbackSequence(t *testing.T) {
+	// The rainbow flag is a ZWJ sequence of four characters.
+	const flag = "\U0001F3F3️‍\U0001F308"
+	opts := colorFontOptions(t, "TwitterColorEmoji.subset.ttf")
+	for _, family := range []string{"Noto Sans", "Twitter Color Emoji"} {
+		t.Run(family, func(t *testing.T) {
+			run, err := ShapeText("a "+flag+" \U0001F600", TextStyle{Family: family, Size: 20}, opts...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ids := glyphIDs(run)
+			for _, s := range []string{"a", flag, "\U0001F600"} {
+				if ids[s] == 0 {
+					t.Errorf("%q has no glyph in %v", s, ids)
+				}
+			}
+			if !run.HasColorGlyphs() {
+				t.Error("HasColorGlyphs is false")
+			}
+		})
+	}
+}
