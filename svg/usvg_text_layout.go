@@ -1811,17 +1811,28 @@ func shapeText(
 	// Remember all fonts used for shaping.
 	usedFonts := []FontID{font.id}
 
+	// Port: upstream stops at the first missing character that no fallback
+	// font draws, so the characters after it get no fallback. okage skips such
+	// a character and goes on with the next missing one (D39). unresolved
+	// holds the characters that it skips.
+	var unresolved []rune
+
 	// Loop until all glyphs become resolved or until no more fonts are left.
 outer:
 	for {
 		var missing rune
 		hasMissing := false
 		for i := range glyphs {
-			if glyphs[i].isMissing() {
-				missing = glyphs[i].byteIdx.charFrom(text)
-				hasMissing = true
-				break
+			if !glyphs[i].isMissing() {
+				continue
 			}
+			c := glyphs[i].byteIdx.charFrom(text)
+			if slices.Contains(unresolved, c) {
+				continue
+			}
+			missing = c
+			hasMissing = true
+			break
 		}
 
 		if !hasMissing {
@@ -1829,12 +1840,14 @@ outer:
 		}
 
 		id, ok := resolver.selectFallback(missing, usedFonts, fonts.fontdb, opt)
-		if !ok {
-			break outer
+		if !ok || slices.Contains(usedFonts, id) {
+			unresolved = append(unresolved, missing)
+			continue
 		}
 		fallbackFont, ok := resolveFont(id, variations, fonts)
 		if !ok {
-			break outer
+			unresolved = append(unresolved, missing)
+			continue
 		}
 
 		// Shape again, using a new font.
@@ -1857,7 +1870,10 @@ outer:
 		// We assume, that shaping with an any font will produce the same amount of glyphs.
 		// This is incorrect, but good enough for now.
 		if len(glyphs) != len(fallbackGlyphs) {
-			break outer
+			// Port: upstream stops here. okage excludes this font and tries
+			// the next fallback font (D39).
+			usedFonts = append(usedFonts, fallbackFont.id)
+			continue
 		}
 
 		// TODO: Replace clusters and not glyphs. This should be more accurate.

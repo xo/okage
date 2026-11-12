@@ -56,5 +56,6 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D34 | [Powf reads one NaN for every NaN](D034-powf-reads-one-nan-for-every-nan.md) | Decided, amends D16 |
 | D35 | [Speed has no target, and stays open work](D035-speed-has-no-target-and-stays-open-work.md) | Decided, amends D18 |
 | D36 | [`svg` has a renderer that loads the system fonts](D036-svg-has-a-renderer-that-loads-the-system-fonts.md) | Decided, amends D9 |
-| D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided |
+| D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided, amended by D39 |
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5 |
+| D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37 |

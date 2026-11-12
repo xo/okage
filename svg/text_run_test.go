@@ -32,7 +32,7 @@ func findText(g *Group) *Text {
 // path, or nil.
 func textOutline(text *Text) *path.Path {
 	pb := path.NewPathBuilder()
-	appendGroupPaths(pb, text.Flattened(), path.IdentityTransform())
+	(&TextRun{text: text}).AppendPath(pb, 0, 0)
 	p, _ := pb.Finish()
 	return p
 }

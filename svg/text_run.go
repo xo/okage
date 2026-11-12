@@ -37,6 +37,7 @@ type TextStyle struct {
 // of the run on the baseline. y grows down, as in SVG.
 type TextRun struct {
 	text *Text
+	opt  *options
 }
 
 // ShapeText lays out text in one line, from an origin at (0, 0) on the
@@ -143,7 +144,7 @@ func shapeTextRun(text string, style TextStyle, opt *options) (*TextRun, error) 
 	t.flattened = group
 	t.strokeBoundingBox = strokeBBox.ToRect()
 	t.absStrokeBoundingBox = t.strokeBoundingBox
-	return &TextRun{text: t}, nil
+	return &TextRun{text: t, opt: opt}, nil
 }
 
 // Width returns the advance width of the run, from the metrics of its
@@ -171,29 +172,56 @@ func (r *TextRun) Text() *Text {
 	return r.text
 }
 
-// AppendPath appends the outlines of the glyphs of the run to pb, with the
-// origin of the run at (x, y). Fill the path with the nonzero rule. A glyph
-// that a font draws as an image or in color, such as an emoji of a color
-// font, has no outline. Render the group of Text().Flattened() to draw it.
+// AppendPath appends the outlines of the glyphs of the run, and of its
+// underline and overline, to pb, with the origin of the run at (x, y). Fill
+// the path with the nonzero rule. A color glyph, such as an emoji of a color
+// font, has no outline here. Draw it with RenderColorGlyphs. AppendPath does
+// not change the run, so a program can call it more than once.
 func (r *TextRun) AppendPath(pb *path.PathBuilder, x, y float32) {
 	if r.text == nil {
 		return
 	}
-	appendGroupPaths(pb, r.text.flattened, path.TransformFromTranslate(x, y))
-}
-
-// appendGroupPaths appends the data of each path of g and of its groups to
-// pb, with the transforms of the groups and then ts.
-func appendGroupPaths(pb *path.PathBuilder, g *Group, ts Transform) {
-	ts = ts.PreConcat(g.Transform())
+	g := r.text.flattened
+	ts := path.TransformFromTranslate(x, y).PreConcat(g.Transform())
 	for _, child := range g.Children() {
-		switch c := child.(type) {
-		case *Group:
-			appendGroupPaths(pb, c, ts)
-		case *Path:
-			if p, ok := c.Data().Transform(ts); ok {
+		// The outlines are the paths of the group. Each color glyph is a
+		// group of its own (D39).
+		if c, ok := child.(*Path); ok {
+			if p, ok := c.Data().Clone().Transform(ts); ok {
 				pb.PushPath(p)
 			}
+		}
+	}
+}
+
+// HasColorGlyphs reports if the run has a glyph that a font draws as an image
+// or in color, from the tables COLR, SVG, CBDT or sbix of the font.
+func (r *TextRun) HasColorGlyphs() bool {
+	if r.text == nil {
+		return false
+	}
+	for _, child := range r.text.flattened.Children() {
+		if _, ok := child.(*Group); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// RenderColorGlyphs draws the color glyphs of the run onto pixmap, with the
+// origin of the run at the origin of transform. It draws nothing for the
+// other glyphs, which AppendPath gives. A program that fills the outlines and
+// then calls RenderColorGlyphs with the same origin draws the whole run.
+func (r *TextRun) RenderColorGlyphs(pixmap *okage.PixmapMut, transform Transform) {
+	if r.text == nil {
+		return
+	}
+	g := r.text.flattened
+	ctx := &context{maxBBox: maxFilterBBox(pixmap.Width(), pixmap.Height()), opt: r.opt}
+	ts := transform.PreConcat(g.Transform())
+	for _, child := range g.Children() {
+		if c, ok := child.(*Group); ok {
+			renderNode(c, ctx, ts, pixmap)
 		}
 	}
 }

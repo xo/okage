@@ -125,6 +125,9 @@ okage differs from upstream only where a decision says so:
    (D30).
 6. The gamma stages give one result for every NaN. Upstream reads the bits
    of a NaN there, and they differ between x86 and ARM (D34).
+7. The fallback of text skips a character that no font draws, and goes on
+   with the characters after it. Upstream stops at that character, so the
+   characters after it get no fallback (D39).
 
 okage also adds APIs that upstream does not have:
 
@@ -138,6 +141,8 @@ okage also adds APIs that upstream does not have:
 3. `svg.ShapeText` lays out a run of text with the fonts, the fallback and
    the shaping of `svg`, and gives its advance width and the outlines of its
    glyphs as a path, so that a program can draw text without SVG data (D37).
+   `TextRun.RenderColorGlyphs` draws its color glyphs, such as color emoji
+   (D39).
 4. `html.Parse` parses an HTML-like label of Graphviz, `label=<...>` in DOT,
    and `Label.Layout` lays it out as `dot` does: the boxes of the tables and
    the cells, the rules, the runs of text and the ports (D38).

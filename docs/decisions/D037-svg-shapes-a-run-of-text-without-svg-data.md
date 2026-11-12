@@ -1,6 +1,6 @@
 # D37. `svg` shapes a run of text without SVG data
 
-Status: Decided.
+Status: Decided, amended by D39.
 
 A program that draws with the root package, such as a chart package, can draw
 paths and shapes without SVG data, but not text. The layout of text of usvg is
