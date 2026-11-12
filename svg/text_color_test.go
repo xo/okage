@@ -161,7 +161,7 @@ func TestShapeTextFallbackPastMissing(t *testing.T) {
 // with the text around it, whichever font comes first (D39).
 func TestShapeTextFallbackSequence(t *testing.T) {
 	// The rainbow flag is a ZWJ sequence of four characters.
-	const flag = "\U0001F3F3️‍\U0001F308"
+	const flag = "\U0001F3F3\uFE0F\u200D\U0001F308"
 	opts := colorFontOptions(t, "TwitterColorEmoji.subset.ttf")
 	for _, family := range []string{"Noto Sans", "Twitter Color Emoji"} {
 		t.Run(family, func(t *testing.T) {
@@ -179,5 +179,26 @@ func TestShapeTextFallbackSequence(t *testing.T) {
 				t.Error("HasColorGlyphs is false")
 			}
 		})
+	}
+}
+
+// TestShapeTextPresentationNoEmojiFont checks that a text glyph with U+FE0F,
+// which no emoji font draws, stays in the text font, and that the run does
+// not move to another font (D40).
+func TestShapeTextPresentationNoEmojiFont(t *testing.T) {
+	const copyright = "\u00A9\uFE0F"
+	opts := colorFontOptions(t, "NotoColorEmojiCOLR.subset.ttf")
+	run, err := ShapeText("a"+copyright+"b", TextStyle{Size: 20}, opts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids := glyphIDs(run)
+	for _, s := range []string{"a", "b"} {
+		if ids[s] == 0 {
+			t.Errorf("%q has no glyph in %v", s, ids)
+		}
+	}
+	if run.HasColorGlyphs() {
+		t.Error("HasColorGlyphs is true")
 	}
 }

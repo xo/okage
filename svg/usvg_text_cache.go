@@ -145,6 +145,27 @@ func (c *fontCache) colr(id FontID, glyph GlyphID, variations []FontVariation) (
 	return t, t != nil
 }
 
+// hasColorGlyph reports if glyph of the font id is a glyph of the tables
+// COLR, SVG, CBDT or sbix, which flatten draws with its own colors.
+//
+// Port: usvg has no such function. The fallback of D40 uses it.
+func (c *fontCache) hasColorGlyph(id FontID, glyph GlyphID) bool {
+	l, ok := c.load(id)
+	if !ok {
+		return false
+	}
+	if colr := l.pf.font.COLR; colr != nil {
+		if _, ok := colr.Search(tables.GlyphID(glyph)); ok {
+			return true
+		}
+	}
+	if _, ok := c.svg(id, glyph); ok {
+		return true
+	}
+	_, ok = c.raster(id, glyph)
+	return ok
+}
+
 // svg is FontCache::svg in usvg src/text/cache.rs.
 func (c *fontCache) svg(id FontID, glyph GlyphID) (Node, bool) {
 	l, ok := c.load(id)

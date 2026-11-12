@@ -275,6 +275,13 @@ new commit as it arrives, as "The ledger" below says.
    and change the same lines. Port each test, each reference image and each
    test font that the commit adds or changes.
 
+   A deliberate difference from upstream replaces some Rust code, and its
+   Go code has a comment that starts with "Port:" and names its decision. If
+   the diff changes such code, read the section "When upstream changes" of
+   that decision, and follow it. For example, D40 says that okage removes the
+   fallback of D39 and D40 when upstream changes the fallback of
+   `shape_text`.
+
 9. Run every test, as "Before you stage" in [`AGENTS.md`](../AGENTS.md) says,
    in the scalar build and in the SIMD build. Every test must pass.
 
@@ -392,3 +399,8 @@ okage differs from upstream only where a decision says so. Each difference
 is in the list "Differences from upstream" in `README.md`, with its decision.
 That list is the full list of differences, so this document does not repeat
 it.
+
+When upstream later implements the same thing, okage follows upstream. It
+removes its own code and ports the commit of upstream, as step 8 of the
+steps above says. A decision for a difference that upstream can fix has a
+section "When upstream changes" with the steps, as D40 has.

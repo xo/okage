@@ -1784,7 +1784,9 @@ func asI16(x float32) int16 {
 // shapeText is shape_text in usvg src/text/layout.rs. It does the text
 // shaping with font fallback.
 //
-// Port: opt holds the logger (D20).
+// Port: opt holds the logger (D20). The fallback differs from upstream (D39,
+// D40). When upstream changes its fallback, remove the code of D39 and D40
+// and port the change, as "When upstream changes" in D40 says.
 func shapeText(
 	text string,
 	font *resolvedFont,
@@ -1817,13 +1819,18 @@ func shapeText(
 	// holds the characters that it skips.
 	var unresolved []rune
 
+	// Port: upstream falls back only for a missing glyph. okage also falls
+	// back for an emoji cluster that the font does not draw as one emoji
+	// (D40). ranks holds the fallbackRank of each glyph.
+	ranks := fallbackRanks(text, glyphs, fonts)
+
 	// Loop until all glyphs become resolved or until no more fonts are left.
 outer:
 	for {
 		var missing rune
 		hasMissing := false
 		for i := range glyphs {
-			if !glyphs[i].isMissing() {
+			if ranks[i] == rankDrawn {
 				continue
 			}
 			c := glyphs[i].byteIdx.charFrom(text)
@@ -1859,8 +1866,15 @@ outer:
 			shapingVariations,
 			fonts,
 		)
+		newRanks := fallbackRanks(text, fallbackGlyphs, fonts)
 
-		allMatched := !slices.ContainsFunc(fallbackGlyphs, func(g glyph) bool { return g.isMissing() })
+		// Port: upstream replaces all glyphs when the fallback font has no
+		// missing glyph. okage does so only when the fallback font also draws
+		// each emoji cluster as one emoji, and the first font has a missing
+		// glyph (D40). Else a run that only has an emoji cluster to fix moves
+		// to the emoji font as a whole.
+		allMatched := !slices.ContainsFunc(newRanks, func(r fallbackRank) bool { return r != rankDrawn }) &&
+			slices.Contains(ranks, rankMissing)
 		if allMatched {
 			// Replace all glyphs when all of them were matched.
 			glyphs = fallbackGlyphs
@@ -1872,7 +1886,7 @@ outer:
 		// glyphs". okage replaces clusters, so that an emoji sequence that is
 		// one glyph in the fallback font replaces the glyphs of the first font
 		// (D39).
-		glyphs = replaceMissingClusters(glyphs, fallbackGlyphs)
+		glyphs, ranks = replaceMissingClusters(glyphs, ranks, fallbackGlyphs, newRanks)
 
 		// Remember this font.
 		usedFonts = append(usedFonts, fallbackFont.id)
@@ -1890,16 +1904,17 @@ outer:
 	return glyphs
 }
 
-// replaceMissingClusters returns glyphs, where each segment that has a
-// missing glyph in glyphs and none in fallback has the glyphs of fallback. A
-// segment starts at each byte index where both glyphs and fallback start a
-// cluster, so it holds whole clusters of both. Both have the glyphs of each
-// visual run in visual order, and each visual run starts a segment, so the
-// glyphs of a segment are together in both.
+// replaceMissingClusters returns glyphs and their ranks, where each segment
+// whose worst rank in fallback is better than its worst rank in glyphs has
+// the glyphs of fallback. A segment starts at each byte index where both
+// glyphs and fallback start a cluster, so it holds whole clusters of both.
+// Both have the glyphs of each visual run in visual order, and each visual
+// run starts a segment, so the glyphs of a segment are together in both.
 //
 // Port: this replaces the copy of the glyphs one by one in shape_text of
-// usvg (D39).
-func replaceMissingClusters(glyphs, fallback []glyph) []glyph {
+// usvg (D39). Without the ranks of D40, a missing glyph has the rank
+// rankMissing and each other glyph has the rank rankDrawn.
+func replaceMissingClusters(glyphs []glyph, ranks []fallbackRank, fallback []glyph, fallbackRanks []fallbackRank) ([]glyph, []fallbackRank) {
 	starts := make(map[byteIndex]bool, len(glyphs))
 	for _, g := range glyphs {
 		starts[g.byteIdx] = true
@@ -1920,34 +1935,124 @@ func replaceMissingClusters(glyphs, fallback []glyph) []glyph {
 		return i
 	}
 
-	// The glyphs of each segment of fallback.
-	fallbackSegments := map[int][]glyph{}
+	// The range of each segment of fallback.
+	fallbackSegments := map[int][2]int{}
 	for i := 0; i < len(fallback); {
 		seg, j := segment(fallback[i]), i+1
 		for j < len(fallback) && segment(fallback[j]) == seg {
 			j++
 		}
-		fallbackSegments[seg] = fallback[i:j]
+		fallbackSegments[seg] = [2]int{i, j}
 		i = j
 	}
 
-	isMissing := func(g glyph) bool { return g.isMissing() }
-	out := make([]glyph, 0, len(glyphs))
+	outGlyphs := make([]glyph, 0, len(glyphs))
+	outRanks := make([]fallbackRank, 0, len(glyphs))
 	for i := 0; i < len(glyphs); {
 		seg, j := segment(glyphs[i]), i+1
 		for j < len(glyphs) && segment(glyphs[j]) == seg {
 			j++
 		}
-		own := glyphs[i:j]
-		other, ok := fallbackSegments[seg]
-		if ok && slices.ContainsFunc(own, isMissing) && !slices.ContainsFunc(other, isMissing) {
-			out = append(out, other...)
+		r, ok := fallbackSegments[seg]
+		if ok && slices.Max(fallbackRanks[r[0]:r[1]]) < slices.Max(ranks[i:j]) {
+			outGlyphs = append(outGlyphs, fallback[r[0]:r[1]]...)
+			outRanks = append(outRanks, fallbackRanks[r[0]:r[1]]...)
 		} else {
-			out = append(out, own...)
+			outGlyphs = append(outGlyphs, glyphs[i:j]...)
+			outRanks = append(outRanks, ranks[i:j]...)
 		}
 		i = j
 	}
-	return out
+	return outGlyphs, outRanks
+}
+
+// fallbackRank tells how well a font draws the cluster of a glyph. A lower
+// rank is better.
+//
+// Port: usvg has no ranks. It falls back only for a missing glyph (D40).
+type fallbackRank uint8
+
+const (
+	// rankDrawn is a cluster that the font draws.
+	rankDrawn fallbackRank = iota
+	// rankNotEmoji is an emoji cluster that the font draws, but not as one
+	// emoji (D40).
+	rankNotEmoji
+	// rankMissing is a cluster with a missing glyph.
+	rankMissing
+)
+
+// fallbackRanks returns the fallbackRank of each glyph of glyphs. All glyphs
+// of one cluster have the same rank.
+//
+// Port: usvg has no ranks (D40). A cluster has the rank rankNotEmoji in two
+// cases:
+//
+//   - It holds U+FE0F, the selector of the emoji presentation, and no glyph
+//     of the cluster is a color glyph. For example, a text font draws "©️"
+//     as a black ©.
+//   - It is an emoji sequence, and the font gives more than one glyph with an
+//     advance for it. For example, a font without the ligature of a ZWJ
+//     sequence draws its emoji side by side.
+func fallbackRanks(text string, glyphs []glyph, fonts *fontCache) []fallbackRank {
+	ranks := make([]fallbackRank, len(glyphs))
+	for r, idx := range glyphClusters(glyphs) {
+		cluster := glyphs[r[0]:r[1]]
+		end := idx.value()
+		for _, g := range cluster {
+			end = max(end, idx.value()+g.clusterLen)
+		}
+		clusterText := text[idx.value():min(end, len(text))]
+
+		rank := rankDrawn
+		switch {
+		case slices.ContainsFunc(cluster, func(g glyph) bool { return g.isMissing() }):
+			rank = rankMissing
+		case strings.ContainsRune(clusterText, 0xFE0F) &&
+			!slices.ContainsFunc(cluster, func(g glyph) bool { return fonts.hasColorGlyph(g.font.id, g.id) }):
+			rank = rankNotEmoji
+		case isEmojiSequence(clusterText) && advancingGlyphs(cluster) > 1:
+			rank = rankNotEmoji
+		}
+		for i := r[0]; i < r[1]; i++ {
+			ranks[i] = rank
+		}
+	}
+	return ranks
+}
+
+// advancingGlyphs returns the number of glyphs of cluster with an advance.
+//
+// Port: usvg has no such function. The fallback of D40 uses it.
+func advancingGlyphs(cluster []glyph) int {
+	n := 0
+	for _, g := range cluster {
+		if g.width != 0 {
+			n++
+		}
+	}
+	return n
+}
+
+// isEmojiSequence reports if text, one cluster, is an emoji sequence: more
+// than one character, with a character that only an emoji sequence holds.
+// These are U+FE0F, the combining keycap U+20E3, a tag from U+E0020 to
+// U+E007F, and a character from U+1F000 to U+1FAFF, which holds the
+// regional indicators, the skin tones and most emoji. A cluster of a script,
+// such as a conjunct of Devanagari with U+200D, holds none of them.
+//
+// Port: usvg has no such test (D40). The test uses ranges of characters, not
+// the property Extended_Pictographic, because go-text keeps its emoji data in
+// an internal package.
+func isEmojiSequence(text string) bool {
+	if utf8.RuneCountInString(text) < 2 {
+		return false
+	}
+	return strings.ContainsFunc(text, func(c rune) bool {
+		return c == 0xFE0F || c == 0x20E3 ||
+			(c >= 0xE0020 && c <= 0xE007F) ||
+			(c >= 0x1F000 && c <= 0x1FAFF)
+	})
 }
 
 // bidiRun is a run of text of one embedding level, as BidiInfo::visual_runs

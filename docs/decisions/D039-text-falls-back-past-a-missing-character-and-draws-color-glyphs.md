@@ -1,6 +1,6 @@
 # D39. Text falls back past a missing character, and `ShapeText` draws color glyphs
 
-Status: Decided, amends D37.
+Status: Decided, amends D37, amended by D40.
 
 zuzu draws text with `Renderer.ShapeText` (D37), and it wants color emoji from
 a fallback font. Two faults blocked that:
@@ -49,6 +49,12 @@ a fallback font. Two faults blocked that:
 7. A program draws a whole run in two steps: it fills the path of
    `AppendPath` with its paint, and then it calls `RenderColorGlyphs` with the
    same origin.
+
+## When upstream changes
+
+When a resvg commit changes the fallback of `shape_text`, okage removes the
+code of items 1 and 2 and ports the commit of upstream. D40 lists the steps
+in "When upstream changes", for D39 and for D40.
 
 ## Why
 

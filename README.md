@@ -130,6 +130,13 @@ okage differs from upstream only where a decision says so:
    characters after it get no fallback (D39). The fallback also replaces
    whole clusters, where upstream copies glyphs one by one, so an emoji
    sequence such as a flag falls back with the text around it (D39).
+8. The fallback of text also goes on for an emoji that the font does not
+   draw as an emoji: a character with U+FE0F without a color glyph, such as
+   "©️" in a text font, and an emoji sequence that the font draws as several
+   glyphs. Upstream falls back only for a missing glyph (D40).
+
+When upstream changes the code of a difference, okage removes its own code
+and ports the change of upstream. D40 gives the steps for items 7 and 8.
 
 okage also adds APIs that upstream does not have:
 
