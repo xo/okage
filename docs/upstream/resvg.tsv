@@ -28,3 +28,4 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 7479da343f8c1a1496d4611c51b45454fe3d9acb	2026-11-09	ported	c038a8e	Move `svgtypes` into the workspace (#1227). It moves svgtypes 0.16.2, which okage follows, into crates/svgtypes. Port: docs/UPSTREAM.md, test
 4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e	2026-11-09	ported	a237122	Resolve currentColor in flood-color (#1217). Port: usvg, tests
 500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported	27ab339	Properly recognize and reject recursive references (#1225). Port: usvg, tests
+5bdbae64eefadc4bf0caa56dcf91702037929086	2026-11-11	not-applicable		Prepare v0.50.0 release (#1230). It raises the versions in Cargo.toml, Cargo.lock and the headers of the C API, and changes CHANGELOG.md only

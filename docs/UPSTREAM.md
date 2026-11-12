@@ -376,9 +376,11 @@ On 2026-11-09 eight ledgers exist:
    to `path/src/dash.rs` and `src/pipeline/mod.rs`. `5d475477` changes the CI
    of upstream only, and it is `not-applicable`. The column `matched` is
    `5d475477`.
-2. `resvg.tsv` holds the 29 commits after `v0.49.0`, up to `500d8605` on
-   2026-11-10. Each one is `ported`, with its okage commit, and the column
-   `matched` is `500d8605`. `7479da34` moves svgtypes 0.16.2 into resvg. `e1a4c92d` raises harfrust to 0.15 and skrifa to
+2. `resvg.tsv` holds the 30 commits after `v0.49.0`, up to `5bdbae64` on
+   2026-11-11. Each one up to `500d8605` is `ported`, with its okage commit.
+   `5bdbae64` prepares the release v0.50.0 and changes only versions and the
+   changelog, so it is `not-applicable`. The column `matched` is
+   `5bdbae64`. `7479da34` moves svgtypes 0.16.2 into resvg. `e1a4c92d` raises harfrust to 0.15 and skrifa to
    0.49. okage ports its change to `usvg/src/text`, with go-text in place of
    the crates, and not the new versions of the crates (D9).
 3. `strict-num.tsv` holds the 7 commits after the base commit. None of them
