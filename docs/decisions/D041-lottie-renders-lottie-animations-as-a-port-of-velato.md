@@ -1,6 +1,6 @@
 # D41. `lottie` renders Lottie animations, as a port of velato
 
-Status: Decided, amends D5 and D7, amended by D42 and D43.
+Status: Decided, amends D5 and D7, amended by D42, D43 and D44.
 
 Lottie is a JSON format for vector animations. The package
 `github.com/xo/lottie` renders it today. It runs ThorVG, compiled to

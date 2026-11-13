@@ -14,7 +14,7 @@ None.
 
 ## lottie
 
-From D41, D42 and D43. The port of velato draws each sampled frame of the 879
+From D41, D42, D43 and D44. The port of velato draws each sampled frame of the 879
 Noto animated emoji within the tolerance of ThorVG. These parts of Lottie are
 not done:
 
@@ -25,7 +25,8 @@ not done:
    `PixmapSink`. No file of the corpus uses the first two. 21 layers use Set
    Matte, which velato does not convert, and they still pass.
 3. Image assets. `PixmapSink.DrawImage` draws nothing, and velato leaves the
-   images to the sink.
+   images to the sink. A dotLottie archive keeps its images in the archive,
+   and `DotLottie.FS` gives them (D44).
 4. Text layers, which velato does not parse. A file with one is an error.
 5. The geometric boolean operations of merge paths, for a stroke or a trim
    after a merge path of mode 2 to 5 (D42).

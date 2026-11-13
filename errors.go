@@ -421,4 +421,13 @@ const (
 	// a missing asset. lottie returns an *lottie.EvaluationError that wraps
 	// it.
 	ErrLottieEvaluation Error = "evaluating lottie"
+
+	// ErrLottieEmpty is the error of the helpers of lottie that draw or time
+	// a composition for a composition with no size, no frames or no frame
+	// rate, and for a target size that is not positive (D44).
+	ErrLottieEmpty Error = "lottie: no size or no frames"
+
+	// ErrLottieDotLottie is the error of lottie.OpenDotLottie for data that
+	// is not a dotLottie archive, or an archive with no animation (D44).
+	ErrLottieDotLottie Error = "reading dotlottie"
 )

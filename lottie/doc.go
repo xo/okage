@@ -14,6 +14,17 @@
 //		return err
 //	}
 //
+// A program that shows Lottie files can use the helpers of D44. Detect finds
+// a Lottie document from the start of a file, OpenDotLottie reads a dotLottie
+// archive, Load parses either one, and Composition.Image draws a frame into an
+// *image.RGBA of a given size:
+//
+//	c, err := lottie.Load(data)
+//	if err != nil {
+//		return err
+//	}
+//	img, err := c.Image(c.FrameCount()/2, 512, 512)
+//
 // A Renderer draws onto any Sink, the interface of velato for a renderer.
 // PixmapSink is the Sink that draws with okage.
 //

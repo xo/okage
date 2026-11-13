@@ -20,10 +20,11 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D43. The package `html` parses and lays out the HTML-like labels of
+to D44. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
-D42, D43). The open questions are at the end of `docs/PLAN.md`.
+D42, D43), and it loads Lottie files and dotLottie archives for a program
+(D44). The open questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -58,7 +59,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | adding an outside package | D6 |
 | working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39 and D40 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
-| working on the Lottie animations of `lottie` | D41, D42 and D43 |
+| working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |

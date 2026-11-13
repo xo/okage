@@ -43,3 +43,8 @@ var IdentityAffine = kurbo.IdentityAffine
 func AffineScale(s float64) Affine {
 	return kurbo.AffineScale(s)
 }
+
+// AffineScaleNonUniform is Affine::scale_non_uniform.
+func AffineScaleNonUniform(sx, sy float64) Affine {
+	return kurbo.AffineScaleNonUniform(sx, sy)
+}

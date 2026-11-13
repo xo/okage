@@ -171,6 +171,11 @@ okage also adds APIs that upstream does not have:
 5. `lottie.Parse` reads a Lottie file, and `lottie.RenderFrame` draws a
    frame of it onto an okage pixmap through `PixmapSink`, the sink of
    `lottie` that draws with okage (D41).
+6. `lottie.Detect` finds a Lottie document from the start of a file, and
+   `lottie.OpenDotLottie` reads a dotLottie archive. `lottie.Load` parses
+   either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
+   given size, and `FrameCount` and `Duration` count and time the frames
+   (D44).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
