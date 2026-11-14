@@ -3,6 +3,7 @@ package lottie
 import (
 	"errors"
 	"image"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -42,6 +43,11 @@ func TestFrameCountAndDuration(t *testing.T) {
 	}
 }
 
+// tooWide is the largest int. On a 64-bit platform, it is over
+// math.MaxInt32. On a 32-bit platform, it is math.MaxInt32, and the pixmap is
+// too large to make.
+const tooWide = math.MaxInt
+
 func TestImage(t *testing.T) {
 	c := loadTestdata(t, "1f525-fire.json")
 	img, err := c.Image(32, 200, 200)
@@ -78,7 +84,7 @@ func TestImage(t *testing.T) {
 		{"frame past the end", 65, 10, 10},
 		{"no width", 0, 0, 10},
 		{"no height", 0, 10, 0},
-		{"too wide", 0, 1 << 40, 10},
+		{"too wide", 0, tooWide, 10},
 	} {
 		if _, err := c.Image(test.n, test.w, test.h); !errors.Is(err, okage.ErrLottieEmpty) {
 			t.Errorf("%s: expected ErrLottieEmpty, got %v", test.name, err)
