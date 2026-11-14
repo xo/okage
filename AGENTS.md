@@ -197,6 +197,7 @@ files:
 | `docs/SIMD.md` | the rules for the vector code and the two implementations |
 | `docs/BACKLOG.md` | the work that is known and not done |
 | `docs/FORMATS.md` | a survey of the work to support other vector formats |
+| `docs/okage.svg` | the logo of okage, which `README.md` shows. The tests of `svg` and of the test module render it |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
 | `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). `tiny-skia.tsv` and `resvg.tsv` exist |

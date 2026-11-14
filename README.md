@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="docs/okage.svg" alt="okage" width="600"/>
+  <br/>
   <a href="#status" title="Status">Status</a> |
   <a href="#installing" title="Installing">Installing</a> |
   <a href="#simd" title="SIMD">SIMD</a> |
