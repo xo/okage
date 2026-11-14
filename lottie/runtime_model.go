@@ -277,7 +277,7 @@ func (c TransformComponents) Matrix() kurbo.Affine {
 
 // toRadians is f64::to_radians.
 func toRadians(deg float64) float64 {
-	return deg * (math.Pi / 180.0)
+	return float64(deg * (math.Pi / 180.0))
 }
 
 // GroupTransform is GroupTransform in velato src/runtime/model/mod.rs.
@@ -484,13 +484,13 @@ func (r *FixedRepeater) Transform(index int) kurbo.Affine {
 		if base < 0.0 && t-math.Trunc(t) != 0.0 {
 			lower := math.Floor(t)
 			fraction := t - lower
-			return kurbo.Powf(base, lower)*(1.0-fraction) + kurbo.Powf(base, lower+1.0)*fraction
+			return float64(kurbo.Powf(base, lower)*(1.0-fraction)) + float64(kurbo.Powf(base, lower+1.0)*fraction)
 		}
 		return kurbo.Powf(base, t)
 	}
 	return kurbo.AffineTranslate(kurbo.NewVec2(
-		t*r.Position.X+r.AnchorPoint.X,
-		t*r.Position.Y+r.AnchorPoint.Y,
+		float64(t*r.Position.X)+r.AnchorPoint.X,
+		float64(t*r.Position.Y)+r.AnchorPoint.Y,
 	)).Mul(kurbo.AffineRotate(toRadians(t * r.Rotation))).
 		Mul(kurbo.AffineScaleNonUniform(scale(r.Scale.X), scale(r.Scale.Y))).
 		Mul(kurbo.AffineTranslate(kurbo.NewVec2(-r.AnchorPoint.X, -r.AnchorPoint.Y)))
@@ -533,7 +533,7 @@ func (t FixedTrim) Normalized() (trimRange, *trimRange, bool) {
 		return trimRange{0.0, 1.0}, nil, true
 	}
 
-	offsetPct := t.Offset * (100.0 / 360.0)
+	offsetPct := float64(t.Offset * (100.0 / 360.0))
 	startPct = remEuclid(startPct+offsetPct, 100.0)
 	endPct = startPct + rangePct
 

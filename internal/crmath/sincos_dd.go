@@ -106,7 +106,7 @@ func quickTwoSum(a, b float64) (float64, float64) {
 // twoProd returns p and e with p + e = a * b exactly, and p = fl(a * b).
 // math.FMA rounds once, so its result is the exact error of p.
 func twoProd(a, b float64) (float64, float64) {
-	p := a * b
+	p := float64(a * b)
 	return p, math.FMA(a, b, -p)
 }
 
@@ -191,7 +191,7 @@ func tanDD(x float64) (float64, bool) {
 	// The relative error of q is the sum of the relative errors of s and c,
 	// and of the division.
 	rel := sv.err/math.Abs(sv.hi) + cv.err/math.Abs(cv.hi) + ddRelErr
-	return ddRound(qh, ql, math.Abs(qh)*rel)
+	return ddRound(qh, ql, float64(math.Abs(qh)*rel))
 }
 
 // sinCosDDValue returns sin(x) and cos(x) as double-double values with their
@@ -209,12 +209,12 @@ func sinCosDDValue(x float64) (ddValue, ddValue, bool) {
 	rh, rl := x, 0.0
 	abs := 0.0
 	if k != 0 {
-		rh, rl = twoSum(x-float64(k*dd.pio2[0]), -(k * dd.pio2[1]))
-		rh, rl = ddAdd(rh, rl, -(k * dd.pio2[2]), 0)
-		rh, rl = ddAdd(rh, rl, -(k * dd.pio2[3]), 0)
+		rh, rl = twoSum(x-float64(k*dd.pio2[0]), -float64(k*dd.pio2[1]))
+		rh, rl = ddAdd(rh, rl, -float64(k*dd.pio2[2]), 0)
+		rh, rl = ddAdd(rh, rl, -float64(k*dd.pio2[3]), 0)
 		// sin and cos have a slope of at most 1, so an error of r is at most
 		// the same error of the result.
-		abs = math.Abs(rh)*ddRedRelErr + ddRedAbsErr
+		abs = float64(math.Abs(rh)*ddRedRelErr) + ddRedAbsErr
 	}
 
 	r2h, r2l := ddMul(rh, rl, rh, rl)
@@ -231,7 +231,7 @@ func sinCosDDValue(x float64) (ddValue, ddValue, bool) {
 	case 3:
 		sh, sl, ch, cl = -ch, -cl, sh, sl
 	}
-	sv := ddValue{sh, sl, math.Abs(sh)*ddRelErr + abs}
-	cv := ddValue{ch, cl, math.Abs(ch)*ddRelErr + abs}
+	sv := ddValue{sh, sl, float64(math.Abs(sh)*ddRelErr) + abs}
+	cv := ddValue{ch, cl, float64(math.Abs(ch)*ddRelErr) + abs}
 	return sv, cv, true
 }

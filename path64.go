@@ -167,7 +167,7 @@ func cbrt5d(d float64) float64 {
 // cbrtaHalleyd is cbrta_halleyd in tiny-skia src/path64/mod.rs. It is an
 // iterative cube root approximation using Halley's method (double).
 func cbrtaHalleyd(a, r float64) float64 {
-	a3 := float64(a*a) * a
+	a3 := float64(float64(a*a) * a)
 	return float64(a*(a3+r+r)) / (a3 + a3 + r)
 }
 

@@ -568,7 +568,7 @@ func convertDecoration(
 
 	builder := path.NewPathBuilder()
 	for _, decSpan := range decorationSpans {
-		rect, ok := path.NonZeroRectFromXYWH(0.0, -thickness/2.0, decSpan.width, thickness)
+		rect, ok := path.NonZeroRectFromXYWH(0.0, -float32(thickness/2.0), decSpan.width, thickness)
 		if !ok {
 			opt.warnf("a decoration span has a malformed bbox")
 			continue
@@ -854,7 +854,7 @@ func resolveClustersPositionsPath(
 		origTs := cluster.transform
 
 		// Clusters should be rotated by the x-midpoint x baseline position.
-		halfWidth := cluster.width / 2.0
+		halfWidth := float32(cluster.width / 2.0)
 		cluster.transform = path.DefaultTransform()
 		cluster.transform = cluster.transform.PreTranslate(x-halfWidth, y)
 		cluster.transform = cluster.transform.PreRotateAt(angle, halfWidth, 0.0)
@@ -979,7 +979,7 @@ func collectNormals(
 		for i := range clusters {
 			cluster := &clusters[i]
 			// Clusters should be rotated by the x-midpoint x baseline position.
-			halfWidth := cluster.width / 2.0
+			halfWidth := float32(cluster.width / 2.0)
 
 			offset := advance + shifts[i].x + halfWidth
 

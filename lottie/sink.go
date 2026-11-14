@@ -257,7 +257,7 @@ func div255(x int) int {
 // the Porter-Duff mode compose. alpha scales src, and so does the coverage
 // in mask, when mask is not nil, as the stage mask_u8 of tiny-skia does.
 func composite(dst, src, mask []byte, width int, region pixRect, compose Compose, alpha float32) {
-	a8 := int(alpha*255 + 0.5)
+	a8 := int(float32(alpha*255) + 0.5)
 	keep := keepsTarget(BlendMode{Compose: compose})
 	for y := region.y0; y < region.y1; y++ {
 		base := y * width
@@ -351,20 +351,20 @@ func applyFilter(pixmap *okage.Pixmap, f *FilterEffect, region pixRect) {
 				// Changes source RGB while keeping source alpha: maps the
 				// luminance from black to white, mixed by the amount.
 				sr, sg, sb := float32(data[i])/255/a, float32(data[i+1])/255/a, float32(data[i+2])/255/a
-				l := 0.2126*sr + 0.7152*sg + 0.0722*sb
+				l := float32(0.2126*sr) + float32(0.7152*sg) + float32(0.0722*sb)
 				am := float32(f.Amount)
-				tr := f.Black[0] + (f.White[0]-f.Black[0])*l
-				tg := f.Black[1] + (f.White[1]-f.Black[1])*l
-				tb := f.Black[2] + (f.White[2]-f.Black[2])*l
-				r, g, b, na = sr+(tr-sr)*am, sg+(tg-sg)*am, sb+(tb-sb)*am, a
+				tr := f.Black[0] + float32((f.White[0]-f.Black[0])*l)
+				tg := f.Black[1] + float32((f.White[1]-f.Black[1])*l)
+				tb := f.Black[2] + float32((f.White[2]-f.Black[2])*l)
+				r, g, b, na = sr+float32((tr-sr)*am), sg+float32((tg-sg)*am), sb+float32((tb-sb)*am), a
 			default:
 				return
 			}
 			na = clampF32(na)
-			data[i] = uint8(clampF32(r)*na*255 + 0.5)
-			data[i+1] = uint8(clampF32(g)*na*255 + 0.5)
-			data[i+2] = uint8(clampF32(b)*na*255 + 0.5)
-			data[i+3] = uint8(na*255 + 0.5)
+			data[i] = uint8(float32(clampF32(r)*na*255) + 0.5)
+			data[i+1] = uint8(float32(clampF32(g)*na*255) + 0.5)
+			data[i+2] = uint8(float32(clampF32(b)*na*255) + 0.5)
+			data[i+3] = uint8(float32(na*255) + 0.5)
 		}
 	}
 }
@@ -457,8 +457,8 @@ func (s *PixmapSink) bounds(transform kurbo.Affine, shape []kurbo.PathEl, pad fl
 	}
 	// The pad grows by the largest scale of the transform, and 2 pixels of
 	// antialiasing.
-	scale := math.Sqrt(math.Max(transform[0]*transform[0]+transform[1]*transform[1], transform[2]*transform[2]+transform[3]*transform[3]))
-	g := pad*scale + 2
+	scale := math.Sqrt(math.Max(float64(transform[0]*transform[0])+float64(transform[1]*transform[1]), float64(transform[2]*transform[2])+float64(transform[3]*transform[3])))
+	g := float64(pad*scale) + 2
 	const limit = 1 << 30
 	if !(x0 > -limit) || !(y0 > -limit) || !(x1 < limit) || !(y1 < limit) {
 		return s.canvas()

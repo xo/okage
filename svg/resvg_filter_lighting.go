@@ -254,7 +254,7 @@ func applyFilterLighting(
 		switch light := lightSource.(type) {
 		case DistantLightFilter:
 		case PointLightFilter:
-			nz := float32(src.alphaAt(nx, ny)) / 255.0 * surfaceScale
+			nz := float32(float32(src.alphaAt(nx, ny)) / 255.0 * surfaceScale)
 			origin := newVector3(light.X, light.Y, light.Z)
 			v := origin.sub(newVector3(float32(nx), float32(ny), nz))
 			if n, ok := v.normalized(); ok {
@@ -263,7 +263,7 @@ func applyFilterLighting(
 				lightVector = v
 			}
 		case SpotLightFilter:
-			nz := float32(src.alphaAt(nx, ny)) / 255.0 * surfaceScale
+			nz := float32(float32(src.alphaAt(nx, ny)) / 255.0 * surfaceScale)
 			origin := newVector3(light.X, light.Y, light.Z)
 			v := origin.sub(newVector3(float32(nx), float32(ny), nz))
 			if n, ok := v.normalized(); ok {

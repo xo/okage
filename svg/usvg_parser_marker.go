@@ -473,7 +473,7 @@ func calcAngle(x1, y1, x2, y2, x3, y3, x4, y4 float32) float32 {
 
 	inA := vectorAngle(x2-x1, y2-y1)
 	outA := vectorAngle(x4-x3, y4-y3)
-	d := (outA - inA) * 0.5
+	d := float32((outA - inA) * 0.5)
 
 	angle := inA + d
 	if fracPi2F32 < float32(math.Abs(float64(d))) {

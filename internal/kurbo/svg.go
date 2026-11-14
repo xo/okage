@@ -56,8 +56,8 @@ func FromSvgArc(arc *SvgArc) (Arc, bool) {
 	sinPhi, cosPhi := SinCos(xr)
 	hdX := (arc.From.X - arc.To.X) * 0.5
 	hdY := (arc.From.Y - arc.To.Y) * 0.5
-	hsX := (arc.From.X + arc.To.X) * 0.5
-	hsY := (arc.From.Y + arc.To.Y) * 0.5
+	hsX := float64((arc.From.X + arc.To.X) * 0.5)
+	hsY := float64((arc.From.Y + arc.To.Y) * 0.5)
 
 	// F6.5.1
 	p := NewVec2(

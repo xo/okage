@@ -41,7 +41,7 @@ func gradientStops(raw []float64, count int) ColorStops {
 			a, b := colors[i-1], colors[i]
 			if x <= b.offset {
 				t := normalizeToRange(a.offset, b.offset, x)
-				return a.r + (b.r-a.r)*t, a.g + (b.g-a.g)*t, a.b + (b.b-a.b)*t
+				return a.r + float64((b.r-a.r)*t), a.g + float64((b.g-a.g)*t), a.b + float64((b.b-a.b)*t)
 			}
 		}
 		last := colors[len(colors)-1]
@@ -57,7 +57,7 @@ func gradientStops(raw []float64, count int) ColorStops {
 		for i := 1; i < len(alphas); i++ {
 			a, b := alphas[i-1], alphas[i]
 			if x <= b.offset {
-				return a.a + (b.a-a.a)*normalizeToRange(a.offset, b.offset, x)
+				return a.a + float64((b.a-a.a)*normalizeToRange(a.offset, b.offset, x))
 			}
 		}
 		return alphas[len(alphas)-1].a

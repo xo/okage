@@ -202,13 +202,13 @@ func tweenF64(a, b, t float64, easing Easing) float64 {
 	// for kurbo::common::solve_cubic.
 	x0, x1, x2, x3 := curve.P0.X, curve.P1.X, curve.P2.X, curve.P3.X
 	c0 := x0
-	c1 := 3.0 * (x1 - x0)
-	c2 := 3.0 * (x2 - 2.0*x1 + x0)
-	c3 := x3 - 3.0*x2 + 3.0*x1 - x0
+	c1 := float64(3.0 * (x1 - x0))
+	c2 := float64(3.0 * (x2 - float64(2.0*x1) + x0))
+	c3 := x3 - float64(3.0*x2) + float64(3.0*x1) - x0
 
 	// Find where along the curve we are at normalized time t.
 	maxCoeff := math.Max(math.Max(math.Abs(c0), math.Abs(c1)), math.Max(math.Abs(c2), math.Abs(c3)))
-	eps := 1e-12 * math.Max(maxCoeff, 1.0)
+	eps := float64(1e-12 * math.Max(maxCoeff, 1.0))
 
 	u := 0.0
 	found := false
@@ -229,7 +229,7 @@ func tweenF64(a, b, t float64, easing Easing) float64 {
 
 	// Evaluate the curve at that point to get the y value.
 	easedY := curve.Eval(u).Y
-	return a + (b-a)*easedY
+	return a + float64((b-a)*easedY)
 }
 
 // tweenPoint is impl Tween for kurbo::Point in velato

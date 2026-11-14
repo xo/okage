@@ -113,5 +113,5 @@ func atan2DD(y, x float64) (float64, bool) {
 	if y < 0 {
 		ah, al = -ah, -al
 	}
-	return ddRound(ah, al, math.Abs(ah)*ddAtanRelErr+abs)
+	return ddRound(ah, al, float64(math.Abs(ah)*ddAtanRelErr)+abs)
 }

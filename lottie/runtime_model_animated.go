@@ -139,10 +139,10 @@ func (r *AnimatedRect) Evaluate(frame float64, path []kurbo.PathEl) []kurbo.Path
 	center := r.Position.Evaluate(frame)
 	size := r.Size.Evaluate(frame)
 	rect := kurbo.NewRoundedRect(
-		center.X-size.Width*0.5,
-		center.Y-size.Height*0.5,
-		center.X+size.Width*0.5,
-		center.Y+size.Height*0.5,
+		center.X-float64(size.Width*0.5),
+		center.Y-float64(size.Height*0.5),
+		center.X+float64(size.Width*0.5),
+		center.Y+float64(size.Height*0.5),
 		r.CornerRadius.Evaluate(frame),
 	)
 	return append(path, rect.PathElements(0.1)...)
@@ -208,16 +208,16 @@ func (s *AnimatedStar) Evaluate(frame float64, path []kurbo.PathEl) []kurbo.Path
 			radius, roundness = innerRadius, innerRoundness
 		}
 
-		x := center.X + radius*kurbo.Cos(currentAngle)
-		y := center.Y + radius*kurbo.Sin(currentAngle)
+		x := center.X + float64(radius*kurbo.Cos(currentAngle))
+		y := center.Y + float64(radius*kurbo.Sin(currentAngle))
 
 		inPt, outPt := kurbo.NewPoint(x, y), kurbo.NewPoint(x, y)
 		if math.Abs(roundness) > 1e-6 {
 			tangentLen := radius * kurbo.Tan(vertexAngleStep/2.0) * roundness * 4.0 / 3.0
 			perpX := -kurbo.Sin(currentAngle)
 			perpY := kurbo.Cos(currentAngle)
-			inPt = kurbo.NewPoint(x-tangentLen*perpX, y-tangentLen*perpY)
-			outPt = kurbo.NewPoint(x+tangentLen*perpX, y+tangentLen*perpY)
+			inPt = kurbo.NewPoint(x-float64(tangentLen*perpX), y-float64(tangentLen*perpY))
+			outPt = kurbo.NewPoint(x+float64(tangentLen*perpX), y+float64(tangentLen*perpY))
 		}
 
 		vertices = append(vertices, vertex{kurbo.NewPoint(x, y), inPt, outPt})
@@ -510,13 +510,13 @@ func (g *AnimatedGradient) Evaluate(frame float64) Brush {
 			// ThorVG places it (D43).
 			w, h := math.Abs(end.X-start.X), math.Abs(end.Y-start.Y)
 			if w > h {
-				radius = w + 0.375*h
+				radius = w + float64(0.375*h)
 			} else {
-				radius = h + 0.375*w
+				radius = h + float64(0.375*w)
 			}
-			if progress := g.HighlightLength.Evaluate(frame) * 0.01; progress != 0 {
+			if progress := float64(g.HighlightLength.Evaluate(frame) * 0.01); progress != 0 {
 				angle := end.Sub(start).Atan2() + toRadians(g.HighlightAngle.Evaluate(frame))
-				focal = kurbo.NewPoint(start.X+kurbo.Cos(angle)*progress*radius, start.Y+kurbo.Sin(angle)*progress*radius)
+				focal = kurbo.NewPoint(start.X+float64(float64(kurbo.Cos(angle)*progress)*radius), start.Y+float64(float64(kurbo.Sin(angle)*progress)*radius))
 			}
 		}
 		return Brush{Kind: BrushGradient, Gradient: Gradient{Kind: GradientRadial, Start: start, End: start, Radius: float32(radius), Stops: stops, Focal: focal}}

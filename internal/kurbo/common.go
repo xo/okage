@@ -204,7 +204,7 @@ func solveItpFallible(f func(float64) (float64, error), a, b, epsilon float64, n
 	// width of the type.
 	scaledEpsilon := epsilon * float64(uint64(1)<<(nmax&63))
 	for b-a > 2.0*epsilon {
-		x12 := 0.5 * (a + b)
+		x12 := float64(0.5 * (a + b))
 		r := scaledEpsilon - float64(0.5*(b-a))
 		xf := (float64(yb*a) - float64(ya*b)) / (yb - ya)
 		sigma := x12 - xf

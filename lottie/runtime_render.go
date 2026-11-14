@@ -516,7 +516,7 @@ func (b *batch) repeat(repeater *FixedRepeater, geometryStart, drawStart int) {
 	for copy := range repeater.Copies {
 		i := index(copy)
 		transform := repeater.Transform(i)
-		layer := copyLayer{id: b.nextCopy, alpha: startAlpha + deltaAlpha*float64(i)}
+		layer := copyLayer{id: b.nextCopy, alpha: startAlpha + float64(deltaAlpha*float64(i))}
 		b.nextCopy++
 		for _, g := range b.repeatGeometries {
 			g.trimOrder += i * geometryCount

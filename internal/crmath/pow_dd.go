@@ -123,7 +123,7 @@ func powDD(x, y float64) (float64, bool) {
 	if !(math.Abs(zh) <= ddMaxExp) {
 		return 0, false
 	}
-	zErr := math.Abs(zh)*ddPowZRelErr + ddPowZAbsErr
+	zErr := float64(math.Abs(zh)*ddPowZRelErr) + ddPowZAbsErr
 
 	// exp(z) = 2^k exp(r), with r = z - k ln 2 and |r| <= ln 2 / 2.
 	k := math.Round(zh / ddp.ln2[0])
@@ -135,5 +135,5 @@ func powDD(x, y float64) (float64, bool) {
 	vl = math.Ldexp(vl, int(k))
 
 	// An error d of z gives a relative error of about d in exp(z).
-	return ddRound(vh, vl, math.Abs(vh)*(zErr*1.01+ddPowRelErr))
+	return ddRound(vh, vl, float64(math.Abs(vh)*(float64(zErr*1.01)+ddPowRelErr)))
 }

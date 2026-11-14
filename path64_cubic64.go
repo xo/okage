@@ -130,8 +130,8 @@ func (c *cubic64) findInflections(tValues []float64) int {
 // give up when changing t no longer moves point
 // also, copy point rather than recompute it when it does change.
 func (c *cubic64) binarySearch(min, max, axisIntercept float64, xAxis searchAxis) float64 {
-	t := (min + max) / 2.0
-	step := (t - min) / 2.0
+	t := float64((min + max) / 2.0)
+	step := float64((t - min) / 2.0)
 	cubicAtT := c.pointAtT(t)
 	calcPos := cubicAtT.axisCoord(xAxis)
 	calcDist := calcPos - axisIntercept
@@ -222,8 +222,8 @@ func (c *cubic64) chopAt(t float64) cubic64Pair {
 // coefficients is coefficients in tiny-skia src/path64/cubic64.rs.
 func coefficients(src []float64) (float64, float64, float64, float64) {
 	a := src[6]                          // d
-	b := src[4] * 3.0                    // 3*c
-	c := src[2] * 3.0                    // 3*b
+	b := float64(src[4] * 3.0)           // 3*c
+	c := float64(src[2] * 3.0)           // 3*b
 	d := src[0]                          // a
 	a -= d - c + b                       // A =   -a + 3*b - 3*c + d
 	b += float64(3.0*d) - float64(2.0*c) // B =  3*a - 6*b + 3*c
@@ -316,17 +316,17 @@ func rootsRealCubic64(a, b, c, d float64, s *[3]float64) int {
 
 	{
 		invA := 1.0 / a
-		na := b * invA
-		nb := c * invA
-		nc := d * invA
+		na := float64(b * invA)
+		nb := float64(c * invA)
+		nc := float64(d * invA)
 		a, b, c = na, nb, nc
 	}
 
-	a2 := a * a
+	a2 := float64(a * a)
 	q := (a2 - float64(b*3.0)) / 9.0
 	r := (float64(float64(2.0*a2)*a) - float64(float64(9.0*a)*b) + float64(27.0*c)) / 54.0
-	r2 := r * r
-	q3 := float64(q*q) * q
+	r2 := float64(r * r)
+	q3 := float64(float64(q*q) * q)
 	r2MinusQ3 := r2 - q3
 	adiv3 := a / 3.0
 	offset := 0
@@ -369,7 +369,7 @@ func rootsRealCubic64(a, b, c, d float64, s *[3]float64) int {
 		s[offset] = r2
 		offset++
 		if almostDequalULPs64(r2, q3) {
-			r2 = -a/2.0 - adiv3
+			r2 = float64(-a/2.0) - adiv3
 			if !almostDequalULPs64(s[0], r2) {
 				s[offset] = r2
 				offset++

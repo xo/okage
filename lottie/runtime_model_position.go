@@ -165,9 +165,9 @@ const bezierEpsilon = 1e-2
 func lineLengthApprox(a, b kurbo.Point) float64 {
 	dx, dy := math.Abs(b.X-a.X), math.Abs(b.Y-a.Y)
 	if dx > dy {
-		return dx + dy*0.375
+		return dx + float64(dy*0.375)
 	}
-	return dy + dx*0.375
+	return dy + float64(dx*0.375)
 }
 
 // bezLengthApprox is _bezLength of ThorVG with lineLengthApprox: the length
@@ -188,7 +188,7 @@ func bezLengthApprox(c kurbo.CubicBez, depth int) float64 {
 // with the parameter that _bezAt finds by bisection.
 func thorvgSpatial(curve kurbo.CubicBez, progress float64) kurbo.Point {
 	length := bezLengthApprox(curve, 0)
-	at := progress * length
+	at := float64(progress * length)
 	if at <= 0 {
 		return curve.Eval(0)
 	}

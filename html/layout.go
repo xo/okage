@@ -335,8 +335,8 @@ func (lay *layouter) grid(t *Table) *grid {
 		}
 	}
 	b := float64(t.Border)
-	g.w = sum(g.cols) + float64(ncols+1)*sp + 2*b
-	g.h = sum(g.rows) + float64(nrows+1)*sp + 2*b
+	g.w = sum(g.cols) + float64(float64(ncols+1)*sp) + float64(2*b)
+	g.h = sum(g.rows) + float64(float64(nrows+1)*sp) + float64(2*b)
 	lay.grids[t] = g
 	return g
 }
@@ -354,7 +354,7 @@ func fit(sizes []float64, i, n int, size, sp float64, spans bool) {
 		return
 	}
 	n = min(n, len(sizes)-i)
-	have := sum(sizes[i:i+n]) + float64(n-1)*sp
+	have := sum(sizes[i:i+n]) + float64(float64(n-1)*sp)
 	if size <= have {
 		return
 	}
@@ -438,11 +438,11 @@ func (lay *layouter) placeTable(t *Table, box Rect, exact bool, under, stroke st
 			cb := Rect{X: colX[c0], Y: rowY[r0], Width: colX[c1] - sp - colX[c0], Height: rowY[r1] - sp - rowY[r0]}
 			lay.placeCell(c, t, cb, under, stroke)
 			if (t.ColumnRules || c.Rule) && c1 < ncols {
-				x := cb.X + cb.Width + sp/2
+				x := cb.X + cb.Width + float64(sp/2)
 				lay.addRule(x, cb.Y-edge(r0 == 0), x, cb.Y+cb.Height+edge(r1 == nrows), stroke)
 			}
 			if (t.RowRules || t.Rows[r1-1].Rule) && r1 < nrows {
-				y := cb.Y + cb.Height + sp/2
+				y := cb.Y + cb.Height + float64(sp/2)
 				lay.addRule(cb.X-edge(c0 == 0), y, cb.X+cb.Width+edge(c1 == ncols), y, stroke)
 			}
 		}
@@ -452,7 +452,7 @@ func (lay *layouter) placeTable(t *Table, box Rect, exact bool, under, stroke st
 // placeBox places a box of a size in a larger box by an align and a valign,
 // in the center by default.
 func placeBox(box Rect, w, h float64, a Align, v VAlign) Rect {
-	r := Rect{X: box.X + (box.Width-w)/2, Y: box.Y + (box.Height-h)/2, Width: w, Height: h}
+	r := Rect{X: box.X + float64((box.Width-w)/2), Y: box.Y + float64((box.Height-h)/2), Width: w, Height: h}
 	switch a {
 	case AlignLeft:
 		r.X = box.X
@@ -516,8 +516,8 @@ func (lay *layouter) placeCell(c *Cell, t *Table, box Rect, under, stroke string
 // sides adds a rule for each side of a cell with a sides attribute, inside
 // the box of the cell, as a border is.
 func (lay *layouter) sides(c *Cell, box Rect, b float64, stroke string) {
-	x1, y1 := box.X+b/2, box.Y+b/2
-	x2, y2 := box.X+box.Width-b/2, box.Y+box.Height-b/2
+	x1, y1 := box.X+float64(b/2), box.Y+float64(b/2)
+	x2, y2 := box.X+box.Width-float64(b/2), box.Y+box.Height-float64(b/2)
 	for _, s := range c.Sides {
 		r := Rule{Stroke: stroke, Width: b, Line: c.Style.Line, Cell: c}
 		switch s {
@@ -539,14 +539,14 @@ func (lay *layouter) sides(c *Cell, box Rect, b float64, stroke string) {
 // the box with AlignText. Each line goes inside the block by its own align,
 // then by balign, then in the center.
 func (lay *layouter) placeText(lines []Line, b *block, box Rect, align, balign Align, valign VAlign, under string) {
-	top := box.Y + (box.Height-b.h)/2
+	top := box.Y + float64((box.Height-b.h)/2)
 	switch valign {
 	case VAlignTop:
 		top = box.Y
 	case VAlignBottom:
 		top = box.Y + box.Height - b.h
 	}
-	bx, bw := box.X+(box.Width-b.w)/2, b.w
+	bx, bw := box.X+float64((box.Width-b.w)/2), b.w
 	switch align {
 	case AlignLeft:
 		bx = box.X
@@ -561,7 +561,7 @@ func (lay *layouter) placeText(lines []Line, b *block, box Rect, align, balign A
 		if a == AlignDefault {
 			a = balign
 		}
-		x := bx + (bw-ls.w)/2
+		x := bx + float64((bw-ls.w)/2)
 		switch a {
 		case AlignLeft:
 			x = bx

@@ -242,19 +242,19 @@ func alignedPos(align svgtypes.Align, x, y, w, h float32) (float32, float32) {
 	case svgtypes.AlignXMinYMin:
 		return x, y
 	case svgtypes.AlignXMidYMin:
-		return x + w/2.0, y
+		return x + float32(w/2.0), y
 	case svgtypes.AlignXMaxYMin:
 		return x + w, y
 	case svgtypes.AlignXMinYMid:
-		return x, y + h/2.0
+		return x, y + float32(h/2.0)
 	case svgtypes.AlignXMidYMid:
-		return x + w/2.0, y + h/2.0
+		return x + float32(w/2.0), y + float32(h/2.0)
 	case svgtypes.AlignXMaxYMid:
-		return x + w, y + h/2.0
+		return x + w, y + float32(h/2.0)
 	case svgtypes.AlignXMinYMax:
 		return x, y + h
 	case svgtypes.AlignXMidYMax:
-		return x + w/2.0, y + h
+		return x + float32(w/2.0), y + h
 	case svgtypes.AlignXMaxYMax:
 		return x + w, y + h
 	}

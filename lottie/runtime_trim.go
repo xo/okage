@@ -50,7 +50,7 @@ func trimPath(elements []kurbo.PathEl, ranges []trimRange, sequential *[2]float6
 		}
 		var intervals []trimInterval
 		for _, r := range ranges {
-			iv := trimInterval{rustMax(r.Start*total-base, 0.0), rustMin(r.End*total-base, contourLength)}
+			iv := trimInterval{rustMax(float64(r.Start*total)-base, 0.0), rustMin(float64(r.End*total)-base, contourLength)}
 			if iv.end > iv.start {
 				intervals = append(intervals, iv)
 			}

@@ -18,9 +18,9 @@ func SolveCubic(c0, c1, c2, c3 float64) []float64 {
 	result := make([]float64, 0, 3)
 	c3Recip := 1 / c3
 	const oneThird = 1. / 3.
-	scaledC2 := c2 * (oneThird * c3Recip)
-	scaledC1 := c1 * (oneThird * c3Recip)
-	scaledC0 := c0 * c3Recip
+	scaledC2 := float64(c2 * float64(oneThird*c3Recip))
+	scaledC1 := float64(c1 * float64(oneThird*c3Recip))
+	scaledC0 := float64(c0 * c3Recip)
 	if !(isFinite(scaledC0) && isFinite(scaledC1) && isFinite(scaledC2)) {
 		// cubic coefficient is zero or nearly so.
 		return SolveQuadratic(c0, c1, c2)
@@ -28,23 +28,23 @@ func SolveCubic(c0, c1, c2, c3 float64) []float64 {
 	c0, c1, c2 = scaledC0, scaledC1, scaledC2
 	d0 := math.FMA(-c2, c2, c1)
 	d1 := math.FMA(-c1, c2, c0)
-	d2 := c2*c0 - c1*c1
-	d := 4.0*d0*d2 - d1*d1
+	d2 := float64(c2*c0) - float64(c1*c1)
+	d := float64(float64(4.0*d0)*d2) - float64(d1*d1)
 	de := math.FMA(-2.0*c2, d0, d1)
 	switch {
 	case d < 0.0:
 		sq := Sqrt(-0.25 * d)
-		r := -0.5 * de
+		r := float64(-0.5 * de)
 		t1 := math.Cbrt(r+sq) + math.Cbrt(r-sq)
 		result = append(result, t1-c2)
 	case d == 0.0:
 		t1 := Copysign(Sqrt(-d0), de)
-		result = append(result, t1-c2, -2.0*t1-c2)
+		result = append(result, t1-c2, float64(-2.0*t1)-c2)
 	default:
 		th := Atan2(Sqrt(d), -de) * oneThird
 		thSin, thCos := SinCos(th)
 		r0 := thCos
-		ss3 := thSin * Sqrt(3.0)
+		ss3 := float64(thSin * Sqrt(3.0))
 		r1 := 0.5 * (-thCos + ss3)
 		r2 := 0.5 * (-thCos - ss3)
 		t := 2.0 * Sqrt(-d0)
@@ -59,8 +59,8 @@ func SolveCubic(c0, c1, c2, c3 float64) []float64 {
 // c0 + c1 x + c2 x² = 0.
 func SolveQuadratic(c0, c1, c2 float64) []float64 {
 	result := make([]float64, 0, 2)
-	sc0 := c0 * (1 / c2)
-	sc1 := c1 * (1 / c2)
+	sc0 := float64(c0 * (1 / c2))
+	sc1 := float64(c1 * (1 / c2))
 	if !isFinite(sc0) || !isFinite(sc1) {
 		// c2 is zero or very small, treat as linear eqn
 		root := -c0 / c1
@@ -72,7 +72,7 @@ func SolveQuadratic(c0, c1, c2 float64) []float64 {
 		}
 		return result
 	}
-	arg := sc1*sc1 - 4.*sc0
+	arg := float64(sc1*sc1) - float64(4.*sc0)
 	var root1 float64
 	if !isFinite(arg) {
 		root1 = -sc1
@@ -110,7 +110,7 @@ func (v Vec2) IsFinite() bool {
 
 // Cross is Vec2::cross in kurbo kurbo/src/vec2.rs.
 func (v Vec2) Cross(other Vec2) float64 {
-	return v.X*other.Y - v.Y*other.X
+	return float64(v.X*other.Y) - float64(v.Y*other.X)
 }
 
 // IsFinite is Point::is_finite in kurbo kurbo/src/point.rs.

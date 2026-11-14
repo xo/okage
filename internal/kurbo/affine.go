@@ -58,20 +58,20 @@ func AffineSkew(skewX, skewY float64) Affine {
 // that applies other first and then a.
 func (a Affine) Mul(other Affine) Affine {
 	return Affine{
-		a[0]*other[0] + a[2]*other[1],
-		a[1]*other[0] + a[3]*other[1],
-		a[0]*other[2] + a[2]*other[3],
-		a[1]*other[2] + a[3]*other[3],
-		a[0]*other[4] + a[2]*other[5] + a[4],
-		a[1]*other[4] + a[3]*other[5] + a[5],
+		float64(a[0]*other[0]) + float64(a[2]*other[1]),
+		float64(a[1]*other[0]) + float64(a[3]*other[1]),
+		float64(a[0]*other[2]) + float64(a[2]*other[3]),
+		float64(a[1]*other[2]) + float64(a[3]*other[3]),
+		float64(a[0]*other[4]) + float64(a[2]*other[5]) + a[4],
+		float64(a[1]*other[4]) + float64(a[3]*other[5]) + a[5],
 	}
 }
 
 // MulPoint is impl Mul<Point> for Affine in kurbo kurbo/src/affine.rs.
 func (a Affine) MulPoint(p Point) Point {
 	return NewPoint(
-		a[0]*p.X+a[2]*p.Y+a[4],
-		a[1]*p.X+a[3]*p.Y+a[5],
+		float64(a[0]*p.X)+float64(a[2]*p.Y)+a[4],
+		float64(a[1]*p.X)+float64(a[3]*p.Y)+a[5],
 	)
 }
 
@@ -82,7 +82,7 @@ func (a Affine) Translation() Vec2 {
 
 // Determinant is Affine::determinant in kurbo kurbo/src/affine.rs.
 func (a Affine) Determinant() float64 {
-	return a[0]*a[3] - a[1]*a[2]
+	return float64(a[0]*a[3]) - float64(a[1]*a[2])
 }
 
 // Inverse is Affine::inverse in kurbo kurbo/src/affine.rs. A singular
@@ -94,8 +94,8 @@ func (a Affine) Inverse() Affine {
 		-invDet * a[1],
 		-invDet * a[2],
 		invDet * a[0],
-		invDet * (a[2]*a[5] - a[3]*a[4]),
-		invDet * (a[1]*a[4] - a[0]*a[5]),
+		invDet * (float64(a[2]*a[5]) - float64(a[3]*a[4])),
+		invDet * (float64(a[1]*a[4]) - float64(a[0]*a[5])),
 	}
 }
 
@@ -123,12 +123,12 @@ func (a Affine) IsFinite() bool {
 // values, the larger first, and the angle of the first singular vector.
 func (a Affine) svd() (Vec2, float64) {
 	aa, b, c, d := a[0], a[1], a[2], a[3]
-	a2 := aa * aa
-	b2 := b * b
-	c2 := c * c
-	d2 := d * d
-	ab := aa * b
-	cd := c * d
+	a2 := float64(aa * aa)
+	b2 := float64(b * b)
+	c2 := float64(c * c)
+	d2 := float64(d * d)
+	ab := float64(aa * b)
+	cd := float64(c * d)
 	angle := 0.5 * Atan2(2.0*(ab+cd), a2-b2+c2-d2)
 	s1 := Sqrt(Powi(aa+d, 2) + Powi(b-c, 2))
 	s2 := Sqrt(Powi(aa-d, 2) + Powi(b+c, 2))

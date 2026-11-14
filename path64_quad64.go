@@ -72,7 +72,7 @@ func rootsRealQuad64(a, b, c float64, s *[3]float64) int {
 	}
 
 	// normal form: x^2 + px + q = 0
-	p2 := p * p
+	p2 := float64(p * p)
 	if !almostDequalULPs64(p2, q) && p2 < q {
 		return 0
 	}

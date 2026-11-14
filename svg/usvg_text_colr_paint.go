@@ -152,7 +152,7 @@ func (inst *colrInstance) varDeltas(varIndexBase uint32, n int) []float32 {
 
 // f2dot14 is F2Dot14::to_f32 of font-types.
 func f2dot14(v tables.Fixed214) float32 {
-	return float32(v) / 16384
+	return float32(float32(v) / 16384)
 }
 
 // f2dot14Delta is F2Dot14::apply_float_delta of font-types.
@@ -703,8 +703,8 @@ func traverseWithCallbacks(
 
 			if colorStopRange != 1.0 || firstStop.offset != 0.0 {
 				p0p3 := sub(p3, p0)
-				p0Offset := colrPoint{p0p3.x * firstStop.offset, p0p3.y * firstStop.offset}
-				p3Offset := colrPoint{p0p3.x * lastStop.offset, p0p3.y * lastStop.offset}
+				p0Offset := colrPoint{float32(p0p3.x * firstStop.offset), float32(p0p3.y * firstStop.offset)}
+				p3Offset := colrPoint{float32(p0p3.x * lastStop.offset), float32(p0p3.y * lastStop.offset)}
 
 				p3 = colrPoint{p0.x + p3Offset.x, p0.y + p3Offset.y}
 				p0 = colrPoint{p0.x + p0Offset.x, p0.y + p0Offset.y}
@@ -760,8 +760,8 @@ func traverseWithCallbacks(
 				radiusDiff := radius1 - radius0
 				scaleFactor := 1.0 / colorStopRange
 
-				c0Offset := colrPoint{c0ToC1.x * firstStop.offset, c0ToC1.y * firstStop.offset}
-				c1Offset := colrPoint{c0ToC1.x * lastStop.offset, c0ToC1.y * lastStop.offset}
+				c0Offset := colrPoint{float32(c0ToC1.x * firstStop.offset), float32(c0ToC1.y * firstStop.offset)}
+				c1Offset := colrPoint{float32(c0ToC1.x * lastStop.offset), float32(c0ToC1.y * lastStop.offset)}
 				stopsStartOffset := firstStop.offset
 
 				c1 = colrPoint{c0.x + c1Offset.x, c0.y + c1Offset.y}

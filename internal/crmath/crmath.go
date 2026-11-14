@@ -194,7 +194,7 @@ func round32(r float64) (float32, bool) {
 		return float32(r), true
 	}
 	// eps is 8 units in the last place of r.
-	eps := math.Abs(math.Nextafter(r, math.Inf(1))-r) * 8
+	eps := float64(math.Abs(math.Nextafter(r, math.Inf(1))-r) * 8)
 	lo, hi := float32(r-eps), float32(r+eps)
 	if lo != hi {
 		return 0, false
