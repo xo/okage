@@ -55,7 +55,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D33 | [A hot stage computes its lanes in one loop](D033-a-hot-stage-computes-its-lanes-in-one-loop.md) | Decided, amends D28 |
 | D34 | [Powf reads one NaN for every NaN](D034-powf-reads-one-nan-for-every-nan.md) | Decided, amends D16 |
 | D35 | [Speed has no target, and stays open work](D035-speed-has-no-target-and-stays-open-work.md) | Decided, amends D18 |
-| D36 | [`svg` has a renderer that loads the system fonts](D036-svg-has-a-renderer-that-loads-the-system-fonts.md) | Decided, amends D9 |
+| D36 | [`svg` has a renderer that loads the system fonts](D036-svg-has-a-renderer-that-loads-the-system-fonts.md) | Decided, amends D9, amended by D46 |
 | D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided, amended by D39 |
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
@@ -65,3 +65,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
 | D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13 |
+| D46 | [`FontDatabase` loads the fonts of the system as the renderer does](D046-fontdatabase-loads-the-fonts-of-the-system-as-the-renderer-does.md) | Decided, amends D36 |

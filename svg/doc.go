@@ -35,13 +35,11 @@
 // The functions of the parser, such as FromData, read no font of the system.
 // They lay out text with the fonts of a FontDatabase, which the caller gives
 // with WithFontDatabase (D9). To use the fonts of a system with them, load the
-// fonts into the database and set the generic families:
+// fonts into the database with LoadOSFonts, which loads the same fonts as the
+// Renderer, and set the generic families:
 //
 //	db := svg.NewFontDatabase()
-//	db.LoadSystemFonts(os.DirFS("/"))
-//	if home, err := os.UserHomeDir(); err == nil {
-//		db.LoadUserFonts(os.DirFS(home))
-//	}
+//	db.LoadOSFonts()
 //	db.SetSansSerifFamily("Noto Sans")
 //	tree, err := svg.FromData(data, svg.WithFontDatabase(db))
 //

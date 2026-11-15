@@ -7,6 +7,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"runtime"
 	"sync"
 	"testing"
 
@@ -294,5 +295,31 @@ func TestDecode(t *testing.T) {
 	}
 	if got := color.RGBAModel.Convert(img.At(5, 5)); got != (color.RGBA{B: 255, A: 255}) {
 		t.Errorf("At(5, 5) = %v, want blue", got)
+	}
+}
+
+// TestLoadOSFonts checks that LoadOSFonts loads the fonts of the root and of
+// the home directory, as LoadSystemFonts and LoadUserFonts load them.
+func TestLoadOSFonts(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the root of the file system is not / on Windows")
+	}
+	exp := NewFontDatabase()
+	exp.LoadSystemFonts(os.DirFS("/"))
+	if home, err := os.UserHomeDir(); err == nil {
+		exp.LoadUserFonts(os.DirFS(home))
+	}
+	db := NewFontDatabase()
+	db.LoadOSFonts()
+	if db.Len() != exp.Len() {
+		t.Fatalf("expected %d faces, got %d", exp.Len(), db.Len())
+	}
+	i := 0
+	for face := range db.Faces() {
+		e, _ := exp.Face(FontID(i))
+		if face.PostScriptName != e.PostScriptName {
+			t.Errorf("face %d: expected %q, got %q", i, e.PostScriptName, face.PostScriptName)
+		}
+		i++
 	}
 }

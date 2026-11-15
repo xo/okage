@@ -82,7 +82,7 @@ func (r *Renderer) init() {
 	if !o.render.customFontDB {
 		db := o.fontdbMut()
 		if !o.render.noSystemFonts {
-			loadOSFonts(db)
+			db.LoadOSFonts()
 		}
 		resolveGenericFamilies(db, o)
 	}
@@ -434,10 +434,14 @@ func resolveGenericFamilies(db *FontDatabase, o *options) {
 	}
 }
 
-// loadOSFonts loads the fonts of the system and of the home directory into
-// db. On Windows, the root of the system is the volume of %WINDIR%. This is
-// the one choice by platform outside internal/wide (D36).
-func loadOSFonts(db *FontDatabase) {
+// LoadOSFonts loads the fonts of the system and of the home directory into
+// db, as the Renderer does by default (D36, D46). It calls LoadSystemFonts
+// with the root of the file system, and LoadUserFonts with the home
+// directory of os.UserHomeDir. On Windows, the root is the volume of
+// %WINDIR%, or C: when WINDIR is not set. This is the one choice by platform
+// outside internal/wide. On WebAssembly, it loads no font and that is no
+// error.
+func (db *FontDatabase) LoadOSFonts() {
 	root := "/"
 	if runtime.GOOS == "windows" {
 		root = `C:\`

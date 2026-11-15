@@ -20,7 +20,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D45. The package `html` parses and lays out the HTML-like labels of
+to D46. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
 D42, D43), and it loads Lottie files and dotLottie archives for a program
@@ -58,7 +58,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40 and D45 |
+| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45 and D46 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
@@ -129,8 +129,9 @@ not repeat. No question is open, and the next question is question 19.
    each build. They call the methods of the vector types, and they index a
    lane only where upstream does (D28), or in one loop on the lanes of a hot
    stage that gives the same bits (D33). The one other code that chooses its
-   behavior by platform is the `Renderer` of `svg`, which finds the root of
-   the system fonts on Windows (D36). The parser takes its fonts from an
+   behavior by platform is `FontDatabase.LoadOSFonts` of `svg`, which the
+   `Renderer` calls, and which finds the root of the system fonts on Windows
+   (D36, D46). The parser takes its fonts from an
    `fs.FS` that the caller gives (D9).
 9. Keep TinyGo in mind (D25). The packages that a user imports do not use
    `reflect`, `encoding/json`, `encoding/xml` or `runtime/debug`. The pipeline

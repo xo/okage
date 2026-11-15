@@ -1,6 +1,6 @@
 # D36. `svg` has a renderer that loads the system fonts
 
-Status: Decided, amends D9.
+Status: Decided, amends D9, amended by D46.
 
 `github.com/xo/resvg` wraps resvg through cgo. A program renders a file with
 one call to it, and resvg finds the fonts of the system with fontconfig. To
