@@ -22,6 +22,8 @@ import (
 	"github.com/go-text/typesetting/font"
 	"github.com/go-text/typesetting/font/opentype"
 	"github.com/go-text/typesetting/font/opentype/tables"
+
+	"github.com/xo/okage/internal/webfont"
 )
 
 // This file ports no file of usvg. usvg finds its fonts with the crate fontdb
@@ -322,7 +324,20 @@ func (db *FontDatabase) warnf(format string, args ...any) {
 // Will load all font faces in case of a font collection.
 //
 // The database keeps data, so the caller must not change it afterwards.
+//
+// Port: fontdb loads TrueType and OpenType data. The database also loads a
+// font in WOFF, WOFF2 or EOT, which it converts to TrueType or OpenType data
+// first, as ConvertFontData does (D45). FaceData gives the converted data.
 func (db *FontDatabase) LoadFontData(data []byte) []FontID {
+	switch webfont.DetectFormat(data) {
+	case webfont.FormatWOFF, webfont.FormatWOFF2, webfont.FormatEOT:
+		sfnt, err := webfont.Convert(data)
+		if err != nil {
+			db.warnf("Failed to load a font face %d from %s cause %s.", 0, "source", err)
+			return nil
+		}
+		data = sfnt
+	}
 	return db.loadFontSource(data, "source")
 }
 

@@ -31,6 +31,12 @@ not done:
 5. The geometric boolean operations of merge paths, for a stroke or a trim
    after a merge path of mode 2 to 5 (D42).
 
+## Fonts in a web format
+
+From D45. `internal/webfont` does not read an EOT file that uses MicroType
+Express compression, and returns `okage.ErrFontUnsupported` for it. Such files
+are rare. They come from old versions of Internet Explorer.
+
 ## Phase 3
 
 ### Make the f64 functions of crmath faster

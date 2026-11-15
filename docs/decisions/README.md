@@ -26,13 +26,13 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
 | D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38 and D41 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided |
-| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41 |
+| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41 and D45 |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided |
-| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32 and D36 |
+| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36 and D45 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
 | D11 | [The upstream checkouts are in `upstream/`, and git ignores them](D011-the-upstream-checkouts-are-in-upstream-and-git-ignores-them.md) | Decided |
 | D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided |
-| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided |
+| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45 |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
 | D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34 |
@@ -64,3 +64,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 |
 | D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
+| D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13 |

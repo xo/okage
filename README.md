@@ -178,6 +178,10 @@ okage also adds APIs that upstream does not have:
    either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
    given size, and `FrameCount` and `Duration` count and time the frames
    (D44).
+7. `FontDatabase.LoadFontData` loads a font in WOFF, WOFF2 or EOT, as well
+   as TrueType and OpenType data. `svg.ConvertFontData` converts such a font
+   to TrueType or OpenType data. `FontDatabase.FaceName` returns a string of
+   the name table of a face, such as the version or the sample text (D45).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
@@ -189,7 +193,10 @@ The root package and `path` are under the BSD-3-Clause license of tiny-skia.
 See [LICENSE](LICENSE), which keeps the copyright lines of upstream. The
 package `svg` and the packages that it uses take the MIT license of resvg and
 of its crates, in a `LICENSE` file in each folder (D13). The package `html`
-ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38). The
+ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38).
+The brotli decoder in `internal/brotli` is a copy of the one of
+`github.com/dsnet/compress`, and keeps its BSD-3-Clause license, in
+[internal/brotli/LICENSE](internal/brotli/LICENSE) (D45). The
 package `lottie` takes the MIT license of velato, in
 [lottie/LICENSE](lottie/LICENSE). Its test files are Noto animated emoji
 under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.

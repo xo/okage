@@ -20,11 +20,12 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D44. The package `html` parses and lays out the HTML-like labels of
+to D45. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
 D42, D43), and it loads Lottie files and dotLottie archives for a program
-(D44). The open questions are at the end of `docs/PLAN.md`.
+(D44). `svg` also loads fonts in WOFF, WOFF2 and EOT (D45). The open
+questions are at the end of `docs/PLAN.md`.
 
 [ts]: https://github.com/linebender/tiny-skia
 [resvg]: https://github.com/linebender/resvg
@@ -57,7 +58,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39 and D40 |
+| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40 and D45 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
@@ -215,6 +216,8 @@ When code exists, the code goes here:
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
+| `internal/brotli/` | the brotli decoder of `github.com/dsnet/compress`, copied, for WOFF2 (D45) |
+| `internal/webfont/` | the conversion of WOFF, WOFF2 and EOT to TrueType or OpenType data (D45) |
 | `testdata/images/` | the reference images of tiny-skia, byte for byte |
 | `svg/testdata/` | the tests, the resources and the fonts of resvg, byte for byte |
 | `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22) |

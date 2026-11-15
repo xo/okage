@@ -159,6 +159,23 @@ linters:
       - path: pipeline_(lowp|highp)\.go
         linters:
           - dupl
+      # internal/brotli is a copy of the decoder of github.com/dsnet/compress,
+      # kept close to its source, so that a fix of the source is easy to
+      # compare (D45). These linters ask for changes of style only.
+      - path: internal/brotli/
+        linters:
+          - dupl
+          - dupword
+          - errorlint
+          - goconst
+          - gocritic
+          - godot
+          - ineffassign
+          - intrange
+          - wastedassign
+          - modernize
+          - revive
+          - staticcheck
 
 formatters:
   enable:

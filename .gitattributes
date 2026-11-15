@@ -12,6 +12,11 @@
 *.svgz binary
 *.ttf binary
 *.otf binary
+*.ttc binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.bin binary
 testdata/** -text
 svg/testdata/** -text
 internal/*/testdata/** -text

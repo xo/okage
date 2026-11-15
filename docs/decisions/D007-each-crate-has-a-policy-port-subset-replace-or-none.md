@@ -1,6 +1,6 @@
 # D7. Each crate has a policy: port, subset, replace or none
 
-Status: Decided, amended by D41.
+Status: Decided, amended by D41 and D45.
 
 Each crate that tiny-skia, usvg and resvg use has one policy:
 
@@ -13,7 +13,8 @@ Each crate that tiny-skia, usvg and resvg use has one policy:
 
 okage ports no crate that decodes or encodes an image, and no crate for text,
 fonts or the shaping of text. A difference from upstream that comes from the
-code that replaces them is accepted.
+code that replaces them is accepted. D45 adds code of okage that converts a
+font in WOFF, WOFF2 or EOT, which no crate of upstream does.
 
 | Crate | Used by | Policy | Go form |
 | --- | --- | --- | --- |

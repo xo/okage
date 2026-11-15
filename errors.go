@@ -431,3 +431,16 @@ const (
 	// is not a dotLottie archive, or an archive with no animation (D44).
 	ErrLottieDotLottie Error = "reading dotlottie"
 )
+
+// The sentinel errors of the conversion of fonts in a web format (D45).
+const (
+	// ErrFontData is the error of svg.ConvertFontData for a font in WOFF,
+	// WOFF2 or EOT whose data is malformed. The conversion wraps a more
+	// precise error with this one.
+	ErrFontData Error = "converting font data"
+
+	// ErrFontUnsupported is the error of svg.ConvertFontData for data that is
+	// not a font of a known format, and for an EOT file that uses MicroType
+	// Express compression.
+	ErrFontUnsupported Error = "converting font data: unsupported format"
+)
