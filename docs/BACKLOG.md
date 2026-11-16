@@ -10,9 +10,7 @@ When the change is committed, delete the claim.
 
 ## Units in progress
 
-1. The copy of go-text in `typesetting`, with the change of `svg` and
-   `webfont` to it (D52). Claimed by the session of group G of ivy on
-   2026-11-17.
+None.
 
 ## typesetting
 
