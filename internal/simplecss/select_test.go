@@ -12,7 +12,7 @@ import (
 
 // testNode is an element of a small XML tree. Upstream tests with the tree
 // of roxmltree. The port has its own tree, so that the tests of simplecss do
-// not depend on internal/roxmltree. parseTestXML reads only the XML of these
+// not depend on roxmltree. parseTestXML reads only the XML of these
 // tests: elements, attributes in single quotes, and white space.
 type testNode struct {
 	name     string

@@ -6,7 +6,7 @@ zuzu draws graphs in the DOT language of Graphviz. The schema graphs that
 dbtpl and usql write use HTML-like labels, `label=<...>`, with tables and
 ports. zuzu draws each such node as its name only, and that blocks the move of
 iv from go-graphviz to zuzu. okage already has an XML parser
-(`internal/roxmltree`) and a text API (D37), so the maintainers chose to put
+(`roxmltree`) and a text API (D37), so the maintainers chose to put
 the parser and the layout of these labels in okage.
 
 ## The decision
@@ -36,7 +36,7 @@ the parser and the layout of these labels in okage.
      between the rows or the cells of a table is not read, as `dot` ignores
      it, and it is an issue.
 4. A syntax error wraps `okage.ErrHTMLSyntax` with the line and the column in
-   `src`. An XML error also wraps the error of `internal/roxmltree`.
+   `src`. An XML error also wraps the error of `roxmltree`.
 5. An attribute or a tag that `html` does not read, such as `href`, `title`,
    `id`, `class`, `gradientangle` or `<img>`, is an `Issue` with its line and
    its column. An invalid value and a port name that repeats are also issues.
@@ -91,7 +91,7 @@ the parser and the layout of these labels in okage.
     space. `dot` takes these metrics from Pango, so a line with more than one
     size of font can differ from `dot`.
 12. The package is pure Go, holds no package-level configuration, and builds
-    with TinyGo (D25). It imports `internal/roxmltree` and `svg`. It ports no
+    with TinyGo (D25). It imports `roxmltree` and `svg`. It ports no
     upstream code, and it does not copy the code of Graphviz. The LICENSE of
     the root covers it.
 13. The test module compares the layout with `dot -Tjson` (D22). The oracle

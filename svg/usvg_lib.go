@@ -12,9 +12,9 @@ import "github.com/xo/okage/internal/xmlwriter"
 // The modules parser, tree and writer of upstream are the files
 // usvg_parser_*.go, usvg_tree*.go and usvg_writer.go of this package, so the
 // re-exports `pub use parser::*` and `pub use tree::*` need no port. The
-// re-export of the crate roxmltree has no port either, because
-// internal/roxmltree is internal (D5). The re-export of WriteOptions goes in
-// usvg_writer.go, the port of src/writer.rs.
+// re-export of the crate roxmltree has no port either, because roxmltree is a
+// package of its own that a program imports (D47). The re-export of
+// WriteOptions goes in usvg_writer.go, the port of src/writer.rs.
 // The module text is the files usvg_text*.go, so `pub use text::*` needs no
 // port either. The re-export of the crate fontdb has no port, because okage
 // does not port fontdb (D9). Its place is taken by FontDatabase in

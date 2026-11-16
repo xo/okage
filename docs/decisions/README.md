@@ -24,10 +24,10 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38 and D41 |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41 and D47 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided |
 | D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41 and D45 |
-| D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided |
+| D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided, amended by D47 |
 | D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36 and D45 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
 | D11 | [The upstream checkouts are in `upstream/`, and git ignores them](D011-the-upstream-checkouts-are-in-upstream-and-git-ignores-them.md) | Decided |
@@ -66,3 +66,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
 | D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13 |
 | D46 | [`FontDatabase` loads the fonts of the system as the renderer does](D046-fontdatabase-loads-the-fonts-of-the-system-as-the-renderer-does.md) | Decided, amends D36 |
+| D47 | [roxmltree is a public package](D047-roxmltree-is-a-public-package.md) | Decided, amends D5 and D8 |

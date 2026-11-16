@@ -10,8 +10,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/xo/okage/internal/roxmltree"
 	"github.com/xo/okage/internal/svgtypes"
+	"github.com/xo/okage/roxmltree"
 )
 
 type svgtypesQuestion struct {

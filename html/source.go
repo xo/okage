@@ -1,7 +1,7 @@
 package html
 
 // This file ports no upstream file. It turns the text of a label into a
-// document for internal/roxmltree, and maps a position in that document back
+// document for roxmltree, and maps a position in that document back
 // to the text (D38).
 
 import (
@@ -28,7 +28,7 @@ type piece struct {
 	copied   bool
 }
 
-// source is the text of a label and the document that internal/roxmltree
+// source is the text of a label and the document that roxmltree
 // parses.
 type source struct {
 	// src is the text of the label.
@@ -45,7 +45,7 @@ type source struct {
 // newSource makes the document of the text of a label. XML knows only five
 // named entities, and Graphviz reads the named entities of HTML, so each
 // other entity that HTML knows becomes a character reference. An entity that
-// HTML does not know stays, and internal/roxmltree reports it.
+// HTML does not know stays, and roxmltree reports it.
 func newSource(src string) *source {
 	s := &source{src: src}
 	var b strings.Builder
@@ -130,7 +130,7 @@ func (s *source) srcOffset(dst int) int {
 }
 
 // docOffset returns the offset of a line and a column of doc, as
-// internal/roxmltree counts them: from 1, with a column for each character.
+// roxmltree counts them: from 1, with a column for each character.
 func (s *source) docOffset(line, col uint32) int {
 	off := 0
 	for l := uint32(1); l < line; l++ {

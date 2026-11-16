@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/roxmltree"
+	"github.com/xo/okage/roxmltree"
 )
 
 // This file ports usvg src/parser/mod.rs, without the items of the feature
@@ -143,8 +143,9 @@ func fromStr(text string, opt *options) (*Tree, error) {
 // fromXMLTree is Tree::from_xmltree in usvg src/parser/mod.rs. It parses
 // `Tree` from `roxmltree::Document`.
 //
-// Port: the function is unexported, because internal/roxmltree is internal
-// and a user cannot make its document (D5).
+// Port: the function is unexported. It was ported while roxmltree was
+// internal, and a user could not make its document (D5). D47 exports
+// roxmltree, and the export of this function is in docs/BACKLOG.md.
 func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) { //nolint:unused // the port of a public function of upstream
 	svgDoc, err := parseTree(doc, opt.styleSheet, opt.maxDepth, opt)
 	if err != nil {

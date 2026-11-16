@@ -11,7 +11,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/xo/okage/internal/roxmltree"
+	"github.com/xo/okage/roxmltree"
 )
 
 // svgDir is the folder of the SVG files of the tests of resvg and usvg, as the

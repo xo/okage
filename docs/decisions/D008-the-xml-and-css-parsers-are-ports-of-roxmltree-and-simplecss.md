@@ -1,8 +1,8 @@
 # D8. The XML and CSS parsers are ports of roxmltree and simplecss
 
-Status: Decided.
+Status: Decided, amended by D47.
 
-okage parses XML with a port of the crate roxmltree, in `internal/roxmltree`,
+okage parses XML with a port of the crate roxmltree, in `roxmltree` (D47),
 and CSS with a port of the crate simplecss, in `internal/simplecss`. Each port
 stays as close to the code of upstream as it can, file by file. okage uses no
 other Go package for XML or CSS.

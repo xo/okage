@@ -29,7 +29,7 @@ closes the speed target of D18:
 5. Phase 5: the three commits of tiny-skia after the base commit, up to
    `5d475477` on 2026-08-20. One commit is ported, and two are not
    applicable.
-6. Phase 6: `internal/roxmltree`, `internal/simplecss`, `internal/xmlwriter`,
+6. Phase 6: `roxmltree`, `internal/simplecss`, `internal/xmlwriter`,
    `internal/svgtypes` and the subset of kurbo in `internal/kurbo`, with
    every test of upstream. `internal/crmath` has the correctly rounded f64
    functions that kurbo needs (D26). The oracle gives the same tree for each
@@ -229,7 +229,8 @@ D5 sets the packages:
 | `path` | `path` | the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg` | `svg` | the port of the crates `usvg` and `resvg`, as one package |
 | `internal/wide` | `wide` | the vector types of `src/wide` (D15) |
-| `internal/svgtypes`, `internal/roxmltree`, `internal/simplecss`, `internal/kurbo`, `internal/xmlwriter` | the name of the crate | the crates that `svg` uses (D7, D8) |
+| `internal/svgtypes`, `internal/simplecss`, `internal/kurbo`, `internal/xmlwriter` | the name of the crate | the crates that `svg` uses (D7, D8) |
+| `roxmltree` | the name of the crate | the XML parser, public for ivy (D47) |
 | `test` | | the test module, with its own `go.mod`: the oracles, the comparison of the builds for WebAssembly, and the benchmarks against other libraries (D22) |
 
 The packages of tiny-skia import only the standard library. Each outside

@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/roxmltree"
+	"github.com/xo/okage/roxmltree"
 )
 
 // SyntaxError is the error of Parse for a label that is not valid. It wraps
-// okage.ErrHTMLSyntax, and the error of internal/roxmltree when the label is
+// okage.ErrHTMLSyntax, and the error of roxmltree when the label is
 // not valid XML.
 type SyntaxError struct {
 	// Pos is the position of the error in the text of the label.
@@ -22,7 +22,7 @@ type SyntaxError struct {
 	// Msg says what is wrong.
 	Msg string
 
-	// err is the error of internal/roxmltree, or nil.
+	// err is the error of roxmltree, or nil.
 	err error
 }
 

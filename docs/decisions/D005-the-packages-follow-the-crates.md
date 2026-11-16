@@ -1,6 +1,6 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38 and D41.
+Status: Decided, amended by D38, D41 and D47.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
@@ -11,7 +11,7 @@ Status: Decided, amended by D38 and D41.
 | `lottie` | `lottie` | the port of the crate `velato`, which renders Lottie animations (D41) |
 | `internal/wide` | `wide` | the vector types of `src/wide` of tiny-skia (D15) |
 | `internal/svgtypes` | `svgtypes` | the parsers of SVG values: lengths, colors, path data, transforms, filter functions and the font shorthand |
-| `internal/roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |
+| `roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |
 | `internal/simplecss` | `simplecss` | the CSS parser and selectors (D8) |
 | `internal/kurbo` | `kurbo` | the subset of kurbo that usvg uses (D7) |
 | `internal/xmlwriter` | `xmlwriter` | the XML writer that the writer of usvg uses |

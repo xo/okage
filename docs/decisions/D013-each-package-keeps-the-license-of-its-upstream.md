@@ -9,7 +9,7 @@ license of its source:
 | --- | --- | --- |
 | tiny-skia | BSD-3-Clause, copyright Google Inc. 2011 and Yevhenii Reizner 2020 | the root package, `path`, `internal/wide` |
 | strict-num, xmlwriter | MIT, copyright Yevhenii Reizner | `path`, `internal/xmlwriter` |
-| resvg, svgtypes, roxmltree, simplecss, kurbo | Apache-2.0 or MIT, at the choice of the user | `svg`, `internal/svgtypes`, `internal/roxmltree`, `internal/simplecss`, `internal/kurbo` |
+| resvg, svgtypes, roxmltree, simplecss, kurbo | Apache-2.0 or MIT, at the choice of the user | `svg`, `internal/svgtypes`, `roxmltree`, `internal/simplecss`, `internal/kurbo` |
 | the brotli decoder of `github.com/dsnet/compress` (D45) | BSD-3-Clause, copyright Joe Tsai and The Go Authors 2015 | `internal/brotli` |
 
 1. `LICENSE` in the root is the BSD-3-Clause license of tiny-skia, with the

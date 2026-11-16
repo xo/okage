@@ -8,9 +8,9 @@ package svg
 import (
 	"strings"
 
-	"github.com/xo/okage/internal/roxmltree"
 	"github.com/xo/okage/internal/simplecss"
 	"github.com/xo/okage/internal/svgtypes"
+	"github.com/xo/okage/roxmltree"
 )
 
 // This file ports usvg src/parser/svgtree/text.rs. The crate compiles it

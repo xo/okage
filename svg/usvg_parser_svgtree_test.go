@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/xo/okage/internal/roxmltree"
 	"github.com/xo/okage/internal/svgtypes"
+	"github.com/xo/okage/roxmltree"
 )
 
 // usvg src/parser/svgtree has no unit tests. These tests check the document,

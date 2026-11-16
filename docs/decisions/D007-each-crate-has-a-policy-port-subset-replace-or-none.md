@@ -21,7 +21,7 @@ font in WOFF, WOFF2 or EOT, which no crate of upstream does.
 | `tiny-skia`, `tiny-skia-path` | resvg, usvg | Port | root package, `path` |
 | `strict-num` | tiny-skia-path, usvg | Port | `path` |
 | `svgtypes` | usvg, resvg | Port | `internal/svgtypes` |
-| `roxmltree` | usvg | Port (D8) | `internal/roxmltree` |
+| `roxmltree` | usvg | Port (D8) | `roxmltree` (D47) |
 | `simplecss` | usvg | Port (D8) | `internal/simplecss` |
 | `xmlwriter` | usvg | Port | `internal/xmlwriter` |
 | `kurbo` | usvg | Subset: `CubicBez`, `QuadBez`, `Line`, `SvgArc`, `Point`, `Vec2` and the traits `ParamCurve`, `ParamCurveArclen` and `ParamCurveDeriv` | `internal/kurbo` |

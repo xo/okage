@@ -81,7 +81,7 @@ Also measure whether `GODEBUG=simd` changes what `archsimd` runs, or what
 ### Port the example select of simplecss
 
 From phase 6. `examples/select.rs` of simplecss matches selectors against a
-tree of roxmltree. It was not ported while `internal/roxmltree` was being
+tree of roxmltree. It was not ported while `roxmltree` was being
 written. Port it as an example of `internal/simplecss`, with its output.
 
 ## Phase 10
@@ -100,3 +100,9 @@ differences stay:
    0.46. No test shows a difference.
 3. read-fonts reads the strikes of the table EBDT. usvg draws none of its
    glyphs, so Go leaves the strikes out. The result is the same.
+
+## The API of roxmltree
+
+D47 makes `roxmltree` a public package. `svg` ported `Tree::from_xmltree` of
+usvg as the unexported function `fromXMLTree`, because a user could not make a
+document of roxmltree. Decide whether `svg` exports it now. Source: D47.

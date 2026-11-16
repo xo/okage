@@ -9,17 +9,17 @@ import (
 	"strings"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/roxmltree"
 	"github.com/xo/okage/internal/simplecss"
 	"github.com/xo/okage/internal/svgtypes"
+	"github.com/xo/okage/roxmltree"
 )
 
 // This file ports usvg src/parser/svgtree/parse.rs.
 //
 // Port: a roxmltree::Error that this file makes is the sentinel error of its
 // case, okage.ErrXMLNoRootNode or okage.ErrXMLNodesLimitReached, because the
-// constructors of internal/roxmltree are private. An error of
-// internal/roxmltree passes through as it is.
+// constructors of roxmltree are private. An error of
+// roxmltree passes through as it is.
 
 const (
 	svgNS          = "http://www.w3.org/2000/svg"

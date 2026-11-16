@@ -49,11 +49,11 @@ const (
 	ErrCreatingMask Error = "decoding png: creating a mask"
 )
 
-// internal/roxmltree returns a *roxmltree.Error that wraps one of the
+// roxmltree returns a *roxmltree.Error that wraps one of the
 // following errors. Its message is "parsing xml: " and the Display text of
 // upstream, with the position and the data of the case.
 
-// The sentinel errors of internal/roxmltree.
+// The sentinel errors of roxmltree.
 const (
 	// ErrXMLInvalidXMLPrefixURI is Error::InvalidXmlPrefixUri of roxmltree.
 	// The `xmlns:xml` attribute must have an
@@ -335,7 +335,7 @@ const (
 
 // Each message of the following errors is "parsing svg: " and the Display
 // text of usvg 0.49.0. ErrSVGParsingFailed wraps the error of
-// internal/roxmltree.
+// roxmltree.
 
 // The sentinel errors of the enum Error in usvg src/parser/mod.rs. The case
 // SvgzFeatureNotEnabled has no port, because okage always reads SVGZ data.
@@ -360,7 +360,7 @@ const (
 
 	// ErrSVGParsingFailed is Error::ParsingFailed in usvg
 	// src/parser/mod.rs. It failed to parse an SVG data. The error wraps
-	// the error of internal/roxmltree. Upstream gives "SVG data parsing
+	// the error of roxmltree. Upstream gives "SVG data parsing
 	// failed cause " and the error of roxmltree.
 	ErrSVGParsingFailed Error = "parsing svg: SVG data parsing failed"
 )
