@@ -10,7 +10,7 @@ package svgtypes
 import (
 	"iter"
 
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // PathSegmentKind is the case of the enum PathSegment in svgtypes

@@ -56,7 +56,7 @@ No file uses text layers or image layers, which velato does not support.
 
    | Crate | Policy | Go form |
    | --- | --- | --- |
-   | `kurbo` | Subset. The subset of D7 grows by the items that velato calls: `BezPath`, `PathEl`, `Affine`, `Ellipse`, `RoundedRect`, `Arc`, the trait `Shape` for them, `Stroke`, `Cap`, `Join`, `solve_cubic` and `cubic_bez_coefs` | `internal/kurbo` |
+   | `kurbo` | Subset. The subset of D7 grows by the items that velato calls: `BezPath`, `PathEl`, `Affine`, `Ellipse`, `RoundedRect`, `Arc`, the trait `Shape` for them, `Stroke`, `Cap`, `Join`, `solve_cubic` and `cubic_bez_coefs` | `kurbo` |
    | `peniko` | Replace. velato uses only `Color`, `Brush`, `Gradient`, `BlendMode` and `Mix`. Small types in `lottie` hold them | none |
    | `serde`, `serde_json`, `serde_repr` | Replace with `encoding/json`. A value that is a constant or a list of keyframes gets an `UnmarshalJSON` method | none |
    | `vello` | None. okage does not port the sinks for Vello. `lottie` has a sink that draws with okage | none |
@@ -96,7 +96,7 @@ No file uses text layers or image layers, which velato does not support.
 A port gives a renderer that okage can test against its source, in the same
 way as resvg, with no binary and no WebAssembly. okage already has the
 paths, the strokes, the gradients, the blend modes, the masks and
-`internal/kurbo` that the sink needs. So most of the work is the schema and
+`kurbo` that the sink needs. So most of the work is the schema and
 the runtime of velato.
 
 The scan of the corpus shows that velato draws about 95% of the Noto

@@ -14,7 +14,7 @@ import (
 	"sync"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 	"github.com/xo/okage/path"
 )
 

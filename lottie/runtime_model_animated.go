@@ -11,8 +11,8 @@ package lottie
 import (
 	"math"
 
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/kurbo"
 )
 
 // PositionKind is the variant of Position in velato

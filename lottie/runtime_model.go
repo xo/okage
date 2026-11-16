@@ -12,7 +12,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // ImageAsset is ImageAsset in velato src/runtime/model/mod.rs: the metadata

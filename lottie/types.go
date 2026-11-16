@@ -5,7 +5,7 @@
 
 package lottie
 
-import "github.com/xo/okage/internal/kurbo"
+import "github.com/xo/okage/kurbo"
 
 // The geometry types of kurbo that the API of velato uses (D41). They are
 // aliases, so a program outside okage can name them, for example to

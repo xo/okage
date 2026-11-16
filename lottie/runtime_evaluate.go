@@ -13,8 +13,8 @@ import (
 	"slices"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/kurbo"
 )
 
 // OccurrencePath is OccurrencePath in velato src/runtime/evaluate.rs:

@@ -5,7 +5,7 @@ of [resvg][resvg], which renders SVG files with tiny-skia (D1). The crate
 `tiny-skia` goes into the root package, `tiny-skia-path` into the package
 `path`, and the crates `usvg` and `resvg` into the one package `svg`. The
 crates that usvg uses go into packages under `internal/` (D5), except
-`roxmltree`, which is public for ivy (D47). A program that imports okage needs
+`roxmltree` and `kurbo`, which are public for ivy (D47, D48). A program that imports okage needs
 the Go toolchain and nothing else.
 
 okage uses SIMD where Go can, and its scalar code is the fallback (D14). Go
@@ -219,6 +219,7 @@ When code exists, the code goes here:
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
 | `roxmltree/` | the package `roxmltree`, the port of the crate roxmltree. It is public, so that ivy reads XML with it (D47) |
+| `kurbo/` | the package `kurbo`, the port of a subset of the crate kurbo. It is public, so that ivy draws PDF with it (D48) |
 | `internal/brotli/` | the brotli decoder of `github.com/dsnet/compress`, copied, for WOFF2 (D45) |
 | `internal/webfont/` | the conversion of WOFF, WOFF2 and EOT to TrueType or OpenType data (D45) |
 | `testdata/images/` | the reference images of tiny-skia, byte for byte |
@@ -249,7 +250,7 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./internal/...
+tinygo test . ./path ./roxmltree ./kurbo ./internal/...
 golangci-lint run ./...
 (cd test && go vet ./... && go test -count=1 ./... && golangci-lint run ./...)
 (cd test && GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=10000)

@@ -1,6 +1,6 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38, D41 and D47.
+Status: Decided, amended by D38, D41, D47 and D48.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Status: Decided, amended by D38, D41 and D47.
 | `internal/svgtypes` | `svgtypes` | the parsers of SVG values: lengths, colors, path data, transforms, filter functions and the font shorthand |
 | `roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |
 | `internal/simplecss` | `simplecss` | the CSS parser and selectors (D8) |
-| `internal/kurbo` | `kurbo` | the subset of kurbo that usvg uses (D7) |
+| `kurbo` | `kurbo` | the subset of kurbo that usvg uses (D7) |
 | `internal/xmlwriter` | `xmlwriter` | the XML writer that the writer of usvg uses |
 | `test` | | the test module, with its own `go.mod` (D22) |
 

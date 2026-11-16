@@ -9,7 +9,7 @@ package lottie
 // (D41): a color, the stops of a gradient, a brush, a stroke and a blend
 // mode.
 
-import "github.com/xo/okage/internal/kurbo"
+import "github.com/xo/okage/kurbo"
 
 // Color is peniko::Color, an AlphaColor of sRGB: the components red, green,
 // blue and alpha, from 0 to 1, with straight alpha.

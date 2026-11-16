@@ -11,8 +11,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/kurbo"
 )
 
 // SpatialKeyframe is SpatialKeyframe in velato

@@ -10,8 +10,8 @@ package lottie
 import (
 	"slices"
 
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/kurbo"
 )
 
 // Sink is the trait RenderSink in velato src/runtime/render.rs: what a

@@ -14,7 +14,7 @@ number of curves grows with the radius of the arc, and kurbo has no limit:
 
 ## The decision
 
-1. `internal/kurbo` makes at most `MaxArcSubdivisions`, 4,096, curves for one
+1. `kurbo` makes at most `MaxArcSubdivisions`, 4,096, curves for one
    arc. A larger number is cut to 4,096 before the angle of each curve is
    computed, so the curves still cover the whole sweep of the arc.
 2. The limit changes an arc only when `r / tolerance` is about 4.23e21 or
@@ -25,7 +25,7 @@ number of curves grows with the radius of the arc, and kurbo has no limit:
    takes about 0.2 seconds on the machine that measured on 2026-11-09, and
    one at 65,536 curves took about 3.6 seconds.
 4. The oracle of the test module still skips such arcs, because upstream does
-   not end on them. A unit test of `internal/kurbo` makes sure that an arc of
+   not end on them. A unit test of `kurbo` makes sure that an arc of
    radius 1e50, 1e300 or the largest float64 ends with 4,096 curves that reach
    the end of the arc.
 

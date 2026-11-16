@@ -8,8 +8,8 @@ package svg
 import (
 	"math"
 
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/svgtypes"
+	"github.com/xo/okage/kurbo"
 	"github.com/xo/okage/path"
 )
 

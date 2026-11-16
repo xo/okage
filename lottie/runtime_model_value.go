@@ -11,7 +11,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // Value is Value in velato src/runtime/model/value.rs: a fixed or animated

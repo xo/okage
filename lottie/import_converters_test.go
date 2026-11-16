@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // makeShapeLayer is make_shape_layer in the tests of velato

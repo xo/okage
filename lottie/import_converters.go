@@ -14,8 +14,8 @@ import (
 	"math"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/kurbo"
 )
 
 // converter holds the first error of an import.

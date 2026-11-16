@@ -1,6 +1,6 @@
 # D7. Each crate has a policy: port, subset, replace or none
 
-Status: Decided, amended by D41 and D45.
+Status: Decided, amended by D41, D45 and D48.
 
 Each crate that tiny-skia, usvg and resvg use has one policy:
 
@@ -24,7 +24,7 @@ font in WOFF, WOFF2 or EOT, which no crate of upstream does.
 | `roxmltree` | usvg | Port (D8) | `roxmltree` (D47) |
 | `simplecss` | usvg | Port (D8) | `internal/simplecss` |
 | `xmlwriter` | usvg | Port | `internal/xmlwriter` |
-| `kurbo` | usvg | Subset: `CubicBez`, `QuadBez`, `Line`, `SvgArc`, `Point`, `Vec2` and the traits `ParamCurve`, `ParamCurveArclen` and `ParamCurveDeriv` | `internal/kurbo` |
+| `kurbo` | usvg | Subset: `CubicBez`, `QuadBez`, `Line`, `SvgArc`, `Point`, `Vec2` and the traits `ParamCurve`, `ParamCurveArclen` and `ParamCurveDeriv` | `kurbo` |
 | `siphasher` | usvg | Replace. usvg hashes the names of elements and attributes into a table. A Go `map` or `switch` gives the same lookup, and the hash is never visible | none |
 | `base64`, `data-url` | usvg | Replace with `encoding/base64` and a small parser of `data:` URLs in `svg` | none |
 | `flate2` | usvg | Replace with `compress/gzip`, for SVGZ files | none |

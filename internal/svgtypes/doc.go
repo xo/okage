@@ -51,6 +51,6 @@
 //
 // A number gives the same float64 as upstream: the scanner passes only the
 // text that upstream scans to strconv.ParseFloat, which rounds correctly as
-// Rust does. The arcs of a path go through internal/kurbo, and sin, cos and
+// Rust does. The arcs of a path go through kurbo, and sin, cos and
 // tan are the correctly rounded functions of internal/crmath (D26).
 package svgtypes

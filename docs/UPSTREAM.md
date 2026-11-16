@@ -142,7 +142,7 @@ of `crates/svgtypes` in the table of resvg. The ledger of svgtypes ends at
 
 For `kurbo`, the policy is `subset` (D7). A Rust file that holds a type or a
 function of the subset is Port, and the rest of `src/` is Not applicable.
-`internal/kurbo/SUBSET.md` lists the types and functions of the subset, from
+`kurbo/SUBSET.md` lists the types and functions of the subset, from
 phase 6 on.
 
 ### File names

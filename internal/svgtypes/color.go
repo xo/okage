@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // Color is Color in svgtypes src/color.rs.

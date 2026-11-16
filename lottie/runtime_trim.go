@@ -10,7 +10,7 @@ package lottie
 import (
 	"math"
 
-	"github.com/xo/okage/internal/kurbo"
+	"github.com/xo/okage/kurbo"
 )
 
 // trimAccuracy is ACCURACY in velato src/runtime/trim.rs.

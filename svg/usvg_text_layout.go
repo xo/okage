@@ -22,8 +22,8 @@ import (
 	"github.com/go-text/typesetting/harfbuzz"
 	"github.com/go-text/typesetting/language"
 
-	"github.com/xo/okage/internal/kurbo"
 	"github.com/xo/okage/internal/wide"
+	"github.com/xo/okage/kurbo"
 	"github.com/xo/okage/path"
 )
 
