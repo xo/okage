@@ -1,6 +1,6 @@
 # D13. Each package keeps the license of its upstream
 
-Status: Decided, amended by D45, D49 and D50.
+Status: Decided, amended by D45, D49, D50 and D52.
 
 okage translates or copies code under four licenses, and the code keeps the
 license of its source:
@@ -31,3 +31,8 @@ license of its source:
 
 BSD-3-Clause also asks that the names of the copyright holders are not used
 to promote a product made from the code without permission.
+
+D52 adds `typesetting`, the copy of go-text. It keeps the license of go-text,
+the Unlicense or the BSD-3-Clause license, with the copyright line of okage,
+in `typesetting/LICENSE`. `typesetting/harfbuzz/LICENSE` keeps the MIT
+license of HarfBuzz.

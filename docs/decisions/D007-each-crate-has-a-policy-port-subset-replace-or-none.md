@@ -1,6 +1,6 @@
 # D7. Each crate has a policy: port, subset, replace or none
 
-Status: Decided, amended by D41, D45 and D48.
+Status: Decided, amended by D41, D45, D48 and D52.
 
 Each crate that tiny-skia, usvg and resvg use has one policy:
 
@@ -47,3 +47,6 @@ D23 measures it.
 
 Astra, Gemini Pro and DeepSeek Pro agreed on the split of port, subset and
 replace on 2026-11-09.
+
+D52 adds a fifth policy, copy, and replaces the crates of text with
+`typesetting`, the copy of go-text in okage.

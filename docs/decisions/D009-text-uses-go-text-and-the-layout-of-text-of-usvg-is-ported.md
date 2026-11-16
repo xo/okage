@@ -1,6 +1,6 @@
 # D9. Text uses go-text, and the layout of text of usvg is ported
 
-Status: Decided, amended by D32, D36 and D45.
+Status: Decided, amended by D32, D36, D45 and D52.
 
 usvg converts text into paths. It finds fonts with fontdb, shapes text with
 harfrust, reads outlines and color glyphs with skrifa and read-fonts, and
@@ -56,3 +56,6 @@ which go-text does not read, before go-text reads it.
 
 Astra, Gemini Pro and DeepSeek Pro each advised on 2026-11-09 not to port the
 crates of text, and to take the fonts from the caller.
+
+D52 amends rule 1 of the first list: okage uses `typesetting`, its own copy
+of go-text, in place of the module `github.com/go-text/typesetting`.

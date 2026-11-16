@@ -10,7 +10,37 @@ When the change is committed, delete the claim.
 
 ## Units in progress
 
-None.
+1. The copy of go-text in `typesetting`, with the change of `svg` and
+   `webfont` to it (D52). Claimed by the session of group G of ivy on
+   2026-11-17.
+
+## typesetting
+
+From D52.
+
+1. Apply the 110 pending commits of `docs/upstream/typesetting.tsv` in
+   order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. Many of them
+   fix a panic on a malformed font, and ivy reads fonts from strangers.
+2. 33 test files of go-text read the data of
+   `github.com/go-text/typesetting-utils`, and the copy leaves them out.
+   Question 19 asks what they become.
+3. A test of `shaping` calls a method of `reflect` that TinyGo does not have,
+   so the TinyGo command of `AGENTS.md` leaves `typesetting/shaping` out.
+
+## The coverage of an edge
+
+From the review of the text of ivy on 2026-11-17. okage computes the
+coverage of a pixel from a grid of 4 by 4 samples, as tiny-skia does
+(`SUPERSAMPLE_SHIFT` of `scan_path_aa.go`). The coverage of an edge moves in
+steps of a quarter, so most pixels of a line of text have one of the
+coverages 0.25, 0.5, 0.75 or 1. FreeType, MuPDF, Poppler and Cairo give
+every coverage. For a page of text at 96 dpi, the mean difference of a pixel
+of okage from a pixel of Cairo is 0.064. A grid of 8 by 8 samples gives
+0.052, and one of 16 by 16 gives 0.051. ivy draws small glyphs at twice
+their size and averages the samples, which costs about half again the time
+of the drawing of a page of text. A finer grid, or an exact coverage, in
+okage itself is a difference from tiny-skia, and a decision of the
+maintainers.
 
 ## lottie
 

@@ -28,7 +28,9 @@ fonts, so those crates are not in the list (D7, D9). velato came on
 2026-11-12 (D41). tinyhtml5, tinycss2 and cssselect2 came on 2026-11-16 (D49,
 D50). These three are Python packages, not crates. For each one, the base
 commit is the commit that okage ports, and the column `matched` holds the
-same commit.
+same commit. go-text came on 2026-11-17, as the upstream `typesetting`, with
+the policy `copy` (D52). Its base commit is `v0.3.5`, and its column
+`matched` stays empty until okage applies its pending commits.
 
 ## The checkouts
 
@@ -50,12 +52,13 @@ must print nothing:
 git -C upstream/tiny-skia status --short
 ```
 
-No upstream holds a Go file on 2026-11-09. If one adds a Go file,
-`go build ./...` finds it. After each fetch, run this command. It must print
-nothing:
+Only `upstream/typesetting` holds Go files, because go-text is a Go module
+(D52). Its `go.mod` makes it a module of its own, so `go build ./...` in okage
+skips it. If another upstream adds a Go file, `go build ./...` finds it.
+After each fetch, run this command. It must print nothing:
 
 ```bash
-find upstream -name '*.go'
+find upstream -path upstream/typesetting -prune -o -name '*.go' -print
 ```
 
 ## The base commits
@@ -193,6 +196,44 @@ tinycss2 (D50). If a commit changes `tests/**`, run the script again.
 The results in `cssselect2/testdata/` come from
 `cssselect2/testdata/make.py`, which runs cssselect2 (D50). If a commit
 changes `tests/**`, run the script again.
+
+### typesetting
+
+`typesetting` is a copy of go-text, not a port (D52). Its Go files are the
+files of go-text, with the import paths of okage. A commit of go-text is
+applied as a diff of Go code, in the order of the ledger.
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `<package>/<name>.go`, for each package that D52 copies | `typesetting/<package>/<name>.go` | Port. Apply the diff, with the import paths of okage |
+| `internal/unicodedata/**` | `typesetting/internal/unicodedata/**` | Port |
+| `testutils/**` | `typesetting/testutils/**` | Port |
+| `<package>/<name>_test.go` | `typesetting/<package>/<name>_test.go` | Port, unless the test reads `github.com/go-text/typesetting-utils`. Then it is left out, as D52 says |
+| `bidi/test/**`, `segmenter/test/**`, `font/testdata/**` | the same path under `typesetting/` | Port, byte for byte |
+| `LICENSE`, `harfbuzz/LICENSE` | `typesetting/LICENSE`, `typesetting/harfbuzz/LICENSE` | Review |
+| `go.mod`, `go.sum` | none | Review. A new requirement is a new dependency of okage (D6) |
+| `fontscan/**` | none | Not applicable. okage does not copy `fontscan` (D52) |
+| `.github/**`, `README.md`, `CODEOWNERS` and the other files of the root | none | Not applicable |
+
+To apply a commit, make a diff of the commit in the checkout, change the
+import paths in the diff, and apply it in `typesetting/`. A test file that
+the copy leaves out is excluded (D52). Run these commands in the root of the
+repository, with the hash of the commit in `c`:
+
+```bash
+skip=$(git -C upstream/typesetting show --format= --name-only "$c" |
+  while read -r f; do
+    case $f in *_test.go) [ -e "typesetting/$f" ] || echo "--exclude=typesetting/$f" ;; esac
+  done)
+git -C upstream/typesetting show "$c" -- ':!fontscan' |
+  sed -e 's#github.com/go-text/typesetting/#github.com/xo/okage/typesetting/#g' |
+  git apply --directory=typesetting --reject $skip
+```
+
+A hunk that does not apply touches a change of okage, which has a comment
+that starts with `okage:`. Apply the hunk by hand, and keep the change of
+okage. Then run `gofmt` on `typesetting/`. The files keep the import groups
+of go-text, so the formatters of `golangci-lint` do not run on them.
 
 ### File names
 
@@ -382,8 +423,8 @@ Upstream: <owner>/<repository>@<full hash>
 
 `<area>` is the okage package that the commit changes most, such as `path`,
 `raster`, `pipeline`, `shaders`, `wide`, `svg`, `svgtypes`, `roxmltree`,
-`simplecss`, `kurbo`, `xmlwriter`, `html`, `tinycss2`, `cssselect2`, `test`
-or `bench`. The `Upstream:` line is
+`simplecss`, `kurbo`, `xmlwriter`, `html`, `tinycss2`, `cssselect2`,
+`typesetting`, `test` or `bench`. The `Upstream:` line is
 the last line before the trailers that the agent adds, such as
 `Upstream: linebender/resvg@66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba`. A tool
 can read the ledgers again from these lines.
@@ -417,7 +458,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-16 twelve ledgers exist:
+On 2026-11-17 thirteen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -452,6 +493,11 @@ On 2026-11-16 twelve ledgers exist:
    2026-11-16: `2a933f5b` for tinyhtml5 (D49), `2cab2705` for tinycss2 and
    `fc22accd` for cssselect2 (D50). The column `matched` of each one is the
    same commit.
+7. `typesetting.tsv` holds the 126 commits of go-text after `v0.3.5`, up to
+   `bafa8730` of 2026-11-10 (D52). 110 are `pending`, and many of them fix a
+   panic on a malformed font. 16 are `not-applicable`: merge commits, and
+   commits that change only `fontscan`, the CI or other files that okage does
+   not copy. The column `matched` is empty.
 
 ## A difference from upstream
 

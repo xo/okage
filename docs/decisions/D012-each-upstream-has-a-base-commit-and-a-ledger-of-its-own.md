@@ -1,6 +1,6 @@
 # D12. Each upstream has a base commit and a ledger of its own
 
-Status: Decided.
+Status: Decided, amended by D52.
 
 okage ports from several upstream repositories. Each has its own history, so
 one timeline of all of them has no meaning. Astra, Gemini Pro and DeepSeek Pro
@@ -35,3 +35,7 @@ On 2026-11-09 tiny-skia has three commits after its base commit, and resvg has
 26. tiny-skia made about 10 commits in a year, and resvg about 96.
 
 This follows transit D30, D116 and D117.
+
+D52 adds go-text as the upstream `typesetting`, with the policy copy. Its
+ledger lists the commits of go-text after `v0.3.5`, and okage applies them as
+diffs of Go code.

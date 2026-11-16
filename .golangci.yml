@@ -81,8 +81,12 @@ linters:
           allow:
             - $gostd
             - github.com/xo/okage
-            - github.com/go-text/typesetting
             - golang.org/x/image/webp
+            # the copy of go-text in typesetting (D52)
+            - golang.org/x/image/math/fixed
+            - golang.org/x/image/tiff
+            # a test of typesetting/shaping only (D52)
+            - golang.org/x/image/font/gofont/goregular
             # the vips oracle of the test module only, with the tag vips (D22)
             - github.com/cshum/vipsgen/v2
             # the ThorVG oracle of lottie in the test module only (D42, D43)
@@ -182,6 +186,44 @@ linters:
           - modernize
           - revive
           - staticcheck
+      # typesetting is a copy of github.com/go-text/typesetting, kept close to
+      # its source, so that a commit of the source is easy to apply (D52).
+      # These linters ask for changes of style, or find faults that the
+      # ledger of typesetting holds as commits of the source to apply.
+      - path: typesetting/
+        linters:
+          - dupl
+          - dupword
+          - embeddedstructfieldcheck
+          - errcheck
+          - errname
+          - errorlint
+          - forbidigo
+          - forcetypeassert
+          - goconst
+          - gocritic
+          - godoclint
+          - godot
+          - gosec
+          - gosmopolitan
+          - inamedparam
+          - ineffassign
+          - interfacebloat
+          - intrange
+          - iotamixing
+          - makezero
+          - misspell
+          - modernize
+          - nakedret
+          - perfsprint
+          - revive
+          - staticcheck
+          - tagalign
+          - thelper
+          - unparam
+          - unused
+          - wastedassign
+          - whitespace
 
 formatters:
   enable:
@@ -194,3 +236,6 @@ formatters:
   exclusions:
     paths:
       - upstream
+      # typesetting keeps the import groups of go-text, so that a commit of
+      # go-text applies as it is (D52). gofmt still runs on it.
+      - typesetting

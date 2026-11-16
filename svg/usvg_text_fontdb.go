@@ -19,9 +19,9 @@ import (
 	"sync"
 	"unicode/utf16"
 
-	"github.com/go-text/typesetting/font"
-	"github.com/go-text/typesetting/font/opentype"
-	"github.com/go-text/typesetting/font/opentype/tables"
+	"github.com/xo/okage/typesetting/font"
+	"github.com/xo/okage/typesetting/font/opentype"
+	"github.com/xo/okage/typesetting/font/opentype/tables"
 
 	"github.com/xo/okage/webfont"
 )

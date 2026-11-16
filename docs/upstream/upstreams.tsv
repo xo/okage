@@ -11,3 +11,4 @@ velato	https://github.com/linebender/velato	upstream/velato	velato 0.12.0	lottie
 tinyhtml5	https://github.com/CourtBouillon/tinyhtml5	upstream/tinyhtml5	tinyhtml5 2.1.0	html	port	2a933f5b7baaf1592aa2b3779c798575db82511f	2a933f5b7baaf1592aa2b3779c798575db82511f
 tinycss2	https://github.com/Kozea/tinycss2	upstream/tinycss2	tinycss2 1.5.1	tinycss2	port	2cab2705158e2b9131e0e8537b8c62b4fb5619f5	2cab2705158e2b9131e0e8537b8c62b4fb5619f5
 cssselect2	https://github.com/Kozea/cssselect2	upstream/cssselect2	cssselect2 0.10.1	cssselect2	port	fc22accd5fdba764d95263fa8e6c97ce24f75f3e	fc22accd5fdba764d95263fa8e6c97ce24f75f3e
+typesetting	https://github.com/go-text/typesetting	upstream/typesetting	github.com/go-text/typesetting v0.3.5	typesetting	copy	19482bd51f2338e34bacd8cfd3288a04bbadc598	

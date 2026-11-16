@@ -8,8 +8,8 @@ package svg
 import (
 	"strconv"
 
-	"github.com/go-text/typesetting/font"
-	"github.com/go-text/typesetting/font/opentype/tables"
+	"github.com/xo/okage/typesetting/font"
+	"github.com/xo/okage/typesetting/font/opentype/tables"
 
 	"github.com/xo/okage/internal/svgtypes"
 	"github.com/xo/okage/internal/wide"

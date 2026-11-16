@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/go-text/typesetting/font/opentype/tables"
+	"github.com/xo/okage/typesetting/font/opentype/tables"
 )
 
 // countFillPainter is a colorPainter that counts the fills.

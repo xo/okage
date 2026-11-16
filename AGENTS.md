@@ -8,8 +8,10 @@ crates that usvg uses go into packages under `internal/` (D5), except
 `roxmltree` and `kurbo`, which are public for ivy (D47, D48). The packages
 `tinycss2` and `cssselect2` port the CSS parser and the CSS selectors of
 WeasyPrint, and `webfont` converts fonts in WOFF, WOFF2 and EOT. They are
-public for ivy too (D50, D51). A program that imports okage needs the Go
-toolchain and nothing else.
+public for ivy too (D50, D51). `typesetting` is a public copy of
+`github.com/go-text/typesetting`, which reads fonts and shapes text for `svg`
+and for ivy (D52). A program that imports okage needs the Go toolchain and
+nothing else.
 
 okage uses SIMD where Go can, and its scalar code is the fallback (D14). Go
 1.27 has SIMD only behind `GOEXPERIMENT=simd`, so okage has a scalar
@@ -24,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D51. The package `html` parses and lays out the HTML-like labels of
+to D52. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -68,6 +70,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
@@ -95,7 +98,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. No question is open, and the next question is question 19.
+not repeat. Question 19 is open, and the next question is question 20.
 
 ## Hard rules
 
@@ -147,9 +150,11 @@ not repeat. No question is open, and the next question is question 19.
    large buffer is a slice that is allocated once, not an array on the stack.
 10. okage ports no crate that decodes an image, and no crate for text, fonts
     or the shaping of text (D7, D9). The standard library,
-    `golang.org/x/image/webp` and `github.com/go-text/typesetting` do that
-    work. The layout of text of usvg is still ported, with go-text in place of
-    the crates that it calls. The walk of the paint graph of COLRv1 of skrifa
+    `golang.org/x/image/webp` and `typesetting`, the copy of
+    `github.com/go-text/typesetting` in okage (D52), do that work. The layout
+    of text of usvg is still ported, with `typesetting` in place of the crates
+    that it calls. A change of `typesetting` stays close to go-text, and has a
+    comment that starts with `okage:` and names its decision (D52). The walk of the paint graph of COLRv1 of skrifa
     is the one part of a crate of text that okage ports (D32).
 11. An option is a functional option whose name starts with `With`, and it
     holds its value in the value that it configures, never in a package
@@ -210,8 +215,8 @@ files:
 | `docs/okage.svg` | the logo of okage, which `README.md` shows. The tests of `svg` and of the test module render it |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
-| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv` and `cssselect2.tsv` |
-| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/` and `upstream/cssselect2/` (D49, D50) |
+| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv` and `typesetting.tsv` |
+| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/` and `upstream/typesetting/` (D49, D50, D52) |
 
 When code exists, the code goes here:
 
@@ -228,6 +233,7 @@ When code exists, the code goes here:
 | `roxmltree/` | the package `roxmltree`, the port of the crate roxmltree. It is public, so that ivy reads XML with it (D47) |
 | `kurbo/` | the package `kurbo`, the port of a subset of the crate kurbo. It is public, so that ivy draws PDF with it (D48) |
 | `internal/brotli/` | the brotli decoder of `github.com/dsnet/compress`, copied, for WOFF2 (D45) |
+| `typesetting/` | the packages of `github.com/go-text/typesetting` `v0.3.5`, copied and public: fonts, shaping, line breaking and bidi, for `svg` and for ivy (D52) |
 | `webfont/` | the package `webfont`, the conversion of WOFF, WOFF2 and EOT to TrueType or OpenType data. It is public, so that ivy loads the fonts of `@font-face` with it (D45, D51) |
 | `tinycss2/` | the package `tinycss2`, the port of tinycss2. It is public, so that ivy reads CSS with it (D50) |
 | `cssselect2/` | the package `cssselect2`, the port of cssselect2. It is public, so that ivy matches CSS selectors with it (D50) |
@@ -262,7 +268,9 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./internal/...
+tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./internal/... \
+  ./typesetting/bidi ./typesetting/di ./typesetting/font/... ./typesetting/harfbuzz \
+  ./typesetting/language ./typesetting/segmenter ./typesetting/internal/...
 golangci-lint run ./...
 (cd test && go vet ./... && go test -count=1 ./... && golangci-lint run ./...)
 (cd test && GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=10000)

@@ -15,12 +15,12 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/go-text/typesetting/bidi"
-	"github.com/go-text/typesetting/font"
-	ot "github.com/go-text/typesetting/font/opentype"
-	"github.com/go-text/typesetting/font/opentype/tables"
-	"github.com/go-text/typesetting/harfbuzz"
-	"github.com/go-text/typesetting/language"
+	"github.com/xo/okage/typesetting/bidi"
+	"github.com/xo/okage/typesetting/font"
+	ot "github.com/xo/okage/typesetting/font/opentype"
+	"github.com/xo/okage/typesetting/font/opentype/tables"
+	"github.com/xo/okage/typesetting/harfbuzz"
+	"github.com/xo/okage/typesetting/language"
 
 	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/kurbo"

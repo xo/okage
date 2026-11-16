@@ -83,8 +83,9 @@ go get github.com/xo/okage
 ```
 
 The renderer imports only the Go standard library. The package `svg` also
-uses `github.com/go-text/typesetting` for text, and `golang.org/x/image/webp`
-for WebP files. okage does not use cgo, so a program that imports it builds with
+uses `typesetting` for text, and `golang.org/x/image/webp` for WebP files.
+`typesetting` is a public copy of [`go-text/typesetting`][typesetting] in
+okage (D52). okage does not use cgo, so a program that imports it builds with
 `CGO_ENABLED=0` for every platform that Go supports.
 
 ## SIMD
@@ -127,9 +128,9 @@ okage differs from upstream only where a decision says so:
 2. `svg` decodes PNG, JPEG and GIF files with the standard library, and WebP
    files with `golang.org/x/image/webp`, in place of the decoders of resvg
    (D7).
-3. `svg` finds fonts and shapes text with
-   [`go-text/typesetting`][typesetting], in place of the crates of resvg. Its
-   text can differ from the text of resvg (D9).
+3. `svg` finds fonts and shapes text with `typesetting`, the copy of
+   [`go-text/typesetting`][typesetting] in okage, in place of the crates of
+   resvg. Its text can differ from the text of resvg (D9, D52).
 4. Each package logs to a `*slog.Logger` that the caller gives (D20).
 5. An elliptical arc makes at most 4,096 cubic curves. kurbo has no limit, so
    an arc with a radius of about 4.23e20 or more does not end in upstream
@@ -216,7 +217,12 @@ in [tinycss2/LICENSE](tinycss2/LICENSE) and
 [cssselect2/LICENSE](cssselect2/LICENSE) (D50).
 The brotli decoder in `internal/brotli` is a copy of the one of
 `github.com/dsnet/compress`, and keeps its BSD-3-Clause license, in
-[internal/brotli/LICENSE](internal/brotli/LICENSE) (D45). The
+[internal/brotli/LICENSE](internal/brotli/LICENSE) (D45). The packages
+under `typesetting` are a copy of go-text, and keep its license, the
+Unlicense or the BSD-3-Clause license, in
+[typesetting/LICENSE](typesetting/LICENSE). The package `harfbuzz` keeps the
+MIT license of HarfBuzz in
+[typesetting/harfbuzz/LICENSE](typesetting/harfbuzz/LICENSE) (D52). The
 package `lottie` takes the MIT license of velato, in
 [lottie/LICENSE](lottie/LICENSE). Its test files are Noto animated emoji
 under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.

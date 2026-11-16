@@ -1,6 +1,6 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38, D41, D47, D48, D49, D50 and D51.
+Status: Decided, amended by D38, D41, D47, D48, D49, D50, D51 and D52.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
@@ -58,3 +58,5 @@ alias.
 
 Astra, Gemini Pro and DeepSeek Pro each proposed one public package for usvg
 and resvg, with the crates that they use in internal packages, on 2026-11-09.
+
+D52 adds the public packages under `typesetting/`, the copy of go-text.

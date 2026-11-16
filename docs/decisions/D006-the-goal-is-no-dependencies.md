@@ -1,6 +1,6 @@
 # D6. The goal is no dependencies
 
-Status: Decided.
+Status: Decided, amended by D52.
 
 The goal of okage is no dependency outside the Go standard library. The
 maintainers decide each exception, one case at a time, when it is necessary.
@@ -31,3 +31,7 @@ A program that imports only the packages of tiny-skia does not link these
 packages. Its `go.sum` still lists the modules that okage requires.
 
 This follows dbmeta hard rule 1 and transit D15.
+
+D52 amends the table: okage copies go-text into `typesetting`, so the module
+needs `golang.org/x/image` only. The copy uses its packages `webp`,
+`math/fixed` and `tiff`.

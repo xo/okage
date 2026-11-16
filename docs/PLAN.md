@@ -228,7 +228,8 @@ okage does not port these parts:
 3. The crate `c-api` of resvg, and the command line tools of usvg and resvg.
 4. Any crate that decodes an image, and any crate for text, fonts or the
    shaping of text (D7, D9). The standard library, `golang.org/x/image/webp`
-   and `github.com/go-text/typesetting` do that work (D6).
+   and `typesetting`, the copy of `github.com/go-text/typesetting` in okage,
+   do that work (D6, D52).
 
 ## Architecture
 
@@ -248,6 +249,7 @@ D5 sets the packages:
 | `lottie` | `lottie` | the port of the crate `velato`, which renders Lottie animations (D41) |
 | `tinycss2`, `cssselect2` | the name of the Python package | the CSS parser and the CSS selectors of WeasyPrint, public for ivy (D50) |
 | `webfont` | `webfont` | the conversion of WOFF, WOFF2 and EOT fonts, public for ivy (D45, D51) |
+| `typesetting/...` | the name of the package of go-text | the copy of `github.com/go-text/typesetting`: fonts, shaping, line breaking and bidi, public for ivy (D52) |
 | `test` | | the test module, with its own `go.mod`: the oracles, the comparison of the builds for WebAssembly, and the benchmarks against other libraries (D22) |
 
 The packages of tiny-skia import only the standard library. Each outside
@@ -768,10 +770,23 @@ Each of these was measured on 2026-11-09:
 
 An open question stays here until the maintainers answer it. Then it becomes
 a decision in [`decisions/`](decisions/README.md), and it is deleted from this
-list. The numbers do not repeat. The next question is question 19.
+list. The numbers do not repeat. The next question is question 20.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
 within a tolerance.
 
-No question is open.
+### Question 19: the tests of go-text that need typesetting-utils
+
+Asked on 2026-11-17, from D52. 33 of the 54 test files of the packages that
+okage copies from go-text read the fonts and the test data of the module
+`github.com/go-text/typesetting-utils`. The data is about 165 MB, and the
+module is an outside package (D6). The copy leaves these tests out, so most
+tests of `harfbuzz`, `font` and `font/opentype/tables` do not run. The
+maintainers can choose one of these answers:
+
+1. Require `typesetting-utils` in the test module, and move the tests there.
+2. Copy into okage only the fonts that the tests read, and keep the tests in
+   their packages.
+3. Leave the tests out, and compare the shaping of `typesetting` with
+   HarfBuzz in the test module, as an oracle.

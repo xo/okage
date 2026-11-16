@@ -1,0 +1,127 @@
+upstream	date	status	okage	note
+2922c6bc3ed2e5f719e6ad54f05771425a682561	2026-09-17	pending		[shaping] use BIDI level to properly compute visual ordering. It changes shaping
+a0d4802591a51a717c612532238de59dd860b844	2026-09-21	pending		[shaping] expose and document Level fields. It changes shaping
+65027726747f49e63ab76c1d7677cceac654391f	2026-09-21	pending		[opentype] expose flavor when writting a font file. It changes font/opentype
+740c56de5fe91e5778cf8715119b09be35ea9e9a	2026-09-22	pending		[bidi,shaping] better handle input containing multiple paragraphs (#275). It changes bidi, internal/unicodedata, shaping
+0e62b2a5f51dbc83b325c9cf8c1d6d7dd97bcc37	2026-09-22	pending		[shaping] use BIDI level to properly compute visual ordering. It changes shaping
+ecb1fc75cb1803b489f42f7fe7d2d7e14d3d170d	2026-09-22	pending		[shaping] expose and document Level fields. It changes shaping
+9e91f9d54cfd218c1085bca26e807588eb83a2d3	2026-09-22	pending		fix rebase. It changes shaping
+662ba5319a81c6732f28d405e73daad224e72fac	2026-09-22	not-applicable		Merge branch 'bidi-ordering' of github.com:go-text/typesetting into bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
+e8da365e472d830d11183cbe53fcee3b537292e2	2026-09-22	pending		[harfbuzz] setDigest: add a range to each sub-digest on its own (#279). It changes go.mod, harfbuzz
+35e0e433b186e301839e7bf0210b107ac0188948	2026-09-28	not-applicable		Merge pull request #276 from go-text/bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
+6f8568f76ce2fdaa82b5dab63f34c41c24ba2385	2026-09-28	not-applicable		Merge pull request #277 from go-text/write-ttf. It is a merge commit, and the commits that it merges are in this ledger
+f199d9b038974afffdb2262ad5c0f2953572de7f	2026-09-29	pending		[harfbuzz,font,segmenter] cleanup/dedupe dead code (#280). It changes font, harfbuzz, segmenter
+14b504423dce06dea0c1af42573f31bd8df7763c	2026-09-29	pending		[font/cff] fix panics on malformed fonts and two wrong-result bugs (#282). It changes font/cff
+87445a208056630ce1e40ac68f229ca01143f2dd	2026-09-29	pending		[harfbuzz] fix panics on malformed fonts and five wrong-result bugs (#283). It changes harfbuzz
+1e1f4714b956cdd7b4a9337dcb2cac6b5ba97dfb	2026-09-29	pending		[font/opentype] ParseGlyf: reject loca offsets outside the glyf table. It changes font, font/opentype
+1fe568f5cadd40d5591c42ac7e15ef20e4ebd9ce	2026-09-29	pending		[font/opentype] SimpleGlyph: reject non-increasing endPtsOfContours. It changes font/opentype
+1fcb0c1a1ef78a4eb076a5566568faa7fe6b1564	2026-09-29	pending		[font/opentype] CompositeGlyph: skip the length prefix in Instructions. It changes font/opentype
+9b75198f9bc12468c90eef64a70d32ca4c99b6a0	2026-09-29	pending		[font/opentype] COLR v0: validate base glyph layer ranges at parse time. It changes font/opentype
+c5a303fae56c9c290e8ef78263a85bd25a1ccc21	2026-09-29	pending		[font/opentype] CBLC: reject inverted ranges and out-of-range offsets. It changes font/opentype
+31064bfc75ba18efd2894d49c05672d21465f1b6	2026-09-29	pending		[font/opentype] GPOS: fix AnchorMatrix bounds and sanitize mark classes. It changes font/opentype
+a13b86552b78427752b9d70d95f59654ebea1a26	2026-09-29	pending		[font/opentype] guard unsanitized mark attachment data. It changes font, font/opentype
+6bd6edb131a550cac44c767a0c7fa3e91c860741	2026-09-29	pending		[font] sanitize resolved layout extension subtables. It changes font
+c6965dda5b60b53bb29c425ae9ff992f738fa0cf	2026-09-29	pending		[font/opentype] ItemVarStore: guard region indexes and axis count. It changes font/opentype
+0d88d2a5763655f8a578fccd4a5e6baf66bae4e9	2026-09-29	pending		[font/opentype] reader: use io.ReadFull and check the Seek error. It changes font/opentype
+fbe0dbae57434a3f90b077544fbcea1c78c510d6	2026-09-29	pending		[font/opentype] honor named instance record sizes. It changes font/opentype
+f7b0a668071a4df82f4d29cd630f4914c7609f65	2026-09-29	pending		[font/opentype] checksum partial words without modifying input. It changes font/opentype
+32bac8a7b09d5c1d51e3840456bb68887a1ee85a	2026-09-29	pending		[bidi] BD16: sort bracket pairs once, drop container/list. It changes bidi
+af1525c14f3f34aab63a22a275abdd4786bffa46	2026-09-29	pending		[bidi] W2/W7: carry the last strong type forward. It changes bidi
+578ac9d0bd504dfc7d60c729abd24d2375a838e5	2026-09-29	pending		[bidi] BD9: match isolates in a single stack pass. It changes bidi
+55732d3715988db2b58b12262e263d63f49b6acf	2026-09-29	pending		[bidi] unicodedata: default Bidi_Class of unassigned code points. It changes bidi, internal/unicodedata
+352ddeaf93ade1de1f7f51fb2664a77247e4f9bd	2026-09-29	pending		[bidi] clean up stale comments and dead code. It changes bidi
+2df4ee58894f11a4c14ac7a470d84884d3508613	2026-09-30	pending		[font] preserve unsigned horizontal and vertical advances. It changes font, font/opentype
+5dea04be2df249f965ec054a1f5cba9775a58577	2026-09-30	not-applicable		[fontscan] use the OS/2 font page when parsing succeeds, not fails. It changes only fontscan, which okage does not copy
+3e4254950e31f2be12db823957110787af3600b8	2026-09-30	not-applicable		[fontscan] read FONTCONFIG_PATH, the env var name had a stray $. It changes only fontscan, which okage does not copy
+193e11e413d3da94f70f0c49d9ad395fc0076f63	2026-09-30	not-applicable		[fontscan] UseSystemFonts: append system fonts only once per font map. It changes only fontscan, which okage does not copy
+753e5ceae7dd87c000b67535c39d46dfdf71bbe4	2026-09-30	not-applicable		[fontscan] SetScript: keep candidates when the script is unchanged. It changes only fontscan, which okage does not copy
+c81624412a695e62f6fd22cc43a90a4f275b31d3	2026-09-30	not-applicable		[fontscan] log an invalid font index cache instead of silent rescan. It changes only fontscan, which okage does not copy
+fff775676a5ef8d55388e1e8803a04b15c287aed	2026-09-30	not-applicable		[fontscan] visited comments: keyed by walk path, symlinks unresolved. It changes only fontscan, which okage does not copy
+5917dc041dd0a0a50e20192c764a75a79cee93ea	2026-09-30	pending		[font, fontscan] include legacy Arabic aliases in rune coverage. It changes font
+4fd1e2b6038b173a7f304f11af4dd1ae7679d408	2026-09-30	not-applicable		[fontscan] substitutions: noGenericFamily.test returns -1 on empty list. It changes only fontscan, which okage does not copy
+5fc0ed6f22c48b7116c3b5067a268456236336df	2026-09-30	not-applicable		[fontscan] lru: length-prefix key families and drop replaced nodes. It changes only fontscan, which okage does not copy
+a23921809ca142514320ea47c514afcdf8b86b18	2026-09-30	not-applicable		[fontscan] retain the result of system font initialization. It changes only fontscan, which okage does not copy
+20db93748d369a4f15308898645266f9ef371e10	2026-09-30	pending		[font] tests: build faces with NewFace instead of Face{}. It changes font
+c1bea1e691d153422d41a99cf1fbc52080d2ed7a	2026-09-30	pending		[font] cache advances of variable fonts without HVAR/VVAR. It changes font
+f82a8f71c14c006b652c218ad38219d2abfb633c	2026-09-30	pending		[font] gvar: only copy the original points when needed. It changes font
+55f71f97b917a16d8d71853b72e17dfb94356571	2026-09-30	pending		[font] cff: reuse the charstring interpreter machine. It changes font, font/cff
+ec4cfa89e65ff7bf477f72238653320898826100	2026-09-30	pending		[segmenter] restart emoji sequences at adjacent pictographs. It changes segmenter
+d373f8ac2945ad8105952f64dd4d3fdbf02f626d	2026-09-30	pending		[segmenter] restart numeric sequences after closing punctuation. It changes segmenter
+897f93006743c0fc1232032fbf0b14e4e3b625d1	2026-09-30	pending		[language] NewLangID: return false for the empty tag. It changes language
+1b47353e0adbaa1d78a14a66f202656126decc76	2026-09-30	pending		[font] cmap4: reject negative index, honor offsets on 0xFFFF segments. It changes font
+71b2f6d135a4636717de8ae530f3a54f2238cd8f	2026-09-30	pending		[font] cmap4: wrap iterator glyph deltas to 16 bits. It changes font
+995755fa355a7455cf204dad81b221b4a0ce8b01	2026-09-30	pending		[font] cmap0: skip glyph 0 instead of byte 0. It changes font
+45139db4a4af07d7a89919eff092cfeb8d03c26f	2026-09-30	pending		[font] cmap10: drop subtables whose start code overflows rune. It changes font
+7a608982d4b3f9da5ca310bdd56d28adb3dae7dd	2026-09-30	pending		[font] cmap: exclude glyph 0 from Lookup and RuneRanges. It changes font
+54959099dd93f17b938f39bdb8ef716b2690d4a4	2026-09-30	not-applicable		[fontscan] skip glyph 0 on the iterator path of rune coverage. It changes only fontscan, which okage does not copy
+cc144d5672dc21afc58d7a7cbdce9582c14e6054	2026-09-30	pending		[font] svg: check document offset+length without uint32 wrap. It changes font
+b17dec7aaa67a1f19df950ba19e7d62168c7e48a	2026-09-30	pending		[font] svg: report failure on a corrupt gzip glyph document. It changes font
+40afd1a92010a485af1b62060c2c5e5cef8d0829	2026-09-30	pending		[font] post: fix off by one in format 2.0 string index check. It changes font
+209b08963eed9dbe1e10f2926b02ec22c6bb74c9	2026-09-30	pending		[font] bitmaps: reject subtables with LastGlyph < FirstGlyph. It changes font
+65c26f76d4a8c2566d2fbe184eb47de34396db4c	2026-09-30	pending		[font] bitmaps: fix index format 5 image offsets and format 3 error text. It changes font
+f2b6b3735ca34113f5f3751edb9840ecbb5edd32	2026-09-30	pending		[font] bitmaps: report no image for glyphs without bitmap data. It changes font
+d674f8ed060068054edf133fd541a897597bc91b	2026-09-30	pending		[font] gvar: bounds-check point numbers at parse time. It changes font
+a45265919b9bad03e4aeb6608f67d9bb74bbca01	2026-09-30	pending		[font] gvar: reject tuples whose axis count differs from fvar. It changes font
+160e691e68c8c10fb9373a3fe8e04e62d51d610b	2026-09-30	pending		[font] drop avar tables whose axis count differs from fvar. It changes font
+693471e804e5cb5c10cb0ba0d3e01aafb9ff7cc3	2026-09-30	pending		[font] NewFont: drop COLR/CPAL on an invalid CPAL instead of failing. It changes font
+001e002b19a055da049dce2bb64946cea19618c2	2026-09-30	pending		[font] gvar: extract checkTupleAxisCount helper. It changes font
+7f66441ebcc89567f7ad6a75435484df12927514	2026-10-01	pending		[font] cache the un-compressed SVG document and its viewBox. It changes font
+cf60e2df3e7d1a429d2a6315c221dda9bd7de466	2026-10-01	pending		[bidi] preserve embedding levels at run boundaries. It changes bidi
+5052c255b2c4a7923ff7b8f2cc211ff5cc990a6f	2026-10-01	pending		[shaping] reflect visual indices when reversing an L2 sequence. It changes shaping
+c4f9c9e6e2a46d4d60da5b722cb4ef4cb9bd67d8	2026-10-01	pending		[harfbuzz] cache the Arabic fallback plan on the shaper plan. It changes harfbuzz
+09d8f6df1af089b01584b128e6173c9ae5759bde	2026-10-01	pending		[harfbuzz] build context matchers as values instead of closures. It changes harfbuzz
+11522e5820126ba7e9d2bc153017b30d3d87539a	2026-10-01	pending		[harfbuzz] stop allocating on nested lookup recursion. It changes harfbuzz
+117857489da8d2a9eb28195e890fa65b00ac154d	2026-10-01	pending		[harfbuzz] read pair positioning value records without allocating. It changes font/opentype
+64922d2b48df3ea2ebae4733781b7c0d0c00d91b	2026-10-01	pending		[harfbuzz] read base/ligature/mark2 anchors without boxing them. It changes font/opentype, harfbuzz
+ed71a39ba10fb3055ffdab4b1e1c879ce23b75d5	2026-10-06	pending		bump the minimum Go version to 1.22. It changes go.mod
+b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	pending		replace the hand-rolled min and max helpers with the builtins. It changes bidi, font, harfbuzz, shaping
+00dfa4fd057ccc5bac6bff26edf317aa7b7d74f3	2026-10-06	pending		tests: stop calling the deprecated top-level math/rand functions. It changes font/opentype
+1966ba783c7c00ba85f92e237f6233fde9066889	2026-10-06	not-applicable		[fontscan] use any and strings.CutPrefix, available since Go 1.18 and 1.20. It changes only fontscan, which okage does not copy
+2c07decd4b3d7723a4c029bcf68843226fbd3f4b	2026-10-06	pending		[shaping] drop the go1.18 build constraint on the fuzz test. It changes shaping
+54d50bbf7b872ef4b24e39ac2891f2b00f3afd69	2026-10-06	pending		[fontscan, harfbuzz] use min for two clamps. It changes harfbuzz
+e49e2bdf1e4b82a816d663c5861f830800e2ae3b	2026-10-06	not-applicable		[fontscan] say what serializeString does past the uint16 limit. It changes only fontscan, which okage does not copy
+a4cf8f401e160d9addb9de3343d9e02a1e931447	2026-10-20	not-applicable		[CI] attempt to fix CI failure. It changes only .github, which okage does not copy
+23022c6726e16ce18df80b01a1ae5f1403d38b41	2026-10-25	pending		[font/opentype] add NewLoadersFromBytes, which does not copy tables. It changes font, font/opentype
+0d9c25a314b6d345b1586e6e00a5e2406c5299d1	2026-10-25	pending		[font/opentype] drop random-input loop from NewLoadersFromBytes test. It changes font/opentype
+d87fcb8b72e2ea5cbe8f51561c97ab36725c5040	2026-10-25	pending		[font/opentype] NewLoadersFromBytes: document lifetime, reject empty table at EOF. It changes font, font/opentype
+364f0cccf707d8f63e8cc2ed7169ddaf1a0e2fb3	2026-10-25	pending		[font/opentype] replace NewLoadersFromBytes with ResourceSlicer. It changes font, font/opentype
+783ec6a75fea2cbb69e6c7a595d8fc591adf6ac4	2026-10-25	pending		[font/opentype] trust ResourceSlicer.Slice for length and capacity. It changes font/opentype
+be47f20d0c7188662cb777582edff1a145fc2ba5	2026-10-25	pending		[font/opentype] rename NewSliceResource to NewSlicedResource. It changes font, font/opentype
+b62a7ae27ed91bb5a690134bdddaae92a1fc53e9	2026-10-26	pending		(perf) update benchmark. It changes go.mod, harfbuzz
+4bc3723f1a8a1e478b1da25e99f70d3c3e576384	2026-10-26	pending		GPOS: add recursion guard. It changes harfbuzz
+c7c9aace196f657a9cf232e5e8416217dfacb39d	2026-10-26	pending		[GPOS] Apply mark-attachment cross-direction offsets immediately. It changes harfbuzz
+29578868ce4b6c2f6b20657ed9c7b4382be41da3	2026-10-26	pending		[GPOS] Attach mark to first component of MultipleSubst in MarkLigPos. It changes harfbuzz
+a4154543cbbd95694f12ba39bf15aaadda5746f6	2026-10-26	pending		[ot] Preserve pair-positioning and ligature concat hazards. It changes harfbuzz
+116817b1dfc042e3b02df30c8ef59b0c595892e7	2026-10-26	pending		[arabic-pua] Fix mapping for isolated lam alef maksura ligature. It changes font, harfbuzz
+a2c0a64fb31522646bdb556a37158e733453b14b	2026-10-26	pending		[aat] Fix insertion at end of text. It changes harfbuzz
+62eeae029b85febee7c7942ad6a4a65dcf01a339	2026-10-26	pending		[aat] Mark in-place deleted glyph replacements Contextual and non-contextual AAT subtables replace glyphs in place. When such a replacement produced the AAT deleted glyph, we changed only the glyph ID and did not set the AAT-deleted metadata that later cleanup uses to remove deleted glyphs from the buffer.. It changes harfbuzz
+23bac226327ffccee183c3f36d3dee3c1e245aba	2026-10-26	pending		[aat] remove redundant comparison. It changes harfbuzz
+7cbf7b371e7f87aba42c156e6b04977b629f1ebf	2026-10-26	pending		[buffer] Charge move_to moves against max_ops (#6191) move_to()'s two memmoves - the forward copy into out_info and the rewind copy-back - were not charged against max_ops, while shift_forward() already charges its moved tail. A morx insertion subtable that keeps its mark far behind the insertion point can force an O(distance) rewind plus re-copy per insertion action, for O(N^2) total work that the max_ops budget never sees.. It changes harfbuzz
+d64a4a9aaa144bca82b375d2da2b11d28c70bb13	2026-10-26	pending		[kern] Avoid rescanning skipped glyphs (#6143) When the skipping iterator fails to find another kernable glyph, resume at the position it reports instead of retrying from the next glyph. This prevents a suffix of ignored marks from being scanned repeatedly while preserving later feature ranges.. It changes harfbuzz
+0cfeb92225777ac687e41112117ebce97038da40	2026-10-26	pending		[gsubgpos] micro optimize. It changes harfbuzz
+6df6185faaf0f06cac9313106ff07c9a294214e5	2026-10-26	pending		[GPOS] Count decomposed pieces as one ligature component. It changes harfbuzz
+56a2aae7fcf4056a8bff6f13f569142787b6be73	2026-10-26	pending		[shape] Limit syllable length (#6120) Unbounded syllables can make the USE and Myanmar reordering passes perform quadratic work. Process syllables in configurable chunks of at most 64 glyphs to bound the work performed by each reordering pass.. It changes harfbuzz
+d6549ec3f91740bd8d302868ca682b228c796428	2026-10-26	pending		OT: Fuse mask initialization into Unicode properties. It changes harfbuzz
+615a9883cd01d46644961d42352713e789af3d28	2026-10-26	pending		Monotone characters fixups (#5752). It changes harfbuzz
+211ded821b1d021af8697ef71ce3052136d4392d	2026-10-26	pending		[ot-shape] Skip the post-morx digest update if not applying GPOS (#6192). It changes harfbuzz
+5df28a99aa761e61aeec93a235a09e29fd379ff4	2026-10-26	pending		micro optimize. It changes harfbuzz
+47ed8cabab5d40e310d3788e28f264fd6d81608d	2026-10-26	pending		[arabic] Cap stch expansion per run (#5823). It changes harfbuzz
+725e00e81bf158a020b642eddb213664049ca5a6	2026-10-26	pending		[hangul] Apply 'calt' feature to non-Hangul characters in Hangul runs. It changes harfbuzz
+6ce328cb99286cb59c96db894e3124d03a456e82	2026-10-26	pending		[avar] Fix logic bug. It changes font/opentype
+2acb79986adad559987029a29ff8c34e7e0a9597	2026-10-26	pending		[unicode] Treat U+180F FVS4 as Default_Ignorable (#6229) U+180F MONGOLIAN FREE VARIATION SELECTOR FOUR was added in Unicode 14.0 and has Default_Ignorable_Code_Point=Yes, but is_default_ignorable() only covered U+180B..180E, so FVS4 was never hidden and leaked a .notdef into the output.. It changes harfbuzz
+5d47eb7cc1b97cbc246b09fc9d89af855f6e9683	2026-10-26	pending		[all] update to Unicode 18. It changes harfbuzz, internal/unicodedata, language, segmenter
+82a95b9904006bab813514edec26d97d9b16d153	2026-10-26	pending		[aat] fix out of bounds. It changes harfbuzz
+9356ea6071439837fd7588ca4aca04ed2eaa5013	2026-10-26	pending		[indic] Categorize U+1CF5 and U+1CF6 as CS (#5949). It changes harfbuzz
+a5737ca9c7ca0e90925052435d37289cc46303ea	2026-10-26	pending		fixes from tests. It changes harfbuzz
+66ccb03e7273f6a23487a34789cbfbc9e40f50df	2026-10-26	pending		[test] support (but ignore) single-par flag. It changes harfbuzz
+d47893403e12f29a4096fdcac9428e5e1ebd3cd7	2026-10-26	pending		[unicodedata] update test expectations to follow Unicode 18. It changes internal/unicodedata
+2ec09380504768bf1109faa5851bbc99186932e9	2026-10-26	pending		[segmenter] update rule LB12a. It changes segmenter
+04e0c82349f79ef143f6eabfbe0c6851b2211858	2026-10-26	pending		[segmenter/graphemes] update to follow Unicode 18 changes. It changes segmenter
+a599cf6eb7fe40cdda8e0d20ecafe21608c49bc3	2026-10-26	pending		[shaping] adjust a test now that Harfbuzz applies 'calt' feature (see 80ec6d612e9c4136a41df73d76a254e57948424a). It changes shaping
+b848cc9dcdac977e891a251613fc565a455f8474	2026-10-26	pending		[deps] use latest test utils version. It changes go.mod
+0f86ffd263930162ba1d5a62afc72e8747d4d008	2026-10-26	pending		[harfbuzz] fix staticcheck warning. It changes harfbuzz
+45369a0f7e1185c19ad9270d90f3985617e4741f	2026-10-26	pending		[harfbuzz] add upstream version. It changes harfbuzz
+d1c97ede1763503adac4cd65c0571cebaee6f405	2026-11-10	pending		[segmenter] document that iterators only read the Segmenter, add Len. It changes segmenter
+8bc6b0d9bcaef650ea14e9a7cca7cc3938fb2a88	2026-11-10	pending		[shaping] add LineWrapper.PrepareSegmented to reuse break attributes. It changes shaping
+8de3a3a332ed1ddbe4d723891f26ec13b4c17c4a	2026-11-10	pending		[shaping] compute the break attributes once in WrapParagraph. It changes shaping
+bafa8730d77efd18e85158ce6b565a8fbda321cc	2026-11-10	pending		wrap-segmented: update to address review comments. It changes segmenter, shaping

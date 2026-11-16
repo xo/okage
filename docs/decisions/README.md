@@ -24,15 +24,15 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50 and D51 |
-| D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided |
-| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45 and D48 |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50, D51 and D52 |
+| D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided, amended by D52 |
+| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45, D48 and D52 |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided, amended by D47 and D50 |
-| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36 and D45 |
+| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36, D45 and D52 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
 | D11 | [The upstream checkouts are in `upstream/`, and git ignores them](D011-the-upstream-checkouts-are-in-upstream-and-git-ignores-them.md) | Decided |
-| D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided |
-| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49 and D50 |
+| D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided, amended by D52 |
+| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49, D50 and D52 |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
 | D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34 |
@@ -71,3 +71,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D49 | [`html` parses HTML documents, as a port of tinyhtml5](D049-html-parses-html-documents-as-a-port-of-tinyhtml5.md) | Decided, amends D5, D13 and D38 |
 | D50 | [tinycss2 and cssselect2 are public ports](D050-tinycss2-and-cssselect2-are-public-ports.md) | Decided, amends D5, D8 and D13 |
 | D51 | [webfont is a public package](D051-webfont-is-a-public-package.md) | Decided, amends D5 and D45 |
+| D52 | [typesetting is a public copy of go-text](D052-typesetting-is-a-public-copy-of-go-text.md) | Decided, amends D5, D6, D7, D9, D12 and D13 |
