@@ -1,19 +1,22 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38, D41, D47 and D48.
+Status: Decided, amended by D38, D41, D47, D48, D49, D50 and D51.
 
 | Path | Package | What it holds |
 | --- | --- | --- |
 | `github.com/xo/okage` | `okage` | the port of the crate `tiny-skia`, with the edges, the scan converters, the shaders and the raster pipeline, and the sentinel errors of every package (D21) |
 | `path` | `path` | the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg` | `svg` | the port of the crates `usvg` and `resvg`, as one package |
-| `html` | `html` | the parser and the layout of the HTML-like labels of Graphviz, which port no upstream (D38) |
+| `html` | `html` | the parser and the layout of the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5 (D49) |
 | `lottie` | `lottie` | the port of the crate `velato`, which renders Lottie animations (D41) |
 | `internal/wide` | `wide` | the vector types of `src/wide` of tiny-skia (D15) |
 | `internal/svgtypes` | `svgtypes` | the parsers of SVG values: lengths, colors, path data, transforms, filter functions and the font shorthand |
 | `roxmltree` | `roxmltree` | the XML tree, with entities and namespaces (D8) |
 | `internal/simplecss` | `simplecss` | the CSS parser and selectors (D8) |
 | `kurbo` | `kurbo` | the subset of kurbo that usvg uses (D7) |
+| `tinycss2` | `tinycss2` | the port of tinycss2, the CSS parser of WeasyPrint, public for ivy (D50) |
+| `cssselect2` | `cssselect2` | the port of cssselect2, the CSS selectors of WeasyPrint, public for ivy (D50) |
+| `webfont` | `webfont` | the conversion of WOFF, WOFF2 and EOT fonts to TrueType or OpenType data, public for ivy (D45, D51) |
 | `internal/xmlwriter` | `xmlwriter` | the XML writer that the writer of usvg uses |
 | `test` | | the test module, with its own `go.mod` (D22) |
 

@@ -3,8 +3,11 @@ tiny-skia	https://github.com/linebender/tiny-skia	upstream/tiny-skia	tiny-skia 0
 strict-num	https://github.com/RazrFalcon/strict-num	upstream/strict-num	strict-num 0.1.1	path	port	edf5020c215063c3a9eb8fcac463c82eaceba6df	76d36febdb73e875ae3e0c6ae1310a084a7860c7
 resvg	https://github.com/linebender/resvg	upstream/resvg	usvg 0.49.0, resvg 0.49.0	svg	port	66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba	5bdbae64eefadc4bf0caa56dcf91702037929086
 svgtypes	https://github.com/linebender/svgtypes	upstream/svgtypes	svgtypes 0.16.2	internal/svgtypes	port	fa62387aea54d7af49ad65b47bca8d731136dd56	90a7f12f898dc69cabe98f6c2fd105ae52747919
-roxmltree	https://github.com/RazrFalcon/roxmltree	upstream/roxmltree	roxmltree 0.21.1	internal/roxmltree	port	67644e16f43c34cadc9e163163dd1aaf7ebe205e	
+roxmltree	https://github.com/RazrFalcon/roxmltree	upstream/roxmltree	roxmltree 0.21.1	roxmltree	port	67644e16f43c34cadc9e163163dd1aaf7ebe205e	
 simplecss	https://github.com/linebender/simplecss	upstream/simplecss	simplecss 0.2.2	internal/simplecss	port	6eacb39ca5c4c2390bfde374ed0651f0e35c9d8d	
-kurbo	https://github.com/linebender/kurbo	upstream/kurbo	kurbo 0.13.1	internal/kurbo	subset	838b69ef35f3381cefc007d86aa8364f5a6dc673	
+kurbo	https://github.com/linebender/kurbo	upstream/kurbo	kurbo 0.13.1	kurbo	subset	838b69ef35f3381cefc007d86aa8364f5a6dc673	
 xmlwriter	https://github.com/RazrFalcon/xmlwriter	upstream/xmlwriter	xmlwriter 0.1.0	internal/xmlwriter	port	5fdcff47da7d71896b55a1bc0e4b561171e232d6	
 velato	https://github.com/linebender/velato	upstream/velato	velato 0.12.0	lottie	port	83336b6519ac7289beea53fcc2ec1e9603f25124	83336b6519ac7289beea53fcc2ec1e9603f25124
+tinyhtml5	https://github.com/CourtBouillon/tinyhtml5	upstream/tinyhtml5	tinyhtml5 2.1.0	html	port	2a933f5b7baaf1592aa2b3779c798575db82511f	2a933f5b7baaf1592aa2b3779c798575db82511f
+tinycss2	https://github.com/Kozea/tinycss2	upstream/tinycss2	tinycss2 1.5.1	tinycss2	port	2cab2705158e2b9131e0e8537b8c62b4fb5619f5	2cab2705158e2b9131e0e8537b8c62b4fb5619f5
+cssselect2	https://github.com/Kozea/cssselect2	upstream/cssselect2	cssselect2 0.10.1	cssselect2	port	fc22accd5fdba764d95263fa8e6c97ce24f75f3e	fc22accd5fdba764d95263fa8e6c97ce24f75f3e

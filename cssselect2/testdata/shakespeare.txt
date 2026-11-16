@@ -1,0 +1,48 @@
+"*"	246
+"div:only-child"	22
+"div:nth-child(even)"	106
+"div:nth-child(2n)"	106
+"div:nth-child(odd)"	137
+"div:nth-child(2n+1)"	137
+"div:nth-child(n)"	243
+"div:last-child"	53
+"div:first-child"	51
+"div > div"	242
+"div + div"	190
+"div ~ div"	190
+"body"	1
+"body div"	243
+"div"	243
+"div div"	242
+"div div div"	241
+"div, div, div"	243
+"div, a, span"	243
+".dialog"	51
+"div.dialog"	51
+"div .dialog"	51
+"div.character, div.dialog"	99
+"div.direction.dialog"	0
+"div.dialog.direction"	0
+"div.dialog.scene"	1
+"div.scene.scene"	1
+"div.scene .scene"	0
+"div.direction .dialog "	0
+"div .dialog .direction"	4
+"div.dialog .dialog .direction"	4
+"#speech5"	1
+"div#speech5"	1
+"div #speech5"	1
+"div.scene div.dialog"	49
+"div#scene1 div.dialog div"	142
+"#scene1 #speech1"	1
+"div[class]"	103
+"div[class=dialog]"	50
+"div[class^=dia]"	51
+"div[class$=log]"	50
+"div[class*=sce]"	1
+"div[class|=dialog]"	50
+"div[class~=dialog]"	51
+":lang(en)"	0
+":lang(fr)"	0
+"div:has(> div.dialog)"	3
+":nth-last-of-type(3)"	21

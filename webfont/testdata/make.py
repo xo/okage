@@ -1,4 +1,4 @@
-# make.py writes the test fonts of internal/webfont from the fonts of
+# make.py writes the test fonts of the package webfont from the fonts of
 # svg/testdata/fonts. Run it from this folder with fontTools, brotli and
 # woff2_compress of google/woff2:
 #
@@ -11,7 +11,7 @@ from fontTools import subset
 from fontTools.ttLib import TTCollection, TTFont
 from fontTools.ttLib.woff2 import WOFF2FlavorData
 
-FONTS = "../../../svg/testdata/fonts/"
+FONTS = "../../svg/testdata/fonts/"
 TEXT = "Hamburgefonstiv 0123 éÅï"
 
 

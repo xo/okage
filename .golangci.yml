@@ -154,6 +154,12 @@ linters:
       - path: test/oracle/
         linters:
           - tagliatelle
+      # The HTML parser of D49 matches the names of the tags, attributes and
+      # encodings of the standards in switches, as upstream does, and each
+      # name is its own constant.
+      - path: html/
+        linters:
+          - goconst
       # The lowp and highp stages of upstream have the same shapes on
       # purpose, and the port keeps both (D10).
       - path: pipeline_(lowp|highp)\.go

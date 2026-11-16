@@ -39,6 +39,10 @@
    `svg`.
 3. [velato][velato] renders Lottie animations. okage ports it into the package
    `lottie`, which draws with okage (D41).
+4. [tinyhtml5][tinyhtml5], [tinycss2][tinycss2] and [cssselect2][cssselect2]
+   parse HTML, parse CSS and match CSS selectors in Python, for WeasyPrint.
+   okage ports them into the packages `html`, `tinycss2` and `cssselect2`
+   (D49, D50).
 
 Today [`xo/resvg`][xoresvg] wraps resvg through cgo and a static archive for
 each platform. A program that imports okage needs the Go toolchain and nothing
@@ -148,6 +152,14 @@ okage differs from upstream only where a decision says so:
    opacity and the blend mode of layers, masks and stroke dashes (D43).
    `Renderer.MergePaths` draws merge paths by compositing, which velato and
    ThorVG do not, and it is off by default (D42).
+10. `html` builds a tree with a node for each run of text, where tinyhtml5
+    builds an ElementTree of Python. It goes on where upstream raises an
+    error, and options bound the depth, the nodes and the issues of a parse
+    (D49).
+11. `tinycss2` nests at most 256 blocks and `cssselect2` at most 32
+    selectors, where upstream has no limit. Where upstream raises an
+    exception for a selector or a color, the port returns a `SelectorError`
+    or no color (D50).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -184,6 +196,8 @@ okage also adds APIs that upstream does not have:
    as TrueType and OpenType data. `svg.ConvertFontData` converts such a font
    to TrueType or OpenType data. `FontDatabase.FaceName` returns a string of
    the name table of a face, such as the version or the sample text (D45).
+   The package `webfont` gives the same conversion to a program that does not
+   use `svg` (D51).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
@@ -195,7 +209,11 @@ The root package and `path` are under the BSD-3-Clause license of tiny-skia.
 See [LICENSE](LICENSE), which keeps the copyright lines of upstream. The
 package `svg` and the packages that it uses take the MIT license of resvg and
 of its crates, in a `LICENSE` file in each folder (D13). The package `html`
-ports no upstream, and the license in [LICENSE](LICENSE) covers it (D38).
+takes the MIT license of tinyhtml5, in [html/LICENSE](html/LICENSE). That
+license also covers the parser of the labels of Graphviz (D49). The packages
+`tinycss2` and `cssselect2` keep the BSD-3-Clause licenses of their upstreams,
+in [tinycss2/LICENSE](tinycss2/LICENSE) and
+[cssselect2/LICENSE](cssselect2/LICENSE) (D50).
 The brotli decoder in `internal/brotli` is a copy of the one of
 `github.com/dsnet/compress`, and keeps its BSD-3-Clause license, in
 [internal/brotli/LICENSE](internal/brotli/LICENSE) (D45). The
@@ -220,6 +238,9 @@ under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.
 [skia]: https://skia.org
 [resvg]: https://github.com/linebender/resvg
 [velato]: https://github.com/linebender/velato
+[tinyhtml5]: https://github.com/CourtBouillon/tinyhtml5
+[tinycss2]: https://github.com/Kozea/tinycss2
+[cssselect2]: https://github.com/Kozea/cssselect2
 [xoresvg]: https://github.com/xo/resvg
 [tinygo]: https://tinygo.org
 [typesetting]: https://github.com/go-text/typesetting

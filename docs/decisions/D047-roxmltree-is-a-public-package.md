@@ -18,7 +18,7 @@ so the parser must be public.
    `okage.ErrXMLUnknownToken` (D21).
 4. It still builds with TinyGo (D25).
 5. The function `fromXMLTree` of `svg` stays unexported. It was unexported
-   because a user could not make a document of roxmltree. Its export is open
+   because a user was not able to make a document of roxmltree. Its export is open
    work in [`docs/BACKLOG.md`](../BACKLOG.md).
 
 A change to the API of the package is now a change to a public API, so it

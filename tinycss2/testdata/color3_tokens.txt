@@ -1,0 +1,149 @@
+""	null
+"red"	"rgba(1 0 0 1)"
+"RED"	"rgba(1 0 0 1)"
+"Red"	"rgba(1 0 0 1)"
+"transparent"	"rgba(0 0 0 0)"
+"currentcolor"	"currentColor"
+"currentColor"	"currentColor"
+"CURRENTCOLOR"	"currentColor"
+"rebeccapurple"	null
+"grey"	"rgba(0.501961 0.501961 0.501961 1)"
+"aliceblue"	"rgba(0.941177 0.972549 1 1)"
+"notacolor"	null
+"#"	null
+"#0"	null
+"#00"	null
+"#000"	"rgba(0 0 0 1)"
+"#0000"	"rgba(0 0 0 0)"
+"#00000"	null
+"#000000"	"rgba(0 0 0 1)"
+"#0000000"	null
+"#00000000"	"rgba(0 0 0 0)"
+"#abc"	"rgba(0.666667 0.733333 0.8 1)"
+"#ABCD"	"rgba(0.666667 0.733333 0.8 0.866667)"
+"#abcdef"	"rgba(0.670588 0.803922 0.937255 1)"
+"#ABCDEF12"	"rgba(0.670588 0.803922 0.937255 0.070588)"
+"#ggg"	null
+"#12345g"	null
+"#abc\\A"	"rgba(0.666667 0.733333 0.8 1)"
+"#abcdef\\A"	"rgba(0.670588 0.803922 0.937255 1)"
+"rgb()"	null
+"rgb(1,2,3)"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgb(1, 2, 3)"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgb(1 2 3)"	null
+"rgb(1,2,3,4)"	null
+"rgb(1,2,3,0.5)"	null
+"rgba(1,2,3)"	null
+"rgba(1,2,3,0.5)"	"rgba(0.003922 0.007843 0.011765 0.5)"
+"rgba(1,2,3,50%)"	null
+"rgb(1 2 3 / 0.5)"	null
+"rgb(1 2 3 / 50%)"	null
+"rgb(1.5, 2, 3)"	null
+"rgb(1%, 2%, 3%)"	"rgba(0.01 0.02 0.03 1)"
+"rgb(1%, 2, 3)"	null
+"rgb(-10%, 120%, 0%)"	"rgba(-0.1 1.2 0 1)"
+"rgb(300, -5, 0)"	"rgba(1.176471 -0.019608 0 1)"
+"rgb(none 2 3)"	null
+"rgb(none none none)"	null
+"rgb(1,2)"	null
+"rgb(1,2,3,4,5)"	null
+"rgb(1 2 3 4)"	null
+"rgb(1 2 3 / none)"	null
+"rgba(1, 2, 3, 2)"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgba(1, 2, 3, -1)"	"rgba(0.003922 0.007843 0.011765 0)"
+"RGB(1,2,3)"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgb(1,/**/2,3)"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgb( 1 , 2 , 3 )"	"rgba(0.003922 0.007843 0.011765 1)"
+"rgb(1,2,3,)"	null
+"hsl(0, 100%, 50%)"	"rgba(1 0 0 1)"
+"hsl(120, 100%, 50%)"	"rgba(0 1 0 1)"
+"hsl(240 100% 50%)"	null
+"hsl(120deg 100% 50%)"	null
+"hsl(0.5turn 100% 50%)"	null
+"hsl(1rad 50% 50%)"	null
+"hsl(200grad 50% 50%)"	null
+"hsl(-120 50% 50%)"	null
+"hsl(480 50% 50%)"	null
+"hsl(none 50% 50%)"	null
+"hsl(0 none 50%)"	null
+"hsl(0 50 50)"	null
+"hsla(0, 100%, 50%, 0.5)"	"rgba(1 0 0 0.5)"
+"hsla(0, 100%, 50%)"	null
+"hsl(0, 100%, 50%, 50%)"	null
+"hsl(0 100% 50% / 0.25)"	null
+"hsl(0, 0%, 50%)"	"rgba(0.5 0.5 0.5 1)"
+"hsl(30DEG 50% 50%)"	null
+"hsl(0 50% 50% / 1 / 2)"	null
+"hsl(1e3 50% 50%)"	null
+"hsl(0.1 33.3% 66.7%)"	null
+"hwb(0 0% 0%)"	null
+"hwb(120 30% 50%)"	null
+"hwb(0 60% 60%)"	null
+"hwb(0 50 50)"	null
+"hwb(0, 0%, 0%)"	null
+"hwb(none 20% 30%)"	null
+"hwb(90deg 10% 10% / 0.5)"	null
+"lab(50% 40 59.5)"	null
+"lab(50 40 59.5)"	null
+"lab(50% 40% 59.5%)"	null
+"lab(none 40 59.5)"	null
+"lab(50, 40, 59.5)"	null
+"lab(50 40 59.5 / 0.5)"	null
+"lch(50% 30 120)"	null
+"lch(50 30% 120deg)"	null
+"lch(50 30 none)"	null
+"lch(50, 30, 120)"	null
+"lch(50 30 0.5turn / 25%)"	null
+"oklab(50% 0.1 -0.1)"	null
+"oklab(0.5 10% -10%)"	null
+"oklab(none 0.1 0.1)"	null
+"oklch(50% 0.1 120)"	null
+"oklch(0.5 25% 3rad)"	null
+"oklch(0.5 0.1 none / 0.5)"	null
+"oklch(0.5, 0.1, 1)"	null
+"color(srgb 1 0 0)"	null
+"color(srgb 100% 0% 0%)"	null
+"color(srgb-linear 1 0 0)"	null
+"color(display-p3 1 0 0)"	null
+"color(a98-rgb 1 0 0)"	null
+"color(prophoto-rgb 1 0 0)"	null
+"color(rec2020 1 0 0)"	null
+"color(xyz 1 0 0)"	null
+"color(xyz-d50 0.5 0.5 0.5)"	null
+"color(xyz-d65 0.5 0.5 0.5 / 0.5)"	null
+"color(XYZ 1 0 0)"	null
+"color(srgb none 0 0)"	null
+"color(unknown 1 0 0)"	null
+"color()"	null
+"color(srgb)"	null
+"color(srgb 1 0)"	null
+"color(srgb, 1, 0, 0)"	null
+"color(--custom 1 2 3)"	null
+"color(--custom 1 2 3 4 5)"	null
+"color(--custom 10% none 3 / 0.5)"	null
+"color(--custom 1 2 3 / none)"	null
+"color(-custom 1 2 3)"	null
+"device-cmyk(0 0 0 1)"	null
+"device-cmyk(0, 0, 0, 1)"	null
+"device-cmyk(0% 50% 100% 0%)"	null
+"device-cmyk(2 -1 0 0)"	null
+"device-cmyk(0 0 0 1 / 0.5)"	null
+"device-cmyk(0 0 0)"	null
+"device-cmyk(0%, 0%, 0%, 0%)"	null
+"device-cmyk(0 0 0 1 / 2 3)"	null
+"light-dark(red, blue)"	null
+"light-dark(red blue)"	null
+"light-dark(red)"	null
+"light-dark(red, blue, green)"	null
+"light-dark(currentcolor, blue)"	null
+"light-dark(light-dark(red, blue), green)"	null
+"light-dark(nope, blue)"	null
+"foo(1, 2, 3)"	null
+"1"	null
+"1px"	null
+"\"red\""	null
+"red blue"	null
+"/**/red"	"rgba(1 0 0 1)"
+"rgb(1 2 3/0.5)"	null
+"rgb(1 2 3 /0.5)"	null
+"hsl(0 50% 50%/.5)"	null

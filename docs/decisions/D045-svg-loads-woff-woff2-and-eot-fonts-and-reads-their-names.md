@@ -1,6 +1,6 @@
 # D45. `svg` loads WOFF, WOFF2 and EOT fonts, and reads their names
 
-Status: Decided, amends D7, D9 and D13.
+Status: Decided, amends D7, D9 and D13, amended by D51.
 
 The image viewer iv shows a preview of a font file. It used a package on
 tdewolff/canvas for that, which adds 6.9 MB to its release build. iv can draw
@@ -47,9 +47,9 @@ okage, not in iv, because other programs, such as zuzu, can use it too.
    - Its errors wrap `okage.ErrFontData`.
 7. `internal/brotli` keeps the BSD-3-Clause license of
    `github.com/dsnet/compress`, in a `LICENSE` file in its folder (D13).
-8. `internal/webfont` holds the conversion of WOFF, WOFF2 and EOT. It ports
-   no upstream. It follows the WOFF 1.0 and WOFF2 recommendations of the W3C
-   and the EOT submission to the W3C.
+8. `internal/webfont`, now `webfont` (D51), holds the conversion of WOFF,
+   WOFF2 and EOT. It ports no upstream. It follows the WOFF 1.0 and WOFF2
+   recommendations of the W3C and the EOT submission to the W3C.
 
 ## What stays in iv
 
@@ -65,7 +65,7 @@ fault, compare the fix with the fix of okage.
 
 If fontdb or go-text adds a reader of WOFF2 or EOT, follow these steps:
 
-1. Compare its result with the result of `internal/webfont` on the fonts of
+1. Compare its result with the result of `webfont` (D51) on the fonts of
    the tests.
 2. If both give the same faces, a maintainer decides whether okage keeps its
    own code or uses the other one. Record the result here or in a new

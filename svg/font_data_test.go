@@ -11,8 +11,8 @@ import (
 	"github.com/xo/okage/path"
 )
 
-// webfontTestdata is the folder of the test fonts of internal/webfont.
-var webfontTestdata = filepath.Join("..", "internal", "webfont", "testdata")
+// webfontTestdata is the folder of the test fonts of the package webfont.
+var webfontTestdata = filepath.Join("..", "webfont", "testdata")
 
 // TestLoadFontDataWebFonts loads the same font as TrueType, WOFF, WOFF2 and
 // EOT, and checks that each one gives the same face and the same outlines.

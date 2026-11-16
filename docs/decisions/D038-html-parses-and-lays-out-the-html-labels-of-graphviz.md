@@ -1,6 +1,6 @@
 # D38. `html` parses and lays out the HTML labels of Graphviz
 
-Status: Decided, amends D5.
+Status: Decided, amends D5, amended by D49.
 
 zuzu draws graphs in the DOT language of Graphviz. The schema graphs that
 dbtpl and usql write use HTML-like labels, `label=<...>`, with tables and

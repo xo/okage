@@ -23,7 +23,7 @@ import (
 	"github.com/go-text/typesetting/font/opentype"
 	"github.com/go-text/typesetting/font/opentype/tables"
 
-	"github.com/xo/okage/internal/webfont"
+	"github.com/xo/okage/webfont"
 )
 
 // This file ports no file of usvg. usvg finds its fonts with the crate fontdb

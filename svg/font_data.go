@@ -1,7 +1,7 @@
 package svg
 
 import (
-	"github.com/xo/okage/internal/webfont"
+	"github.com/xo/okage/webfont"
 )
 
 // This file ports no upstream file. It holds the APIs of D45 for fonts in a

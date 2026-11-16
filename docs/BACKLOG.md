@@ -33,7 +33,7 @@ not done:
 
 ## Fonts in a web format
 
-From D45. `internal/webfont` does not read an EOT file that uses MicroType
+From D45. `webfont` (D51) does not read an EOT file that uses MicroType
 Express compression, and returns `okage.ErrFontUnsupported` for it. Such files
 are rare. They come from old versions of Internet Explorer.
 
@@ -104,5 +104,5 @@ differences stay:
 ## The API of roxmltree
 
 D47 makes `roxmltree` a public package. `svg` ported `Tree::from_xmltree` of
-usvg as the unexported function `fromXMLTree`, because a user could not make a
-document of roxmltree. Decide whether `svg` exports it now. Source: D47.
+usvg as the unexported function `fromXMLTree`, because a user was not able to
+make a document of roxmltree. Decide whether `svg` exports it now. Source: D47.

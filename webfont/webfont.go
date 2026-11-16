@@ -1,7 +1,8 @@
 // Package webfont converts a font in WOFF, WOFF2 or EOT into an sfnt file,
-// the format of a TrueType or OpenType font file (D45). It ports no upstream.
-// It follows the WOFF 1.0 and WOFF2 recommendations of the W3C and the EOT
-// submission to the W3C.
+// the format of a TrueType or OpenType font file (D45). It is public, so that
+// ivy and other programs can read fonts in a web format (D51). It ports no
+// upstream. It follows the WOFF 1.0 and WOFF2 recommendations of the W3C and
+// the EOT submission to the W3C.
 package webfont
 
 import (

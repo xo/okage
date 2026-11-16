@@ -16,7 +16,7 @@ from (D12). It has these columns, separated by a tab:
 | `repository` | the short name, which is also the name of its ledger and of its checkout |
 | `url` | the URL to clone |
 | `checkout` | the folder of the checkout (D11) |
-| `crates` | the crates that okage ports from it, with their versions |
+| `crates` | the crates or the Python packages that okage ports from it, with their versions |
 | `okage` | the okage package of each crate |
 | `policy` | `port` or `subset` (D7) |
 | `base` | the full hash of the base commit |
@@ -24,7 +24,11 @@ from (D12). It has these columns, separated by a tab:
 
 On 2026-11-09 it lists tiny-skia, strict-num, resvg, svgtypes, roxmltree,
 simplecss, kurbo and xmlwriter. okage ports no crate for images, text or
-fonts, so those crates are not in the list (D7, D9).
+fonts, so those crates are not in the list (D7, D9). velato came on
+2026-11-12 (D41). tinyhtml5, tinycss2 and cssselect2 came on 2026-11-16 (D49,
+D50). These three are Python packages, not crates. For each one, the base
+commit is the commit that okage ports, and the column `matched` holds the
+same commit.
 
 ## The checkouts
 
@@ -144,6 +148,51 @@ For `kurbo`, the policy is `subset` (D7). A Rust file that holds a type or a
 function of the subset is Port, and the rest of `src/` is Not applicable.
 `kurbo/SUBSET.md` lists the types and functions of the subset, from
 phase 6 on.
+
+### tinyhtml5
+
+The port is in the package `html` (D49).
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `tinyhtml5/<module>.py` | `html/tinyhtml5_<module>.go`, such as `html/tinyhtml5_tokenizer.go` | Port |
+| `tinyhtml5/__init__.py` | `ParseDocument` in `html/document.go`, which takes the place of `parse` | Review |
+| `tests/test_<name>.py` | `html/tinyhtml5_<name>_test.go`, and `html/tinyhtml5_test.go` for the helpers of `tests/__init__.py` | Port |
+| `tests/<folder>/**` | `html/testdata/tinyhtml5/<folder>/**`, copied byte for byte | Port |
+| `LICENSE`, `pyproject.toml`, `docs/changelog.rst` | none | Review. A new dependency can change what okage ports |
+| everything else | none | Not applicable |
+
+A change to the table of `webencodings` or of the codecs of Python changes
+`html/document_encoding.go`. A change to `html.entities.html5` of Python
+changes `html/tinyhtml5_entities.go` (D49).
+
+### tinycss2
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `tinycss2/<name>.py` | `tinycss2/<name>.go` | Port |
+| `tinycss2/__init__.py` | `tinycss2/doc.go` | Port |
+| `tests/**` | `tinycss2/tinycss2_test.go` and `tinycss2/testdata/**` | Port |
+| `LICENSE`, `pyproject.toml` | none | Review |
+| everything else | none | Not applicable |
+
+The test files of `tests/css-parsing-tests` are a git submodule. The results
+in `tinycss2/testdata/` come from `tinycss2/testdata/make.py`, which runs
+tinycss2 (D50). If a commit changes `tests/**`, run the script again.
+
+### cssselect2
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `cssselect2/<name>.py` | `cssselect2/<name>.go` | Port |
+| `cssselect2/__init__.py` | `cssselect2/matcher.go` and `cssselect2/doc.go` | Port |
+| `tests/**` | `cssselect2/cssselect2_test.go` and `cssselect2/testdata/**` | Port |
+| `LICENSE`, `pyproject.toml` | none | Review |
+| everything else | none | Not applicable |
+
+The results in `cssselect2/testdata/` come from
+`cssselect2/testdata/make.py`, which runs cssselect2 (D50). If a commit
+changes `tests/**`, run the script again.
 
 ### File names
 
@@ -333,7 +382,8 @@ Upstream: <owner>/<repository>@<full hash>
 
 `<area>` is the okage package that the commit changes most, such as `path`,
 `raster`, `pipeline`, `shaders`, `wide`, `svg`, `svgtypes`, `roxmltree`,
-`simplecss`, `kurbo`, `xmlwriter`, `test` or `bench`. The `Upstream:` line is
+`simplecss`, `kurbo`, `xmlwriter`, `html`, `tinycss2`, `cssselect2`, `test`
+or `bench`. The `Upstream:` line is
 the last line before the trailers that the agent adds, such as
 `Upstream: linebender/resvg@66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba`. A tool
 can read the ledgers again from these lines.
@@ -367,7 +417,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-12 nine ledgers exist:
+On 2026-11-16 twelve ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -397,6 +447,11 @@ On 2026-11-12 nine ledgers exist:
 5. `velato.tsv` holds no commit yet. The base commit of velato is
    `83336b65`, the head of main on 2026-11-12, and the column `matched` is
    the same commit (D41).
+6. `tinyhtml5.tsv`, `tinycss2.tsv` and `cssselect2.tsv` hold no commit yet.
+   The base commit of each one is the head of its main branch on
+   2026-11-16: `2a933f5b` for tinyhtml5 (D49), `2cab2705` for tinycss2 and
+   `fc22accd` for cssselect2 (D50). The column `matched` of each one is the
+   same commit.
 
 ## A difference from upstream
 

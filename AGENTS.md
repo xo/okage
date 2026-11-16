@@ -5,8 +5,11 @@ of [resvg][resvg], which renders SVG files with tiny-skia (D1). The crate
 `tiny-skia` goes into the root package, `tiny-skia-path` into the package
 `path`, and the crates `usvg` and `resvg` into the one package `svg`. The
 crates that usvg uses go into packages under `internal/` (D5), except
-`roxmltree` and `kurbo`, which are public for ivy (D47, D48). A program that imports okage needs
-the Go toolchain and nothing else.
+`roxmltree` and `kurbo`, which are public for ivy (D47, D48). The packages
+`tinycss2` and `cssselect2` port the CSS parser and the CSS selectors of
+WeasyPrint, and `webfont` converts fonts in WOFF, WOFF2 and EOT. They are
+public for ivy too (D50, D51). A program that imports okage needs the Go
+toolchain and nothing else.
 
 okage uses SIMD where Go can, and its scalar code is the fallback (D14). Go
 1.27 has SIMD only behind `GOEXPERIMENT=simd`, so okage has a scalar
@@ -21,8 +24,9 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D46. The package `html` parses and lays out the HTML-like labels of
-Graphviz, with `dot` as its oracle (D38). The package `lottie` is the port of
+to D51. The package `html` parses and lays out the HTML-like labels of
+Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
+a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
 D42, D43), and it loads Lottie files and dotLottie archives for a program
 (D44). `svg` also loads fonts in WOFF, WOFF2 and EOT (D45). The open
@@ -61,8 +65,11 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | adding an outside package | D6 |
 | working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45 and D46 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
+| working on the parser of HTML documents in `html` | D49, then D38 |
+| working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 |
+| working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
-| working on the XML parser or the CSS parser, or asked to use another package for them | D8 |
+| working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
 | adding a dependency to the test module, or a comparison with another library | D22 |
@@ -203,8 +210,8 @@ files:
 | `docs/okage.svg` | the logo of okage, which `README.md` shows. The tests of `svg` and of the test module render it |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
-| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). `tiny-skia.tsv` and `resvg.tsv` exist |
-| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). `upstream/tiny-skia/` and `upstream/resvg/` exist |
+| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv` and `cssselect2.tsv` |
+| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/` and `upstream/cssselect2/` (D49, D50) |
 
 When code exists, the code goes here:
 
@@ -213,7 +220,7 @@ When code exists, the code goes here:
 | `*.go` in the root | the package `okage`, the port of the crate `tiny-skia`, with the sentinel errors of every package. A file of a folder of `src` starts with the name of the folder, such as `scan_path_aa.go` |
 | `path/` | the package `path`, the port of the crates `tiny-skia-path` and `strict-num` |
 | `svg/` | the package `svg`, the port of the crates `usvg` and `resvg`. A file starts with the name of its crate, such as `usvg_parser_svgtree.go` |
-| `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz. It ports no upstream (D38) |
+| `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5. A file of the port starts with `tinyhtml5_` and the name of its Python module, such as `tinyhtml5_tokenizer.go` (D49) |
 | `lottie/` | the package `lottie`, the port of the crate `velato`. A file starts with the name of its folder in `src`, such as `runtime_evaluate.go` (D41) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
@@ -221,9 +228,14 @@ When code exists, the code goes here:
 | `roxmltree/` | the package `roxmltree`, the port of the crate roxmltree. It is public, so that ivy reads XML with it (D47) |
 | `kurbo/` | the package `kurbo`, the port of a subset of the crate kurbo. It is public, so that ivy draws PDF with it (D48) |
 | `internal/brotli/` | the brotli decoder of `github.com/dsnet/compress`, copied, for WOFF2 (D45) |
-| `internal/webfont/` | the conversion of WOFF, WOFF2 and EOT to TrueType or OpenType data (D45) |
+| `webfont/` | the package `webfont`, the conversion of WOFF, WOFF2 and EOT to TrueType or OpenType data. It is public, so that ivy loads the fonts of `@font-face` with it (D45, D51) |
+| `tinycss2/` | the package `tinycss2`, the port of tinycss2. It is public, so that ivy reads CSS with it (D50) |
+| `cssselect2/` | the package `cssselect2`, the port of cssselect2. It is public, so that ivy matches CSS selectors with it (D50) |
 | `testdata/images/` | the reference images of tiny-skia, byte for byte |
 | `svg/testdata/` | the tests, the resources and the fonts of resvg, byte for byte |
+| `html/testdata/tinyhtml5/` | the tests of tinyhtml5, from html5lib-tests, byte for byte (D49) |
+| `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
+| `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
 | `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22) |
 
 ## Before you stage
@@ -250,7 +262,7 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./kurbo ./internal/...
+tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./internal/...
 golangci-lint run ./...
 (cd test && go vet ./... && go test -count=1 ./... && golangci-lint run ./...)
 (cd test && GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=10000)

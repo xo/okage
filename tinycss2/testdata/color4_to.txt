@@ -1,0 +1,149 @@
+""	null
+"red"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"RED"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"Red"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"transparent"	["color(srgb 0 0 0 / 0)", null, null, null, null]
+"currentcolor"	null
+"currentColor"	null
+"CURRENTCOLOR"	null
+"rebeccapurple"	["color(srgb 0.4 0.2 0.6 / 1)", null, null, null, null]
+"grey"	["color(srgb 0.501961 0.501961 0.501961 / 1)", null, null, null, null]
+"aliceblue"	["color(srgb 0.941177 0.972549 1 / 1)", null, null, null, null]
+"notacolor"	null
+"#"	null
+"#0"	null
+"#00"	null
+"#000"	["color(srgb 0 0 0 / 1)", null, null, null, null]
+"#0000"	["color(srgb 0 0 0 / 0)", null, null, null, null]
+"#00000"	null
+"#000000"	["color(srgb 0 0 0 / 1)", null, null, null, null]
+"#0000000"	null
+"#00000000"	["color(srgb 0 0 0 / 0)", null, null, null, null]
+"#abc"	["color(srgb 0.666667 0.733333 0.8 / 1)", null, null, null, null]
+"#ABCD"	["color(srgb 0.666667 0.733333 0.8 / 0.866667)", null, null, null, null]
+"#abcdef"	["color(srgb 0.670588 0.803922 0.937255 / 1)", null, null, null, null]
+"#ABCDEF12"	["color(srgb 0.670588 0.803922 0.937255 / 0.070588)", null, null, null, null]
+"#ggg"	null
+"#12345g"	null
+"#abc\\A"	["color(srgb 0.666667 0.733333 0.8 / 1)", null, null, null, null]
+"#abcdef\\A"	["color(srgb 0.670588 0.803922 0.937255 / 1)", null, null, null, null]
+"rgb()"	null
+"rgb(1,2,3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1, 2, 3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1 2 3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1,2,3,4)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1,2,3,0.5)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgba(1,2,3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgba(1,2,3,0.5)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgba(1,2,3,50%)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgb(1 2 3 / 0.5)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgb(1 2 3 / 50%)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgb(1.5, 2, 3)"	["color(srgb 0.005882 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1%, 2%, 3%)"	["color(srgb 0.01 0.02 0.03 / 1)", null, null, null, null]
+"rgb(1%, 2, 3)"	null
+"rgb(-10%, 120%, 0%)"	["color(srgb -0.1 1.2 0 / 1)", null, null, null, null]
+"rgb(300, -5, 0)"	["color(srgb 1.176471 -0.019608 0 / 1)", null, null, null, null]
+"rgb(none 2 3)"	["color(srgb 0 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(none none none)"	["color(srgb 0 0 0 / 1)", null, null, null, null]
+"rgb(1,2)"	null
+"rgb(1,2,3,4,5)"	null
+"rgb(1 2 3 4)"	null
+"rgb(1 2 3 / none)"	null
+"rgba(1, 2, 3, 2)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgba(1, 2, 3, -1)"	["color(srgb 0.003922 0.007843 0.011765 / 0)", null, null, null, null]
+"RGB(1,2,3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1,/**/2,3)"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb( 1 , 2 , 3 )"	["color(srgb 0.003922 0.007843 0.011765 / 1)", null, null, null, null]
+"rgb(1,2,3,)"	null
+"hsl(0, 100%, 50%)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"hsl(120, 100%, 50%)"	["color(srgb 0 1 0 / 1)", null, null, null, null]
+"hsl(240 100% 50%)"	["color(srgb 0 0 1 / 1)", null, null, null, null]
+"hsl(120deg 100% 50%)"	["color(srgb 0 1 0 / 1)", null, null, null, null]
+"hsl(0.5turn 100% 50%)"	["color(srgb 0 1 1 / 1)", null, null, null, null]
+"hsl(1rad 50% 50%)"	["color(srgb 0.75 0.727465 0.25 / 1)", null, null, null, null]
+"hsl(200grad 50% 50%)"	["color(srgb 0.25 0.75 0.75 / 1)", null, null, null, null]
+"hsl(-120 50% 50%)"	["color(srgb 0.25 0.25 0.75 / 1)", null, null, null, null]
+"hsl(480 50% 50%)"	["color(srgb 0.25 0.75 0.25 / 1)", null, null, null, null]
+"hsl(none 50% 50%)"	["color(srgb 0.75 0.25 0.25 / 1)", null, null, null, null]
+"hsl(0 none 50%)"	["color(srgb 0.5 0.5 0.5 / 1)", null, null, null, null]
+"hsl(0 50 50)"	["color(srgb 0.75 0.25 0.25 / 1)", null, null, null, null]
+"hsla(0, 100%, 50%, 0.5)"	["color(srgb 1 0 0 / 0.5)", null, null, null, null]
+"hsla(0, 100%, 50%)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"hsl(0, 100%, 50%, 50%)"	["color(srgb 1 0 0 / 0.5)", null, null, null, null]
+"hsl(0 100% 50% / 0.25)"	["color(srgb 1 0 0 / 0.25)", null, null, null, null]
+"hsl(0, 0%, 50%)"	["color(srgb 0.5 0.5 0.5 / 1)", null, null, null, null]
+"hsl(30DEG 50% 50%)"	null
+"hsl(0 50% 50% / 1 / 2)"	null
+"hsl(1e3 50% 50%)"	["color(srgb 0.583333 0.25 0.75 / 1)", null, null, null, null]
+"hsl(0.1 33.3% 66.7%)"	["color(srgb 0.777889 0.556481 0.556111 / 1)", null, null, null, null]
+"hwb(0 0% 0%)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"hwb(120 30% 50%)"	["color(srgb 0.3 0.5 0.3 / 1)", null, null, null, null]
+"hwb(0 60% 60%)"	["color(srgb 0.5 0.5 0.5 / 1)", null, null, null, null]
+"hwb(0 50 50)"	["color(srgb 0.5 0.5 0.5 / 1)", null, null, null, null]
+"hwb(0, 0%, 0%)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"hwb(none 20% 30%)"	["color(srgb 0.7 0.2 0.2 / 1)", null, null, null, null]
+"hwb(90deg 10% 10% / 0.5)"	["color(srgb 0.5 0.9 0.1 / 0.5)", null, null, null, null]
+"lab(50% 40 59.5)"	[null, null, "color(xyz-d50 0.263557 0.184187 0.016507 / 1)", null, "color(lab 50 40 59.5 / 1)"]
+"lab(50 40 59.5)"	[null, null, "color(xyz-d50 0.263557 0.184187 0.016507 / 1)", null, "color(lab 50 40 59.5 / 1)"]
+"lab(50% 40% 59.5%)"	[null, null, "color(xyz-d50 0.288683 0.184187 0.006269 / 1)", null, "color(lab 50 50 74.375 / 1)"]
+"lab(none 40 59.5)"	[null, null, "color(xyz-d50 0.009981 0 -0.031523 / 1)", null, "color(lab 0 40 59.5 / 1)"]
+"lab(50, 40, 59.5)"	null
+"lab(50 40 59.5 / 0.5)"	[null, null, "color(xyz-d50 0.263557 0.184187 0.016507 / 0.5)", null, "color(lab 50 40 59.5 / 0.5)"]
+"lch(50% 30 120)"	[null, null, "color(xyz-d50 0.150971 0.184187 0.069837 / 1)", null, "color(lab 50 -15 25.980762 / 1)"]
+"lch(50 30% 120deg)"	[null, null, "color(xyz-d50 0.138713 0.184187 0.043202 / 1)", null, "color(lab 50 -22.5 38.971143 / 1)"]
+"lch(50 30 none)"	[null, null, "color(xyz-d50 0.239934 0.184187 0.151973 / 1)", null, "color(lab 50 30 0 / 1)"]
+"lch(50, 30, 120)"	null
+"lch(50 30 0.5turn / 25%)"	[null, null, "color(xyz-d50 0.127138 0.184187 0.151973 / 0.25)", null, "color(lab 50 -30 0 / 0.25)"]
+"oklab(50% 0.1 -0.1)"	[null, "color(xyz-d65 0.169711 0.112837 0.316577 / 1)", null, "color(xyz-d65 0.169711 0.112837 0.316577 / 1)", "color(lab 40.054205 39.94159 -35.841703 / 1)"]
+"oklab(0.5 10% -10%)"	[null, "color(xyz-d65 0.137398 0.120548 0.199142 / 1)", null, "color(xyz-d65 0.137398 0.120548 0.199142 / 1)", "color(lab 41.302996 15.417708 -14.720384 / 1)"]
+"oklab(none 0.1 0.1)"	[null, "color(xyz-d65 -0.000457 0.000174 -0.004195 / 1)", null, "color(xyz-d65 -0.000457 0.000174 -0.004195 / 1)", "color(lab 0.157303 -2.549882 6.270013 / 1)"]
+"oklch(50% 0.1 120)"	[null, "color(xyz-d65 0.099735 0.129448 0.033962 / 1)", null, "color(xyz-d65 0.099735 0.129448 0.033962 / 1)", "color(lab 42.679911 -17.095772 38.220365 / 1)"]
+"oklch(0.5 25% 3rad)"	[null, "color(xyz-d65 0.081845 0.134637 0.124042 / 1)", null, "color(xyz-d65 0.081845 0.134637 0.124042 / 1)", "color(lab 43.453827 -35.470756 5.559354 / 1)"]
+"oklch(0.5 0.1 none / 0.5)"	[null, "color(xyz-d65 0.160713 0.115547 0.126484 / 0.5)", null, "color(xyz-d65 0.160713 0.115547 0.126484 / 0.5)", "color(lab 40.499445 32.955615 -0.166453 / 0.5)"]
+"oklch(0.5, 0.1, 1)"	null
+"color(srgb 1 0 0)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"color(srgb 100% 0% 0%)"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"color(srgb-linear 1 0 0)"	[null, null, null, null, null]
+"color(display-p3 1 0 0)"	[null, null, null, null, null]
+"color(a98-rgb 1 0 0)"	[null, null, null, null, null]
+"color(prophoto-rgb 1 0 0)"	[null, null, null, null, null]
+"color(rec2020 1 0 0)"	[null, null, null, null, null]
+"color(xyz 1 0 0)"	[null, "color(xyz-d65 1 0 0 / 1)", null, "color(xyz-d65 1 0 0 / 1)", "color(lab 0 439.575526 0 / 1)"]
+"color(xyz-d50 0.5 0.5 0.5)"	[null, null, "color(xyz-d50 0.5 0.5 0.5 / 1)", null, "color(lab 76.069261 4.838731 -10.505342 / 1)"]
+"color(xyz-d65 0.5 0.5 0.5 / 0.5)"	[null, "color(xyz-d65 0.5 0.5 0.5 / 0.5)", null, "color(xyz-d65 0.5 0.5 0.5 / 0.5)", "color(lab 76.069261 6.779031 4.450609 / 0.5)"]
+"color(XYZ 1 0 0)"	[null, "color(xyz-d65 1 0 0 / 1)", null, "color(xyz-d65 1 0 0 / 1)", "color(lab 0 439.575526 0 / 1)"]
+"color(srgb none 0 0)"	["color(srgb 0 0 0 / 1)", null, null, null, null]
+"color(unknown 1 0 0)"	null
+"color()"	["exception", "ValueError"]
+"color(srgb)"	null
+"color(srgb 1 0)"	null
+"color(srgb, 1, 0, 0)"	null
+"color(--custom 1 2 3)"	null
+"color(--custom 1 2 3 4 5)"	null
+"color(--custom 10% none 3 / 0.5)"	null
+"color(--custom 1 2 3 / none)"	null
+"color(-custom 1 2 3)"	null
+"device-cmyk(0 0 0 1)"	null
+"device-cmyk(0, 0, 0, 1)"	null
+"device-cmyk(0% 50% 100% 0%)"	null
+"device-cmyk(2 -1 0 0)"	null
+"device-cmyk(0 0 0 1 / 0.5)"	null
+"device-cmyk(0 0 0)"	null
+"device-cmyk(0%, 0%, 0%, 0%)"	null
+"device-cmyk(0 0 0 1 / 2 3)"	null
+"light-dark(red, blue)"	null
+"light-dark(red blue)"	null
+"light-dark(red)"	null
+"light-dark(red, blue, green)"	null
+"light-dark(currentcolor, blue)"	null
+"light-dark(light-dark(red, blue), green)"	null
+"light-dark(nope, blue)"	null
+"foo(1, 2, 3)"	null
+"1"	null
+"1px"	null
+"\"red\""	null
+"red blue"	null
+"/**/red"	["color(srgb 1 0 0 / 1)", null, null, null, null]
+"rgb(1 2 3/0.5)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"rgb(1 2 3 /0.5)"	["color(srgb 0.003922 0.007843 0.011765 / 0.5)", null, null, null, null]
+"hsl(0 50% 50%/.5)"	["color(srgb 0.75 0.25 0.25 / 0.5)", null, null, null, null]

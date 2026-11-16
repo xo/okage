@@ -1,4 +1,4 @@
-# Test fonts of `internal/webfont`
+# Test fonts of `webfont`
 
 `make.py` writes these fonts from the fonts of `svg/testdata/fonts`. Run it in
 this folder with fontTools, the Python package brotli and `woff2_compress` of

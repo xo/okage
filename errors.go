@@ -432,15 +432,23 @@ const (
 	ErrLottieDotLottie Error = "reading dotlottie"
 )
 
-// The sentinel errors of the conversion of fonts in a web format (D45).
+// The sentinel errors of the conversion of fonts in a web format (D45, D51).
 const (
-	// ErrFontData is the error of svg.ConvertFontData for a font in WOFF,
-	// WOFF2 or EOT whose data is malformed. The conversion wraps a more
-	// precise error with this one.
+	// ErrFontData is the error of webfont.Convert and svg.ConvertFontData
+	// for a font in WOFF, WOFF2 or EOT whose data is malformed. The
+	// conversion wraps a more precise error with this one.
 	ErrFontData Error = "converting font data"
 
-	// ErrFontUnsupported is the error of svg.ConvertFontData for data that is
-	// not a font of a known format, and for an EOT file that uses MicroType
-	// Express compression.
+	// ErrFontUnsupported is the error of webfont.Convert and
+	// svg.ConvertFontData for data that is not a font of a known format, and
+	// for an EOT file that uses MicroType Express compression.
 	ErrFontUnsupported Error = "converting font data: unsupported format"
+)
+
+// The sentinel errors of cssselect2 (D50).
+const (
+	// ErrCSSSelector is SelectorError of cssselect2, for a selector that is
+	// invalid or that cssselect2 does not support. cssselect2 returns a
+	// *cssselect2.SelectorError that wraps it, with the message of upstream.
+	ErrCSSSelector Error = "parsing css selector"
 )

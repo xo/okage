@@ -68,8 +68,21 @@ closes the speed target of D18:
 okage now follows its upstreams when a maintainer asks.
 
 On 2026-11-11 the package `html` parses and lays out the HTML-like labels of
-Graphviz for zuzu (D38). It ports no upstream. The test module compares its
-layout with `dot` of Graphviz 16.1.0.
+Graphviz for zuzu (D38). That part ports no upstream. The test module compares
+its layout with `dot` of Graphviz 16.1.0.
+
+ivy lays out ebooks and web pages with a port of WeasyPrint. On 2026-11-16
+okage has these parts for it:
+
+1. `html` also parses HTML documents, as a port of tinyhtml5 2.1.0 (D49).
+2. `tinycss2` and `cssselect2` port tinycss2 1.5.1 and cssselect2 0.10.1, the
+   CSS parser and the CSS selectors of WeasyPrint (D50).
+3. `webfont`, the conversion of WOFF, WOFF2 and EOT fonts of D45, is now a
+   public package (D51).
+
+The tests of each package pass, and each package builds with TinyGo (D25).
+D49 counts the tests of tinyhtml5 that the port passes. D50 says how the
+tests of tinycss2 and cssselect2 are made.
 
 These documents hold the rules and the references that come from this plan:
 
@@ -231,6 +244,10 @@ D5 sets the packages:
 | `internal/wide` | `wide` | the vector types of `src/wide` (D15) |
 | `internal/svgtypes`, `internal/simplecss`, `internal/xmlwriter` | the name of the crate | the crates that `svg` uses (D7, D8) |
 | `roxmltree`, `kurbo` | the name of the crate | the XML parser and the geometry, public for ivy (D47, D48) |
+| `html` | `html` | the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5 (D49) |
+| `lottie` | `lottie` | the port of the crate `velato`, which renders Lottie animations (D41) |
+| `tinycss2`, `cssselect2` | the name of the Python package | the CSS parser and the CSS selectors of WeasyPrint, public for ivy (D50) |
+| `webfont` | `webfont` | the conversion of WOFF, WOFF2 and EOT fonts, public for ivy (D45, D51) |
 | `test` | | the test module, with its own `go.mod`: the oracles, the comparison of the builds for WebAssembly, and the benchmarks against other libraries (D22) |
 
 The packages of tiny-skia import only the standard library. Each outside

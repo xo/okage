@@ -17,6 +17,7 @@
 *.woff2 binary
 *.eot binary
 *.bin binary
-testdata/** -text
-svg/testdata/** -text
-internal/*/testdata/** -text
+# A pattern with a slash matches from the root only, so the leading **/
+# keeps the bytes of the test data of every package at any depth, such as
+# the files with NUL bytes and Latin-1 text of html/testdata/tinyhtml5.
+**/testdata/** -text
