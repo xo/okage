@@ -220,8 +220,10 @@ func (pr *Loader) findTableBuffer(s tableSection, dst []byte) ([]byte, error) {
 
 		// okage: the uncompressed length is not limited by the size of the
 		// resource. If dst is too small, the copy grows a buffer as the
-		// data comes, instead of making a buffer of zLength (D61).
-		if cap(dst) < int(s.zLength) {
+		// data comes, instead of making a buffer of zLength (D61). The
+		// comparison is in uint64, because an int of 32 bits makes a
+		// length of almost 4 GB negative.
+		if uint64(cap(dst)) < uint64(s.zLength) {
 			return readZTable(r, s.zLength)
 		}
 		dst = dst[0:s.zLength]
@@ -229,7 +231,7 @@ func (pr *Loader) findTableBuffer(s tableSection, dst []byte) ([]byte, error) {
 			return nil, err
 		}
 	} else {
-		if cap(dst) < int(s.length) {
+		if uint64(cap(dst)) < uint64(s.length) {
 			dst = make([]byte, s.length)
 		}
 		dst = dst[0:s.length]
