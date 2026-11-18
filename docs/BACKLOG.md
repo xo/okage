@@ -141,3 +141,11 @@ From D62.
    maintainers accept this within the tolerance of D65. To give the
    instances of subsetter, `typesetting` must compute the deltas in fixed
    point, as skrifa does. Source: phase 13, unit 4.
+3. `path.Path.Stroke` does not end for some paths with a point that is NaN.
+   `PathBuilder` takes such a point, and the bounds of the path leave it
+   out. For example, the stroke of width 2 of a path that moves to NaN,
+   1e38, draws lines to 1, -1.7e38 and -3e38, -2e37, and closes, does not
+   end. tiny-skia has the same fault. `pdf` checks each point before it
+   strokes a path, and returns `ErrPDFInvalidPath` (D66). A program that
+   renders such a path with okage still waits forever. Source: phase 14,
+   the merge of units 5 and 6.

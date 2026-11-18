@@ -27,12 +27,16 @@
 //
 // # The state of the port
 //
-// Phase 14 of "The PDF writer" in docs/PLAN.md ports the document, the
-// pages and the serializer, then the surface and the graphics. These files
-// are ported: geom.rs, num.rs, util.rs, error.rs, data.rs, lib.rs,
-// stream.rs, resource.rs, chunk_container.rs, serialize.rs, document.rs,
-// page.rs and configure/. The surface, the graphics, the images, the text,
-// the metadata, the outline and the links come in later units.
+// Phase 14 of "The PDF writer" in docs/PLAN.md is done. It ports the
+// document, the pages, the serializer, the surface and the graphics without
+// the images. These files are ported: geom.rs, num.rs, util.rs, error.rs,
+// data.rs, lib.rs, stream.rs, resource.rs, chunk_container.rs,
+// serialize.rs, document.rs, page.rs, configure/, content.rs, surface.rs and
+// graphics/ without graphics/image/ and graphics/separation.rs. Each file
+// of graphics/ is a file graphics_<name>.go, and the ICC profiles of krilla
+// are in the folder icc. The images, the text, the metadata, the outline and
+// the links come in later phases. content.go and surface.go name the parts
+// of the text and the images that phases 15 and 16 add to them.
 //
 // The file lib.rs of upstream holds the documentation of the crate, which is
 // this comment. The file data.rs holds the type Data, a shared slice of
@@ -57,17 +61,32 @@
 //     surface that is open, with the function in Page.finishSurface.
 //  3. A panic of krilla that a caller can cause becomes an error that wraps
 //     a sentinel error of the root package, such as ErrPDFInvalidBox (D21,
-//     D62).
+//     D62). A call of a surface records its error in the serializeContext,
+//     and Document.Finish returns the first one. These are the errors of a
+//     surface:
+//     - ErrPDFPushPop for a pop without a push, or a push without a pop.
+//     - ErrPDFInvalidClipPath for a clip path that a transform makes too
+//     large.
+//     - ErrPDFInvalidStroke for a stroke whose width is negative or NaN.
+//     - ErrPDFInvalidPath for a path to stroke whose coordinates, with the
+//     width of the stroke, have a magnitude above 2^60, when krilla
+//     computes the bbox of the stroke. The stroker of krilla can panic
+//     there (D66).
+//     - ErrPDFMixedColorSpaces for a gradient whose stops have colors with
+//     different numbers of components, such as RGB and CMYK (D66).
+//     - ErrPDFInvalidGradient for a gradient with no stop, or with a
+//     transform that cannot be inverted where krilla needs its inverse.
 //  4. The cache of the serializer keys each object with a hash. sipHash
 //     hashes a name of the type, then the value, as sip_hash of upstream
 //     hashes a type_id, then the value. stableHash128 gives the hash of
 //     upstream, byte for byte, for the values that go into the file, such as
 //     the ID of the document.
 //
-// # How a later unit adds its files
+// # How a later phase adds its files
 //
-// Units 5 and 6 of phase 14 port content.rs, surface.rs and graphics/.
-// They add their files without a change to the files above, by these rules:
+// Phases 15 and 16 port the images, the text, the metadata, the outline and
+// the links. They add their files by these rules, which units 5 and 6 of
+// phase 14 followed for the surface and the graphics:
 //
 //  1. A type that krilla writes once for each value, such as a graphics
 //     state, a shading or a pattern, satisfies cacheable: the methods typeID,
@@ -86,47 +105,22 @@
 //     the streams. It makes the bytes of a stream with a filterStreamBuilder,
 //     such as newFilterStreamFromContentStream, and writes the filters with
 //     filterStream.writeFilters.
-//  3. A method of a type of these files that needs a type of a later file
-//     goes in the later file, because a Go method can be in any file of its
-//     package. The port of surface.rs adds these methods:
-//     Page.Surface, StreamBuilder.Surface, StreamBuilder.SurfaceWithBBox and
-//     Surface.StreamBuilder. The port of graphics/color.rs adds
+//  3. A method of a type of an earlier file that needs a type of a later
+//     file goes in the later file, because a Go method can be in any file of
+//     its package. For example, surface.go holds Page.Surface,
+//     StreamBuilder.Surface, StreamBuilder.SurfaceWithBBox and
+//     Surface.StreamBuilder. graphics_color.go holds
 //     serializeContext.registerColorSpace and the type
-//     maybeDeviceColorSpace of serialize.rs. The port of graphics/icc.rs adds
+//     maybeDeviceColorSpace of serialize.rs. graphics_icc.go holds
 //     PDFVersion.rgbICC and PDFVersion.greyICC of configure/version.rs. A
 //     unit that needs another method of Validators adds it to validators, in
 //     its own file, with the answer of an empty set of validators.
 //  4. A surface gives its stream to the code that made it with a function,
 //     as the finish_fn of upstream. The number of marked content IDs of
 //     upstream is for the tags, so the function takes the stream only.
-//  5. The field cmyk_profile of SerializeSettings needs the type ICCProfile
-//     of graphics/icc.rs. Its port adds the field cmykProfile to
-//     serializeSettings and the option WithCMYKProfile in serialize.go. This
-//     is the one change to a file above.
 //
-// This is the method Surface of Page for surface.go, with the names that
-// content.go and surface.go give to the code of upstream:
-//
-//	// Surface is Page::surface in krilla src/page.rs.
-//	//
-//	// Get the surface of the page to draw on. Calling this multiple times
-//	// on the same page will reset any previous drawings.
-//	func (p *Page) Surface() *Surface {
-//		if p.finishSurface != nil {
-//			p.finishSurface()
-//		}
-//		rootBuilder := newContentBuilder(p.rootTransform(), false, p.sc)
-//		s := newSurface(p.sc, p.cc, rootBuilder, path.IdentityTransform(), func(stream *Stream) {
-//			p.pageStream = stream
-//			p.finishSurface = nil
-//		})
-//		p.finishSurface = s.Finish
-//		return s
-//	}
-//
-// The surface of a StreamBuilder sets b.stream in the same way. The images
-// of graphics/image add their chunks to cc.streams.images, with the error
-// of a decode. The text, the metadata, the outline and the links add their
+// The images of graphics/image add their chunks to cc.streams.images, with
+// the error of a decode. The text, the metadata, the outline and the links add their
 // fields to chunkContainer and globalObjects, and their steps to
 // serializeContext.finish and chunkContainer.finish, where the comments of
 // those functions name them. The annotations of interactive/annotation.rs

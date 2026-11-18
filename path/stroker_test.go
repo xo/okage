@@ -211,3 +211,23 @@ func TestCubicStrokerOneOff(t *testing.T) {
 		t.Errorf("Stroke is not ok, want ok")
 	}
 }
+
+// TestQuadMaxCurvatureNaN is not in tiny-skia. The products of
+// find_quad_max_curvature overflow to NaN for this curve, and tiny-skia
+// panics there. okage strokes the curve as a line (D66).
+func TestQuadMaxCurvatureNaN(t *testing.T) {
+	quad := [3]Point{PointFromXY(2e37, -2e37), PointFromXY(-1, 1e20), PointFromXY(1, 1e38)}
+	if got := findQuadMaxCurvature(&quad); got != NormalizedF32Zero {
+		t.Errorf("findQuadMaxCurvature = %v, want 0", got)
+	}
+	pb := NewPathBuilder()
+	pb.MoveTo(quad[0].X, quad[0].Y)
+	pb.QuadTo(quad[1].X, quad[1].Y, quad[2].X, quad[2].Y)
+	path, ok := pb.Finish()
+	if !ok {
+		t.Fatalf("Finish is not ok")
+	}
+	stroke := DefaultStroke()
+	stroke.Width = 2
+	NewPathStroker().Stroke(path, &stroke, 1.0)
+}

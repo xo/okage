@@ -259,7 +259,10 @@ func findQuadMaxCurvature(src *[3]Point) NormalizedF32 {
 	t := numer / denom
 	n, ok := NewNormalizedF32(t)
 	if !ok {
-		panic("path: find_quad_max_curvature: NormalizedF32::new returned None")
+		// okage: tiny-skia unwraps None here and panics. Only a NaN gets
+		// here, when the products above overflow for coordinates near the
+		// largest float32. The curve then counts as a line (D66).
+		return NormalizedF32Zero
 	}
 	return n
 }

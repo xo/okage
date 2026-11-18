@@ -81,7 +81,8 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |
 | D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
 | D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |
-| D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32 |
+| D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32, amended by D66 |
 | D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52 |
 | D64 | [Radial gradients with the extend rule of PDF](D064-radial-gradients-with-the-extend-rule-of-pdf.md) | Decided |
 | D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided |
+| D66 | [`pdf` returns errors for large strokes and mixed stops](D066-pdf-returns-errors-for-large-strokes-and-mixed-stops.md) | Decided, amends D62 |

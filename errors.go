@@ -528,4 +528,35 @@ const (
 	// ErrPDFFinished is the error of a second call of Document.Finish.
 	// krilla consumes the document when it finishes it.
 	ErrPDFFinished Error = "writing pdf: the document is already finished"
+
+	// ErrPDFPushPop is the error of Document.Finish for a surface whose
+	// pushes and pops do not match: a pop without a push, or a push without
+	// a pop when the surface finishes. krilla panics in this case.
+	ErrPDFPushPop Error = "writing pdf: the pushes and the pops of a surface do not match"
+
+	// ErrPDFInvalidClipPath is the error of Document.Finish for a clip path
+	// that becomes invalid in the coordinates of PDF, such as a path with a
+	// coordinate near the largest float32 under a transform that scales it
+	// up. krilla panics in this case.
+	ErrPDFInvalidClipPath Error = "writing pdf: a clip path is not valid in the coordinates of the page"
+
+	// ErrPDFInvalidStroke is the error of Document.Finish for a stroke whose
+	// width is negative or NaN. krilla panics in this case.
+	ErrPDFInvalidStroke Error = "writing pdf: the width of a stroke is not valid"
+
+	// ErrPDFInvalidPath is the error of Document.Finish for a path to stroke
+	// with a point that is NaN, or with a coordinate whose magnitude, with
+	// the width of the stroke, is above 2^60. When krilla computes the bbox
+	// of the stroke, its stroker can panic for such a path, or not end (D66).
+	ErrPDFInvalidPath Error = "writing pdf: a path to stroke has coordinates that are not valid"
+
+	// ErrPDFMixedColorSpaces is the error of Document.Finish for a gradient
+	// whose stops have colors in color spaces with different numbers of
+	// components, such as RGB and CMYK. krilla panics in this case (D66).
+	ErrPDFMixedColorSpaces Error = "writing pdf: the stops of a gradient are in different color spaces"
+
+	// ErrPDFInvalidGradient is the error of Document.Finish for a gradient
+	// with no stop, or with a transform that cannot be inverted where the
+	// gradient needs the inverse. krilla panics in these cases.
+	ErrPDFInvalidGradient Error = "writing pdf: a gradient is not valid"
 )

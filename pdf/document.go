@@ -114,6 +114,9 @@ func (d *Document) Finish(w io.Writer) error {
 		d.StartPage(DefaultPageSettings()).Finish()
 	}
 	d.finished = true
+	if d.sc.err != nil {
+		return d.sc.err
+	}
 
 	pdf, err := d.sc.finish(d.cc)
 	if err != nil {

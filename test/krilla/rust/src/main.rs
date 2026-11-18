@@ -4,7 +4,7 @@
 //! answer for each: four bytes with the length of the answer, little-endian,
 //! then the answer. The first byte of an answer is 0 for a result and 1 for
 //! an error. The rest of an error is its message in UTF-8. A panic of a crate
-//! is an error with the message of the panic. There are four kinds of
+//! is an error with the message of the panic. There are five kinds of
 //! question, which `test/krilla/doc.go` documents:
 //!
 //! 1. "subset": the subset of a font by subsetter, with the tag that krilla
@@ -14,6 +14,8 @@
 //! 3. "svg": the PDF file that krilla-svg writes for an SVG file.
 //! 4. "krilla": the PDF file that krilla writes for a scene of calls of its
 //!    surface. The module `scene` answers both 3 and 4.
+//! 5. "point_ts": the rotation of get_point_ts in krilla, which calls atan2,
+//!    sin and cos of the C library. The function `point_ts` answers it.
 //!
 //! The Go tests write each number of a float32 as the shortest decimal of a
 //! float64 that gives back the float32, as the oracle of test/oracle says.
@@ -34,6 +36,7 @@ enum Question {
     PdfWriter(writer::Question),
     Svg(scene::SvgQuestion),
     Krilla(scene::Scene),
+    PointTs(Vec<[f32; 4]>),
 }
 
 fn main() {
@@ -80,5 +83,24 @@ fn answer(q: &Question) -> Result<Vec<u8>, String> {
         Question::PdfWriter(q) => writer::answer(q),
         Question::Svg(q) => scene::answer_svg(q),
         Question::Krilla(q) => scene::answer_scene(q),
+        Question::PointTs(q) => Ok(point_ts(q)),
     }
+}
+
+/// Answers the question "point_ts". For each line from x1, y1 to x2, y2, it
+/// computes the rotation of get_point_ts in
+/// krilla/src/graphics/shading_function.rs, and writes its six numbers sx,
+/// ky, kx, sy, tx and ty as f32, little-endian.
+fn point_ts(lines: &[[f32; 4]]) -> Vec<u8> {
+    let mut data = Vec::with_capacity(lines.len() * 24);
+    for l in lines {
+        let dx = l[2] - l[0];
+        let dy = l[3] - l[1];
+        let angle = dy.atan2(dx).to_degrees();
+        let ts = krilla::geom::Transform::from_rotate_at(angle, l[0], l[1]);
+        for v in [ts.sx(), ts.ky(), ts.kx(), ts.sy(), ts.tx(), ts.ty()] {
+            data.extend_from_slice(&v.to_le_bytes());
+        }
+    }
+    data
 }

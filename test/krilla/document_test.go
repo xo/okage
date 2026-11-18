@@ -17,15 +17,15 @@ import (
 // The tests of this file compare the documents and the pages of the package
 // pdf with krilla, through the question "krilla" of the oracle (the gate of
 // units 1 to 4 of phase 14 of the PDF writer in docs/PLAN.md). A scene of
-// these tests has pages without a surface, because the surface comes with
-// unit 5. The Go side builds the same scene with pdf. The objects of the two
-// files must be the same after the reader decodes the streams. When no
-// stream is compressed, the bytes must be the same, with the ID of the
-// document. qpdf must accept each file of pdf.
+// these tests has pages without a surface. surface_test.go compares the
+// calls of the surface. The Go side builds the same scene with pdf. The
+// objects of the two files must be the same after the reader decodes the
+// streams. When no stream is compressed, the bytes must be the same, with
+// the ID of the document. qpdf must accept each file of pdf.
 
 // goScene builds the PDF file of a scene with the package pdf. It reads the
-// settings and the pages that the oracle reads, and it fails for a page with
-// calls of the surface.
+// settings and the pages that the oracle reads, and makes the calls of the
+// surface of each page with goRun.
 func goScene(s scene) ([]byte, error) {
 	var opts []pdf.Option
 	for k, v := range s.Settings {
@@ -58,14 +58,20 @@ func goScene(s scene) ([]byte, error) {
 	}
 	d := pdf.NewDocument(opts...)
 	for i, p := range s.Pages {
-		if len(p.Ops) != 0 || p.Surface == nil || *p.Surface {
-			return nil, fmt.Errorf("page %d has a surface, which comes with unit 5", i)
-		}
 		ps, err := goPageSettings(p)
 		if err != nil {
 			return nil, err
 		}
-		d.StartPage(ps).Finish()
+		page := d.StartPage(ps)
+		if p.Surface == nil || *p.Surface {
+			surface := page.Surface()
+			err := goRun(surface, p.Ops)
+			surface.Finish()
+			if err != nil {
+				return nil, fmt.Errorf("page %d: %w", i, err)
+			}
+		}
+		page.Finish()
 	}
 	var buf bytes.Buffer
 	if err := d.Finish(&buf); err != nil {

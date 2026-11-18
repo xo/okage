@@ -1,6 +1,6 @@
 # D62. `pdf` writes PDF files, as a port of krilla
 
-Status: Decided, amends D5, D7, D9 and D32.
+Status: Decided, amends D5, D7, D9 and D32, amended by D66.
 
 On 2026-11-18 a maintainer asked okage to write PDF output. The survey of
 [`../FORMATS.md`](../FORMATS.md) rates a PDF writer as the easiest item of

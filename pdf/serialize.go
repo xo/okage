@@ -24,9 +24,8 @@ const (
 // serializeSettings is SerializeSettings in krilla src/serialize.rs. The
 // public fields of upstream are the options of NewDocument (D20). The base
 // port leaves out the field xmp_metadata, because it has no XMP metadata
-// (D62). It keeps enable_tagging without an option. The port of graphics/icc.rs adds the field
-// cmyk_profile with its option, and the port of the text adds the field
-// render_svg_glyph_fn with WithSVGGlyphs.
+// (D62). It keeps enable_tagging without an option. The port of the text
+// adds the field render_svg_glyph_fn with WithSVGGlyphs.
 //
 // Settings that should be applied when creating a PDF document.
 type serializeSettings struct {
@@ -42,6 +41,9 @@ type serializeSettings struct {
 	// asciiCompatible writes a PDF that only consists of characters in the
 	// ASCII range, on a best-effort basis.
 	asciiCompatible bool
+	// cmykProfile is the ICC profile for CMYK colors when noDeviceCS is
+	// true. Nil is None.
+	cmykProfile *ICCProfile
 	// configuration holds the validators and the PDF version.
 	configuration configuration
 	// enableTagging is the field enable_tagging of upstream, which is true by
@@ -124,6 +126,26 @@ func WithNoDeviceCS(noDeviceCS bool) Option {
 func WithASCIICompatible(asciiCompatible bool) Option {
 	return func(s *serializeSettings) {
 		s.asciiCompatible = asciiCompatible
+	}
+}
+
+// WithCMYKProfile is the field cmyk_profile of SerializeSettings in krilla
+// src/serialize.rs. The default is nil, which is None. The type
+// ICCProfile<4> of upstream takes only a profile with four components. The
+// option takes nil in place of a profile with another number of components.
+//
+// The ICC profile that should be used for CMYK colors when no_device_cs is
+// enabled.
+//
+// This is usually not required, but it is for example required when
+// exporting to PDF/A and using a CMYK color, since they have to be
+// device-independent.
+func WithCMYKProfile(profile *ICCProfile) Option {
+	return func(s *serializeSettings) {
+		if profile != nil && profile.components != 4 {
+			profile = nil
+		}
+		s.cmykProfile = profile
 	}
 }
 
@@ -218,6 +240,10 @@ type serializeContext struct {
 	limits pdfwriter.Limits
 	// location is the current location. Zero is None.
 	location Location
+	// err is the first error of a call of a surface, for a panic of krilla
+	// that a caller can cause, such as a pop without a push. Document.Finish
+	// returns it.
+	err error
 }
 
 // newSerializeContext is SerializeContext::new in krilla src/serialize.rs.
@@ -251,6 +277,14 @@ func (sc *serializeContext) setLocation(location Location) {
 // src/serialize.rs.
 func (sc *serializeContext) resetLocation() {
 	sc.location = 0
+}
+
+// setError records the first error of a call of a surface. Document.Finish
+// returns it.
+func (sc *serializeContext) setError(err error) {
+	if sc.err == nil {
+		sc.err = err
+	}
 }
 
 // newRef is SerializeContext::new_ref in krilla src/serialize.rs.

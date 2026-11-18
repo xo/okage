@@ -251,8 +251,24 @@
 // The tests of document_test.go build the scenes of the pages without a
 // surface with the package pdf, and compare the files with the answers by
 // their objects. When no stream is compressed, the bytes must be the same,
-// with the ID of the document. The units of phase 14 that port the surface
-// and the graphics add their calls to these tests.
+// with the ID of the document. The tests of surface_test.go make the calls
+// of the surface in the same way, with goRun, for scenes of every paint and
+// for random scenes. Phase 16 adds the metadata, the outline and the links.
 //
-// Phase 16 adds the metadata, the outline and the links.
+// # The question "point_ts"
+//
+// The question gives the rotation of get_point_ts of krilla, which rotates a
+// linear gradient with the spread method reflect or repeat:
+//
+//	{"point_ts": [[x1, y1, x2, y2], ...]}
+//
+// For each line, the oracle computes the angle of the line with atan2 and
+// the transform of Transform::from_rotate_at, which calls sin and cos. The
+// answer holds six float32 for each line, little-endian: sx, ky, kx, sy, tx
+// and ty. Rust calls the C library for these functions, and glibc misses the
+// correctly rounded result of sinf and cosf for about 1 percent of the
+// angles, where pdf computes it with internal/crmath (D26). When the file of
+// a scene differs from the file of krilla, the tests of surface_test.go ask
+// this question. The difference is accepted only when a rotation of the
+// scene differs.
 package krilla

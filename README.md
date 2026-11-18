@@ -179,9 +179,17 @@ okage differs from upstream only where a decision says so:
     has no validators of PDF/A and PDF/UA. It compresses with
     `compress/zlib`, so the bytes of a compressed stream differ from krilla,
     and its data does not. It returns an error where krilla panics, such as
-    for a box of a page that does not fit the coordinates of PDF.
-    `Document.StartPage` and `Document.Finish` finish the page that is open,
-    which Rust does not let a program leave open (D62).
+    for a box of a page that does not fit the coordinates of PDF, for a
+    pop of a surface without a push, for a gradient with no stop, or for
+    the stops of a gradient in two color spaces. It also returns an error
+    for a path to stroke with a point that is NaN or a coordinate above
+    2^60, where krilla can panic or not end. `Document.StartPage` and
+    `Document.Finish` finish the page that is open, and `Page.Finish`
+    finishes the surface of the page, which Rust does not let a program
+    leave open (D62, D66).
+16. The stroker of `path` treats a quadratic curve as a line where the
+    products of `findQuadMaxCurvature` overflow to NaN. tiny-skia panics
+    there (D66).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
