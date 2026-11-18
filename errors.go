@@ -490,3 +490,42 @@ const (
 	// *cssselect2.SelectorError that wraps it, with the message of upstream.
 	ErrCSSSelector Error = "parsing css selector"
 )
+
+// The sentinel errors of the PDF writer of pdf, for the cases of KrillaError
+// and of LimitError of krilla src/error.rs that the base port keeps, and for
+// the panics of krilla that a caller can cause (D62). The text after
+// "writing pdf: " is the Display text of upstream, where upstream has one.
+const (
+	// ErrPDFValidation is KrillaError::Validation of krilla. A validator
+	// found faults in the document. The base port has no validator (D62), so
+	// pdf does not return it yet.
+	ErrPDFValidation Error = "writing pdf: validation failed"
+
+	// ErrPDFTooLargeFloat is KrillaError::Limit with LimitError::TooLargeFloat
+	// of krilla. A float is larger than PDF 1.4 allows.
+	ErrPDFTooLargeFloat Error = "writing pdf: PDF version limit exceeded: a float exceeded the maximum allowed size"
+
+	// ErrPDFTooLongArray is KrillaError::Limit with LimitError::TooLongArray
+	// of krilla. An array is longer than PDF 1.4 allows.
+	ErrPDFTooLongArray Error = "writing pdf: PDF version limit exceeded: an array exceeded the maximum allowed length"
+
+	// ErrPDFTooLongDictionary is KrillaError::Limit with
+	// LimitError::TooLongDictionary of krilla. A dictionary has more entries
+	// than PDF 1.4 allows.
+	ErrPDFTooLongDictionary Error = "writing pdf: PDF version limit exceeded: a dictionary exceeded the maximum allowed number of entries"
+
+	// ErrPDFVersion is ConfigurationError::VersionDoesNotMatchValidatorsRange
+	// of krilla src/configure/mod.rs. The option WithPDFVersion gave a
+	// version that pdf does not know. Document.Finish returns it.
+	ErrPDFVersion Error = "writing pdf: the PDF version does not match the range of the validators"
+
+	// ErrPDFInvalidBox is the error of Document.Finish for a box of a page
+	// that becomes invalid when the page is flipped into the coordinates of
+	// PDF, such as a box with a coordinate near the largest float32. krilla
+	// panics in this case.
+	ErrPDFInvalidBox Error = "writing pdf: a box of a page is not valid"
+
+	// ErrPDFFinished is the error of a second call of Document.Finish.
+	// krilla consumes the document when it finishes it.
+	ErrPDFFinished Error = "writing pdf: the document is already finished"
+)

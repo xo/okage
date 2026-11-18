@@ -177,6 +177,21 @@
 // the RGBA bytes of Image::from_rgba8, not premultiplied. Each page is
 // PageSettings::from_wh, and its calls make its content.
 //
+// A page has more fields, which are optional:
+//
+//	{"width": 200, "height": 200, "media_box": [x, y, w, h],
+//	 "crop_box": [x, y, w, h], "bleed_box": [...], "trim_box": [...], "art_box": [...],
+//	 "label": {"style": "r", "prefix": "A-", "offset": 2}, "surface": false}
+//
+// With "media_box", the page is PageSettings::new with that rectangle, and
+// "width" and "height" are not read. The other boxes and the label are the
+// methods with_crop_box, with_bleed_box, with_trim_box, with_art_box and
+// with_page_label. The style of a label is the key /S of PDF: "D", "r",
+// "R", "a" or "A". A missing field of a label is None. When "surface" is
+// false, the oracle finishes the page without a call of Page::surface, so the
+// page has the empty stream of upstream. A scene without pages gets the
+// default page of Document::finish.
+//
 // Each call OP is an object with the field "op". These are the calls, with
 // the fields of each one:
 //
@@ -233,5 +248,11 @@
 // size of the font, as in KrillaGlyph. The fields other than "id" are
 // optional, and their default is 0.
 //
-// Phase 16 adds the metadata, the outline, the page labels and the links.
+// The tests of document_test.go build the scenes of the pages without a
+// surface with the package pdf, and compare the files with the answers by
+// their objects. When no stream is compressed, the bytes must be the same,
+// with the ID of the document. The units of phase 14 that port the surface
+// and the graphics add their calls to these tests.
+//
+// Phase 16 adds the metadata, the outline and the links.
 package krilla

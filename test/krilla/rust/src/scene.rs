@@ -11,7 +11,7 @@ use krilla::geom::{PathBuilder, Point, Rect, Size, Transform};
 use krilla::image::Image;
 use krilla::mask::{Mask, MaskType};
 use krilla::num::NormalizedF32;
-use krilla::page::PageSettings;
+use krilla::page::{NumberingStyle, PageLabel, PageSettings};
 use krilla::paint::{
     Fill, FillRule, LineCap, LineJoin, LinearGradient, Paint, Pattern, RadialGradient,
     SpreadMethod, Stop, Stroke, StrokeDash, SweepGradient,
@@ -225,9 +225,75 @@ struct ImageSpec {
 
 #[derive(Deserialize)]
 struct PageSpec {
+    #[serde(default)]
     width: f32,
+    #[serde(default)]
     height: f32,
+    #[serde(default)]
     ops: Vec<Op>,
+    /// The media box as [x, y, w, h], for PageSettings::new. Without it, the
+    /// page is PageSettings::from_wh(width, height).
+    #[serde(default)]
+    media_box: Option<[f32; 4]>,
+    #[serde(default)]
+    crop_box: Option<[f32; 4]>,
+    #[serde(default)]
+    bleed_box: Option<[f32; 4]>,
+    #[serde(default)]
+    trim_box: Option<[f32; 4]>,
+    #[serde(default)]
+    art_box: Option<[f32; 4]>,
+    #[serde(default)]
+    label: Option<LabelSpec>,
+    /// false finishes the page without a call of Page::surface.
+    #[serde(default = "yes")]
+    surface: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
+/// A page label. "style" is "D", "r", "R", "a" or "A", as the key /S of PDF.
+#[derive(Deserialize)]
+struct LabelSpec {
+    #[serde(default)]
+    style: Option<String>,
+    #[serde(default)]
+    prefix: Option<String>,
+    #[serde(default)]
+    offset: Option<u32>,
+}
+
+fn rect_xywh(r: [f32; 4]) -> Result<Rect, String> {
+    Rect::from_xywh(r[0], r[1], r[2], r[3]).ok_or_else(|| format!("the rectangle {r:?} is not valid"))
+}
+
+fn page_settings(p: &PageSpec) -> Result<PageSettings, String> {
+    let mut s = match p.media_box {
+        Some(r) => PageSettings::new(rect_xywh(r)?),
+        None => PageSettings::from_wh(p.width, p.height).ok_or("the size of a page is not valid")?,
+    };
+    let opt = |r: Option<[f32; 4]>| r.map(rect_xywh).transpose();
+    s = s
+        .with_crop_box(opt(p.crop_box)?)
+        .with_bleed_box(opt(p.bleed_box)?)
+        .with_trim_box(opt(p.trim_box)?)
+        .with_art_box(opt(p.art_box)?);
+    if let Some(l) = &p.label {
+        let style = match l.style.as_deref() {
+            None => None,
+            Some("D") => Some(NumberingStyle::Arabic),
+            Some("r") => Some(NumberingStyle::LowerRoman),
+            Some("R") => Some(NumberingStyle::UpperRoman),
+            Some("a") => Some(NumberingStyle::LowerAlpha),
+            Some("A") => Some(NumberingStyle::UpperAlpha),
+            Some(other) => return Err(format!("the numbering style {other:?} is not known")),
+        };
+        let offset = l.offset.and_then(std::num::NonZeroU32::new);
+        s = s.with_page_label(PageLabel::new(style, l.prefix.clone(), offset));
+    }
+    Ok(s)
 }
 
 /// A call of the surface.
@@ -470,12 +536,12 @@ pub fn answer_scene(q: &Scene) -> Result<Vec<u8>, String> {
     }
     let mut doc = Document::new_with(settings(&q.settings)?);
     for p in &q.pages {
-        let mut page = doc.start_page_with(
-            PageSettings::from_wh(p.width, p.height).ok_or("the size of a page is not valid")?,
-        );
-        let mut surface = page.surface();
-        run(&mut surface, &p.ops, &res)?;
-        surface.finish();
+        let mut page = doc.start_page_with(page_settings(p)?);
+        if p.surface {
+            let mut surface = page.surface();
+            run(&mut surface, &p.ops, &res)?;
+            surface.finish();
+        }
         page.finish();
     }
     doc.finish().map_err(|e| format!("{e:?}"))

@@ -175,6 +175,13 @@ okage differs from upstream only where a decision says so:
     such limit, so a small font can make it run for a very long time. Where
     subsetter panics on a font, the port returns an error. The package
     comment of `internal/subsetter` lists the other differences (D62).
+15. `pdf` writes no XMP metadata, where krilla writes it by default, and it
+    has no validators of PDF/A and PDF/UA. It compresses with
+    `compress/zlib`, so the bytes of a compressed stream differ from krilla,
+    and its data does not. It returns an error where krilla panics, such as
+    for a box of a page that does not fit the coordinates of PDF.
+    `Document.StartPage` and `Document.Finish` finish the page that is open,
+    which Rust does not let a program leave open (D62).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and

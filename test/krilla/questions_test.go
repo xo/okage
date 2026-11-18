@@ -174,9 +174,25 @@ func rgbaImage(img *image.NRGBA) imageSpec {
 }
 
 type pageSpec struct {
-	Width  float32 `json:"width"`
-	Height float32 `json:"height"`
-	Ops    []op    `json:"ops"`
+	Width    float32     `json:"width"`
+	Height   float32     `json:"height"`
+	Ops      []op        `json:"ops,omitempty"`
+	MediaBox *[4]float32 `json:"media_box,omitempty"`
+	CropBox  *[4]float32 `json:"crop_box,omitempty"`
+	BleedBox *[4]float32 `json:"bleed_box,omitempty"`
+	TrimBox  *[4]float32 `json:"trim_box,omitempty"`
+	ArtBox   *[4]float32 `json:"art_box,omitempty"`
+	Label    *labelSpec  `json:"label,omitempty"`
+	// Surface false finishes the page without a call of Page::surface.
+	Surface *bool `json:"surface,omitempty"`
+}
+
+// labelSpec is a page label: the style as the key /S of PDF, "D", "r", "R",
+// "a" or "A", the prefix and the offset. A nil field is None.
+type labelSpec struct {
+	Style  *string `json:"style,omitempty"`
+	Prefix *string `json:"prefix,omitempty"`
+	Offset *uint32 `json:"offset,omitempty"`
 }
 
 // op is a call of the surface, such as {"op": "draw_path", "path": ...}.

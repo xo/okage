@@ -233,6 +233,7 @@ When code exists, the code goes here:
 | `svg/` | the package `svg`, the port of the crates `usvg` and `resvg`. A file starts with the name of its crate, such as `usvg_parser_svgtree.go` |
 | `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5. A file of the port starts with `tinyhtml5_` and the name of its Python module, such as `tinyhtml5_tokenizer.go` (D49) |
 | `lottie/` | the package `lottie`, the port of the crate `velato`. A file starts with the name of its folder in `src`, such as `runtime_evaluate.go` (D41) |
+| `pdf/` | the package `pdf`, the port of the crate `krilla`, which writes PDF files. A file of a folder of `src` starts with the name of the folder, such as `configure_version.go` (D62) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
@@ -274,7 +275,7 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./internal/... \
+tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./pdf ./internal/... \
   ./typesetting/bidi ./typesetting/di ./typesetting/font/... ./typesetting/harfbuzz \
   ./typesetting/language ./typesetting/segmenter ./typesetting/internal/...
 golangci-lint run ./...
