@@ -121,3 +121,13 @@ differences stay:
    0.46. No test shows a difference.
 3. read-fonts reads the strikes of the table EBDT. usvg draws none of its
    glyphs, so Go leaves the strikes out. The result is the same.
+
+## The PDF writer
+
+From D62.
+
+1. Limit the size of a subset of a font. A subset copies the data of a glyph
+   once for each glyph ID that the caller asks for, so a hostile font can
+   make a subset up to 65,536 times the size of its table glyf. Upstream has
+   the same property. Give `internal/subsetter` a limit on its output, and
+   return an error past it. Source: phase 13.

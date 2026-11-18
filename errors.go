@@ -451,6 +451,38 @@ const (
 	ErrFontUnsupported Error = "converting font data: unsupported format"
 )
 
+// The sentinel errors of the font subsets of the PDF writer, one for each case
+// of the enum Error of subsetter (D62). The text after "subsetting font: " is
+// the Display text of upstream.
+const (
+	// ErrSubsetUnknownKind is Error::UnknownKind of subsetter. The file
+	// contains an unknown kind of font.
+	ErrSubsetUnknownKind Error = "subsetting font: unknown font kind"
+
+	// ErrSubsetMalformedFont is Error::MalformedFont of subsetter. The font
+	// is malformed, or the code that reads the font has a fault.
+	ErrSubsetMalformedFont Error = "subsetting font: malformed font"
+
+	// ErrSubsetUnimplemented is Error::Unimplemented of subsetter. The font
+	// relies on a feature that the subsetter does not implement, so the
+	// subset cannot be made.
+	ErrSubsetUnimplemented Error = "subsetting font: unsupported feature in font"
+
+	// ErrSubsetFailed is Error::SubsetError of subsetter. An unexpected error
+	// occurred when the subsetter made the subset. It shows a fault in the
+	// logic of the subsetter.
+	ErrSubsetFailed Error = "subsetting font: subsetting of font failed"
+
+	// ErrSubsetOverflow is Error::OverflowError of subsetter. A value
+	// overflowed during the computation. The font or the logic of the
+	// subsetter can cause it.
+	ErrSubsetOverflow Error = "subsetting font: overflow occurred"
+
+	// ErrSubsetCFF is Error::CFFError of subsetter. An error occurred while
+	// the subsetter processed the CFF table.
+	ErrSubsetCFF Error = "subsetting font: processing CFF table failed"
+)
+
 // The sentinel errors of cssselect2 (D50).
 const (
 	// ErrCSSSelector is SelectorError of cssselect2, for a selector that is

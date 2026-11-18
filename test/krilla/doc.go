@@ -40,6 +40,12 @@
 // front of the name of the font, which is a hash of the remapper by
 // siphasher, then the bytes of the subset.
 //
+// The tests of subsetter_test.go make the same subsets with
+// internal/subsetter, and compare the tag and the bytes with the answer. They
+// read the TrueType fonts of upstream/subsetter/fonts and of the tests of
+// okage, and fonts with bytes changed at random. A case that needs a unit of
+// phase 13 that is not ported yet is skipped.
+//
 // # The question "pdf_writer"
 //
 // The question gives the bytes of a list of calls of pdf-writer:

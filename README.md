@@ -233,6 +233,14 @@ okage also adds APIs that upstream does not have:
 13. The package `typesetting/font/cff` exports the predefined charsets of
     CFF, and draws the accented glyphs of `seac` and the FontMatrix of each
     font dictionary (D59).
+14. `internal/subsetter` returns an error where subsetter panics, such as on
+    the glyph after 65,535 glyphs. Its closure of composite glyphs reads
+    each glyph once, where upstream can take time and memory that grow with
+    the square of the number of components, and it gives the same order. It
+    normalizes the coordinates of a variable font in float32 with avar
+    version 1, as `typesetting` does, where skrifa uses fixed point and
+    avar version 2. It hashes the glyphs in little-endian order on every
+    machine (D62).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
