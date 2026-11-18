@@ -142,6 +142,7 @@ var highpStages = [stagesCount]func(*highpPipeline){
 	(*highpPipeline).checkDecalMask,
 	(*highpPipeline).meshGradient,
 	(*highpPipeline).gatherAligned,
+	(*highpPipeline).xyTo2PtConicalExtend,
 }
 
 // startHighp is start in tiny-skia src/pipeline/highp.rs.
@@ -2002,6 +2003,27 @@ func (p *highpPipeline) meshGradient() {
 	for i := range p.r {
 		p.r[i], p.g[i], p.b[i], p.a[i] = ctx.shade(p.r[i], p.g[i])
 	}
+
+	p.nextStage()
+}
+
+// xyTo2PtConicalExtend gives the t of a gradient of NewRadialGradientExtend
+// at the x and the y of each lane, and the mask of the lanes that have a t
+// (D64). tiny-skia has no such stage. A lane without a t gets the t 0, as in
+// mask2PtConicalNan, and applyVectorMask later makes it transparent.
+func (p *highpPipeline) xyTo2PtConicalExtend() {
+	ctx := &p.ctx.radialExtend
+
+	// One loop on the lanes (D33).
+	var mask wide.U32x8
+	for i := range p.r {
+		t, ok := ctx.t(p.r[i], p.g[i])
+		p.r[i] = t
+		if ok {
+			mask[i] = ^uint32(0)
+		}
+	}
+	p.ctx.twoPointConicalGradient.mask = mask
 
 	p.nextStage()
 }

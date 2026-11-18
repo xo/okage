@@ -241,6 +241,10 @@ okage also adds APIs that upstream does not have:
     version 1, as `typesetting` does, where skrifa uses fixed point and
     avar version 2. It hashes the glyphs in little-endian order on every
     machine (D62).
+15. `NewRadialGradientExtend` makes a radial gradient with the rule of the
+    radial shadings of PDF and PostScript. A point takes the color of the
+    largest t in 0..=1 whose circle has a radius of at least 0. Two flags
+    let t go below 0 or above 1, as the key `Extend` of PDF does (D64).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

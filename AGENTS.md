@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D63. The package `html` parses and lays out the HTML-like labels of
+to D64. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -64,6 +64,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the scan converter, a huge path, or the fast path of `DrawPixmap` | D53 |
 | working on the coverage of a fill, stroke adjustment or the clip of a hairline | D16, then D54 |
 | working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |
+| working on the radial gradients of `NewRadialGradientExtend`, for the radial shadings of PDF | D64, then D55 |
 | working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |
 | writing or changing the vector types, or anything with a build tag | [docs/SIMD.md](docs/SIMD.md), then D15 and D16 |
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
@@ -247,7 +248,7 @@ When code exists, the code goes here:
 | `html/testdata/tinyhtml5/` | the tests of tinyhtml5, from html5lib-tests, byte for byte (D49) |
 | `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
 | `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
-| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62) |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62) |
 
 ## Before you stage
 

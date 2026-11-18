@@ -146,12 +146,16 @@ const (
 	// a pattern that is aligned to the pixels, in place of the stages
 	// SeedShader, Transform and Gather (D53). Only highp has it.
 	stageGatherAligned
+	// stageXYTo2PtConicalExtend is not a stage of upstream. It gives the t of
+	// a gradient of NewRadialGradientExtend, and the mask of the lanes that
+	// have a t (D64). Only highp has it.
+	stageXYTo2PtConicalExtend
 )
 
 // stagesCount is STAGES_COUNT in tiny-skia src/pipeline/mod.rs.
 //
-// okage: it counts the stages of D53 and D55 too.
-const stagesCount = int(stageGatherAligned) + 1
+// okage: it counts the stages of D53, D55 and D64 too.
+const stagesCount = int(stageXYTo2PtConicalExtend) + 1
 
 // gather is PixmapRef::gather in tiny-skia src/pipeline/mod.rs. It returns
 // the pixels at the eight indexes of index, as RGBA bytes.
@@ -258,10 +262,11 @@ type context struct {
 	limitY                    tileCtx
 	transform                 Transform
 
-	// okage: the contexts of the stages of D55.
+	// okage: the contexts of the stages of D53, D55 and D64.
 	decalMask     wide.U32x8
 	mesh          meshCtx
 	gatherAligned gatherAlignedCtx
+	radialExtend  radialExtendCtx
 }
 
 // newContext is the Default impl of Context in tiny-skia

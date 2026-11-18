@@ -92,6 +92,9 @@ const (
 	gradientTypeStrip
 	// gradientTypeFocal is GradientType::Focal.
 	gradientTypeFocal
+	// gradientTypeExtend is not a variant of upstream. It is the gradient of
+	// NewRadialGradientExtend, which follows the rule of PDF (D64).
+	gradientTypeExtend
 )
 
 // gradientType is GradientType in tiny-skia src/shaders/radial_gradient.rs.
@@ -112,6 +115,9 @@ type gradientType struct {
 
 	// focal is the data of GradientType::Focal.
 	focal focalData
+
+	// extend is the data of gradientTypeExtend (D64).
+	extend radialExtendCtx
 }
 
 // RadialGradient is RadialGradient in tiny-skia
@@ -288,6 +294,9 @@ func (g RadialGradient) pushStages(cs ColorSpace, p *rasterPipelineBuilder) bool
 	case gradientTypeFocal:
 		fd := g.gradientType.focal
 		p0, p1 = 1.0/fd.r1, fd.focalX
+	case gradientTypeExtend:
+		// okage: the gradient of NewRadialGradientExtend (D64).
+		p.ctx.radialExtend = g.gradientType.extend
 	}
 
 	p.ctx.twoPointConicalGradient = twoPointConicalGradientCtx{
@@ -339,11 +348,13 @@ func (g RadialGradient) pushStages(cs ColorSpace, p *rasterPipelineBuilder) bool
 				if fd.isSwapped {
 					p.push(stageAlter2PtConicalUnswap)
 				}
+			case gradientTypeExtend:
+				p.push(stageXYTo2PtConicalExtend)
 			}
 		},
 		func(p *rasterPipelineBuilder) {
 			switch g.gradientType.kind {
-			case gradientTypeStrip:
+			case gradientTypeStrip, gradientTypeExtend:
 				p.push(stageApplyVectorMask)
 			case gradientTypeFocal:
 				if !g.gradientType.focal.isWellBehaved() {

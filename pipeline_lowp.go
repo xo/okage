@@ -165,6 +165,7 @@ var lowpStages = [stagesCount]func(*lowpPipeline){
 	nil, // CheckDecalMask
 	nil, // MeshGradient
 	nil, // GatherAligned (D53)
+	nil, // XYTo2PtConicalExtend (D64)
 }
 
 // startLowp is start in tiny-skia src/pipeline/lowp.rs.

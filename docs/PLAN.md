@@ -861,6 +861,7 @@ draws the pixels. This table maps each feature of okage and `svg`:
 | a gradient with the spread mode repeat or reflect, a focal radial gradient, a sweep gradient | a shading with a PostScript function, as krilla writes it | |
 | the stops of a gradient with alpha | a soft mask of a luminosity shading, as krilla writes it | |
 | the decal spread mode (D55) | `Extend` false at both ends | |
+| a radial gradient of `NewRadialGradientExtend` (D64) | a shading of type 3 with its `Extend` | |
 | a mesh gradient (D55) | a shading of type 4 | |
 | a pattern of a pixmap with the spread mode repeat | a tiling pattern of the image | |
 | a pattern with the spread mode reflect | a tiling pattern of four mirrored copies | |

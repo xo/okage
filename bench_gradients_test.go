@@ -210,3 +210,46 @@ func BenchmarkGradientsSimpleRadial(b *testing.B) {
 func BenchmarkGradientsTwoPointRadial(b *testing.B) {
 	radial(b, okage.PointFromXY(400, 400))
 }
+
+// radialExtend fills the path of radial with a gradient of
+// NewRadialGradientExtend between the same circles (D64). It ports no
+// upstream benchmark.
+func radialExtend(b *testing.B, start okage.Point, extendStart, extendEnd bool) {
+	b.Helper()
+
+	paint := okage.DefaultPaint()
+	paint.AntiAlias = false
+	paint.Shader = must(okage.NewRadialGradientExtend(
+		start,
+		0,
+		okage.PointFromXY(500, 500),
+		500,
+		[]okage.GradientStop{
+			okage.NewGradientStop(0.25, okage.ColorFromRGBA8(50, 127, 150, 200)),
+			okage.NewGradientStop(1.00, okage.ColorFromRGBA8(220, 140, 75, 180)),
+		},
+		extendStart,
+		extendEnd,
+		okage.IdentityTransform(),
+	))
+
+	path := gradientPath()
+
+	pixmap := must(okage.NewPixmap(1000, 1000))
+
+	for b.Loop() {
+		pixmap.FillPath(path, &paint, okage.FillRuleWinding, okage.IdentityTransform(), nil)
+	}
+}
+
+func BenchmarkGradientsSimpleRadialExtend(b *testing.B) {
+	radialExtend(b, okage.PointFromXY(500, 500), true, true)
+}
+
+func BenchmarkGradientsTwoPointRadialExtend(b *testing.B) {
+	radialExtend(b, okage.PointFromXY(400, 400), true, true)
+}
+
+func BenchmarkGradientsTwoPointRadialNoExtend(b *testing.B) {
+	radialExtend(b, okage.PointFromXY(400, 400), false, false)
+}
