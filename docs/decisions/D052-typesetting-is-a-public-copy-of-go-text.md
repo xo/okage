@@ -1,6 +1,6 @@
 # D52. typesetting is a public copy of go-text
 
-Status: Decided, amends D5, D6, D7, D9, D12 and D13.
+Status: Decided, amends D5, D6, D7, D9, D12 and D13, amended by D63.
 
 okage read fonts, shaped text and broke lines with the module
 `github.com/go-text/typesetting` `v0.3.5` (D6, D9). ivy draws the text of its

@@ -1,0 +1,2 @@
+upstream	date	status	okage	note
+b0adcc1cdf5283d8a4014ff31c174f1ca5deced4	2026-07-23	pending		Sort table records when parsing so unsorted table directories remain searchable (#29). It changes src/lib.rs

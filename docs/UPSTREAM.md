@@ -30,7 +30,11 @@ D50). These three are Python packages, not crates. For each one, the base
 commit is the commit that okage ports, and the column `matched` holds the
 same commit. go-text came on 2026-11-17, as the upstream `typesetting`, with
 the policy `copy` (D52). Its base commit is `v0.3.5`, and its column
-`matched` stays empty until okage applies its pending commits.
+`matched` stays empty until okage applies its pending commits. krilla,
+pdf-writer and subsetter came on 2026-11-18, for the PDF writer (D62). The
+row of krilla covers the crates `krilla` and `krilla-svg`, which are folders
+of one repository. Their column `matched` stays empty until the base port of
+phases 11 to 18 of [`PLAN.md`](PLAN.md) is done.
 
 ## The checkouts
 
@@ -234,6 +238,45 @@ A hunk that does not apply touches a change of okage, which has a comment
 that starts with `okage:`. Apply the hunk by hand, and keep the change of
 okage. Then run `gofmt` on `typesetting/`. The files keep the import groups
 of go-text, so the formatters of `golangci-lint` do not run on them.
+
+### krilla
+
+The port is in the packages `pdf` and `pdfsvg` (D62).
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `crates/krilla/src/<name>.rs` | `pdf/<name>.go` | Port |
+| `crates/krilla/src/<folder>/<name>.rs` | `pdf/<folder>_<name>.go`, such as `pdf/graphics_paint.go` and `pdf/text_cid.go` | Port |
+| `crates/krilla/src/<folder>/mod.rs` | `pdf/<folder>.go` | Port |
+| `crates/krilla/src/interchange/tagging/**`, `crates/krilla/src/interactive/form.rs`, `crates/krilla/src/interchange/embed.rs`, `crates/krilla/src/graphics/separation.rs`, `crates/krilla/src/pdf.rs` | none | Review. The base port of D62 leaves them out. A commit that changes only these files is `not-applicable` until a decision adds them |
+| `crates/krilla-svg/src/<name>.rs` | `pdfsvg/<name>.go` | Port. A change that the tree of `svg` needs has a comment that starts with `okage:` (D62) |
+| `refs/snapshots/**` | `pdf/testdata/snapshots/**`, copied byte for byte | Port |
+| `Cargo.toml`, `Cargo.lock`, `crates/*/Cargo.toml` | none | Review. A new version of pdf-writer or subsetter starts the steps of "A new version of a dependency" |
+| everything else | none | Review. "Testing" under "The PDF writer" in [`PLAN.md`](PLAN.md) says which tests okage ports and which ones the test module compares |
+
+### pdf-writer
+
+The port is in `internal/pdfwriter`, and it holds only the part that krilla
+calls (D62).
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `src/<name>.rs` | `internal/pdfwriter/<name>.go` | Port, for the part that krilla calls. A change to another part is Not applicable |
+| `Cargo.toml`, `LICENSE-*` | none | Review |
+| everything else | none | Not applicable |
+
+### subsetter
+
+The port is in `internal/subsetter` (D62).
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `src/<name>.rs` | `internal/subsetter/<name>.go` | Port |
+| `src/cff/<name>.rs` | `internal/subsetter/cff_<name>.go` | Port |
+| `src/cff/mod.rs` | `internal/subsetter/cff.go` | Port |
+| `tests/**`, `fonts/**` | the tests of `internal/subsetter`, and the comparison with the oracle in `test/krilla` | Port |
+| `Cargo.toml`, `LICENSE-*`, `NOTICE` | none | Review |
+| everything else | none | Not applicable |
 
 ### File names
 
@@ -458,7 +501,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-17 thirteen ledgers exist:
+On 2026-11-18 sixteen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -499,6 +542,14 @@ On 2026-11-17 thirteen ledgers exist:
    commits that change only `fontscan`, the CI or other files that okage does
    not copy. One is `ported`: okage applied `e8da365e` out of order, for the
    kerning of Calibri (D59). The column `matched` is empty.
+8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
+   commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
+   pdf-writer has two commits after `fdf09012`. `a10fe0a3` changes only a
+   comment of the forms, which the base port leaves out, so it is
+   `not-applicable`. `12549ecf` reserves the capacity of a stream in
+   `object.rs`, and it is `pending`. subsetter has one commit after
+   `v0.2.6`. `b0adcc1c` sorts the tables of a font when it reads them, and
+   it is `pending`. The column `matched` of each one is empty.
 
 ## A difference from upstream
 

@@ -10,8 +10,6 @@ When the change is committed, delete the claim.
 
 ## Units in progress
 
-None.
-
 ## typesetting
 
 From D52.
@@ -21,7 +19,8 @@ From D52.
    fix a panic on a malformed font, and ivy reads fonts from strangers.
 2. 33 test files of go-text read the data of
    `github.com/go-text/typesetting-utils`, and the copy leaves them out.
-   Question 19 asks what they become.
+   Copy the fonts and the files that they read, each with its license, and
+   put the tests back in their packages, as D63 decides.
 3. A test of `shaping` calls a method of `reflect` that TinyGo does not have,
    so the TinyGo command of `AGENTS.md` leaves `typesetting/shaping` out.
 

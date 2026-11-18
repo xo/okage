@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D62. The package `html` parses and lays out the HTML-like labels of
+to D63. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -74,7 +74,8 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59 and D61, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61 and D63, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the PDF writer, or comparing it with krilla | D62, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
@@ -102,7 +103,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. Question 19 is open, and the next question is question 28.
+not repeat. No question is open, and the next question is question 28.
 
 ## Hard rules
 
@@ -219,8 +220,8 @@ files:
 | `docs/okage.svg` | the logo of okage, which `README.md` shows. The tests of `svg` and of the test module render it |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
-| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv` and `typesetting.tsv` |
-| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/` and `upstream/typesetting/` (D49, D50, D52) |
+| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv`, `typesetting.tsv`, `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` |
+| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/`, `upstream/typesetting/`, `upstream/krilla/`, `upstream/pdf-writer/` and `upstream/subsetter/` (D49, D50, D52, D62) |
 
 When code exists, the code goes here:
 
@@ -246,7 +247,7 @@ When code exists, the code goes here:
 | `html/testdata/tinyhtml5/` | the tests of tinyhtml5, from html5lib-tests, byte for byte (D49) |
 | `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
 | `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
-| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22) |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62) |
 
 ## Before you stage
 

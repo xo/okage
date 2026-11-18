@@ -71,7 +71,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D49 | [`html` parses HTML documents, as a port of tinyhtml5](D049-html-parses-html-documents-as-a-port-of-tinyhtml5.md) | Decided, amends D5, D13 and D38 |
 | D50 | [tinycss2 and cssselect2 are public ports](D050-tinycss2-and-cssselect2-are-public-ports.md) | Decided, amends D5, D8 and D13, amended by D58 |
 | D51 | [webfont is a public package](D051-webfont-is-a-public-package.md) | Decided, amends D5 and D45 |
-| D52 | [typesetting is a public copy of go-text](D052-typesetting-is-a-public-copy-of-go-text.md) | Decided, amends D5, D6, D7, D9, D12 and D13 |
+| D52 | [typesetting is a public copy of go-text](D052-typesetting-is-a-public-copy-of-go-text.md) | Decided, amends D5, D6, D7, D9, D12 and D13, amended by D63 |
 | D53 | [Huge paths fill, and aligned images skip the pipeline](D053-huge-paths-fill-and-aligned-images-skip-the-pipeline.md) | Decided |
 | D54 | [`Paint` takes a finer coverage and stroke adjustment](D054-paint-takes-a-finer-coverage-and-stroke-adjustment.md) | Decided, amends D16 |
 | D55 | [Mesh gradients and the decal spread mode](D055-mesh-gradients-and-the-decal-spread-mode.md) | Decided |
@@ -82,3 +82,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
 | D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |
 | D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32 |
+| D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52 |

@@ -153,9 +153,9 @@ linters:
       - path: example_test\.go
         linters:
           - forbidigo
-      # The JSON of the Rust oracle has the field names of Rust, in snake
+      # The JSON of the Rust oracles has the field names of Rust, in snake
       # case (D22).
-      - path: test/oracle/
+      - path: test/(oracle|krilla)/
         linters:
           - tagliatelle
       # The HTML parser of D49 matches the names of the tags, attributes and

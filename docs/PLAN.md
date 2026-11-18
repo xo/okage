@@ -795,11 +795,11 @@ crate. In short:
    comment.
 
 The checkouts are `upstream/krilla`, `upstream/pdf-writer` and
-`upstream/subsetter` (D11). The crates `siphasher`, `write-fonts` and
-`xmp-writer` have no checkout of their own. In phase 11, a maintainer
-decides how okage follows each one. It can get a row in
-`docs/upstream/upstreams.tsv`, or a note in the ledger of the crate that
-calls it, as the walk of D32 has.
+`upstream/subsetter` (D11). On 2026-11-18 the maintainers decided that the
+crates `siphasher`, `write-fonts` and `xmp-writer` each get a checkout, a
+row in `docs/upstream/upstreams.tsv` and a ledger, as the other upstreams
+have. Each one gets them in the phase that ports it: `siphasher` in phase
+12, `write-fonts` in phase 13, and `xmp-writer` when a decision adds XMP.
 
 | Repository | URL | Base commit | okage |
 | --- | --- | --- | --- |
@@ -1094,9 +1094,11 @@ These parts of krilla wait for a decision of their own:
 
 ## Open questions
 
-An open question stays here until the maintainers answer it. Then it becomes
-a decision in [`decisions/`](decisions/README.md), and it is deleted from this
-list. The numbers do not repeat. The maintainers answered questions 20 to 27 on 2026-11-18 with the recommendations of D62. The next question is question 28.
+An open question stays here until the maintainers answer it. Then it becomes a
+decision in [`decisions/`](decisions/README.md), and it is deleted from this
+list. The numbers do not repeat. The maintainers answered question 19 with
+D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
+The next question is question 28.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
