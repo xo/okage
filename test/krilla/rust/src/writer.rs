@@ -6,7 +6,8 @@
 //! stream is a list of operations, each written with `Content::op` and its
 //! operands. These calls reach the code of `buf.rs`, `object.rs`, `chunk.rs`,
 //! `lib.rs` and `content.rs`, and the fixed keys that each typed writer
-//! writes when it starts. Phase 12 adds the typed calls that its units need.
+//! writes when it starts. The modules `writer_content`, `font`, `color` and
+//! `structure` add the typed calls of the units of phase 12.
 //!
 //! A question can also renumber its objects, as `Chunk::renumber` does, and
 //! give the filters of a cross-reference stream, as
@@ -14,11 +15,23 @@
 
 use std::collections::HashMap;
 
+#[path = "writer_font.rs"]
+mod font;
+
 use base64::Engine;
 use pdf_writer::{
     Chunk, Content, Filter, Name, Null, Obj, Pdf, Ref, Settings, Str, TextStr, XRefFilter,
 };
 use serde::Deserialize;
+
+#[path = "writer_content.rs"]
+mod writer_content;
+
+#[path = "writer_color.rs"]
+mod color;
+
+#[path = "writer_structure.rs"]
+mod structure;
 
 /// A question for pdf-writer.
 #[derive(Deserialize)]
@@ -98,6 +111,10 @@ struct Object {
     /// it is given.
     #[serde(default)]
     filter: Option<String>,
+    /// The calls of a typed writer of structure.rs, annotations.rs or
+    /// actions.rs, which the module `structure` makes.
+    #[serde(default)]
+    structure: Option<Vec<structure::Call>>,
 }
 
 /// An operation of a content stream.
@@ -168,6 +185,10 @@ pub fn answer(q: &Question) -> Result<Vec<u8>, String> {
         pdf.extend(r);
     }
     for o in q.objects.iter().filter(|_| renumbered.is_none()) {
+        if let Some(calls) = &o.structure {
+            structure::write_pdf(&mut pdf, o, calls)?;
+            continue;
+        }
         let id = reference(o.id)?;
         match o.start.as_deref() {
             Some("catalog") => {
@@ -204,6 +225,9 @@ pub fn answer(q: &Question) -> Result<Vec<u8>, String> {
 
 /// write_object writes one indirect object into a chunk.
 fn write_object(c: &mut Chunk, o: &Object, settings: Settings) -> Result<(), String> {
+    if let Some(calls) = &o.structure {
+        return structure::write(c, o, calls);
+    }
     let id = reference(o.id)?;
     let data = match (&o.data, &o.content) {
         (Some(d), _) => Some(
@@ -270,6 +294,8 @@ fn write_object(c: &mut Chunk, o: &Object, settings: Settings) -> Result<(), Str
         (Some("exponential_function"), None) => pairs!(c.exponential_function(id)),
         (Some("stitching_function"), None) => pairs!(c.stitching_function(id)),
         (Some("annotation"), None) => pairs!(c.annotation(id)),
+        (Some(s), d) if font::starts(s) => font::write(c, o, s, d)?,
+        (Some(s), d) if s.starts_with(color::PREFIX) => color::write(c, id, s, d, filter, &o.dict)?,
         (Some(s), _) => return Err(format!("object {}: the start {s:?} is not known", o.id)),
     }
     Ok(())
@@ -279,6 +305,9 @@ fn write_object(c: &mut Chunk, o: &Object, settings: Settings) -> Result<(), Str
 fn content(ops: &[Operation], settings: Settings) -> Result<Vec<u8>, String> {
     let mut c = Content::with_settings(settings);
     for op in ops {
+        if writer_content::call(&mut c, op)? {
+            continue;
+        }
         let mut w = c.op(&op.op);
         for v in &op.operands {
             write_value(w.obj(), v)?;

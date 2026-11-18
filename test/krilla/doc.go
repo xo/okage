@@ -92,8 +92,21 @@
 // its operands. "filter" is written as it is, and the data is not encoded.
 // The typed writers of a stream are stream, form_xobject, image_xobject,
 // cmap, icc_profile, tiling_pattern, stream_shading, post_script_function,
-// sampled_function, metadata and embedded_file. Phase 12 adds the calls that
-// its units need.
+// sampled_function, metadata and embedded_file.
+//
+// The units of phase 12 add typed calls, each in a module of the oracle that
+// documents its format:
+//
+//   - An operation of "content" whose "op" is the name of a method of
+//     Content calls that method (writer_content.rs).
+//   - An object whose "start" is "calls.<writer>" makes the typed calls of a
+//     font, a font descriptor, a CMap or an XObject (writer_font.rs).
+//   - An object whose "start" begins with "color:" runs a script of the
+//     writers of color spaces, patterns, shadings and functions
+//     (writer_color.rs).
+//   - An object with "structure" makes the calls of the catalog, the pages,
+//     the outline, the page labels, the destinations, the annotations and the
+//     actions (writer_structure.rs).
 //
 // The test TestPDFWriterGo makes the same calls with the Go writer of
 // internal/pdfwriter, and compares the bytes with the answer of the oracle.

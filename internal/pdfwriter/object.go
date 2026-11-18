@@ -1861,3 +1861,11 @@ func (e *NumberTreeEntries[T]) Finish() {
 
 // The trait Finish of upstream drops a writer. Each writer of the port has
 // the method Finish, which writes the end of the object.
+
+// itemsF32 writes each value as a Real item of the array, as Array::items
+// does in Rust for an iterator of f32. The writers of several files use it.
+func itemsF32(a *Array, values []float32) {
+	for _, v := range values {
+		a.Item(Real(v))
+	}
+}
