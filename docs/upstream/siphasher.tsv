@@ -1,0 +1,9 @@
+upstream	date	status	okage	note
+4b90c33ae9c8510ef6b6dbf2f6e4dd2b9f3f361e	2026-05-03	pending		Optimize SipHash. It changes src/sip128.rs: Hasher::hash128 hashes a whole slice without a copy of the hasher, and Hasher overrides write_u16. The hashes do not change
+451f67d73a772cba325728109bbfa247750ed076	2026-05-03	not-applicable		Bump. It changes the version in Cargo.toml and .gitignore only
+083b4c3411f1c4b2b96b9a1fe172323ce415b64b	2026-05-04	not-applicable		Use SPDX license format (#23). It changes Cargo.toml only
+07a910ae2ad302c795c7fca173e997c0eb923c40	2026-06-17	not-applicable		Add full Apache-2.0 and MIT license texts (#25). internal/siphasher/LICENSE already holds the MIT license
+de1e89ddbcb7568325998128742551bd1fe25cae	2026-09-25	not-applicable		Improve description. It changes Cargo.toml only
+83d4fcd6793f8e3ee4a210b476db556e585ee5a5	2026-09-25	not-applicable		Bump to 1.1.0. It changes the version in Cargo.toml only
+ed028f01a16205b0819fa83b0cdc052e2d5ac3b7	2026-09-25	not-applicable		Bump to 1.0.4. It changes the version in Cargo.toml only
+2fcf2a742340824ee23328e6eba4bc7ea0e52613	2026-09-25	not-applicable		Fix stale documentation links. It changes links in comments that the port does not keep

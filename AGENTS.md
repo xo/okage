@@ -220,8 +220,8 @@ files:
 | `docs/okage.svg` | the logo of okage, which `README.md` shows. The tests of `svg` and of the test module render it |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
-| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv`, `typesetting.tsv`, `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` |
-| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/`, `upstream/typesetting/`, `upstream/krilla/`, `upstream/pdf-writer/` and `upstream/subsetter/` (D49, D50, D52, D62) |
+| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv`, `typesetting.tsv`, `krilla.tsv`, `pdf-writer.tsv`, `subsetter.tsv` and `siphasher.tsv` |
+| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/`, `upstream/typesetting/`, `upstream/krilla/`, `upstream/pdf-writer/`, `upstream/subsetter/` and `upstream/siphasher/` (D49, D50, D52, D62) |
 
 When code exists, the code goes here:
 

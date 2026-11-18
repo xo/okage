@@ -7,9 +7,17 @@
 //! operands. These calls reach the code of `buf.rs`, `object.rs`, `chunk.rs`,
 //! `lib.rs` and `content.rs`, and the fixed keys that each typed writer
 //! writes when it starts. Phase 12 adds the typed calls that its units need.
+//!
+//! A question can also renumber its objects, as `Chunk::renumber` does, and
+//! give the filters of a cross-reference stream, as
+//! `Pdf::finish_with_xref_stream_and_filter` takes them.
+
+use std::collections::HashMap;
 
 use base64::Engine;
-use pdf_writer::{Chunk, Content, Filter, Name, Null, Obj, Pdf, Ref, Settings, Str, TextStr};
+use pdf_writer::{
+    Chunk, Content, Filter, Name, Null, Obj, Pdf, Ref, Settings, Str, TextStr, XRefFilter,
+};
 use serde::Deserialize;
 
 /// A question for pdf-writer.
@@ -39,6 +47,26 @@ pub struct Question {
     /// with a cross-reference table.
     #[serde(default)]
     xref_stream: Option<i32>,
+    /// The filters of the cross-reference stream: one name for
+    /// `XRefFilter::Single`, or a list of names for `XRefFilter::Multiple`.
+    /// The data of the stream stays as it is.
+    #[serde(default)]
+    xref_filter: Option<XRefFilterSpec>,
+    /// The pairs [old, new] of a renumbering. When it is there, the objects
+    /// go into a chunk, and `Chunk::renumber` renumbers the chunk with the
+    /// map. A number that is not in the map stays as it is. Then the answer
+    /// is the renumbered chunk, or a file that `Pdf::extend` adds it to. The
+    /// typed writers catalog and document_info are then not allowed.
+    #[serde(default)]
+    renumber: Option<Vec<(i32, i32)>>,
+}
+
+/// The filters of a cross-reference stream.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum XRefFilterSpec {
+    Single(String),
+    Multiple(Vec<String>),
 }
 
 fn yes() -> bool {
@@ -102,6 +130,23 @@ enum Value {
 /// answer makes the calls and returns the bytes.
 pub fn answer(q: &Question) -> Result<Vec<u8>, String> {
     let settings = Settings { pretty: q.pretty };
+    let renumbered = match &q.renumber {
+        Some(pairs) => {
+            let mut c = Chunk::with_settings(settings);
+            for o in &q.objects {
+                write_object(&mut c, o, settings)?;
+            }
+            let mut map = HashMap::new();
+            for &(old, new) in pairs {
+                map.insert(reference(old)?, reference(new)?);
+            }
+            Some(c.renumber(|old| map.get(&old).copied().unwrap_or(old)))
+        }
+        None => None,
+    };
+    if let (true, Some(r)) = (q.chunk, &renumbered) {
+        return Ok(r.as_bytes().to_vec());
+    }
     if q.chunk {
         let mut c = Chunk::with_settings(settings);
         for o in &q.objects {
@@ -119,7 +164,10 @@ pub fn answer(q: &Question) -> Result<Vec<u8>, String> {
     if let Some((a, b)) = &q.file_id {
         pdf.set_file_id((hex(a)?, hex(b)?));
     }
-    for o in &q.objects {
+    if let Some(r) = &renumbered {
+        pdf.extend(r);
+    }
+    for o in q.objects.iter().filter(|_| renumbered.is_none()) {
         let id = reference(o.id)?;
         match o.start.as_deref() {
             Some("catalog") => {
@@ -137,9 +185,20 @@ pub fn answer(q: &Question) -> Result<Vec<u8>, String> {
             _ => write_object(&mut pdf, o, settings)?,
         }
     }
-    Ok(match q.xref_stream {
-        Some(id) => pdf.finish_with_xref_stream(reference(id)?),
-        None => pdf.finish(),
+    let xref_filter = match &q.xref_filter {
+        Some(XRefFilterSpec::Single(f)) => Some(XRefFilter::Single(filter(f)?)),
+        Some(XRefFilterSpec::Multiple(fs)) => {
+            Some(XRefFilter::Multiple(fs.iter().map(|f| filter(f)).collect::<Result<_, _>>()?))
+        }
+        None => None,
+    };
+    Ok(match (q.xref_stream, xref_filter) {
+        (Some(id), Some(f)) => {
+            pdf.finish_with_xref_stream_and_filter(reference(id)?, |data| (data.to_vec(), f))
+        }
+        (Some(id), None) => pdf.finish_with_xref_stream(reference(id)?),
+        (None, Some(_)) => return Err("xref_filter needs xref_stream".into()),
+        (None, None) => pdf.finish(),
     })
 }
 

@@ -34,7 +34,10 @@ the policy `copy` (D52). Its base commit is `v0.3.5`, and its column
 pdf-writer and subsetter came on 2026-11-18, for the PDF writer (D62). The
 row of krilla covers the crates `krilla` and `krilla-svg`, which are folders
 of one repository. Their column `matched` stays empty until the base port of
-phases 11 to 18 of [`PLAN.md`](PLAN.md) is done.
+phases 11 to 18 of [`PLAN.md`](PLAN.md) is done. siphasher came on 2026-11-18, in phase 12. Its
+base commit is `1.0.2`, the version in the `Cargo.lock` of krilla. The port
+of `sip128` at the base commit is done, but the column `matched` stays empty
+until okage ports the pending commit of its ledger.
 
 ## The checkouts
 
@@ -262,6 +265,8 @@ calls (D62).
 | Upstream path | okage path | Rule |
 | --- | --- | --- |
 | `src/<name>.rs` | `internal/pdfwriter/<name>.go` | Port, for the part that krilla calls. A change to another part is Not applicable |
+| `src/lib.rs` | `internal/pdfwriter/lib.go`, and the package comment in `internal/pdfwriter/doc.go` | Port |
+| `src/macros.rs` | the helpers of `internal/pdfwriter/macros_test.go`. The macros `writer!` and `deref!` become the rules for typed writers in `internal/pdfwriter/doc.go` | Port |
 | `Cargo.toml`, `LICENSE-*` | none | Review |
 | everything else | none | Not applicable |
 
@@ -276,6 +281,26 @@ The port is in `internal/subsetter` (D62).
 | `src/cff/mod.rs` | `internal/subsetter/cff.go` | Port |
 | `tests/**`, `fonts/**` | the tests of `internal/subsetter`, and the comparison with the oracle in `test/krilla` | Port |
 | `Cargo.toml`, `LICENSE-*`, `NOTICE` | none | Review |
+| everything else | none | Not applicable |
+
+### siphasher
+
+The port is in `internal/siphasher`, and it holds only the module `sip128`
+(D62).
+
+The port reads integers in little-endian order on every machine, where
+upstream uses the byte order of the machine. So a big-endian machine gives
+the same subset tags as any other. The maintainers accepted this difference
+on 2026-11-18.
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `src/sip128.rs` | `internal/siphasher/sip128.go` | Port |
+| `src/common.rs` | `internal/siphasher/common.go` | Port |
+| `src/tests128.rs` | `internal/siphasher/sip128_test.go` | Port |
+| `src/lib.rs` | `internal/siphasher/doc.go` | Review |
+| `src/sip.rs`, `src/tests.rs` | none | Not applicable. krilla does not call the 64-bit mode |
+| `Cargo.toml`, `COPYING`, `LICENSE-*` | none | Review |
 | everything else | none | Not applicable |
 
 ### File names
@@ -501,7 +526,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-18 sixteen ledgers exist:
+On 2026-11-18 seventeen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -550,6 +575,12 @@ On 2026-11-18 sixteen ledgers exist:
    `object.rs`, and it is `pending`. subsetter has one commit after
    `v0.2.6`. `b0adcc1c` sorts the tables of a font when it reads them, and
    it is `pending`. The column `matched` of each one is empty.
+9. `siphasher.tsv` starts at `1.0.2`, which is `db817204`. On 2026-11-18
+   it holds the 8 commits after it. `4b90c33a` makes `sip128.rs` faster and
+   adds the method `write_u16` to `Hasher`, with the same hashes, and it is
+   `pending`. The other 7 change the versions, the license files, the
+   description or the links in comments, so they are `not-applicable`. The
+   column `matched` is empty, because it cannot move past a pending commit.
 
 ## A difference from upstream
 

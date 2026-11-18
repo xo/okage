@@ -57,6 +57,21 @@
 // number, from Pdf::finish_with_xref_stream. The strings of "file_id" are in
 // hex.
 //
+// Two more fields are optional:
+//
+//	{"pdf_writer": {..., "xref_stream": 9, "xref_filter": ["ASCIIHexDecode", "FlateDecode"],
+//	                "renumber": [[1, 7], [2, 8]]}}
+//
+// "xref_filter" needs "xref_stream". The oracle then calls
+// Pdf::finish_with_xref_stream_and_filter. A name gives XRefFilter::Single,
+// a list of names gives XRefFilter::Multiple, and the data of the stream
+// stays as it is. With "renumber", the oracle writes the objects into a
+// Chunk and renumbers it with Chunk::renumber. Each pair is an old number
+// and a new number, and a number that is not in a pair stays as it is. The
+// answer is the renumbered chunk when "chunk" is true. Otherwise the oracle
+// adds the renumbered chunk to a Pdf with Pdf::extend and answers the file.
+// The typed writers catalog and document_info cannot go into a chunk.
+//
 // Each object of "objects" is one of these forms:
 //
 //	{"id": 1, "value": V}
@@ -79,6 +94,12 @@
 // cmap, icc_profile, tiling_pattern, stream_shading, post_script_function,
 // sampled_function, metadata and embedded_file. Phase 12 adds the calls that
 // its units need.
+//
+// The test TestPDFWriterGo makes the same calls with the Go writer of
+// internal/pdfwriter, and compares the bytes with the answer of the oracle.
+// The Go side of each typed writer is in the maps writerDicts, writerStreams
+// and pdfDicts of pdfwriter_test.go. A unit that ports a typed writer adds
+// its entries to them from a file of its own, in a function init.
 //
 // A value V is the string "null", or an object with one key: {"bool": true},
 // {"int": 3}, {"real": 1.5}, {"name": "Type"}, {"str": "<hex>"}, {"text":

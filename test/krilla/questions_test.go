@@ -48,6 +48,9 @@ type writerSpec struct {
 	FileID       *[2]string     `json:"file_id,omitempty"`
 	Objects      []writerObject `json:"objects"`
 	XrefStream   int            `json:"xref_stream,omitempty"`
+	// XrefFilter is a string for one filter, or a []string for a list.
+	XrefFilter any      `json:"xref_filter,omitempty"`
+	Renumber   [][2]int `json:"renumber,omitempty"`
 }
 
 // writerObject is an indirect object of pdf-writer. Value, Dict, Data and
