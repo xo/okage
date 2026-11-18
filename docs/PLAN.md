@@ -786,8 +786,8 @@ crate. In short:
 3. `subsetter` goes into `internal/subsetter`, with the code of
    `write-fonts` that writes a simple glyph, and `sip128` of `siphasher`
    goes into `internal/siphasher`.
-4. `kurbo` grows by `CubicBez::to_quads` and `QuadSpline`, for the variable
-   fonts of subsetter.
+4. `kurbo` grows by `CubicBez::to_quads`, for the variable fonts of
+   subsetter.
 5. The walk of COLRv1 of D32 moves from `svg` into `internal/colr`.
 6. `typesetting` reads the fonts, and the standard library decodes the
    images. A function that `typesetting` lacks, such as the `fsType` of the
@@ -948,7 +948,10 @@ okage with the sources (D22):
    The fonts are the 15 fonts of `upstream/subsetter/fonts` and the fonts of
    `svg/testdata`, with the sets of glyphs of `tests/data/subsets.tests`. A variable font at
    coordinates other than the default compares its outlines within 1 unit,
-   because `typesetting` and skrifa compute them with other code.
+   because `typesetting` and skrifa compute them with other code. The
+   comparison fails only when more than 0.1% of the glyphs of the instances
+   of a font differ by more than 1 unit. The maintainers accepted this
+   tolerance on 2026-11-18 (D65).
 6. The Rust oracle gives the bytes of pdf-writer for a list of calls, which
    use no compression. The bytes of okage must be the same.
 7. `qpdf --check` reads each file that a test writes, and must find no

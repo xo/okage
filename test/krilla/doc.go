@@ -46,6 +46,14 @@
 // okage, and fonts with bytes changed at random. A case that needs a unit of
 // phase 13 that is not ported yet is skipped.
 //
+// The tests of subsetter_vf_test.go make the instances of the variable fonts
+// of subsetter and of the tests of okage at many locations. A subset at the
+// default location must be the same, byte for byte. In an instance, each
+// coordinate, advance and left side bearing must be within 1 unit of the
+// instance of subsetter, because typesetting computes the deltas in float32
+// and skrifa in fixed point. The tests count the values that differ, and log
+// the counts for each font.
+//
 // # The question "pdf_writer"
 //
 // The question gives the bytes of a list of calls of pdf-writer:

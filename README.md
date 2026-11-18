@@ -169,6 +169,12 @@ okage differs from upstream only where a decision says so:
     stages of the pipeline, with the same bytes (D53).
 13. A hairline on a pixmap of 1 or 2 rows or columns draws its pixels.
     Upstream draws nothing there (D54).
+14. The subsetter of fonts of `internal/subsetter` runs at most 1,000,000
+    operators for one glyph of a CFF font, and makes at most 1,000,000
+    instructions. Past either limit, it returns an error. Upstream has no
+    such limit, so a small font can make it run for a very long time. Where
+    subsetter panics on a font, the port returns an error. The package
+    comment of `internal/subsetter` lists the other differences (D62).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -245,6 +251,14 @@ okage also adds APIs that upstream does not have:
     radial shadings of PDF and PostScript. A point takes the color of the
     largest t in 0..=1 whose circle has a radius of at least 0. Two flags
     let t go below 0 or above 1, as the key `Extend` of PDF does (D64).
+16. `typesetting` applies five commits of go-text out of order, for the
+    variable fonts of `internal/subsetter`. It maps a coordinate with the
+    table avar as skrifa does, with a rounded division. `WriteTTF` writes
+    nothing into the slices of its caller. A malformed font gives an empty
+    glyph, an advance of 0 or an error where go-text panics (D65).
+    `internal/subsetter` makes the instances of variable fonts with
+    `typesetting`, and an instance can differ from the instance of
+    subsetter by 1 unit in a point (D62, D65).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

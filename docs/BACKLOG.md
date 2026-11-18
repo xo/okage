@@ -14,7 +14,7 @@ When the change is committed, delete the claim.
 
 From D52.
 
-1. Apply the 102 pending commits of `docs/upstream/typesetting.tsv` in
+1. Apply the 97 pending commits of `docs/upstream/typesetting.tsv` in
    order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. Many of them
    fix a panic on a malformed font, and ivy reads fonts from strangers.
 2. 33 test files of go-text read the data of
@@ -131,3 +131,13 @@ From D62.
    make a subset up to 65,536 times the size of its table glyf. Upstream has
    the same property. Give `internal/subsetter` a limit on its output, and
    return an error past it. Source: phase 13.
+2. `typesetting` computes the deltas of gvar, HVAR and the blends of CFF2 in
+   float32, and skrifa in fixed point. In the instances of `test/krilla`
+   that are not the same as the instances of subsetter, between 1 point in
+   750 and 1 point in 150 differs by 1 unit. One glyph of
+   `NotoSans-Regular_var.ttf` differs by 2 units, and 21 of the 31,042
+   glyphs of the instances of `Cantarell-VF.otf` have another number of
+   quadratic curves. The
+   maintainers accept this within the tolerance of D65. To give the
+   instances of subsetter, `typesetting` must compute the deltas in fixed
+   point, as skrifa does. Source: phase 13, unit 4.

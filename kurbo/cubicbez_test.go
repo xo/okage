@@ -11,10 +11,10 @@ import (
 )
 
 // The tests of kurbo kurbo/src/cubicbez.rs. Only the tests of the subset are
-// ported: cubicbez_deriv, cubicbez_arclen, cubicbez_inv_arclen and
-// cubicbez_inv_arclen_accuracy. The others test the signed area, the nearest
-// point, the conversion to quadratic Beziers, the extrema and the
-// inflections, which the subset does not have.
+// ported: cubicbez_deriv, cubicbez_arclen, cubicbez_inv_arclen,
+// cubicbez_inv_arclen_accuracy, degenerate_to_quads and cubicbez_toquads.
+// The others test the signed area, the nearest point, the quadratic splines,
+// the extrema and the inflections, which the subset does not have.
 
 func TestCubicBezDeriv(t *testing.T) {
 	// y = x^2
@@ -97,6 +97,54 @@ func TestCubicBezInvArclenAccuracy(t *testing.T) {
 		approxT := c.InvArclen(0.5, accuracy)
 		if !(math.Abs(approxT-trueT) <= accuracy) {
 			t.Errorf("accuracy %v: t = %v, want %v", accuracy, approxT, trueT)
+		}
+	}
+}
+
+// TestDegenerateToQuads is degenerate_to_quads: ToQuads returns something
+// for collinear points.
+func TestDegenerateToQuads(t *testing.T) {
+	c := NewCubicBez(NewPoint(0., 9.), NewPoint(6., 6.), NewPoint(12., 3.0), NewPoint(18., 0.0))
+	it := c.ToQuads(1e-6)
+	if n := it.Len(); n != 1 {
+		t.Fatalf("ToQuads gives %d quadratics, want 1", n)
+	}
+	if _, _, _, ok := it.Next(); !ok {
+		t.Fatal("ToQuads gives no quadratic")
+	}
+	if _, _, q, ok := it.Next(); ok {
+		t.Errorf("ToQuads gives a second quadratic %v", q)
+	}
+}
+
+// TestCubicBezToQuads is cubicbez_toquads.
+func TestCubicBezToQuads(t *testing.T) {
+	// y = x^3
+	c := NewCubicBez(NewPoint(0.0, 0.0), NewPoint(1.0/3.0, 0.0), NewPoint(2.0/3.0, 0.0), NewPoint(1.0, 1.0))
+	for i := range int32(10) {
+		accuracy := Powi(0.1, i)
+		it := c.ToQuads(accuracy)
+		for {
+			t0, t1, q, ok := it.Next()
+			if !ok {
+				break
+			}
+			epsilon := 1e-12
+			if d := q.Start().Sub(c.Eval(t0)).Hypot(); !(d < epsilon) {
+				t.Errorf("accuracy %v: the start of %v is %v from the cubic", accuracy, q, d)
+			}
+			if d := q.End().Sub(c.Eval(t1)).Hypot(); !(d < epsilon) {
+				t.Errorf("accuracy %v: the end of %v is %v from the cubic", accuracy, q, d)
+			}
+			n := 4
+			for j := 0; j <= n; j++ {
+				tt := float64(j) * (1 / float64(n))
+				p := q.Eval(tt)
+				err := math.Abs(p.Y - Powi(p.X, 3))
+				if !(err < accuracy) {
+					t.Errorf("got %v wanted %v", err, accuracy)
+				}
+			}
 		}
 	}
 }

@@ -53,9 +53,32 @@ type gvar struct {
 	sharedTupleActiveIdx []int              // with length tupleCount
 }
 
-func newGvar(table tables.Gvar, glyf tables.Glyf) (gvar, error) {
+// checkTupleAxisCount returns an error if the tuple is present and its
+// number of values differs from the number of axes in fvar.
+func checkTupleAxisCount(t tables.Tuple, axisCount int) error {
+	if t.Values != nil && len(t.Values) != axisCount {
+		return fmt.Errorf("gvar: invalid number of axis (%d != %d)", len(t.Values), axisCount)
+	}
+	return nil
+}
+
+func newGvar(table tables.Gvar, glyf tables.Glyf, axisCount int) (gvar, error) {
 	if len(table.GlyphVariationDatas) != len(glyf) {
 		return gvar{}, fmt.Errorf("invalid 'gvar' table: mismatch in glyphs count")
+	}
+	for _, ts := range table.SharedTuples.SharedTuples {
+		if err := checkTupleAxisCount(ts, axisCount); err != nil {
+			return gvar{}, err
+		}
+	}
+	for _, vs := range table.GlyphVariationDatas {
+		for _, h := range vs.TupleVariationHeaders {
+			for _, t := range [3]tables.Tuple{h.PeakTuple, h.IntermediateTuples[0], h.IntermediateTuples[1]} {
+				if err := checkTupleAxisCount(t, axisCount); err != nil {
+					return gvar{}, err
+				}
+			}
+		}
 	}
 
 	out := gvar{
@@ -76,7 +99,7 @@ func newGvar(table tables.Gvar, glyf tables.Glyf) (gvar, error) {
 		err := parseGlyphVariationSerializedData(vs.SerializedData,
 			vs.HasSharedPointNumbers(), pointsNumberCountAll, false, tvs)
 		if err != nil {
-			return out, err
+			return gvar{}, err
 		}
 		out.variations[i] = tvs
 	}
@@ -173,7 +196,7 @@ func parseGlyphVariationSerializedData(data []byte, hasSharedPoints bool, pointN
 		err                error
 	)
 	if hasSharedPoints {
-		sharedPointNumbers, data, err = parsePointNumbers(data)
+		sharedPointNumbers, data, err = parsePointNumbers(data, pointNumbersCountAll)
 		if err != nil {
 			return err
 		}
@@ -189,7 +212,7 @@ func parseGlyphVariationSerializedData(data []byte, hasSharedPoints bool, pointN
 		// default to shared points
 		privatePointNumbers := sharedPointNumbers
 		if h.HasPrivatePointNumbers() {
-			privatePointNumbers, data, err = parsePointNumbers(data)
+			privatePointNumbers, data, err = parsePointNumbers(data, pointNumbersCountAll)
 			if err != nil {
 				return err
 			}
@@ -216,8 +239,9 @@ func parseGlyphVariationSerializedData(data []byte, hasSharedPoints bool, pointN
 	return nil
 }
 
-// the returned slice is nil if all glyph points are used
-func parsePointNumbers(data []byte) ([]uint16, []byte, error) {
+// the returned slice is nil if all glyph points are used.
+// Otherwise parsePointNumbers rejects any point number >= pointCount.
+func parsePointNumbers(data []byte, pointCount int) ([]uint16, []byte, error) {
 	count, data, err := getPackedPointCount(data)
 	if err != nil {
 		return nil, nil, err
@@ -256,6 +280,12 @@ func parsePointNumbers(data []byte) ([]uint16, []byte, error) {
 				lastPoint = actualValue
 			}
 			data = data[1+runLength:]
+		}
+	}
+
+	for _, pt := range points {
+		if int(pt) >= pointCount {
+			return nil, nil, fmt.Errorf("invalid glyph variation point number %d (expected < %d)", pt, pointCount)
 		}
 	}
 

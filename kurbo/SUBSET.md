@@ -9,7 +9,9 @@ each type has the methods that the trait gives it.
 
 `svgtypes` means svgtypes 0.16.2. `usvg` means usvg in resvg 0.49.0, and the
 paths start at `crates/usvg/src`. `velato` means velato at the commit
-`83336b65`, and the paths start at `src`. A use that is marked "for the subset" comes
+`83336b65`, and the paths start at `src`. `subsetter` means subsetter 0.2.6,
+which asks for kurbo 0.13.0 for its variable fonts, and the paths start at
+`src`. kurbo 0.13.0 and 0.13.1 have the same `CubicBez::to_quads`. A use that is marked "for the subset" comes
 from another item of the subset, not from svgtypes or usvg.
 
 The port differs from upstream in one place: `Arc.AppendIter` makes at most
@@ -75,6 +77,7 @@ The port differs from upstream in one place: `Arc.AppendIter` makes at most
 | `impl ParamCurveDeriv for CubicBez` | `CubicBez.Deriv` | usvg `text/layout.rs` |
 | `arclen_quadrature_core`, `arclen_rec` | `arclenQuadratureCore`, `arclenRec` | for the subset: `CubicBez::arclen` |
 | `impl ParamCurveArclen for CubicBez` | `CubicBez.Arclen`, `CubicBez.InvArclen` | usvg `parser/text.rs` (`arclen`), `text/layout.rs` (`arclen`, `inv_arclen`) |
+| `CubicBez::to_quads`, `ToQuads` with its impl of `Iterator` | `CubicBez.ToQuads`, `ToQuads`, `ToQuads.Next`, `ToQuads.Len` (`size_hint`) | subsetter `interjector.rs` |
 
 ## svg.rs, in svg.go
 
@@ -180,6 +183,6 @@ helpers `maxF64`, `minF64`, `remF64` and `f64ToUsize`, which follow `f64::max`,
 The rest of `src/` is Not applicable (D7): among others `BezPath`, the trait
 `Shape` for the other shapes, the traits `ParamCurveArea`,
 `ParamCurveNearest` and `ParamCurveCurvature`, the extrema of the other
-curves, the quartic solver and the conversion of a cubic to quadratic
-Beziers. The
+curves, the quartic solver, and the quadratic splines of `QuadSpline` and
+`CubicBez::approx_spline`, which subsetter does not call. The
 upstream tests of these items are not ported.

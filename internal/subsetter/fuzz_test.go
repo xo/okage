@@ -25,7 +25,10 @@ const maxFuzzFont = 1 << 14
 // whether to call SubsetWithVariations and with which value of the axis
 // wght, and the other bytes give the glyphs, two bytes each.
 func FuzzSubset(f *testing.F) {
-	for _, name := range []string{"TestTTC.ttc"} {
+	// TestTTC.ttc holds TrueType fonts. EndcharInSubroutine.otf is a
+	// SID-keyed CFF font, and NotoSansCJKsc-Bold-subset1.otf a CID-keyed
+	// one.
+	for _, name := range []string{"TestTTC.ttc", "EndcharInSubroutine.otf", "NotoSansCJKsc-Bold-subset1.otf"} {
 		data := readTestFont(f, name)
 		f.Add(data, []byte{0, 0, 0, 1, 0, 2})
 		f.Add(data, []byte{1, 0, 0, 3})
@@ -36,7 +39,20 @@ func FuzzSubset(f *testing.F) {
 	}
 	f.Add(small, []byte{0, 0, 0, 1, 0, 2, 0, 3})
 	f.Add(small, []byte{1, 200, 0, 4})
+	// A subset of a CFF font is a CID-keyed font without subroutines.
+	smallCFF, err := Subset(readTestFont(f, "LatinModernRoman-Regular.otf"), 0, NewGlyphRemapperFromGlyphs([]uint16{5, 8, 290, 292}))
+	if err != nil {
+		f.Fatal(err)
+	}
+	f.Add(smallCFF, []byte{0, 0, 0, 1, 0, 2, 0, 3, 0, 4})
 	f.Add(buildTrueType([][]byte{nil, compositeGlyph(2, 3, 1), simpleGlyph(), compositeGlyph(1, 2)}), []byte{0, 0, 0, 1})
+	// The variable fonts of interjector_skrifa_test.go, at the default
+	// location and at other locations, which give instances.
+	for _, data := range [][]byte{buildVariableTrueType(), buildCFF2()} {
+		f.Add(data, []byte{1, 100, 0, 1, 0, 2})
+		f.Add(data, []byte{1, 225, 0, 2, 0, 1})
+		f.Add(data, []byte{1, 40, 0, 1})
+	}
 
 	f.Fuzz(func(t *testing.T, data, glyphs []byte) {
 		if len(data) > maxFuzzFont || len(glyphs) < 2 || len(glyphs) > 512 {

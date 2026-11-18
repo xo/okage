@@ -45,6 +45,10 @@ type skrifaInterjector struct {
 	// location holds one normalized coordinate for each axis of the fvar
 	// table, in the order of the axes. It is the Location of upstream.
 	location []tables.Coord
+	// inst holds the outlines and the metrics at the location, which
+	// interject reads with typesetting. interjector_skrifa.go makes it on
+	// the first call.
+	inst *glyphInstance
 }
 
 // newSkrifaInterjector is SkrifaInterjector::new in subsetter

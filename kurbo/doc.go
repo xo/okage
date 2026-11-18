@@ -9,8 +9,9 @@
 // okage ports only the types and functions that svgtypes and usvg call, and
 // what they need (D7): Point, Vec2, Line, QuadBez, CubicBez, SvgArc, Arc, the
 // traits ParamCurve, ParamCurveDeriv and ParamCurveArclen, and the parts of
-// common.rs that they use. SUBSET.md lists each item, with the file of
-// svgtypes or usvg that uses it.
+// common.rs that they use. velato and subsetter call a few more items, such
+// as CubicBez::to_quads. SUBSET.md lists each item, with the file of
+// svgtypes, usvg, velato or subsetter that uses it.
 //
 // The arithmetic gives the same bits as the Rust code. A multiply that is
 // followed by an add is written as float64(x*y) + z, so that the Go compiler

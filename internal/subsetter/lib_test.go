@@ -23,8 +23,7 @@ import (
 // seams and of the closure of glyf.go.
 
 // TestMalformedCFFReturnsError is malformed_cff_returns_error in subsetter
-// src/lib.rs. Until unit 3 of phase 13 ports cff::subset, the seam returns
-// okage.ErrSubsetUnimplemented.
+// src/lib.rs.
 func TestMalformedCFFReturnsError(t *testing.T) {
 	var font []byte
 	font = binary.BigEndian.AppendUint32(font, 0x4F54544F)
@@ -40,12 +39,8 @@ func TestMalformedCFFReturnsError(t *testing.T) {
 
 	_, err := Subset(font, 0, NewGlyphRemapper())
 
-	want := error(errCFF)
-	if subsetCFFTable == nil {
-		want = errUnimplemented
-	}
-	if !errors.Is(err, want) {
-		t.Errorf("got the error %v, want %v", err, want)
+	if !errors.Is(err, errCFF) {
+		t.Errorf("got the error %v, want %v", err, errCFF)
 	}
 }
 
@@ -110,9 +105,9 @@ func TestBinarySearchRecords(t *testing.T) {
 	}
 }
 
-// TestVariations checks the seam of the instances of variable fonts: the
-// default location gives the subset of Subset, and another location returns
-// okage.ErrSubsetUnimplemented until unit 4 of phase 13 is ported.
+// TestVariations checks the instances of variable fonts: the default
+// location gives the subset of Subset, and another location gives an
+// instance, as upstream does.
 func TestVariations(t *testing.T) {
 	// The font folder of svg is the folder that the packages share (D63).
 	data, err := os.ReadFile(filepath.Join("..", "..", "svg", "testdata", "fonts", "RobotoFlex.subset.ttf"))
@@ -139,9 +134,11 @@ func TestVariations(t *testing.T) {
 			t.Errorf("%v: the subset is not the subset of Subset", vars)
 		}
 	}
-	_, err = SubsetWithVariations(data, 0, []Variation{{Tag{'w', 'g', 'h', 't'}, 900}}, m)
-	if interjectGlyph == nil && !errors.Is(err, okage.ErrSubsetUnimplemented) {
+	got, err := SubsetWithVariations(data, 0, []Variation{{Tag{'w', 'g', 'h', 't'}, 900}}, m)
+	if err != nil {
 		t.Errorf("a location that is not the default gives the error %v", err)
+	} else if bytes.Equal(got, want) {
+		t.Error("a location that is not the default gives the subset of Subset")
 	}
 	if _, err := SubsetWithVariations(data, 1, nil, m); !errors.Is(err, okage.ErrSubsetMalformedFont) {
 		t.Errorf("the index 1 of a font that is not a collection gives the error %v", err)

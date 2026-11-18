@@ -20,6 +20,11 @@ func (item *LongHorMetric) mustParse(src []byte) {
 func ParseHmtx(src []byte, metricsCount int, leftSideBearingsCount int) (Hmtx, int, error) {
 	var item Hmtx
 	n := 0
+	// okage: go-text makes a slice of a negative length, and panics, when
+	// hhea gives more long metrics than maxp gives glyphs (D65).
+	if metricsCount < 0 || leftSideBearingsCount < 0 {
+		return item, 0, fmt.Errorf("reading Hmtx: invalid counts %d and %d", metricsCount, leftSideBearingsCount)
+	}
 	{
 
 		if L := len(src); L < metricsCount*4 {

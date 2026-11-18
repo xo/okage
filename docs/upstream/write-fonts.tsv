@@ -1,0 +1,860 @@
+upstream	date	status	okage	note
+68a30e5660ae3b10302a0dbfd20cbceade40001e	2026-04-09	not-applicable		Make script classes and style classes public. It changes only skrifa
+aa21d07daac267b37074a99d4834cd4c33015e06	2026-04-09	not-applicable		Create an autohinter feature to hide new structs behind. It changes only skrifa
+68620bd07bdd40935853ae4fa09b4879d70c15d7	2026-04-09	not-applicable		Make a few more structures exportable (not exported yet). It changes only skrifa
+9f7f21c7a09d1fd86eb4c3ebc691a56f08495197	2026-04-09	not-applicable		Allow auto hinters access to full points. It changes only skrifa
+38725565f8676dd3514c8a6f5d6cdfde2af58e8e	2026-04-09	not-applicable		Allow auto hinters access to style information. It changes only skrifa
+1ef7790e5d612764e55e69f770d6a43c7d457ab6	2026-04-09	not-applicable		Keep track of where blues came from. It changes only skrifa
+74302efa58584d386c8cd45bd18fcf6df0b83bdc	2026-04-09	not-applicable		Introduce a Recorder to record hinting decisions. It changes only skrifa
+a4deea201f9cff289c770e5f0fc7dfceade727f4	2026-04-09	not-applicable		Export all the things (if you’re an autohinter). It changes only skrifa
+941e55268f57c70e396f3d08d4ad112338c4993b	2026-04-09	not-applicable		Correctness fixes found by diffing against ttfautohint. It changes only skrifa
+8fc06aecbde76e78b4a0c3d41071da0348c95b24	2026-04-09	not-applicable		(Optional) TTFAutohint uses a different algorithm than FreeType for edge detection. It changes only skrifa
+51bc1eb03f2ce0ea470ad49e4febcecd0510674b	2026-04-13	not-applicable		[subset] update tests and minor bug fixes. It changes only skera
+9c02b908f9a6a850c02766bac6854236c73cc2d7	2026-04-13	not-applicable		[write] Restore GvarInputError as an alias. It changes write-fonts outside the code that writes a simple glyph
+717f7fafc088ee74cb68f5ad44dcb669e34884f3	2026-04-13	not-applicable		Merge pull request #1834 from googlefonts/restore-gvar-input-error. A merge commit. Each commit that it merges has a line of its own
+d096c2286662e7a1cd247680d7a1ff19f5ba2538	2026-04-13	not-applicable		Update hashbrown. It changes only skera
+36a2402673ea851193c3749432d0f3327538312c	2026-04-13	not-applicable		[write] Add ClassDef::is_empty. It changes write-fonts outside the code that writes a simple glyph
+6722c00640c043e8be725c7ef7da2931254ae51e	2026-04-13	not-applicable		Merge pull request #1836 from googlefonts/class-def-is-empty. A merge commit. Each commit that it merges has a line of its own
+dc3673f0a25823bd569b95852d7e45637d4e53c3	2026-04-14	not-applicable		Fix build for docs.rs (#1837). It changes only shared-brotli-patch-decoder
+b8da612e48faea069dacf72d9d23069575d6d1e2	2026-04-15	not-applicable		[write] Better handling of zero value deltas. It changes write-fonts outside the code that writes a simple glyph
+011e67546743b08a1cd53780f42e4645ffe3f335	2026-04-15	not-applicable		Merge pull request #1829 from googlefonts/fix_tests. A merge commit. Each commit that it merges has a line of its own
+70aa739fb9a5bb28103a6da108c131cf56b5a132	2026-04-20	not-applicable		Added decode logic for non-png cbdt bitmap. (#1839). It changes only skrifa
+b692d6cacbae9f1bda90f905557ab87d3f5c8f86	2026-04-21	not-applicable		[chore] skera 0.2.0 (#1844). It changes only skera, the root
+ba086017d5bc36ff0b0e9502f6ea4f30efa70a37	2026-04-22	not-applicable		[chore] release read-fonts 0.39.2, skrifa 0.42.1 (#1845). It changes only read-fonts, skrifa, the root
+a948deb0d8a7dde1bae280ff6306d1d46627215f	2026-04-23	not-applicable		[chore] bump write-fonts to 0.48.1. It changes only the root, write-fonts
+fd0178ce4ea48301a7f06b35a6fce9879c102292	2026-04-23	not-applicable		Merge pull request #1846 from googlefonts/release-write-fonts-0.48.1. A merge commit. Each commit that it merges has a line of its own
+22898057ff3919ad30e00c97c86ea78391c09dbd	2026-04-27	not-applicable		Bump incremental-font-transfer to 0.3.0. It changes only incremental-font-transfer, the root
+3924cb82dc84e89bf28951e744daf45a93002315	2026-04-27	not-applicable		Merge pull request #1848 from googlefonts/wm-deps. A merge commit. Each commit that it merges has a line of its own
+87bbadd0b8606754828dc76acffa506fba76f6c5	2026-04-30	not-applicable		[types] Add f64 conversion fns for all fixed types. It changes only font-types
+30dfcc6a6470f901445236d3c04c3d776a48b4cf	2026-04-30	not-applicable		Bump shared-brotli-patch-decoder (#1850). It changes only shared-brotli-patch-decoder, the root
+03981712026ceb4a474399dac13e6d41c4767115	2026-05-04	not-applicable		Remove trailing whitespace from LICENSE file (#1854). It changes only the root
+f62023546f0fc1dc4f6cd25a48ff764cc195d51c	2026-05-04	not-applicable		Add safety annotations to shared-brotli-patch-decoder (#1853). It changes only shared-brotli-patch-decoder
+60023c5e324f9f200f7f9b08b38f5e81bc4f128e	2026-05-04	not-applicable		[chore] Release shared-brotli-patch-decoder 0.1.3 (#1855). It changes only incremental-font-transfer, shared-brotli-patch-decoder, the root
+d91a0b4daa16889d11e3f7d46b9fef00a787eacf	2026-05-04	not-applicable		[read] Make subtables() helper handle empty extensions. It changes only read-fonts, skera, skrifa
+d7482dae97729ed9dca365ba26e90b0506af1771	2026-05-06	not-applicable		checkpoint: make some autohinting types public. It changes only skrifa
+2095706c08150411f546092fc93f7ec7b8efb2b5	2026-05-07	not-applicable		expose Axis, Segment and Edge types. It changes only skrifa
+a1ec6ad76f5020b0999e8489b3bf9ea463b3ec3d	2026-05-07	not-applicable		Handle FT/ttfautohint quirks. It changes only skrifa
+c6c76db78914d3853c8884f2f9158351d6bb667e	2026-05-07	not-applicable		fix lints. It changes only skrifa
+92fc3126a8b0a4e218a9dee0daece1b4f26add36	2026-05-07	not-applicable		reify scale flags. It changes only skrifa
+22eb610bc8d3e3feb3a07a0116db92ec37b0055a	2026-05-07	not-applicable		add ctor for GlyphStyle. It changes only skrifa
+c8bad9d0c8b438d9eaa67f505f984ce78baaaba8	2026-05-07	not-applicable		make target configurable for HintPlan. It changes only skrifa
+b3b8ec52f266b08bc6c7c930774de867bd29aa12	2026-05-08	not-applicable		Implement Clone and Debug for PatchGroup and related types. It changes only incremental-font-transfer
+5a0f217c4ecb9f5d446acf4ed9e5e353442adb6b	2026-05-08	not-applicable		Merge pull request #1857 from googlefonts/wm-ift. A merge commit. Each commit that it merges has a line of its own
+afd18356e93021b4ce98b8d239fa980bd526a7ac	2026-05-11	not-applicable		Merge pull request #1856 from googlefonts/autohint-needs-api. A merge commit. Each commit that it merges has a line of its own
+b0c1eb2a2ed424e054fcb3e33ad1952070380ef6	2026-05-11	not-applicable		Merge pull request #1794 from googlefonts/autohint-needs. A merge commit. Each commit that it merges has a line of its own
+1eae2835fc61421dda3c991ae30b920864d7c644	2026-05-11	not-applicable		[subset] add null checks so we don't emit ReadError for null offsets. It changes only read-fonts, skera
+ef058135e2b9405937dff0b0091502593035ca3e	2026-05-12	not-applicable		[Not variations] Fix for OS/2 codepage ranges: high codepoints fell through the cracks. It changes only skera
+5f01a6cf4526fe97140c58744601edb7aa352eb8	2026-05-12	not-applicable		[Not variations] typo was breaking Khmer. It changes only skera
+ae29901fbe8c329879aa4a3b20f5953037db0d45	2026-05-12	not-applicable		Merge pull request #1860 from googlefonts/skera-high-codepoints. A merge commit. Each commit that it merges has a line of its own
+8f13c1ec323bcc8becad19687b4b1792ecec218e	2026-05-12	not-applicable		Merge pull request #1842 from googlefonts/add_tests. A merge commit. Each commit that it merges has a line of its own
+b13be857ac22c073f736615d56d5cb5c39b98bc6	2026-05-12	not-applicable		[colr closure] add binary search branch in closure. It changes only read-fonts
+553d9deec7085259b4813ac5d3831c44220cc45e	2026-05-12	not-applicable		Merge pull request #1851 from googlefonts/minor_fixes. A merge commit. Each commit that it merges has a line of its own
+f4b4a380a5afc2b9944da384adb382d5232e8134	2026-05-12	not-applicable		[subset] fix bug in closure_lookups. It changes only read-fonts, skera
+d213a1d9d55d821cd7d6b3156a66c0bec898f3e3	2026-05-12	not-applicable		[subset] Don't drop Rule/ChainRule/ConextFormat3 tables with empty lookupRecords. It changes only skera
+e6cd196645b823850209039fc8f439b3314fe95f	2026-05-12	not-applicable		[subset] add test. It changes only skera
+47123d5ea30f705a8a54c4ad55085efa08bac05c	2026-05-12	not-applicable		Merge pull request #1863 from googlefonts/bug_fixes. A merge commit. Each commit that it merges has a line of its own
+5843c00b2cbbdced4c2c53dd2b569dacfbac1427	2026-05-13	not-applicable		Merge pull request #1862 from googlefonts/skera-duplicate-feature-typo. A merge commit. Each commit that it merges has a line of its own
+138903f66c059e3b50e38508257c833b310c3c47	2026-05-13	not-applicable		Treat an empty dictionary the same as a `None` (#1864). It changes only shared-brotli-patch-decoder
+7c9d875992c42d0bda6d0c7f807c25222e863490	2026-05-13	not-applicable		Update brotlic (#1865). It changes only shared-brotli-patch-decoder
+ba317f6aa8a135fd3197591715c5040edae4b9e2	2026-05-14	not-applicable		[codegen] split format/generic groups into modules. It changes only font-codegen
+03b333678faecebea15413c2f1fc572b44bcf2b2	2026-05-15	not-applicable		[ift] Run clippy in CI. It changes only incremental-font-transfer, the CI
+cb3e528f0a83aa79dc487f065fdd8305a0b4793b	2026-05-15	not-applicable		[subset] bug fix for postV2 subset. It changes only skera
+4f67b2a83581d19353845339d293ea01e90f1192	2026-05-18	not-applicable		[subset] remove invalid lookup indices before closure_lookups. It changes only read-fonts, skera
+98a47415e0d9af3484a2b926c1ce413de2a92986	2026-05-19	not-applicable		Merge pull request #1867 from googlefonts/codegen-cleanup-1. A merge commit. Each commit that it merges has a line of its own
+f720b84905f2874d8a554cc5c3d4fd149d89e159	2026-05-19	not-applicable		[subset] add more tests. It changes only skera
+6928e1cd49d80a306d8a7b8bda6ce53326e2440e	2026-05-19	not-applicable		[subset] skip typo check on test input. It changes only the root
+f9f0440994a497a4d8e6db0fbdb5a9c5228e9e1d	2026-05-19	not-applicable		Make it easier to fix typo failures (#1872). It changes only the CI
+8bb3567cd58c4595497db7e975d9f68c99d8b198	2026-05-21	not-applicable		Update copyright holder (#1875). It changes only the root
+d9562bd788a708afb15e3a979d454a9fbe2843e3	2026-05-21	not-applicable		[subset] close unicodes over bidi mirror variants. It changes only skera
+8a4e19e74e22a4ed3b43af426f72c1f89aa48ec6	2026-05-21	not-applicable		[codegen] Split up parsing module. It changes only font-codegen
+c15fb3dafdd22f56b2c15cd65d058359066397e8	2026-05-21	not-applicable		[read] Remove funny rexports from gdef module (#1876). It changes only read-fonts
+a306d6ff875c0f854c51e465ebfbbcff8895679c	2026-05-22	not-applicable		Merge pull request #1869 from googlefonts/fix_post. A merge commit. Each commit that it merges has a line of its own
+da79fb8715daf9bb38c410a261714f40e353c581	2026-05-22	not-applicable		Merge pull request #1874 from googlefonts/bidi_closure. A merge commit. Each commit that it merges has a line of its own
+99ff417a066258fd9bcac143c722b797e0f15dbd	2026-05-22	not-applicable		Merge pull request #1871 from googlefonts/add_tests. A merge commit. Each commit that it merges has a line of its own
+7056ea0c8c74531f9170b07b15a5b3af26d52900	2026-05-22	not-applicable		[codegen] Add test input for computed array w/ offsets (#1879). It changes only read-fonts, the code generator, write-fonts
+9cc498bbb04d5c8c66648fa0e41313b6d69f2888	2026-05-22	not-applicable		[codegen] Cleanup old NeededWhen logic (#1881). It changes only font-codegen
+a6255dd09386e6b8e6319504f68455e76a7b65b8	2026-05-22	not-applicable		Implement hasher directly in Skera (#1877). It changes only skera
+a5e7dbdbbf67269da43e5a1feda37a1c6a2a7f99	2026-05-22	not-applicable		Fix 26.6 mul/div operators  (#1880). It changes only font-types, skrifa
+ece86e90713ddfc8c37b2bb8c02d181cfed6604f	2026-05-26	not-applicable		[codegen] Add a test input for generic groups (#1883). It changes only read-fonts, the code generator, write-fonts
+5cbca260c07cb1261354da718798f6aafc75ad49	2026-05-26	not-applicable		Add an error when rustfmt fails to run (#1884). It changes only font-codegen
+d86e9c3c53dedf32c7d7110a03a0675982ff0f65	2026-05-28	not-applicable		[codegen] Rework how we handle tables with generic fields. It changes only font-codegen, read-fonts, the code generator
+cd374e7a131325368a8787f76b74bff7cfee202e	2026-05-28	not-applicable		[codegen] Remove into_concrete methods for generic tables. It changes only font-codegen, read-fonts
+2d91846d8339afd27581cb1703983d10d8b65591	2026-06-02	not-applicable		[write] Cleanup old dead_code annotations (#1888). It changes write-fonts outside the code that writes a simple glyph
+6a8b7717b2287ec7cc2225f2dd80bfb498b95940	2026-06-02	pending		Create "tables" feature for write-fonts (#1882). It changes write-fonts/src/util.rs, write-fonts/src/write.rs
+07a99a7c1bd8d3de826642493bfaedf8e96e373e	2026-06-02	not-applicable		[skera] Disable tables from write-fonts (#1889). It changes only incremental-font-transfer, the root
+162f647fd5dd3648fc7620435b7abc907c00943e	2026-06-03	not-applicable		[codegen] Generate default impls for tables. It changes only font-codegen, read-fonts
+8df559362cdff89a28891a7eb0bac5ec0c6f7571	2026-06-03	not-applicable		[subset] remove invalid glyphs after layout closure. It changes only skera
+163964da8ed89b40534c6b77555ea4f226a7f4bf	2026-06-03	not-applicable		[subset] Don't err out if lookup index is invalid. It changes only read-fonts
+d18eb766c173a141523ae3513d5bfc41856afc29	2026-06-03	not-applicable		[subset] calculate cost correctly. It changes only read-fonts
+0ce60305e307d7461b84f94d46f434f0aef7b784	2026-06-03	not-applicable		[glyph closure] fix a bug in (chain)Context Format2. It changes only read-fonts
+a764319b46631dd495b37210d45d97846710a046	2026-06-03	not-applicable		[glyph closure] check if should visit lookup before inserting seq idx. It changes only read-fonts
+2e8f0427b775a9badfc31175a3d7d9a775da63ac	2026-06-03	not-applicable		[subset] bug fix in ClassDef. It changes only read-fonts
+73b134b2da63f72d77e7235be951308be77a37b8	2026-06-03	not-applicable		[subset] refactor is_lookup_done, get rid of unnecessary brackets. It changes only read-fonts
+ff0e4b2edee251ce5cf1a01d22b9d00cc69f6176	2026-06-03	not-applicable		[subset] add tests. It changes only skera
+0cd68e99ea6cee058f7f686e623cbd0d5c2cd571	2026-06-03	not-applicable		fix clippy. It changes only read-fonts
+93e9f3de4182d683f29abf08f29a51e294c7fba6	2026-06-03	not-applicable		[subset] add more tests. It changes only skera
+7ba8c5393ecfef1a8fc38deaefd7c581b77bcb9d	2026-06-03	not-applicable		Merge pull request #1891 from googlefonts/clean_tests. A merge commit. Each commit that it merges has a line of its own
+bb425a88edc36e136296065c663b1cd5d401a388	2026-06-03	not-applicable		[codegen] generate default for read_args types. It changes only font-codegen, read-fonts
+e8d9a9fbb5f5f172ba39f8a89ce3eede90f2ae8b	2026-06-03	not-applicable		[codegen] impl Default for generic groups. It changes only font-codegen, read-fonts
+5c4bbed787673eb1623bd93de41302f4935844a0	2026-06-04	not-applicable		[subset] bug fix : use word_delta_count to check if delta values are using long types. It changes only skera
+beecf795bc198955d8aa97ff24af9cbd94353187	2026-06-04	not-applicable		Merge pull request #1895 from googlefonts/add_more_tests. A merge commit. Each commit that it merges has a line of its own
+278f1e17131c9e86af5b29e5f43022206f5f8c64	2026-06-04	not-applicable		[read-fonts] avoid panics in post table (#1896). It changes only read-fonts
+4216333fd053a3175f4ce2ac7c6f19ad76041cd5	2026-06-05	not-applicable		doc(deps): Update dependency graph (#1897). It changes only the root
+965611d6c78bc3a0c965f19dc6a75e53a9150fbe	2026-06-05	not-applicable		[subset] fix table size estimation. It changes only skera
+858e08d1f2dc8662aaa885d6d8ae2cd234b94ca6	2026-06-05	not-applicable		[subset] fix bug in cmap. It changes only skera
+7bd089a846e69019c4254d2ad7080b18baddc192	2026-06-05	not-applicable		[subset] add more tests. It changes only skera
+3088a1e107714baeabce3b1b1b7fe9c317847278	2026-06-08	not-applicable		Merge pull request #1902 from terkel/subset-add-palt-default-feature. It changes only skera
+72b73e5ecc5dcf93d7d06eb635644eb510bdca28	2026-06-08	not-applicable		[traverse] Use existing ArrayOfOffsets instead type. It changes only font-codegen, read-fonts
+629f0602d25b208ec3b0e263a0acce0e01ebd2eb	2026-06-08	not-applicable		Merge pull request #1899 from googlefonts/add_more_tests. A merge commit. Each commit that it merges has a line of its own
+786e4691a08b1f2b56aa6160a4416164b6bf7f65	2026-06-08	not-applicable		[font-types] Add GlyphId24 scalar (#1904). It changes only font-codegen, font-types, read-fonts
+e6a00e239a83541432fef8e8548f5b0f40516d35	2026-06-08	not-applicable		chore(release): Bump versions (#1905). It changes only font-test-data, font-types, incremental-font-transfer, read-fonts, shared-brotli-patch-decoder, skera, skrifa, the root, write-fonts
+908452dda9e419b85191ea4332f9d36ebe0b4dfb	2026-06-08	not-applicable		Bump versions and promote font-types to 0.12.0 (#1908). It changes only font-test-data, font-types, read-fonts, skrifa, the root, write-fonts
+5a45a1ffee49e5fb1357ad47c0a21ae7c6a6f125	2026-06-08	not-applicable		fix(build): Add GlyphId24 support to otexplorer (#1913). It changes only otexplorer, the CI
+94507359c79fb6dad2ce7d34f9d4c0c39a32c5df	2026-06-09	not-applicable		fix(package): Remove test files from package (#1906). It changes only incremental-font-transfer, skera
+3bb0854e2e5378c1070f2a88f36d12ee5728447b	2026-06-09	not-applicable		[subset] don't err out in case of empty name str. It changes only skera
+e3249748509327199fe84fea168d3d20abb9c7a9	2026-06-09	not-applicable		Parallelize skera integration test (#1912). It changes only fauntlet, font-codegen, skera, the root
+33b57bfbb18479ecdcf3edd637de6278b3e84cb4	2026-06-09	not-applicable		[subset] add tests. It changes only skera
+e3244d84faf0de6f270ca701fdd4bd0459ff390b	2026-06-09	not-applicable		[subset] skip typos check on tests input. It changes only the root
+27e3ca3585bc95477309f1dca3e851da4e394e78	2026-06-09	not-applicable		Merge pull request #1909 from googlefonts/bug_fixes. A merge commit. Each commit that it merges has a line of its own
+8a4322034f0cc0f955501a4403f3fd1015006e38	2026-06-09	not-applicable		Skip slow skera integration test by default (#1911). It changes only skera, the CI
+2138b468973b81624b3672bdfbfc20978a7edfd3	2026-06-09	not-applicable		Add some additional info to the output of ift_extend: - Breakdown of the bytes transferred. - Set of glyphs that were added to the font by the operation. It changes only incremental-font-transfer
+45992a52a4cb129370f3e1fbf82605268ae0a1c4	2026-06-10	not-applicable		[subset] bug fix: always generate advMap even it's empty. It changes only skera
+491d4fcf01c98680a1682220ae63ff653d581abf	2026-06-10	not-applicable		[skrifa] report adjusted advances for CFF(2) fonts (#1915). It changes only skrifa
+c7e70d27963657daa31b1f1c4f35e99799a8f8e8	2026-06-10	not-applicable		[subset] fix a bug in colrv1 VarColorStop. It changes only skera
+d8b06d1a143ae66830a246fbe62727dd615d9589	2026-06-10	not-applicable		Merge pull request #1917 from googlefonts/add_tests. A merge commit. Each commit that it merges has a line of its own
+c36b97e40146b401ff7cc3f70464a7bfc4667707	2026-06-10	not-applicable		Merge pull request #1919 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+25c28a42992381173d556fdac400bc499e6a597f	2026-06-10	not-applicable		[chore] release skrifa 0.43.2 (#1921). It changes only skrifa, the root
+938811c1ab8a3a8110d722ac626c05f9cc13aac3	2026-06-12	not-applicable		fix: address RUSTSEC advisories for unmaintained crates (#1923). It changes only otexplorer, read-fonts, skera, the root, write-fonts
+5ab0b5f871387558f751554c68ac181a43095539	2026-06-12	not-applicable		read-fonts: fix oob panic in fvar.rs user_to_normalized. It changes only read-fonts
+acf280108573b1d6487d0dd7b721d9a9b7d3f8a9	2026-06-12	not-applicable		handle unpaired high surrogate in name table CharIter. It changes only read-fonts
+d80480124df84bb87f28046a78822f4d9d5f197a	2026-06-16	not-applicable		[codegen] Use helper for generated count casts (#1925). It changes only font-codegen, read-fonts, write-fonts
+83c438a1dc59d8ed33748b33a0d3a96d7d528680	2026-06-16	not-applicable		[subset] add additional sorting after extension promotion. It changes only skera
+b0d6a0fa5e09d94290d4abfa722ae64cb83c5b84	2026-06-16	not-applicable		[subset] add repacker tests. It changes only skera
+07fd2d4aed1bab16181953175da8b76603fb4359	2026-06-16	not-applicable		Merge pull request #1926 from googlefonts/fix_repacker. A merge commit. Each commit that it merges has a line of its own
+ae95aa678511db2072c442cc99f6a2002e217571	2026-06-18	not-applicable		[subset-repacker] use hashmap when collecting child_idxes. It changes only skera
+963ee44b3908aa8777ced4a82f6efe24cc9754c7	2026-06-18	not-applicable		[subset-repack] cmp order by lookup index when subtables_per_byte are equal. It changes only skera
+1a4355948c0516a6e961f53859f4aea008b4b46b	2026-06-18	not-applicable		[subset] update expected test output. It changes only skera
+b5f642e36dd4deccac60408b4f618341890af960	2026-06-18	not-applicable		Reduce allocations in ift expand_template (#1928). It changes only incremental-font-transfer
+9610c8fa73a2db7267dfea0ec0d326d1f001730e	2026-06-18	not-applicable		Merge pull request #1927 from googlefonts/repacker_fix. A merge commit. Each commit that it merges has a line of its own
+da28a9509aa29dd20df39701064c9ae05634d5e5	2026-06-19	not-applicable		[read-fonts] a new Font API. It changes only read-fonts
+87573715d3be06b37c520c75226f9f8fc47e5782	2026-06-19	not-applicable		lints. It changes only read-fonts
+e7bf83ceaf819332044057b6eae0c9c6c0b477d0	2026-06-19	not-applicable		more lints. It changes only read-fonts
+2b2bf9afe40db8ed50f2a949ff05a78437add106	2026-06-19	not-applicable		return inner Any for shaping data. It changes only read-fonts
+82cd1280adbd7d633fd207cbcd4d8fe159181e46	2026-06-19	not-applicable		add shaping data interop test. It changes only read-fonts
+3e068b146043b9dccbfc0c171b0628b6ab25f222	2026-06-19	not-applicable		add table lookup benchmarks. It changes only read-fonts
+6ab032ba698eb97163d724e60827042dd02a4b2f	2026-06-19	not-applicable		remove unused fmtx table. It changes only read-fonts
+d73cb2e1c7312956cfcbe1053e0ad5a5758344cf	2026-06-19	not-applicable		add FontInstance. It changes only read-fonts
+cc7b1220927730704a2569a86968009f8added99	2026-06-19	not-applicable		add named_instance_with_overrides. It changes only read-fonts
+bc040b2f06cb95391dca1eba613521802a5991e6	2026-06-19	not-applicable		minor cleanup. It changes only read-fonts
+a981259fe6a1bd1e6ef3e042f9ba6cd1696d71a3	2026-06-19	not-applicable		clippy. It changes only read-fonts
+fc561c9a581809420455e837609a511b436a5c5d	2026-06-19	not-applicable		feature gate once module as well. It changes only read-fonts
+c4d87b2223bddc7a6f3d612ed708c311242cf8a0	2026-06-19	not-applicable		export FontTableFunction. It changes only read-fonts
+9df43e797f77bcecf4ccab7494d45c72cc53d540	2026-06-19	not-applicable		Bump patch version for read/write-fonts. It changes only read-fonts, the root, write-fonts
+602c8abb1cb8acd8bcfbf0b0d8fe8bdf46493d96	2026-06-19	not-applicable		Fix cargo.toml version breakage. It changes only read-fonts
+8e1cf8e8d8bb0bc6ba74cccef9e18ef82da7efbc	2026-06-20	not-applicable		Reduce SubsetDefinition clones in IFT (#1929). It changes only incremental-font-transfer
+99e2cf021d7a5b35e26a46041c55ba0766a68b0f	2026-06-22	not-applicable		Parse base32hex and base64url encodings on demand (#1935). It changes only incremental-font-transfer
+597549fd36de3ac7fddd845873f449c47e4bfb3c	2026-06-23	pending		Fix trivial clippy errors (#1940). It changes write-fonts/src/tables/glyf/simple.rs
+1fa9efef7cdfc3ef7b047191a4210e89e7f11135	2026-06-23	not-applicable		Fix clippy lint (#1941). It changes only skrifa
+c592c271df920516d9cdc928f782cfef5d37a39f	2026-06-23	not-applicable		[subset] repacker bug fix. It changes only skera
+4d0cc0a9001542421bffda4d4c651acc8b814ee8	2026-06-23	not-applicable		Upgrade CI Rust version (#1942). It changes only read-fonts, the CI, write-fonts
+84790f467b78bd73c6411a9522b674849d88daf7	2026-06-23	not-applicable		Bump ift to 0.4.1 (#1946). It changes only incremental-font-transfer, the root
+6d04d15364c827ce6c55ad0d9e639af1aa20318b	2026-06-24	not-applicable		Merge pull request #1938 from googlefonts/port_repacker_fix. A merge commit. Each commit that it merges has a line of its own
+4de326f353b13440ec2a4ab326cab29340b219e2	2026-06-24	not-applicable		[subset] retain extension subtables. It changes only read-fonts, skera
+91c622a01572051ff38fde6cc7d086cb21332e7c	2026-06-24	not-applicable		[read-fonts] read the full flag run in read_points_fast. It changes only read-fonts
+3e98025561b3392013967c9c1b5dac9847051b69	2026-06-24	not-applicable		Update rand dev-dependency from 0.8 to 0.10 in read-fonts. It changes only read-fonts
+6a59a0fc2b45e63463ee814cff9234daad254331	2026-06-24	not-applicable		Update rand dev-dependency from 0.8 to 0.10 in write-fonts. It changes write-fonts outside the code that writes a simple glyph
+493acac81caf43135627d811bf18200e9dd26093	2026-06-24	not-applicable		Update rstest dev-dependency from 0.18 to 0.26 in write-fonts. It changes write-fonts outside the code that writes a simple glyph
+9db9e7dcd6d24bda6b84c23042a6c407c0016223	2026-06-24	not-applicable		[subset] update tests. It changes only skera
+0f373001a606d71902f4c599c16c7ffe59c14e84	2026-06-24	not-applicable		[subset-repack] Add safety limits to repacker. It changes only skera
+a1d51323366cbe864232692765fac231f50c59d5	2026-06-24	not-applicable		Merge pull request #1948 from googlefonts/port_from_hb. A merge commit. Each commit that it merges has a line of its own
+68c0ead3a41ea8efa6e05f5a06abe597a9e758c0	2026-06-25	not-applicable		Fix whitespace in docs. It changes only font-types
+a45c9d863b3f821226230bdf5c141bb8ee271395	2026-06-25	not-applicable		serde: use value (not repr) for fixed point numbers. It changes only font-types
+9db468ae71e247c8e883f655ac07918cedb4b007	2026-06-25	not-applicable		Add test for serialized format & roundtrip. It changes only font-types
+965ec445fac9113e10c233a87fa0db094d101d09	2026-06-25	not-applicable		Split one_is_one tests per type. It changes only font-types
+8a1ca6673d516cc9a3c61596e93e5965a6ab54aa	2026-06-25	not-applicable		Add roundtrip_all tests. It changes only font-types
+b44f9344261a6ebeff194d0116d987319aee160f	2026-06-25	not-applicable		Improve assertion error. It changes only font-types
+b6f8e27f42bdcc7a224b1359a7e0507c56888e86	2026-06-25	not-applicable		Simplify/Shorten assertion messages. It changes only font-types
+c9e4c6c8776038d2733e97c6206d351fced37acb	2026-06-25	not-applicable		Merge pull request #1947 from googlefonts/retain_extension_subtable. A merge commit. Each commit that it merges has a line of its own
+4883d5c04ef9ab5e40fa9de051e0baa650064a87	2026-06-25	not-applicable		[read] Fix overflow in CoverageFormat2::get. It changes only read-fonts
+dec679d7d4864175e95e29509b173e67dd889003	2026-06-30	not-applicable		Guard CoverageFormat2 index overflow. It changes only read-fonts
+bb3431985a1b78fcd88a3388d7844816f572de61	2026-07-03	not-applicable		[varc] Read SkewX/SkewY before TCenterX/TCenterY. It changes only read-fonts
+9b2a56ddfbf66ea053f83c9d9478502fd6d84018	2026-07-03	not-applicable		[test-data] Set glyphDataFormat=0 in VARC test fonts. It changes only font-test-data
+940249fc4bb590d491934e4b9f9f06f84b1f8296	2026-07-03	not-applicable		[read-fonts] Make FloatItemDelta float accessors public. It changes only read-fonts
+cd4aaef57887dd1d8a5875e38c406843e66c9cab	2026-07-03	not-applicable		Bump read-fonts version. It changes only read-fonts, the root
+02c26dedbd1f1caaaf1a02da663ad74f541689c7	2026-07-03	not-applicable		Implement custom encoder (#1950). It changes only incremental-font-transfer
+df8598df6fa714dee528382542a74ca369348de9	2026-07-03	not-applicable		[read-fonts] use real segment start code in cmap4 iterator. It changes only read-fonts
+cb8b3eb397743159713bdfc79b00e7f951c88463	2026-07-03	not-applicable		Run rustfmt on the cmap4 overlap test. It changes only read-fonts
+b373cdbc6043a791fb23b3e0f413649458f5e63a	2026-07-03	not-applicable		[chore] Bump versions. It changes only font-types, skrifa, the root, write-fonts
+a0bdb6e27a2ed50151501bf4ccae9a0ea9ee8d26	2026-07-05	not-applicable		[read] Suppress a clippy false-positive (#1957). It changes only read-fonts
+699ee1d738921895e3866f7d24cb286fda84410b	2026-07-06	not-applicable		[chore] Release skera and incremental-font-transfer (#1959). It changes only incremental-font-transfer, skera, the root
+28ad033c871ae7d330bdca6bb4a8324cbebdd0d5	2026-07-09	not-applicable		[skrifa] tt hint: limit number of skipped instructions (#1963). It changes only skrifa
+93d40d25f596914404d97b1da618f3f08a6dad6c	2026-07-09	not-applicable		[skrifa] tt hint: overflow/OOB fixes (#1964). It changes only skrifa
+e33ce2d25798d2727579c548e96bd8f4d631a8fb	2026-07-10	pending		[read] Combine FontRead/FontReadWithArgs. It changes write-fonts/src/tables/glyf.rs, write-fonts/src/tables/glyf/simple.rs, write-fonts/src/write.rs
+6090c3b08e0d67535459cd5599065b9dedd7786b	2026-07-10	not-applicable		[read] Simplifiy ResolveOffset. It changes only read-fonts
+f28b5818a954575f1680c545497acba0cf869f3d	2026-07-10	pending		[read] Pass Args by value. It changes write-fonts/src/tables/glyf.rs, write-fonts/src/tables/glyf/simple.rs, write-fonts/src/write.rs
+b0160adc3d576b3d598be4a96a7dd1fb47343e2b	2026-07-10	not-applicable		Fixup for new Font API. It changes only read-fonts, skera
+26503f2a0a24f9d0504d7ec6cb0fc4cba0e68a58	2026-07-10	not-applicable		[read-fonts] handle empty simple glyph with padding (#1965). It changes only read-fonts
+87d48012bd5b33f79abd1b76ae7af1dc2d4d2a68	2026-07-10	not-applicable		[skrifa] support cmap13 in Charmap (#1966). It changes only font-test-data, skrifa
+37b6878e122854cfe2b3b081ef03cf585595d20b	2026-07-10	not-applicable		Short string optimization for IFT url_template (#1961). It changes only incremental-font-transfer, the fuzzers
+2056e6cd228ab4cd603aa4f94a5d30d6aa46cbb3	2026-07-10	not-applicable		[chore] Cleanup some clippy lints (#1968). It changes only font-codegen, the fuzzers
+a90709143ebb06ed1cbf652ab0f272fdc52071d6	2026-07-10	not-applicable		Bump Rust to 1.89 (Aug 7 2025) (#1967). It changes only the root
+fc82097bdb932bc94f8af5dc591520474ca3f234	2026-07-11	pending		Support more fields when writing glyphs (#1960). It changes write-fonts/src/tables/glyf/simple.rs
+ed57bb9ef64b79bfafc3733eba9610267c34037e	2026-07-15	not-applicable		[skera] increase MAX_FEATURE_INDICES. It changes only skera
+46e1f22acf8d07ede5e128a670c25b5146ce21c7	2026-07-15	not-applicable		Merge pull request #1969 from googlefonts/port_from_hb. A merge commit. Each commit that it merges has a line of its own
+109f1d801695be181d16195e86194043bab54606	2026-07-16	not-applicable		skrifa: Support obtaining `LocalizedStrings` from name table without a `FontRef` (#1900). It changes only skrifa
+bbedcb2167dbd3a0d887325fdb720808072624df	2026-07-16	not-applicable		Add skera benchmarks (#1970). It changes only skera
+7be593502496a4b930c0b6ccd04d47283cc16715	2026-07-20	not-applicable		Add alternate sparse bit set decoding method that allows specifying a maximum output set size. It changes only read-fonts
+86d242fd44a57488a0c7c564c3833aab281ea5c9	2026-07-21	not-applicable		Make vhea version default, not computed (#1974). It changes only read-fonts, the code generator, write-fonts
+b08fd8746782df7139580c68159041cd90c3892d	2026-07-21	not-applicable		[chore] release all crates (except font-types) with minor bump (#1975). It changes only font-test-data, incremental-font-transfer, read-fonts, skera, skrifa, the root, write-fonts
+634bf4d4a79c8364cb3b10284e2a52983c575485	2026-07-21	not-applicable		[skera] increase MAX_VERTICES limit to 800000. It changes only skera
+25229be498e7fde3d9202a005571f527c8884723	2026-07-21	not-applicable		Merge pull request #1976 from googlefonts/port_hb_fixes. A merge commit. Each commit that it merges has a line of its own
+dd9af718bd659346dec891965ff3728c2ff6b1aa	2026-07-23	not-applicable		[read-fonts] avoid panic in BitmapSize::location() (#1977). It changes only read-fonts
+8c1fedf93df9e130c9a0b2469c7650a6effbc718	2026-07-23	not-applicable		[skrifa] limit TT composite glyph work (#1978). It changes only skrifa
+5f74c0d19a47aaf91e60d63e69cccf167e21afaa	2026-07-23	not-applicable		[font-types] use wrapping abs/neg for Fixed (#1979). It changes only font-types
+d2d296e8d94ff5d3983c11293eb844fd66348e6e	2026-07-23	not-applicable		[skrifa] avoid infinite loop in autohinter (#1980). It changes only skrifa
+734d3e01b1b5ad2e8e5a6fc3226ba8dbe4861830	2026-07-23	not-applicable		[chore] release patch update for types, read, skrifa, skera (#1981). It changes only font-types, read-fonts, skera, skrifa, the root
+c54a4178c150470ddfcb70d5f4da175311dfbee9	2026-07-24	not-applicable		[skera] add copy_data option for duplicate_vertex(). It changes only skera
+dd3b9cf7f03a57eac6523e31a36479aa32ba87b0	2026-07-24	not-applicable		[skera-repack] fix is_shared(). It changes only skera
+ad9d2167108f12372ee82c8ae42bb32c24235f20	2026-07-24	not-applicable		[skera] update remap_child(). It changes only skera
+0d01f501b30dc6d04eed21e2ab29786bf78a1afa	2026-07-24	not-applicable		[skera-repack] make a copy of shared coverage table before mutation. It changes only skera
+aa570583a9373eae1c118a2798e2ece6d8809575	2026-07-24	not-applicable		[skera-repack] make a copy of shared ClassDef before mutation. It changes only skera
+660a4f82e8c3692beff2d454079f42f18b57ecdf	2026-07-24	not-applicable		[skera-repack] fix MarkBasePos table splitting. It changes only skera
+d2b3791fab663164ed2c7bade224153bcde040e0	2026-07-24	not-applicable		[skera-repack] fix LigastureSubst table splitting. It changes only skera
+3213a55b58b2250e272813454bc909cbec4c8148	2026-07-24	not-applicable		[skera-rapack] remove unused fn. It changes only skera
+a16ef391005989b5f61681eae3ead13cadab31a9	2026-07-24	not-applicable		[skera-repack] fix fix_virtual_links() in ligatureSubst splitting. It changes only skera
+fd1fa6224d8c0b9692316f6b1dc20eaabb741bd1	2026-07-24	not-applicable		[skera-repack] add test. It changes only skera
+0c818f804fb435651527e4b2c32f1fb33208f2f3	2026-07-24	not-applicable		[skera] fix comment. It changes only skera
+0d5779d1ab576fd8795ff3c5c6ae70b71ece93e7	2026-07-27	not-applicable		[skera-repack] revert previous change to add_parent(). It changes only skera
+a2f09903729e4f2ff3eac367df5d575c62ae779a	2026-07-27	not-applicable		Merge pull request #1982 from googlefonts/port_hb_fixes. A merge commit. Each commit that it merges has a line of its own
+739ee692ac85a954ad11934177ea5c87d506d538	2026-07-28	not-applicable		[skera] tweak Benchmark suite. It changes only skera
+21571e8e4d44d9467adb7991da6710d7f1c29a89	2026-07-28	not-applicable		[skera] move plan creation out of iterating loop. It changes only skera
+d0f10996e45d37a1d3306a87549e0a83a66ca8e9	2026-07-28	not-applicable		Merge pull request #1984 from googlefonts/adjust_benchmark. A merge commit. Each commit that it merges has a line of its own
+37c89dd54cca0665a04ef050f226fc59bcd25520	2026-07-28	not-applicable		[skera] move plan creation backc into interation loop. It changes only skera
+7255a6a7dac1bd5eabf20ebd9e5c3aeb5a3d9c81	2026-07-29	not-applicable		Merge pull request #1985 from googlefonts/fix_num_iter. A merge commit. Each commit that it merges has a line of its own
+fbe0cb3a29b5451b3231ce1c076b560472feae40	2026-07-29	not-applicable		[read-fonts] optimize post glyph name iter (#1983). It changes only font-test-data, read-fonts, skrifa
+1041d90f3ba2c2fe4f6ac481872bc0d48662e93e	2026-07-29	not-applicable		[skrifa] smallvec: don't pretend we do fallible alloc (#1990). It changes only skrifa
+8ec1dca81605957d853b420fb8dc4427d5bf424e	2026-07-29	not-applicable		[read-fonts] avoid range reset for cmap12/13 iter (#1986). It changes only read-fonts
+823c1eae496f5e4f1d66f178486cb96dcef59487	2026-07-30	not-applicable		[glyph closure] try to reduce allocations by splitting borrows. It changes only read-fonts
+b7487ff091525e56b2735b4ab5bd315f7244c1f5	2026-07-30	not-applicable		[skrifa] autohint: avoid panic on overflow (#1987). It changes only skrifa
+38fdf8ced273beb99bdb970d0eda2930441719c1	2026-07-30	not-applicable		[skrifa] autohint: ensure indices fit in u16 (#1989). It changes only skrifa
+5d8cc1d9c9b1be7f72d4718b16817957079447ac	2026-07-30	not-applicable		[skrifa] autohint: explicit guards for indexed access (#1988). It changes only skrifa
+fbe890db74b0947e2cec32cfdbb161dde71edc31	2026-07-30	not-applicable		Update bytemuck to 1.14.0 (#1991). It changes only the root
+d3947297b40a7219c7bb54a191d17e0930add61b	2026-07-30	not-applicable		[glyph closure] remove unused fn. It changes only read-fonts
+746053e2d8e768f55abbf3ebbb2f65dc01a3c769	2026-07-30	not-applicable		fix clippy. It changes only read-fonts
+aeede194891632850e0abdd0fe297319166bd0b5	2026-08-01	not-applicable		[skera] name: don't panic on out-of-range name record count. It changes only skera
+91281af48ba3fb25175c0606453997c80749c7bc	2026-08-03	not-applicable		Merge pull request #1992 from googlefonts/reduce_alloc. A merge commit. Each commit that it merges has a line of its own
+a4abcc32a8dc6a48783a96e14d636ffd6dac70a3	2026-08-03	not-applicable		enable Link-Time Optimization (LTO) and codegen-units = 1. It changes only the root
+0f9c7f9b8047d07c46caedf14730513189d86c42	2026-08-03	not-applicable		Merge pull request #1999 from googlefonts/build_config_opt. A merge commit. Each commit that it merges has a line of its own
+8f5f551b055f40f8d92d996632e0ca1c672da451	2026-08-03	not-applicable		[read-fonts] apply imageDataOffset to format 4 sbit offsets (#1994). It changes only read-fonts
+275888aaaefb1462db4ceec1d8917521c9bad2b8	2026-08-05	not-applicable		[chore] Better manage github actions deps. It changes only the CI
+106bbf93d2f16dfeae817cc0581a60fe12b0e8f3	2026-08-05	not-applicable		Bump actions/checkout from 4.4.0 to 7.0.1. It changes only the CI
+9a16122b4eb49b1104a4f56610a64019647797c8	2026-08-05	not-applicable		Merge pull request #1996 from sagikazarmark/skera-name-malformed-record-count. A merge commit. Each commit that it merges has a line of its own
+40cd87d21b7d0f030e60f239cc60dc814d548a0e	2026-08-05	not-applicable		Remove support for IFT Patch Map Format 1. It changes only font-codegen, font-test-data, incremental-font-transfer, read-fonts, the code generator, write-fonts
+d8769631a63a9a1e7fec98a6241d559489f023d4	2026-08-05	not-applicable		[read-fonts] limit work in charstring eval (#2000). It changes only read-fonts
+227d12e82cdd18e134a27dabdcc08dbf21406d21	2026-08-05	pending		[chore] Fix some typos (#2005). It changes write-fonts/src/tables/glyf.rs
+f95a2db5b2367ddbe752884c39e13b62a2ea39bd	2026-08-05	not-applicable		[read-fonts] type1: remove unbounded recursion (#1993). It changes only read-fonts
+4d031892d55373f96f354323286e8e0e54c5c920	2026-08-05	not-applicable		[skera] add doc for profiling skera. It changes only skera
+867fe4d6e06fe52d417c2bf9b30c473d5805577d	2026-08-05	not-applicable		skrifa/varc: bound condition-evaluation recursion (#2014). It changes only skrifa
+f43403c06f9045acf482ee4527e4796c84ffdc03	2026-08-05	not-applicable		skrifa/varc: don't panic on a null MultiItemVariationStore offset (#2012). It changes only skrifa
+fa1e1f24142e1448ee9fe3f0f12b2cff0084babb	2026-08-06	not-applicable		Bump crate-ci/typos from 1.30.2 to 1.48.0. It changes only the CI
+ca56cdee896b45d4e6bc5706e5ce3c4f63c86956	2026-08-06	not-applicable		Merge branch 'main' into skera_profil_doc. A merge commit. Each commit that it merges has a line of its own
+8f295ea2f1c2d92550a07ed7c9c377d68500bfc1	2026-08-06	not-applicable		Lower MSRV to 1.85 and add MSRV CI check. It changes only font-test-data, font-types, incremental-font-transfer, read-fonts, shared-brotli-patch-decoder, skera, skrifa, the CI, the root, write-fonts
+487a3335dfdac06af76a8c36c975ac97006e55a7	2026-08-06	not-applicable		[skrifa] avoid more overflow panics in TT hinting (#2011). It changes only skrifa
+d0f5d071fdb483fee1be598fe13d6228eb3ead3c	2026-08-06	not-applicable		[read-fonts] avoid overflow panics in CFF charset (#2016). It changes only read-fonts
+7d464b87540490314fe9edcb6e7a78dc16ea3a92	2026-08-06	not-applicable		[read-fonts] aat: use wrapping to avoid panics on 32-bit (#2017). It changes only read-fonts
+5e1b053b1ff76fbc6a28f224e8a0f2abb95e27dd	2026-08-06	not-applicable		Merge pull request #2007 from googlefonts/skera_profil_doc. A merge commit. Each commit that it merges has a line of its own
+3dfbae6fed1cf2d267fdda0c799318713caf0c21	2026-08-06	not-applicable		[glyph closure] add a fn in classdef. It changes only read-fonts
+40b07affc950686114aac55657cbf78312772c01	2026-08-06	not-applicable		[glyph closure] reduce allocations for (Chain)ContextFormat2. It changes only read-fonts
+76c63d821b1f6ebade5d7c60270e21ebb53a4322	2026-08-06	not-applicable		[closure] reduce set allocations for (Chain)ContextFormat1. It changes only read-fonts
+1d3e93109e2e51522cdeb011a4e693c22c344772	2026-08-06	not-applicable		[glyph closure] reduce set allocations for (Chain)ContextFormat1. It changes only read-fonts
+95e1159344efe58f05c32feb59db938d893b72df	2026-08-06	not-applicable		[glyph closure] move seen_sequence_indices out of loop. It changes only read-fonts
+35ca72a63cb8cb8c660a4c348977e5b910cbdbb1	2026-08-06	not-applicable		[glyph closure] remove unncessary set allocation. It changes only read-fonts
+e00c732c713a7b1ae7689ea1bb9c686b25036aa8	2026-08-06	not-applicable		[closure] Add FnvHashMap, use it as a cache during closure. It changes only read-fonts
+d38642222e10bd323b49a1f52c3b1e467168f5fa	2026-08-06	not-applicable		[glyph closure] add intersected_class_cache. It changes only read-fonts
+ae4b992c7fa7e6374217f255d62ede5ac255a5fe	2026-08-06	not-applicable		[glyph closure] make fnv feature gated. It changes only read-fonts
+950fd5fc23ca5313f4b6f38032237b836a425591	2026-08-06	not-applicable		fix clippy. It changes only read-fonts
+e0487b93cc2e9b1d7c347d50af7c0f8410f23f22	2026-08-06	not-applicable		[glyph closure] address review comments. It changes only read-fonts
+bb6f87166aa8bac93ff9df5ea67d58b7091b3e2a	2026-08-06	not-applicable		Add is_subset() method to IntSet. It changes only read-fonts
+6cd24c9f26b522dadda4c00d1588205455303037	2026-08-06	not-applicable		Add is_subset() method to IntSet. It changes only read-fonts
+a9aa24f639ce1933aeafe4baf39012511e198045	2026-08-06	not-applicable		[glyph closure] use IntSet is_subset() API. It changes only read-fonts
+f66ac7cb143d22e1423e29a93b307daad7445696	2026-08-07	not-applicable		Merge pull request #2015 from googlefonts/use_is_subset. A merge commit. Each commit that it merges has a line of its own
+419aa42ef26cb263b5858052aafae2e2e149a035	2026-08-07	not-applicable		fix build issues caused by merging stacked PR. It changes only read-fonts
+bf31399aa1abace327272a76cbe705ec5afddf95	2026-08-07	not-applicable		Merge pull request #2023 from googlefonts/fix_build. A merge commit. Each commit that it merges has a line of its own
+b65f4708268071048f9d673c37179731da06a7c3	2026-08-07	not-applicable		[skera-repack] single parent optimization. It changes only skera
+961143e778318118e97972ee2251b8185297cc4e	2026-08-07	not-applicable		[skera-repacker] use enum type for parents. It changes only skera
+b0030ec65af96e9aff7837d58ea35a335bbecda6	2026-08-07	not-applicable		Merge pull request #2024 from googlefonts/single_parent_in_repack. A merge commit. Each commit that it merges has a line of its own
+e63756f27bdc6b3b3e44b4e5ed451f07d928babd	2026-08-10	not-applicable		[read-fonts] Ignore short indexTablesSize when reading EBLC/CBLC index subtables (#2020). It changes only read-fonts
+9bbb04d0850a8d438434fea8cc442bfa0a388914	2026-08-10	not-applicable		[skrifa] COLRv1: remove nested traversal optimization and limit total work (#2009). It changes only skrifa
+e829e72a3a1ccae4207a005d06181cbd13b55bfd	2026-08-10	not-applicable		[skrifa] VARC: limit number of edges processed (#2032). It changes only skrifa
+10b5d6959ec5907f3c6635550aa48f43b8e9984b	2026-08-10	not-applicable		[read-fonts] handle FD Select bounds (#2026). It changes only read-fonts
+555ff882909366525825844f791e69e16b187448	2026-08-10	not-applicable		[read-fonts] avoid Device iter subtraction overflow (#2027). It changes only read-fonts
+4e1f904350f72d3580712744b6cccc26e9edf314	2026-08-10	not-applicable		[read-fonts] FontAPI: add pure CFF variant to FontKind (#2034). It changes only read-fonts
+e29b8b5087354bcbca162af6437f07c07c989a6f	2026-08-10	not-applicable		[read-fonts] avoid panics in classdef intersection  (#2028). It changes only read-fonts
+29ae374343fe1f62429e2889324fe5cfac3847c8	2026-08-11	not-applicable		[skrifa] COLRv1: avoid unbalanced stack state on error  (#2031). It changes only skrifa
+7873c8a7d0ce89517336e28583154e986cfb3210	2026-08-11	not-applicable		[skera-repack] replace BTreeMap with vector. It changes only skera
+73fd5ce7035069913c561b7978a015e4e23b12d4	2026-08-11	not-applicable		[read-fonts] reduce avar application complexity (#2036). It changes only read-fonts
+60877df3b5b89fae4e60b31f836c42108470e410	2026-08-12	not-applicable		[skrifa] autohint: avoid panic on font with 0 glyphs (#2044). It changes only skrifa
+bb974b19a171b8201a4a760e0f15c7782cbef011	2026-08-12	not-applicable		[skera-repack] Use enum type to track sorted status for real links. It changes only skera
+f3edd9d2d4d87789a51f22f2736e7443ea2cb711	2026-08-12	not-applicable		[skrifa] tthint: avoid overflow in line_vector (#2039). It changes only skrifa
+21b17b4c946559832bc94e09509046048665ee35	2026-08-12	not-applicable		[font-types] add normalize method to bbox (#2043). It changes only font-types
+c2446237f91fc40122601f8028ad34b4f9a44828	2026-08-12	not-applicable		[skrifa] tthint: ignore fractional bits in parity checks- #2040 #2040. It changes only skrifa
+78aa50da911a4ec64a45d091765154e8b7843e12	2026-08-12	not-applicable		[read-fonts] fvar: use different normalization path for large number of axes (#2038). It changes only read-fonts
+d28db340e438eed1120120b2fda94827911fbeec	2026-08-12	not-applicable		[font-types] remove assert from Version16Dot16::new (#2041). It changes only font-types
+39fdc1af68cf31f571f9e0189c8cd2460de33b20	2026-08-12	not-applicable		[chore] tidy for release (#2045). It changes only read-fonts
+74915340ab076dd6edf11c5ddfd285d20459fc78	2026-08-12	not-applicable		[chore] breaking release for all except font-types, shared-brotli (#2046). It changes only font-test-data, incremental-font-transfer, read-fonts, skera, skrifa, the root, write-fonts
+21270ba09f2645cc509bac3692bce7aae9db76c6	2026-08-12	not-applicable		address review comments. It changes only skera
+d4ba6b601dd2ebeb836d8d01b38eb802abeea433	2026-08-12	not-applicable		sign-extend packed device deltas in iter_packed_values (#2047). It changes only read-fonts
+e90420c3f7f2ca8b70d26d79fa1bdc9e1182bd42	2026-08-13	not-applicable		Do not add final segment in cmap4 if already present. It changes write-fonts outside the code that writes a simple glyph
+9270e66430f32143a63a8ceaab1970b9fba4f181	2026-08-13	not-applicable		Do not use assert_matches as it is not supported by MSRV. It changes write-fonts outside the code that writes a simple glyph
+bdc0c9dd4e5942fb79b1dce02b6b7f5cd7ad98c7	2026-08-13	not-applicable		Fix n_segments calculation. It changes write-fonts outside the code that writes a simple glyph
+114500539375af839f61766507653a1d205568d4	2026-08-13	not-applicable		[skera-repack] deduplicate virtual_links. It changes only skera
+3bc6792ab10deac7bed1c356c902cf2b30e0f174	2026-08-13	not-applicable		[skera-repack] avoid unnecessary update_parents() call. It changes only skera
+cd0dd9cb8d4f39788c655c56d5fca9b26c5de0cd	2026-08-13	not-applicable		[skera-repack] minor optimization: use remove_entry(). It changes only skera
+db859cdabd1bedbda943658553b00243b19007b4	2026-08-13	not-applicable		[skera-repack] try to reduce vector allocs. It changes only skera
+511a9c01fe4101b1bc6271a316b4134582ac8652	2026-08-13	not-applicable		Merge pull request #2035 from googlefonts/experiment. A merge commit. Each commit that it merges has a line of its own
+756f9f7a0b7ce07b457443bc09d426ce6d731da9	2026-08-13	not-applicable		Merge pull request #2048 from googlefonts/runtime_exp. A merge commit. Each commit that it merges has a line of its own
+565b4164ca58ab7b4f0e98223619948a3205c9a8	2026-08-14	not-applicable		[read-fonts] avar: cap to start of trimmed range (#2055). It changes only read-fonts
+e57d7f9871f5f434b6afcaaaea61d9e0a0046255	2026-08-18	not-applicable		[skera] no need to keep VariationDevice if varidx is NO_VARIATION_INDEX. It changes only skera
+df803e3f82dc07daf02fd9cd87576cc3b570ca88	2026-08-18	not-applicable		[skera] don't err out in case of empty VariationDevice in GPOS. It changes only skera
+5b0b0c3ed1ed71065ede53aa006cff0179154b7d	2026-08-18	not-applicable		[skera] don't err out in case of empty VariationDevice in gdef. It changes only skera
+242e0cee204025fc38a8e1df3e90a95e7dce22eb	2026-08-18	not-applicable		[skera] fix base table. It changes only skera
+301b06e5930dff211b76ccf1a1062833ba42f7f4	2026-08-18	not-applicable		[skera] add tests. It changes only skera
+726fca740f102a4320bf43379c484c2034518025	2026-08-18	not-applicable		[read-fonts] fix COLRv1 closure overflows (#2049). It changes only read-fonts
+4bddc43b086a05ea55095132b95738fb8302b4a4	2026-08-18	not-applicable		[read-fonts] fix svg glyph data overflow (#2050). It changes only read-fonts
+f5ab31fe72fe5918a171d3055a61862c9d9cc37c	2026-08-18	not-applicable		[read-fonts] fix PointIter::advance_flags overflow (#2052). It changes only read-fonts
+5ba9ea04dfca0fa09c407ccc37bef90854193ef0	2026-08-18	not-applicable		[read-fonts] fix potential bitmap overflows (#2053). It changes only read-fonts
+67e32c4d78df7ebea1fab8c8af5ccbbf6400afd7	2026-08-18	not-applicable		[codegen] traversal: don't unwrap versioned fields (#2054). It changes only font-codegen, read-fonts
+b08c6cce20462f8cffada8cb01f7f462d702ad88	2026-08-18	not-applicable		[read-fonts] bound VarLenArray::get() reads (#2051). It changes only read-fonts
+8f0786275dd84d6b006327d01d1f6071bf5c3247	2026-08-18	not-applicable		[skrifa] raise COLRv1 paint node budget for complex flags (#2059). It changes only font-test-data, skrifa
+36f2bd95a164a525da1a24e74f0dc900b714f7b1	2026-08-19	not-applicable		[skera] simplify code. It changes only skera
+ed8294ec750b6a7e047cb674139b39aeaf4c8903	2026-08-19	not-applicable		Merge pull request #2057 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+5ac65ae19e626e60a68abddb2d638e0d2e33c3da	2026-08-19	not-applicable		[read-fonts] add Cmap14::iter_with_limits (#2056). It changes only read-fonts, skrifa
+4db936cca7e995719e1f579b34d099b4fca9cce4	2026-08-20	not-applicable		Inline hot AAT lookup and state table accessors (#2061). It changes only read-fonts
+b1c38b999814e3d7d59fa8786bfea46d4f3c4ecb	2026-08-20	not-applicable		Convert legacy state offsets without a hardware divide (#2062). It changes only read-fonts
+f74e224db882c9c495e87bd927a9b33f104deee9	2026-08-20	not-applicable		Add lifetime-free parts capture for morx subtables (#2063). It changes only read-fonts
+22679c058a8e09fd0a48c29b187f5e4029d58d10	2026-08-21	not-applicable		Release read-fonts 0.43.1, skrifa 0.46.1 (#2064). It changes only font-test-data, read-fonts, skrifa, the root
+fa2749cd6249730265041b08325bedfedae36cc7	2026-08-21	not-applicable		[font-types] derive bytemuck::NoUninit for glyph ids (#2066). It changes only font-types
+f886c9069b08eaddcb1caced3a44b0d8291a159a	2026-08-21	not-applicable		Release types 0.12.4, read 0.43.2, skrifa 0.46.2 (#2067). It changes only font-types, read-fonts, skrifa, the root
+46204d266a385138df9d87c8e3654fbf915a2825	2026-08-22	not-applicable		[int_set] Streamline the insert path (#2068). It changes only read-fonts
+76f415bcbaf28ba561dd1fdabcb3fe2994dd0acd	2026-08-24	not-applicable		[read-fonts] Move gvar delta computation out of skrifa (#2070). It changes only read-fonts, skrifa
+a7b2d9c789787b8f8fc4beb25b4ab5bb18ccbc73	2026-08-24	not-applicable		[read-fonts] Generalize legacy AAT state-table entries. It changes only read-fonts
+5d4fac608a27eeecd6573947c1c0842272d9b031	2026-08-24	not-applicable		[read-fonts] Add mort table support. It changes only read-fonts, the code generator
+df7ba9db6fd29553b86442fc004f28cb7997e99a	2026-08-24	not-applicable		[read-fonts] Use FontRead for legacy state tables. It changes only read-fonts
+d8445101a4e4f05aadda9f4adf7a74d0a3bc9fff	2026-08-24	not-applicable		[read-fonts] Refactor gvar deltas (#2071). It changes only read-fonts
+aa63c44564073bf9bd24c7211aa0c8a8eefd62d0	2026-08-24	not-applicable		[read-fonts] Add mort table support (#2074). A merge commit. Each commit that it merges has a line of its own
+b80d84bb01380de1d253bb136f2464c9c4897dbf	2026-08-25	not-applicable		[read-fonts] Simplify `array::get_pair()`. (#2072). It changes only read-fonts
+a0c08f637ddcdbbe672dd35975b99660eb561df6	2026-08-25	not-applicable		Merge pull request #2078 from googlefonts/state-table-read-compat. It changes only read-fonts
+a2be65244af08f403bf580f37d246146b58a473f	2026-08-25	not-applicable		Release read-fonts 0.43.3 (#2079). It changes only read-fonts, the root
+0a8143612313eb0c148f4b381cc356622ddfdbe0	2026-08-26	not-applicable		[skera-repack] fix a bug in update_distances. It changes only skera
+7759a41d8ae1eb0c9d901f412c3fde9f324c9b3f	2026-08-26	not-applicable		update test, just checksum diff. It changes only skera
+7458ee1d5db24b59bd2fa18765bc19f673c31579	2026-08-26	not-applicable		[read-fonts] Push DICT operands straight onto the stack (#2082). It changes only read-fonts
+30bd3903f61c76f6819ffb5b0f0d0bdee82a6310	2026-08-26	not-applicable		Merge pull request #2084 from googlefonts/fix_repacker_bug. A merge commit. Each commit that it merges has a line of its own
+1de5b87473ddad59b1f3746fae10dad52b1ec485	2026-08-26	not-applicable		[read-fonts] Decode glyph coordinates through a slice iterator (#2080). It changes only read-fonts
+93d29a4e5d28f46a25ab4d8ac389eeed9cf9a5b3	2026-08-27	not-applicable		[skera-repack] only recompute coverage size when included glyphs changed. It changes only skera
+a3baf4e4261557c8077dffbaf954bd944e978e9b	2026-08-27	not-applicable		Merge pull request #2086 from googlefonts/port_from_hb. A merge commit. Each commit that it merges has a line of its own
+cca483f9e270c17f3c4249253948a59b49e630db	2026-08-27	not-applicable		[codegen] Add positioned records (#2075). It changes only font-codegen, read-fonts, the code generator
+f0a3689935ede26a32b37df262ece723a23319e3	2026-08-27	not-applicable		[read-fonts] Make GPOS value records positioned (#2076). It changes only font-codegen, read-fonts, skera, the code generator, write-fonts
+aaf59bfbd63d016434c6e8009c7ac48de547c33b	2026-08-27	not-applicable		[codegen] Support records embedded in tables (#2077). It changes only font-codegen, read-fonts, the code generator
+43dcf8d43d11b44cb3f8fe87fd0325bf3284e927	2026-08-27	not-applicable		Drop traversal (#2087). It changes only font-codegen, otexplorer, read-fonts, skrifa, the CI, the docs, the root, write-fonts
+3c87569a0374cffeaa2669b61f88339170994c0f	2026-08-28	not-applicable		Remove vestigial traces of traversal (#2088). It changes only font-codegen, the code generator
+c9b61ad41bbac54a47de597712ad207a29e81a62	2026-08-28	not-applicable		[skera] use flat vector which outperforms hashmap lookup. It changes only skera
+de6014c38edae21154b0db6633fb24ccd21511c0	2026-08-28	not-applicable		[read-fonts] Answer with Option where ps only had malformed data (#2089). It changes only incremental-font-transfer, read-fonts, skrifa
+ed237ddf61e2a8f03d4bff7ca7d59c481ec46eeb	2026-08-28	not-applicable		Merge pull request #2090 from googlefonts/use_flat_vector. A merge commit. Each commit that it merges has a line of its own
+dc3d5265e6320f5f22f32ddba61bce97eac54807	2026-08-28	not-applicable		[font-types] Add F48Dot16 (#2091). It changes only font-types
+b6c1918ae007d06d25ba93e73be93e3f60316ab0	2026-08-28	not-applicable		Rework some skrifa errors (#2095). It changes only fauntlet, read-fonts, skrifa
+a4e05f736cfff5a4e4791f46a9aae4646118ef32	2026-08-31	not-applicable		[read-fonts] Compute variation deltas exactly, in 48.16 (#2092). It changes only read-fonts
+67fde478adb602cbfaab73bb85e828df9285e80a	2026-09-01	not-applicable		[read-fonts] Restore experimental_traverse as an empty feature (#2098). It changes only read-fonts
+e00f48bffb2bb6b664f4a5c6acfe821221c03e09	2026-09-01	not-applicable		[ci] test builds against skia and fontconfig (#2097). It changes only the CI, the code generator
+17450936084e898911ca303060326f7962dd9963	2026-09-02	not-applicable		[read-fonts] Drop the floating point delta path (#2093). It changes only read-fonts, skrifa
+e62be6fa7fd3ec88221500d373408df45ae73992	2026-09-03	not-applicable		[write] Add iterators for accessing lookup builder state. It changes write-fonts outside the code that writes a simple glyph
+d7305f205bd884160c4e8ca530a823ef86636557	2026-09-03	not-applicable		[ci] Compile Chromium's font code against this tree  (#2099). It changes only the CI, the code generator
+e40710236f90f983a9e972377b57a5cad18f7a48	2026-09-03	not-applicable		Bump crate-ci/typos from 1.48.0 to 1.49.0. It changes only the CI
+5ce386d1cd62604de3a73f8004a3cc5021690d43	2026-09-03	not-applicable		[skera] refactor value_record subsetting code with less ops. It changes only skera
+3f07415704373803fe941ea2554dbb9370e0e24c	2026-09-03	not-applicable		[skera] refactor pair_pos subsetting code with less ops. It changes only skera
+657e9e32df272c14ad115831e0fd7ff57bc6cd8f	2026-09-03	not-applicable		[skera] refactor single_pos code with less ops. It changes only skera
+9f5a4c8fb93d9ec5706526312b64c2fadd6693cb	2026-09-03	not-applicable		fix clippy. It changes only skera
+619a6d30604be501a950406e99c4a5b2ba0cd4e6	2026-09-04	not-applicable		[read-fonts] svg, trak, cvar and dsig answer with Option (#2102). It changes only read-fonts, write-fonts
+f65ca72372d5f5724fa8e7b7ec9b191bb835b433	2026-09-04	not-applicable		[skera] fix integer underflow panic. It changes only skera
+b5d3ae1864e46f6cb6ccc8b65013cee4d36f49e7	2026-09-04	not-applicable		Merge pull request #2104 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+506f2b9b60325dcde2da2b11f4187316e6d7f231	2026-09-06	not-applicable		[read-fonts] Simplify U32Set intersection walk (#2108). It changes only read-fonts
+2ea7bf064b1a03aa2481aeb59211f5259935084b	2026-09-07	pending		[read-fonts] add Loca::get that returns Option<LocaGlyph>- #2101 #2101. It changes write-fonts/src/tables/glyf/simple.rs
+0b1b5a74f03341c15865a7eb2927cbbe0c323536	2026-09-08	not-applicable		[read-fonts] Report HVAR and VVAR deltas exactly. It changes only fauntlet, read-fonts, skrifa
+6375df98ea078e57f642f39353ac9dfbc0fda9e9	2026-09-08	not-applicable		Merge pull request #2110 from googlefonts/read/exact-variation-deltas. A merge commit. Each commit that it merges has a line of its own
+e1a545c53c1c1300604ff03426e9ac0c5f84fd36	2026-09-08	not-applicable		[read-fonts] experimental Font API: add GlobalMetrics- #2111. It changes only read-fonts
+0fd84869da04b8e83f6e00bb9e66e9bab0ebeff4	2026-09-08	not-applicable		[read-fonts] Add GlyphMetrics, with the tables it reads cached on the font. It changes only read-fonts, the root
+7779127e7dd1e59f4e0eb3d8723fdabb1991b3ed	2026-09-08	not-applicable		[skera] Convert repacker graph traversals to BFS. It changes only skera
+b8027d34be863e264f947e1196a550f556d87754	2026-09-08	not-applicable		[skera] add comment for fn popcount8. It changes only skera
+2635f035065ac664b49f905d1e1ed493c31e078c	2026-09-08	not-applicable		Merge pull request #2103 from googlefonts/pair_pos. A merge commit. Each commit that it merges has a line of its own
+33b16c8a0ff33bd89b08b353a94193defa895ae9	2026-09-08	not-applicable		Update read-fonts/src/model/metrics/glyph.rs. It changes only read-fonts
+738cdfad1146d97aadb8682e02ae5d4c06978bc4	2026-09-08	not-applicable		Merge pull request #2113 from googlefonts/read/glyph-metrics-yoke. A merge commit. Each commit that it merges has a line of its own
+c71628eb83ebbafc78206c6c0a5602200af8c19a	2026-09-08	not-applicable		[read-fonts] new Font API: variable advance widths (#2115). It changes only read-fonts
+59fcc3b4833c3e5032309bf1b75e50c5cff8fda2	2026-09-08	not-applicable		Bump crate versions. It changes only font-types, incremental-font-transfer, read-fonts, skera, skrifa, the root, write-fonts
+9a4f2478cac890ea57152e7694165f7489ca0934	2026-09-08	not-applicable		[read-fonts] Add MATH table and supporting functions. (#2105). It changes only read-fonts, the code generator, write-fonts
+e3cbfdd2769e8b051fc7255ab24992768b132bb3	2026-09-08	not-applicable		Merge pull request #2114 from googlefonts/port_hb_fix. A merge commit. Each commit that it merges has a line of its own
+a132bd63f9a35718283e6d1a910a51fb1ca1f6ea	2026-09-09	not-applicable		[write-fonts] Add failing test for orphaned duplicate in isolate_subgraph_hb. It changes write-fonts outside the code that writes a simple glyph
+b16575eeec71d23a1ac038dfd98e02e0da169008	2026-09-09	not-applicable		[write-fonts] Fix orphaned duplicate when isolating a subgraph root. It changes write-fonts outside the code that writes a simple glyph
+cb77dcaef57399879c1207b02e0267b9fd06f96f	2026-09-09	not-applicable		Fix IFT brotli decoding failing to detect trailing data. It changes only incremental-font-transfer, shared-brotli-patch-decoder
+05c197f60036ab76ad927447fcbff5c404a86950	2026-09-09	not-applicable		[ci] Pin dtolnay/rust-toolchain to a commit on its master branch (#2121). It changes only the CI
+317943f8cda38d882ff16f8ea83f5588ba4bda91	2026-09-09	not-applicable		Reserve capacity for output data. It changes write-fonts outside the code that writes a simple glyph
+24653dbd2b5bd32e286865e0b0b5461c1af7cb80	2026-09-09	not-applicable		[read-fonts] new Font API: vertical glyph advances (#2119). It changes only font-test-data, read-fonts
+9806fbf741fccf70f195ac79dea19331d481253f	2026-09-09	not-applicable		skera: avoid redundant cmap materialization. It changes only skera
+93e7fa9cc8e2e853278fdf9ac61f0e18774da486	2026-09-09	not-applicable		skera: serialize simple glyphs without temporary buffers. It changes only skera
+9cef23a63dc807977d464d874ac27859c3642ff0	2026-09-09	not-applicable		[read-fonts] Read a charstring's width without drawing it (#2123). It changes only read-fonts
+619b92f99297ccdab00f8e532398a4e6e63497db	2026-09-09	not-applicable		write-fonts: accept precomputed table checksums. It changes write-fonts outside the code that writes a simple glyph
+7f8b47e6d0df3b0dde3ad2380f58021c09415944	2026-09-09	not-applicable		skera: pass through unchanged bitmap tables. It changes only skera
+05c2b229bf4305dbbbaef2f80e6ac03db9e231f1	2026-09-10	not-applicable		[read-fonts] Measure a font in a caller's own units (#2122). It changes only read-fonts
+4750d4839ec407631957959cd76178b64872705a	2026-09-10	not-applicable		[write-fonts] Add failing test for remapping var indices inside an extension lookup. It changes write-fonts outside the code that writes a simple glyph
+982b179e7e6ff7935ce6c36b9b44766433a407a7	2026-09-10	not-applicable		[write-fonts] Remap variation indices inside extension lookups. It changes write-fonts outside the code that writes a simple glyph
+7ded85259499cbd5935288b0359dff73c7db3254	2026-09-10	not-applicable		Merge pull request #2128 from googlefonts/fix-extension-remap-var-indices. A merge commit. Each commit that it merges has a line of its own
+9fa10c9995799cd95182a33e0cb9716a8aab063a	2026-09-10	not-applicable		[ci] Read only the archive the packages come from (#2120). It changes only the CI
+f8cbc783e892fb668cabe3874f2a0a7803f3dd25	2026-09-10	not-applicable		[read-fonts] Compute charstring bounds (#2124). It changes only read-fonts
+240b4322acde4618332421d5cf29209cb996c50b	2026-09-10	not-applicable		[read-fonts] Add BASE table accessors (#2106). It changes only read-fonts
+ce5a6ed02f6984705c43bc3ed18837bd0664d7c1	2026-09-10	not-applicable		[write-fonts] Collect wide parents with a plain loop. It changes write-fonts outside the code that writes a simple glyph
+6f439d12632d387719f858049e49b6455a9d9d00	2026-09-10	not-applicable		Reserve capacity for output data (#2125). It changes write-fonts outside the code that writes a simple glyph
+3aef9a9a2b6cfcf3303086115e850d10d72a9bbe	2026-09-10	not-applicable		[read-fonts] Remove use of peekable iterators in int_set. It changes only read-fonts
+35492c0bfabb46392121b3b2e2dee3ba64fe6787	2026-09-10	not-applicable		Merge pull request #2126 from googlefonts/no_peekable_iterator. A merge commit. Each commit that it merges has a line of its own
+ec79324c38e0cbdbf0579b8eaedc35dff2813fb5	2026-09-10	not-applicable		Speed up full-font subsetting in Skera (#2127). A merge commit. Each commit that it merges has a line of its own
+1c852d13cd78b8d67626bf6bfb8f7a0e3c57fdae	2026-09-10	not-applicable		Merge pull request #2118 from googlefonts/fix-isolate-subgraph-root-remap. A merge commit. Each commit that it merges has a line of its own
+5bff933870d6fa2ee2d0a6cf5e990dd72e157eae	2026-09-10	not-applicable		Move skrifa hinting error types to read-fonts (#2130). It changes only read-fonts, skrifa
+f4967940501b05d87bbf4ebdb418431e1f0454ce	2026-09-10	not-applicable		[skera] Optimize glyf and loca subsetting performance. It changes only skera
+3d75c8bfc7ee66f14b2390503f0fccf560c07d80	2026-09-10	not-applicable		Move skrifa's outline to path conversion to read-fonts (#2132). It changes only read-fonts, skrifa
+812840a1245899e7373f31ed2a453f06a2da90e4	2026-09-10	not-applicable		Merge pull request #2131 from googlefonts/less_alloc. A merge commit. Each commit that it merges has a line of its own
+1ee6d858cc311cccab77a6e52da037594d776513	2026-09-10	not-applicable		[read-fonts] Add short lived memory helpers. It changes only read-fonts, skrifa
+b26a42cae8676509552090df77170aabd0a7cda2	2026-09-10	not-applicable		[skera] Serialize composite glyphs without temporary buffers. It changes only skera
+f438605b2248140b741a8226e49627b2ff023873	2026-09-10	not-applicable		[read-fonts] State the limits on how much work a font can ask for. It changes only read-fonts, skrifa
+269709f7baa05c33ceb2bff9c705ee00d9b83a54	2026-09-10	not-applicable		Merge pull request #2135 from googlefonts/glyf_perf. A merge commit. Each commit that it merges has a line of its own
+df411363b95d34e9f57e969a46757b847e82140c	2026-09-11	not-applicable		[write-fonts] Add failing tests for splitting subtables of an Extension lookup. It changes write-fonts outside the code that writes a simple glyph
+9ef7aea409b0dfda61e6a65a6078c51a6204bdc1	2026-09-11	not-applicable		[write-fonts] Split subtables of Extension lookups when packing. It changes write-fonts outside the code that writes a simple glyph
+7ce52594c805ceb4e962f55d9cc0e28efdaef360	2026-09-11	not-applicable		[write-fonts] Share the MarkToBase full-split test between bare and Extension lookups. It changes write-fonts outside the code that writes a simple glyph
+64b8aad489a70ac6d26081836c7ffe318ab1b1db	2026-09-11	not-applicable		Push only the tags this release created. It changes only the code generator
+1936c9ced37fcfca4320da2c9e41409e3e14c9b5	2026-09-11	not-applicable		[skera] Downgrade GPOS and GSUB table versions to 1.0 when FeatureVariations is absent. It changes only skera
+0e4b28cdb55fd4ca9d4ba52139a3a5967739c1a5	2026-09-11	not-applicable		Merge pull request #2138 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+90b5404f1aafd2b940a3d93fd82c5ce02f1dbe00	2026-09-11	not-applicable		[skera] Fix SinglePosFormat2 varidx collection and serialization bugs. It changes only skera
+0c58188070a48e27503a0cf23fd50b773f22626c	2026-09-11	not-applicable		[skera] Fix repacker subgraph isolation. It changes only skera
+5571237cda8b2ff1420de60aa746ed7fcadc86c9	2026-09-11	not-applicable		fix rustfmt. It changes only skera
+6aba46f72eddd6f359969adc40622eca4efb6eab	2026-09-11	not-applicable		[skera] Return byte length directly from compute_record_len and add SinglePosFormat2 tests. It changes only skera
+c40e155d2fb5de0dc243eaa31a32fb1863d0eccc	2026-09-11	not-applicable		Merge pull request #2139 from googlefonts/fix_collect_variation_idx. A merge commit. Each commit that it merges has a line of its own
+d31432646d0b64f246e18e78acc748a5818b23d1	2026-09-14	not-applicable		[skera] Track visited nodes in repacker duplicate_subgraph. It changes only skera
+9bfffd93cd768483f354cedb674fe0504f3c6270	2026-09-14	not-applicable		Merge pull request #2140 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+c4bd081481d4e04a20d6f697b8b1860dbe9309f8	2026-09-14	not-applicable		[skera] Drop identity advance index map in HVAR/VVAR. It changes only skera
+0463911c89cef1f49ba92f3efeb38f97457785b3	2026-09-14	not-applicable		Merge pull request #2141 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+a1434d8da93e7eb53512227b6b27627363c286f8	2026-09-15	not-applicable		[skera] Fix COLRv1 layer index truncation. It changes only skera
+816c14332134e3ba894e38a0b32f6cdd343610a4	2026-09-15	not-applicable		[skera] Fix cmap format 14 default UVS serialization. It changes only skera
+328df01e87f868cdd9ae8d675d9e88a860fb89d9	2026-09-15	not-applicable		[skera] Fix overflow panic on empty ClassDefFormat1. It changes only read-fonts, skera
+32cff7d9d01bdb2fd9d05453f3560846d707c69f	2026-09-15	not-applicable		[skera] Add unit tests for empty ClassDef handling. It changes only read-fonts, skera
+8bf9713c0de28c83f62ee7265db767f18ce90bc3	2026-09-15	not-applicable		Merge pull request #2144 from googlefonts/add_tests. A merge commit. Each commit that it merges has a line of its own
+949d404228113ee911ac613d92a696ae3a4517ff	2026-09-16	not-applicable		Merge pull request #2137 from googlefonts/release-push-explicit-tags. A merge commit. Each commit that it merges has a line of its own
+2fe6b37431192f8af49fc8937f2ce2820ed5e3c7	2026-09-16	not-applicable		[write-fonts] Assert all extensions in a lookup wrap the same type. It changes write-fonts outside the code that writes a simple glyph
+2b62c029ecafe45c20babd9d040efd43ceb06a95	2026-09-16	not-applicable		Merge pull request #2136 from googlefonts/fix-split-extension-subtables. A merge commit. Each commit that it merges has a line of its own
+e5710d453320843dddbc2e3668c278a32ac11cfd	2026-09-16	not-applicable		Merge pull request #2143 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+ba735dd596711fcc170c77f347d1313515f56bfd	2026-09-16	not-applicable		[skera] Fix gvar short offset overflow when glyphs are remapped. It changes only skera
+9f3cd3c7f86e9db9a86bff934fd9682e2e765798	2026-09-16	not-applicable		Merge pull request #2145 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+46775061693299a7204f77267fb3e401283c43ee	2026-09-16	not-applicable		[skera] Bound coverage iteration by the array it indexes into. It changes only skera
+acb4a63427b72fabdedb8dde1190238220cdb4e8	2026-09-16	not-applicable		[skera] Bound SinglePosFormat2 variation index collection by valueCount. It changes only skera
+a53d3a179a26aa56becfb7b73c07c2ed55349cf1	2026-09-18	not-applicable		[write-fonts] Compute cmap14 length and record count. It changes only the code generator, write-fonts
+889462848f7406471e83b928ff024c8333e312b4	2026-09-18	not-applicable		[read-fonts] Add the outline error and coordinate modes. It changes only read-fonts
+1c101d189e2fc2ff4781ec80c9e9bf2dd818f125	2026-09-20	not-applicable		[skrifa] use outer index for implicit COLR variation mapping. It changes only skrifa
+9a3a7fb89001fcb5a3559fbd9917f362feb1680c	2026-09-22	not-applicable		[read-fonts] Fix a 26.6 typo and pin the component offset bound. It changes only read-fonts
+0b606dc934afaeb23a016ff01961ff0d0d61bdab	2026-09-22	not-applicable		[read-fonts] Add the outline context and hinter hook. It changes only read-fonts
+5b7310af88a4a5071fcd36200a25a4f69811c056	2026-09-22	not-applicable		[read-fonts] Add the outline buffers and the loaded outline. It changes only read-fonts
+47648298ca89a70dc78b69429ada8ae08f93b9df	2026-09-22	not-applicable		[read-fonts] Add the outline plan and the loading pass. It changes only read-fonts
+09a43ac602eef7db17dc2c4343878fcf090cd523	2026-09-22	not-applicable		Merge pull request #2149 from googlefonts/cut/1-error-scale. A merge commit. Each commit that it merges has a line of its own
+2d563790c2c6c05b7cf515a8e75c36d830dea7e7	2026-09-22	not-applicable		Merge pull request #2150 from googlefonts/cut/2-context-hinter. A merge commit. Each commit that it merges has a line of its own
+a15266290e3921406a8ba5a6fcbbe3a74c86ada6	2026-09-22	not-applicable		Merge pull request #2151 from googlefonts/cut/3-buffers-borrowed. A merge commit. Each commit that it merges has a line of its own
+4df6bbb048b8aafd5bc954679eb13dd740817985	2026-09-22	not-applicable		[read-fonts] Restore the composite delta stack unconditionally. It changes only read-fonts
+7e943250c469b151171cfd05104a48a4b16ff122	2026-09-22	not-applicable		[read-fonts] Add the outline that owns its buffers. It changes only read-fonts
+a55ee9befd0ac6f6234ec75e4a68bc2b028f32ff	2026-09-22	not-applicable		Merge pull request #2152 from googlefonts/cut/4-plan-load. A merge commit. Each commit that it merges has a line of its own
+6fe724f589dab4136a3d98469e9dc7c5f7ca64a2	2026-09-22	not-applicable		[read-fonts] Say "loads" in the unscaled entry point. It changes only read-fonts
+ad027c79367d9024bb2235aac0edb22c6765e155	2026-09-22	not-applicable		Merge pull request #2153 from googlefonts/cut/5-owned. A merge commit. Each commit that it merges has a line of its own
+78a6c4e8927ff60cb0cacef2a2f447c63d3eac92	2026-09-22	not-applicable		[read-fonts] Turn on the new outline loader. It changes only read-fonts, skrifa, the code generator
+50c9d8f555a0948b6507b80bbdefa60e8ae3dfb0	2026-09-22	not-applicable		Merge pull request #2154 from googlefonts/cut/6-enable. A merge commit. Each commit that it merges has a line of its own
+b124730c5b59709fa38f52965656de75a82ca610	2026-09-23	not-applicable		[read-fonts] Report variation deltas as Option rather than Result. It changes only fauntlet, read-fonts, skrifa
+114321b22cf6534aeaedef491e10bf41de910082	2026-09-23	not-applicable		Merge pull request #2159 from googlefonts/read/option-deltas. A merge commit. Each commit that it merges has a line of its own
+1dbc24cedb2729064af8c844feffa4f78ae53c3d	2026-09-23	not-applicable		[read-fonts] Let a caller compute variation scalars once and reuse them (#2160). It changes only read-fonts
+3f67429fe1c47d06cbef3fb40bb4052081f1ee7c	2026-09-23	not-applicable		Cache PatchMap computation (#2158). It changes only incremental-font-transfer
+150d7cb2090c841199c0c101215119c7c2c49761	2026-09-23	not-applicable		Fix zizmor findings (#2162). It changes only the CI
+f53dfb55ce0ca50d2534c845c34c9b553caa328e	2026-09-23	not-applicable		Test ift compatability (#2161). It changes only the CI, the code generator
+ac01b59213144c67cf591c963c0b6f51afcc142a	2026-09-24	not-applicable		[skrifa] Prefer Unicode encoding 6 format 13 cmap subtables. It changes only font-test-data, skrifa
+d1afd71618cbdec1621c73d4dec2e855fbfa5e76	2026-09-24	not-applicable		[read-fonts] Make the instance the font (#2167). It changes only read-fonts
+fa4a523a1c83da943c805fa6af9f369b88813603	2026-09-24	not-applicable		Avoid copying in add_intersecting_paths (#2164). It changes only incremental-font-transfer
+784eed42e7d278fb5b63a77577af4c6e731b5461	2026-09-24	not-applicable		[read-fonts] model: drop gratuitous Font prefixes (#2168). It changes only read-fonts
+bc35f58f8c1874a64a92512113e75737d0b77074	2026-09-24	not-applicable		[skrifa] Prefer Unicode encoding 6 format 13 cmap subtables (#2166). A merge commit. Each commit that it merges has a line of its own
+47f734abbc2cac2f7433ae24706cf63318276b1c	2026-09-24	not-applicable		Merge pull request #2157 from metsw24-max/colr-implicit-var-index. A merge commit. Each commit that it merges has a line of its own
+b87ae606c2250823d58aeb38b4aaaf869d463eed	2026-09-24	not-applicable		Remove allocation for single url use case (#2169). It changes only incremental-font-transfer
+5650b42525f0d7ca7c9b87a292dd45ad1a7b48f8	2026-09-26	not-applicable		Update brotli-decompressor to 6.0.1 (#2172). It changes only shared-brotli-patch-decoder, the CI
+d6f8aaa864a9f29a8012ee351e192b7e924be770	2026-09-26	not-applicable		Use glyf bounds for sbix vertical placement. It changes only skrifa
+3d373753aeaa0dd8c3b8f30d40329f19ddbc9276	2026-09-26	not-applicable		Ignore sbix LSB without glyf contours. It changes only skrifa
+bb4cf66332efd1ead3df8ba3bd77aa7f67eead3c	2026-09-29	not-applicable		skip invalid intermediate regions in scalar_for. It changes only read-fonts
+ed4da63b3bac8ba91bbf59baec9936113e26f8df	2026-09-29	not-applicable		Merge pull request #2176 from metsw24-max/scalar-for-intermediate-guard. A merge commit. Each commit that it merges has a line of its own
+083d72656d93d4d90ab12dc1852478e2d2acbea0	2026-09-29	not-applicable		[read-fonts] Measure glyph extents. It changes only read-fonts
+b733e42fdfbf3ad88443cf31ed95cc0289bbdbda	2026-09-29	not-applicable		Merge pull request #2177 from googlefonts/metrics/glyph-extents. A merge commit. Each commit that it merges has a line of its own
+eb2a63dbdbd0563f6f1e8821c8a77dc7cb14fe6e	2026-09-29	not-applicable		Apply code review. It changes only skrifa
+e175cb0587fc6b0857c57857e0f3f43d68f4fc83	2026-09-29	not-applicable		Optimize empty and single entry ApplicativeBitIndices sets (#2171). It changes only incremental-font-transfer
+24507460a47e7cc229faed847efad8bb890680c6	2026-09-30	not-applicable		Merge pull request #2174 from LaurenzV/fix-lsb. A merge commit. Each commit that it merges has a line of its own
+e7b79933616966652b898eb68b39d21bb8a39506	2026-09-30	not-applicable		[read-fonts] Measure glyph vertical origins (#2178). It changes only read-fonts
+edce04cdf14e6e69184111dee904b58d9725311d	2026-09-30	not-applicable		[read-fonts] move generic feature var code to layout (#2170). It changes only read-fonts
+79159027e0e04d9cb0e98a9b74129e2401422c90	2026-10-01	not-applicable		[ci] fix fontconfig check (#2182). It changes only the code generator
+9515a09392ae5824f6a375096be12f33ec39746c	2026-10-01	not-applicable		Create faster API for checking if patches are needed (#2179). It changes only incremental-font-transfer
+cc90033f73577ab8476c76d692a5101385c584eb	2026-10-01	not-applicable		[read-fonts] add glyph name lookup for Font (#2181). It changes only read-fonts
+f2c8f01c8d3cfe6cfb29fbc6fb0e5670b52ce7be	2026-10-01	not-applicable		[read-fonts] new font API: add StyleMetrics (#2184). It changes only read-fonts
+0ca9d4e27e5982f4f3ebe2a9b7f220cbfbf9e81b	2026-10-02	not-applicable		don't clamp checkpoint slots in post glyph name iterator. It changes only read-fonts
+c839fd1c3a827a35f6b441f89a1a3ccf29ebbfc2	2026-10-02	not-applicable		[read-fonts] Bound implicit advance variation indices. It changes only read-fonts
+8bf806587704668a288db9ca564bac817ceb946b	2026-10-02	not-applicable		[skrifa] Evaluate variation-free VARC data without a store. It changes only skrifa
+f1c6d5b8898340d80832ed35b16443f7e4840589	2026-10-02	not-applicable		[skrifa] Treat null VARC condition offsets as unconditional. It changes only skrifa
+7a7406517b153a20a5785fce8dc6b713723d1068	2026-10-02	not-applicable		Merge pull request #2187 from behdad/off-2026-audit-fixes. A merge commit. Each commit that it merges has a line of its own
+23b011a50ae0aebe9745e1e8cafe53a1382c5f83	2026-10-02	not-applicable		Merge pull request #2186 from metsw24-max/post-checkpoint-slot. A merge commit. Each commit that it merges has a line of its own
+cdf9ab8b6b18c5b8b05d1c58b2ef816bf88142cd	2026-10-02	not-applicable		[read-fonts] new font API: charmap support (#2183). It changes only read-fonts
+3f04de5e664d8a9fbcdbeb0c47c5711b251a1e87	2026-10-02	not-applicable		Merge pull request #2188 from behdad/varc-off-2026-binary-format. It changes only font-codegen, font-test-data, read-fonts, the code generator, write-fonts
+6e0a9d397363e17262e70cf9707e1cea6c07eaa4	2026-10-02	not-applicable		Use IftTable struct instead of tuple (#2189). It changes only incremental-font-transfer
+66563a3d3284f5479f650e18854f21ee1d0cfad6	2026-10-02	not-applicable		[read-fonts] tidy up for release  (#2190). It changes only read-fonts, skrifa
+d2de08f9fc9404713b6b8fbf5ffaea49e32d93a5	2026-10-02	not-applicable		Preserve 32-bit VARC delta precision during accumulation (#2192). It changes only font-test-data, read-fonts, skrifa
+0e56a7ac03145e714d32bf7a5d9ef70bfbfc5356	2026-10-02	not-applicable		[read-fonts] accept a null shared tuples offset when count is 0 (#2185). It changes only font-codegen, read-fonts, the code generator
+5f411f67fc8c621f3f2276f483d54e415c566718	2026-10-02	not-applicable		[font-types] Print fixed-point values as shortest decimal (#2191). It changes only font-types
+800f03c91fd4ce30dffbf0a5e3b839e2d8ab9c42	2026-10-02	not-applicable		Support static VARC variation axes (#2142). It changes only font-test-data, skrifa
+0e939934004776b1982982428a7ce748e61b0310	2026-10-02	not-applicable		Release everything (#2193). It changes only font-test-data, font-types, read-fonts, shared-brotli-patch-decoder, skera, skrifa, the root, write-fonts
+4f0e215ae30ee25052d08299332ed2959c70d70b	2026-10-02	not-applicable		Release IFT 0.9.0 (#2194). It changes only incremental-font-transfer, the root
+7dc5d6d62297fd2a38356a5f8f4cd502e84037cb	2026-10-04	not-applicable		Skip scalar computation for zero variation deltas (#2199). It changes only read-fonts
+770b830441494acd9df941318428c9185999b006	2026-10-04	not-applicable		Inline CFF charstring opcode decoding (#2205). It changes only read-fonts
+4c01c0728932043f23a1ee5b4981da2b75d874ad	2026-10-04	not-applicable		Skip unused hinting entries in unhinted CFF subfonts (#2204). It changes only read-fonts
+84aababe1807920dc169b56dd6df24a9cfea7461	2026-10-04	not-applicable		Resolve shared font state when constructing a charmap (#2203). It changes only read-fonts
+9216e60d0d1cb33a971d227859badf00d125f135	2026-10-07	not-applicable		Bump crate-ci/typos from 1.49.0 to 1.50.2. It changes only the CI
+71c5365a4a3557933b69cb4cb123131af918773e	2026-10-07	not-applicable		Merge pull request #2146 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+001ba38b53e5d69ebdd0f41c393c04f060c2e12e	2026-10-07	not-applicable		[skera] Bounds-check class indices in PairPosFormat2 variation collection. It changes only skera
+d6a9007c1e20a8bf815675bbc6dda508847ccb09	2026-10-07	not-applicable		Merge pull request #2233 from googlefonts/fix_pair_pos. A merge commit. Each commit that it merges has a line of its own
+b8818355161c11eb458b417306d162ee171eeea8	2026-10-07	not-applicable		reserve room for widened gvar offsets in glyph keyed patching. It changes only incremental-font-transfer
+80918ca62629a5599a77ec73ebdeae3162f55396	2026-10-07	not-applicable		bound gvar offsets growth by half the new array. It changes only incremental-font-transfer
+8767519cb12b0d92a3299a563e3661f02e357fd3	2026-10-07	not-applicable		skera: expose Plan mappings and passthrough table configuration (#2234). It changes only skera, the CI
+f6241a6550750e272d4b69afd93f6c9d42bdef44	2026-10-08	not-applicable		Use foldhash (#2235). It changes only read-fonts, skera, the root
+49e01e6d497e082e6e38b81b76df91fa96bb5c4b	2026-10-08	not-applicable		[skera] fix SinglePosFormat1::collect_variation_indices. It changes only skera
+c67a89a267e1b120368847e19322286096ff1086	2026-10-08	not-applicable		Merge pull request #2237 from googlefonts/fix_single_pos. A merge commit. Each commit that it merges has a line of its own
+ae3613d1b408ca77aff87f0b20808d6aa5355fe3	2026-10-08	not-applicable		[write-fonts] Fix cmap4 idDelta overflow panic. It changes write-fonts outside the code that writes a simple glyph
+c4521f3aa5f2400dc76390276e1e1234d32e73a3	2026-10-08	not-applicable		[read-fonts] use precomputed gvar/HVAR scalars (#2198). It changes only read-fonts
+a265466c537d00e442cd8d12fca0092608a70b27	2026-10-08	not-applicable		[skera] Share coverage/glyph-set intersection logic across subtables. It changes only skera
+d8e27d6e36cebaa0f604328a01ec28cd514f5fbd	2026-10-08	not-applicable		[skera] Drop Mark*Pos subtable when all MarkRecord anchors are null. It changes only skera
+9162cc0946c687b788270a63fcd513514b820360	2026-10-09	not-applicable		[write-fonts] Validate post v2 custom name count. It changes only the code generator, write-fonts
+b1042a905e2f66fea9bffb36d577bbadfd87a97b	2026-10-09	not-applicable		[write-fonts] Validate post glyph name length. It changes write-fonts outside the code that writes a simple glyph
+c6e753e744ef507b2057b5b8c6960b7b6f2c4756	2026-10-09	not-applicable		[skera] bug fix: Wrap SingleSubstFormat1 delta modulo 65536. It changes only skera
+68050a8f97d3fcbd4c63756156e604890f290991	2026-10-09	not-applicable		Merge pull request #2260 from googlefonts/bug_fix_single_subst. A merge commit. Each commit that it merges has a line of its own
+e8e13d57e02a742b448bc32d49a960f561100609	2026-10-09	not-applicable		[read-fonts] model: add name table accessors (#2256). It changes only read-fonts, skrifa
+25ffbdb1a6d1f7c1bff2d8af7131531f91302815	2026-10-09	not-applicable		[read-fonts] Iterate cmap format 0 mappings (#2265). It changes only read-fonts
+067e4a22e500226040f33f1482b00ab3c8ea50e4	2026-10-10	not-applicable		[write-fonts] Omit cmap4 when mappings don't fit. It changes only the code generator, write-fonts
+663568be12c996195d1361cf537b4a100b0e2c35	2026-10-10	not-applicable		[write-fonts] Don't panic splitting empty MarkToBase. It changes write-fonts outside the code that writes a simple glyph
+4c69a3bcddeeb9aaa561beabc2ac59805db2784a	2026-10-11	not-applicable		[read-fonts] type1 parsing fixes (#2257). It changes only read-fonts, the root
+4b9c5214eced18d5eecc3170cc8a339cd5794ad6	2026-10-12	not-applicable		[write-fonts] Don't build empty subtables. It changes write-fonts outside the code that writes a simple glyph
+7658e23c66db30096e2a4b99e764e48c1068348f	2026-10-12	not-applicable		[skera] Read tables directly through read-fonts. It changes only font-codegen, skera
+49d093b29ddb83c0973721b3219e9f6f8a70d78f	2026-10-12	pending		[colr] Support 24-bit outline IDs in PaintGlyph2. It changes write-fonts/src/write.rs
+aac302f54a38c30776ead113fcf40675678cf4d0	2026-10-12	not-applicable		[tests] Exercise PaintGlyph2 through the public color painter. It changes only skrifa
+98f84df9d7be1734ca7f6d67829b7206a713b2cc	2026-10-12	not-applicable		[read] Select extended TTC font directories. It changes only read-fonts
+b93525222e0673a06187d87445e88f03c8ba0e59	2026-10-12	not-applicable		[metrics] Support ISO OFF fifth-edition capital-letter tables. It changes only fauntlet, font-test-data, read-fonts, skrifa, the code generator, write-fonts
+86f1652c4d988a7d44c09cfc4b77a798e9037a21	2026-10-12	pending		[glyf] Support ISO OFF GLYF/LOCA and cubic outlines. It changes write-fonts/src/tables/glyf/simple.rs
+0f2b0e17b5d7e2928919554302b6728517f211d7	2026-10-12	not-applicable		[tests] Exercise scaled extended cubic outlines. It changes only skrifa
+ce4cafbce804319b266bc46c1073fb2ba7fbfe68	2026-10-12	not-applicable		[gvar] Support ISO OFF GVAR glyph variations. It changes only font-test-data, read-fonts, skrifa, the code generator, write-fonts
+7a7e1a65e5893756d292438b8fcb862ad2106751	2026-10-12	not-applicable		[tests] Exercise shared GVAR instances across locations. It changes only skrifa
+b73e094a485514381402027c93a4ac4afaa769fd	2026-10-12	not-applicable		[subset] Use and preserve uppercase MAXP glyph counts. It changes only skera
+018b634a1716237aa02fcf049bdeec1653768dc6	2026-10-12	not-applicable		[subset] Close and subset uppercase GLYF and LOCA outlines. It changes only skera
+348a52f506eb624721779f166bca0f9a41442d3b	2026-10-12	not-applicable		[subset] Widen compact glyph mapping to 32 bits. It changes only skera
+cdd0047b396a1d5a307ee9ce1476b56fbbdfbd5c	2026-10-12	not-applicable		[subset] Subset uppercase horizontal and vertical metrics. It changes only skera
+68717e01a0e884c9f4bd8a4e7c20d3f14fbbe40f	2026-10-12	not-applicable		[subset] Preserve uppercase GVAR headers and glyph rows. It changes only skera
+ea26934c5a9fd62c87e3dbbc2fceb7df27ba55e4	2026-10-12	not-applicable		[cmap] Support DMAP character mapping overrides. It changes only font-test-data, read-fonts, skera, skrifa, the code generator, write-fonts
+9695ff159ae19e01b88f324c0724bbc807264099	2026-10-12	not-applicable		[cmap] Support format 15 variation sequences. It changes only font-test-data, read-fonts, skrifa, the code generator, write-fonts
+1f55a2e31b92f6e907c684d88ed801c37f2e5d36	2026-10-12	not-applicable		[cmap] Include the maximum character when iterating formats 12 and 13. It changes only read-fonts
+7abab28ae2a69f7d2e91ff102e3a9458ecdde01b	2026-10-12	not-applicable		[tests] Cross-check DMAP and cmap15 consumer boundaries. It changes only skera, skrifa
+64f5186ecc0b6bc2786fa49e16e440931fc93abd	2026-10-12	not-applicable		[subset] Preserve cmap format 15 variation sequences. It changes only skera
+4d83f6c79d3346044acc62b91f198ffea52ee042	2026-10-12	not-applicable		[layout] Support ISO OFF lookup variations in GSUB and GPOS. It changes only read-fonts, the code generator, write-fonts
+900f9866fd27dced56d5580dfcd386c409a3f262	2026-10-12	pending		[layout] Add ISO OFF 24-bit coverage and class definitions. It changes write-fonts/src/write.rs
+991883c9768bef6723807c1761f9283032ae8033	2026-10-12	not-applicable		[subset] Subset DMAP character maps and variation sequences. It changes only skera
+d4823d1cffce4e59cddf6bd8e5afa6f4841713cd	2026-10-12	not-applicable		[layout] Add ISO OFF expanded contextual lookup formats. It changes only read-fonts, skera, skrifa, the code generator, write-fonts
+6577c2fa5bbd3c9f9db6b5186072b00cf6c5c5bf	2026-10-12	not-applicable		[tests] Use read-fonts directly in extended layout tests. It changes write-fonts outside the code that writes a simple glyph
+9176bbe87c4cfcf81b3e0a578d4bd728db7972a0	2026-10-12	not-applicable		[layout] Support ISO OFF GSUB/GPOS 1.2 headers. It changes only read-fonts, skera, the code generator, write-fonts
+84dc722623c4593c16f3c49c637ebc9c8f7d868e	2026-10-12	not-applicable		[layout] Add ISO OFF expanded GSUB substitution formats. It changes only read-fonts, skera, skrifa, the code generator, write-fonts
+956642d4dcda04c56e94246dd017ff96246abf6b	2026-10-12	not-applicable		[layout] Add ISO OFF expanded GPOS positioning formats. It changes only read-fonts, skera, the code generator, write-fonts
+3fbefdaf6912f7ef8add29e84ebeaa58a7ddebb9	2026-10-12	not-applicable		[layout] Support ISO OFF GDEF 1.4 and LigCaretList2. It changes only read-fonts, skera, the code generator, write-fonts
+378c3f6552e092ff4d6c0bb31e08f0382d999c3c	2026-10-12	not-applicable		[write] Find nested wide-offset packing spaces. It changes write-fonts outside the code that writes a simple glyph
+34644c168f23fbeefe5011dfdb7a1371b98399ac	2026-10-12	not-applicable		[write] Keep extended mark positioning out of the legacy splitter. It changes write-fonts outside the code that writes a simple glyph
+a389b06d885101c83f0df3f535f28a938a22daf3	2026-10-12	not-applicable		[write] Isolate extension targets below wide lookup lists. It changes write-fonts outside the code that writes a simple glyph
+6bd38e5751c3e759a2f802c976e30ae8ef4eb655	2026-10-12	not-applicable		[write] Preserve incoming edges between connected space roots. It changes write-fonts outside the code that writes a simple glyph
+38dfbe5c07ecd1a5466066129a11f1851ab92681	2026-10-12	not-applicable		[read] Share bounded layout condition evaluation. It changes only read-fonts
+7bed39cafbbd344e2ffff4b267501f2c1162dc77	2026-10-12	not-applicable		[skrifa] Use shared condition evaluation for VARC. It changes only skrifa
+e5afdb538ed39855de7631aba08e63252f45666b	2026-10-12	not-applicable		[read] Evaluate feature variations at the default location. It changes only read-fonts
+254da1b9bf82d62274499fdcd8b8e212410fdaa8	2026-10-12	not-applicable		[skrifa] Apply conditional lookups in autohint shaping. It changes only skrifa
+f7f8c54dd4abeadc5680b3cb1785cd8eef1b4270	2026-10-12	not-applicable		[repack] Adapt splitter fixtures to extended layouts. It changes write-fonts outside the code that writes a simple glyph
+bbccc5f485bed65eaf36e51e03c36dab37d20da5	2026-10-12	not-applicable		[subset] Support extended layout Coverage tables. It changes only skera
+83e8d3d46f56d403e2df893b38a8c47927e5f2b5	2026-10-12	not-applicable		[closure] Support extended single substitutions. It changes only read-fonts
+be273c2ee141b5e25fe7cabae8eb47babda56a66	2026-10-12	not-applicable		[subset] Support extended single substitutions. It changes only skera
+91daffc62dfebd3ee8e94eb8e70d350aeaf140a3	2026-10-12	not-applicable		[closure] Support extended multiple and alternate substitutions. It changes only read-fonts
+c85df7336ce46658d676fded169163501741bfb1	2026-10-12	not-applicable		[subset] Support extended multiple and alternate substitutions. It changes only skera
+b665664e2770383a46ebaacb46d7d2184c398515	2026-10-12	not-applicable		[closure] Support extended ligature substitutions. It changes only read-fonts
+2a0ef6ed938af832becf337814644873e45f530a	2026-10-12	not-applicable		[closure] Support extended reverse-chain substitutions. It changes only read-fonts
+c527b48cd05c6fb42e2cb6b1a925c3929846e0b5	2026-10-12	not-applicable		[subset] Support extended reverse-chain substitutions. It changes only skera
+4ea9c15fce373c3e22c02d5c277eb78931478075	2026-10-12	not-applicable		[subset] Support extended ligature substitutions. It changes only skera
+c3c2a9830864053e76f11e1dc23640a4186b0d7e	2026-10-12	not-applicable		[subset] Support extended class definitions. It changes only read-fonts, skera
+c84dbac5e8d0c09d6b27401f50c0d075b76495ec	2026-10-12	not-applicable		[closure] Support extended glyph-based contexts. It changes only read-fonts
+1146e4dd4c2576f1352099803bd0c4a32f370b24	2026-10-12	not-applicable		[subset] Support extended glyph-based contexts. It changes only skera
+5e095565d2435fc694c7e346d86832fff27a1da8	2026-10-12	not-applicable		[closure] Support extended coverage-based contexts. It changes only read-fonts
+a18ca77ef67dcc0d8dc2dd1adb86440233a542dc	2026-10-12	not-applicable		[subset] Support extended coverage-based contexts. It changes only skera
+3e097e5ba7159ea87327c48340f2a0f514a64de5	2026-10-12	not-applicable		[closure] Support extended class-based contexts. It changes only read-fonts
+c32aed493fb841f9aed480a09c3b01df04fedfee	2026-10-12	not-applicable		[subset] Support extended class-based contexts. It changes only skera
+2ad0a3918c824ffd62c12cf55f63ff702f5d849a	2026-10-12	not-applicable		[closure] Support extended positioning lookups. It changes only read-fonts
+c09f56bc6c32e35a9119f5c3e48f627e8e59ba3c	2026-10-12	not-applicable		[subset] Support extended single positioning. It changes only skera
+0cc802cdbbbf168a9794ce2c0b60c16912e27d12	2026-10-12	not-applicable		[subset] Keep cursive coverage aligned with anchor records. It changes only skera
+97bf20cb0d9c831ec1a73c4dbf165ca596a1a01f	2026-10-12	not-applicable		[subset] Support extended cursive positioning. It changes only skera
+fb9fc2e693127e715342c997d7d94813aa8b40c6	2026-10-12	not-applicable		[subset] Support extended glyph-pair positioning. It changes only skera
+c00eacffa98147c3e829eff4d2f3f88bccdfcf96	2026-10-12	not-applicable		[subset] Support extended class-pair positioning. It changes only skera
+6a37b964a316f47ef97802e8b19303e015bec3d6	2026-10-12	not-applicable		[subset] Support extended mark-to-base positioning. It changes only skera
+e6341cd13bb5ad6453b95974d89c5b880cd48d9e	2026-10-12	not-applicable		[subset] Support extended mark-to-ligature positioning. It changes only skera
+3e363c4c309c1d56350d25b480cd31c83c533e42	2026-10-12	not-applicable		[subset] Support extended mark-to-mark positioning. It changes only skera
+ec849dcc68e93b2cc834bfdea4548413fa518770	2026-10-12	not-applicable		[subset] Support 32-bit lookup-list offsets. It changes only skera
+354805e99faab762411f3d75b40b376947427ce9	2026-10-12	not-applicable		[subset] Support extended GSUB and GPOS headers. It changes only skera
+6fad33df850f71b261e2e0f3aae538fd6babe3e1	2026-10-12	not-applicable		[subset] Support extended ligature caret lists. It changes only skera
+5fbe8bac79bd5c7269c1813b962ebea8982b75ab	2026-10-12	not-applicable		[subset] Support extended GDEF headers. It changes only skera
+06426539e97e87827cd8904bc8b143f9fdfa097b	2026-10-12	not-applicable		[closure] Collect conditional lookup variations. It changes only read-fonts
+84292c36bdce4adf68a4c5a33e9bd5fb2f1b0f21	2026-10-12	not-applicable		[subset] Retain lookup-variation features independently. It changes only skera
+76fe4020e2e6abebf08e73b165573715823639c1	2026-10-12	not-applicable		[subset] Preserve layout condition trees and variation indices. It changes only skera
+f39c53a6924080125f1d061e14c94718618e5f92	2026-10-12	not-applicable		[subset] Serialize and remap lookup variations. It changes only skera
+59db2d1341dfb3d0932792ca1504e27844f6f6e0	2026-10-12	not-applicable		[repack] Handle extended layout headers and lookup lists. It changes only skera
+fefa36881fb666905ad3281aa7ac45efc8a9d4de	2026-10-12	not-applicable		[repack] Split extended class pairs with narrow device offsets. It changes only skera
+12c318e4a7e093d221807123e8161aaa7cc198b4	2026-10-12	not-applicable		[repack] Leave extended ligature subtables unsplit. It changes only skera
+003ba18ac0ea4977b677f0cb7caa8da6d46cdd67	2026-10-12	not-applicable		[subset] Reject truncated GDEF attachment point arrays. It changes only skera
+a1edfe8b1132670652320c57251d3f03ec702fd7	2026-10-12	not-applicable		[repack] Preserve incoming edges between space roots. It changes only skera
+4b7c3c2f519da3eeb52bdeaee4b1ff39cddb53fd	2026-10-12	not-applicable		[repack] Move already isolated subgraphs into new spaces. It changes only skera
+fa77014def932ade160a3b4664a734ee3efb354a	2026-10-12	not-applicable		[repack] Preserve the full distance range before packing. It changes only skera
+bf1d3f1fe8db9539b1c51e374a48196add87e66c	2026-10-12	not-applicable		[repack] Refine nested wide offsets into independent spaces. It changes only skera
+596de86f96559b3edcb8f16e3eadfdfbca4dcb25	2026-10-12	not-applicable		[skera] Move layout limits to read_fonts::limits and match harfbuzz. It changes only read-fonts, skera
+4b9d7df0239d12c87f6e6f306c92f59fbc61857f	2026-10-12	not-applicable		Merge pull request #2242 from googlefonts/less_allocs. A merge commit. Each commit that it merges has a line of its own
+2b46814ffb83b6ca23944ce0c1d56c89a37f786d	2026-10-12	not-applicable		Merge pull request #2336 from googlefonts/bug_fixes. A merge commit. Each commit that it merges has a line of its own
+a484fb43788d19022e91792cd40eef78b3a2b099	2026-10-13	not-applicable		Merge pull request #2243 from googlefonts/fix_mark_array. A merge commit. Each commit that it merges has a line of its own
+2ad341a441a88519e3001097e084d8745e986541	2026-10-13	not-applicable		[skera] Fix out-of-bounds rule set read in ContextFormat2 subsetting. It changes only skera
+5666b3b54ca5f4afc46176065a94da6292b768a8	2026-10-13	not-applicable		fix build. It changes only skera
+cbb2f9240c350829448d4e5d6feba7439a43d461	2026-10-13	not-applicable		Merge pull request #2244 from googlefonts/fix_context_format2. A merge commit. Each commit that it merges has a line of its own
+51fce9dc6c0355c62320f552c7b22e348f2ab0bd	2026-10-14	not-applicable		[read-fonts] use dynamic dispatch for scratch and cs eval (#2347). It changes only read-fonts
+62aeef02fe2c67d6a1aa1f0fd7063dece60fb589	2026-10-14	not-applicable		[read-fonts] Share axis sorting across coordinate normalization types (#2348). It changes only read-fonts
+dc0caaced854468a07bdb18fdbf5c2e76be93a47	2026-10-14	not-applicable		[skera] Subset GSUB/GPOS lists in harfbuzz's order. It changes only skera
+c8e5db1d5325cc2737879831961409e9acdac591	2026-10-14	not-applicable		[codegen] Fall back to defaults in validated field getters (#2350). It changes only font-codegen, read-fonts
+65395d2e4c8bdee6ab309f3107960141f1739c73	2026-10-14	not-applicable		[read-fonts] fix ISO Latin-1 glyph names for codes 0xA1.0xFF (#2342). It changes only read-fonts
+bfe6abe8fafdf3ddaaa0a0851bc3678d3df1dd3e	2026-10-14	not-applicable		[layout] Consolidate expanded layout support with current Skera fixes. A merge commit. Each commit that it merges has a line of its own
+108b6cebe58c05c2d1a60830bcf54e0524ca537f	2026-10-14	not-applicable		[glyf] Consolidate extended outlines, metrics, variation data, and subsetting. A merge commit. Each commit that it merges has a line of its own
+a5e3c58f4adcce150f34180e64807b60a78c789b	2026-10-14	not-applicable		[cmap] Consolidate DMAP and format 15 reading and subsetting. A merge commit. Each commit that it merges has a line of its own
+77167eb30895bd213f14b56c65b11644f1d3aaa9	2026-10-14	not-applicable		[colr] Include 24-bit PaintGlyph2 support. A merge commit. Each commit that it merges has a line of its own
+4001647502c31df135b2557af436659cffdf6dd2	2026-10-14	not-applicable		[read-fonts] Include extended TTC directories. A merge commit. Each commit that it merges has a line of its own
+71ede176e9b42c1b590de572355c9c672afb4c4c	2026-10-14	not-applicable		[beyond64k] Preserve current layout limits and regenerate validated getters. It changes only read-fonts, skera
+23515b7e82864bd49be03bf1a251d5e4f5f1eb0e	2026-10-14	not-applicable		Remove redundant import from extended ligature tests. It changes only skera
+0e6380f6b164a1cb2edcf45a0aaa17cbacb3cf2b	2026-10-14	not-applicable		[skrifa] Share outline drawing across pen types (#2349). It changes only skrifa
+47089d63c7692bdca06fc5abab2ba81c8d60e955	2026-10-14	not-applicable		[skera] Read tables directly through read-fonts. It changes only font-codegen, skera
+2decca7ff493938bd2387b0a32bc568d8f1b6c85	2026-10-14	not-applicable		Merge pull request #2351 from googlefonts/fix_packing_order. A merge commit. Each commit that it merges has a line of its own
+d551721fb8422601e85caed3b715ac6b7b026a85	2026-10-14	not-applicable		[font-types] Add TableDataRef. It changes only font-types
+b5512a30f484e337d88527e47d1846d3cffd710a	2026-10-14	not-applicable		[codegen] Read fixed table fields from a header struct. It changes only font-codegen, read-fonts
+0f0be1b75b56b3f1c6cb0b1ab8b6cc7ccafc42c1	2026-10-15	not-applicable		[codegen] Read fixed table fields from a header struct (#2353). A merge commit. Each commit that it merges has a line of its own
+4105cd0424bfcf27d95333807d9fcbf65e8ef0bc	2026-10-15	not-applicable		Merge main into beyond64k-consolidated. A merge commit. Each commit that it merges has a line of its own
+9e6067bbb7e94cfa533da56af0293c5d9f4302ac	2026-10-15	not-applicable		[read-fonts] Cache whether a font has lookup variations. It changes only read-fonts
+d4e330e2aef7b9facf83a98b9dec5e266fde0f56	2026-10-15	not-applicable		[read-fonts] Keep the common coverage and class formats inline. It changes only font-codegen, read-fonts
+1c3d0afe49b8bec3d398124e3242d19fdfbc50d9	2026-10-15	not-applicable		[read-fonts] Expose the shared tables as a cache host for HarfRust. It changes only read-fonts
+ef666662f5985965bbbb726c4f77d15481831a1b	2026-10-15	not-applicable		Release types 0.12.7, read 0.45.1 (#2355). It changes only font-types, read-fonts, the root
+5ae29e17aeca861f680c1dea5c84e31f720c8694	2026-10-15	not-applicable		Release write 0.54.1 (#2356). It changes only the root, write-fonts
+a06fc03846ce70de0dd918195d7ec146c20990ac	2026-10-15	not-applicable		[read-fonts] Restore name/language.rs line endings from main. It changes only read-fonts
+1c16be7a72536e73660ced267135c926ba003a6d	2026-10-15	not-applicable		Merge remote-tracking branch 'origin/main' into beyond64k-consolidated. A merge commit. Each commit that it merges has a line of its own
+e64d9e3f8cb38915023559dcce9e49dc69fd80de	2026-10-15	not-applicable		[read-fonts] Select extended header offsets in one place. It changes only read-fonts, skrifa, write-fonts
+a51c387d0a71456b8bcac479a54db7de29347cd7	2026-10-15	not-applicable		Name the selected tables and the original forms consistently. It changes only fauntlet, read-fonts, skera, skrifa, the code generator, write-fonts
+1c7a3e712b6b2f2f6221c72f4366a293017097dc	2026-10-15	not-applicable		[read-fonts] Apply lookup variations through one helper. It changes only read-fonts, skrifa
+3f52e99a626d9e202a1b8b2898df8467f3af2874	2026-10-15	not-applicable		[read-fonts] Read cmap formats 14 and 15 through one UvsSubtable. It changes only read-fonts, skera, skrifa, write-fonts
+05ecc66be6ae8a14d5232dee0f4155ac8fa111b8	2026-10-15	not-applicable		[read-fonts] Move GlyphMetricRecords to the hmtx module. It changes only read-fonts, skera, skrifa
+4b994bbbc0074f1d59f2cc5aab05064757e466b6	2026-10-15	not-applicable		[skrifa] Sort autohint lookups only when lists were merged. It changes only skrifa
+0e9931ab0a2377b2d70db3fceb61c619ab6decd7	2026-10-15	not-applicable		[skera] Pre-size hash maps with known sizes. It changes only skera
+822eca7dfa7fbe9aee1354d83074f9b0fd70ade2	2026-10-15	not-applicable		[skera] Store hashes in the serializer's dedup table. It changes only skera
+1064fa4ae5974f40a54c5bc046192cf06220f69e	2026-10-15	not-applicable		[skera] Drop unused parameters from PoolIdxHashTable::set_with_hash. It changes only skera
+441ae981dc22beda22167b8b7a28fec7195c3bbd	2026-10-15	not-applicable		[read-fonts] Size hdmx and sbix records by the selected glyph count. It changes only read-fonts, the code generator
+e6c5424e4e96f849998d0727269aad3fbb53f1f6	2026-10-15	not-applicable		Name the header-selected layout lists like the selected tables. It changes only read-fonts, skera, write-fonts
+003e00237717bd458722b9b8bc25fd1e4dada29c	2026-10-15	not-applicable		[read-fonts] Keep each layout format with its siblings. It changes only read-fonts, write-fonts
+bc0c4e4e815c224f89480a4dbef325a5d51b3b14	2026-10-15	not-applicable		[read-fonts] Give Cmap15 the same methods as Cmap14. It changes only read-fonts
+37872f821c1f7453d2f80eb70dd317b2e2ea5712	2026-10-15	not-applicable		Merge pull request #2357 from googlefonts/more_skera_opt. A merge commit. Each commit that it merges has a line of its own
+c8866d8532d7ae47c52184252a76e98b89f20dd1	2026-10-15	not-applicable		[skera] Resolve serializer links in a single pass. It changes only skera
+5fdd8be9ac531af1d9e99ffba25f9a567c34fd4f	2026-10-15	not-applicable		[skera] Hash serializer links with fewer hasher writes. It changes only skera
+8a626a83bb8eadebe588e187e2a5a5d8c553b1bb	2026-10-15	not-applicable		[read-fonts] Harden layout header selection and lookup variations. It changes only read-fonts
+7c0f4ee173d1ce0b1e81527d2fbb7fc3a9c85fb4	2026-10-15	not-applicable		[skrifa] Bound the autohinter's work on hostile fonts. It changes only skrifa
+62b4a55a8ab87c4d62d326f4f4585b398a8d59c2	2026-10-15	not-applicable		Choose the variation sequences subtable one way. It changes only read-fonts, skrifa
+f0f7d1e77e9520588ef5521defefadcb9fcf5931	2026-10-15	not-applicable		[skera] Fix subsetting next to DMAP and above 64K glyphs. It changes only skera
+6e9c3a037c782784c40ef9c33dce4a39ec5dc50c	2026-10-15	not-applicable		[read-fonts] Rename Encoding::sfnt_index to cmap_index. It changes only read-fonts
+16d412c93b001a045782112041d2792e66024769	2026-10-15	not-applicable		Split packing spaces below 32-bit links only for LookupList2. It changes only skera, write-fonts
+3d41c2d8bc4b064b7199969599f3c02cb1ffe8d1	2026-10-15	not-applicable		Bring docs in line with the extended tables. It changes only read-fonts, skrifa, the code generator, write-fonts
+d3108354a61f129f375fb5b4c40a41d33981dc6e	2026-10-15	not-applicable		Drop the RawGlyphMetrics alias for GlyphMetricRecords. It changes only read-fonts
+6ae4525080e8744d0cb02f2e5009110ba9a61596	2026-10-15	not-applicable		[read-fonts] Document the extended table accessors. It changes only read-fonts
+f515286df536fb50dd9b6363984933eccbb6bf16	2026-10-15	not-applicable		Share the variation-store delta function for conditions. It changes only read-fonts, skrifa
+ba881f2c23d11018e3ba8bf18e56a3e973a893f1	2026-10-15	not-applicable		Move pair_pos_intersects beside its original-format caller. It changes only read-fonts
+fda84bcde28f2f790467be2c69d1a57ba6a09ee7	2026-10-15	not-applicable		Keep Yokeable off public table types. It changes only read-fonts
+1dc7af26f0428f4b34c3833a91f4c3ed33674876	2026-10-15	not-applicable		Read the selected maximum advance height as unsigned. It changes only read-fonts
+8f263d4f7c8ea640d8ca6955154bc64252984700	2026-10-15	not-applicable		[write-fonts] Build CoverageFormat4 when ranges are smaller. It changes write-fonts outside the code that writes a simple glyph
+1aaf2705e36975c57b29844182dc29df89c96000	2026-10-15	not-applicable		[skrifa] Bound feature variation work in the autohinter with a budget. It changes only skrifa
+94609e0cdc47abcc847448479102494eb08ce1c5	2026-10-15	not-applicable		[skera] Count remapped classes with the loop. It changes only skera
+b5947cd5aa370ed351bd834a009931d4e32982ed	2026-10-15	not-applicable		Keep spec_next as a feature that does nothing. It changes only read-fonts, skrifa
+71bfbcc029d8a3272a9aba4511e0369903d027cd	2026-10-15	not-applicable		[read-fonts] Add PairPosFormat4::class_value_records. It changes only read-fonts
+aa6d13a85c4685302defa800a1bdf88c3c3f1003	2026-10-15	not-applicable		Merge pull request #2358 from googlefonts/opt_serializer. A merge commit. Each commit that it merges has a line of its own
+51f9b0ba570ae494573a06ec1d3f2d71d432e6a9	2026-10-16	not-applicable		consume the whole BCD real when its exponent overflows. It changes only read-fonts
+00752fd740716680ec0817fc8a05ced429f9bb4c	2026-10-15	not-applicable		[read-fonts] Move value_record_refs back to PairPosFormat2. It changes only read-fonts
+0876fdce114ea8ae1818fa350c8b7fc1c602eb4f	2026-10-15	not-applicable		[skera] Move the serializer's graph into the repacker instead of copying it. It changes only skera
+e09841a648f89a8254566ea31d0cf2bf30fc3c88	2026-10-15	not-applicable		Merge remote-tracking branch 'origin/main' into beyond64k-consolidated. A merge commit. Each commit that it merges has a line of its own
+caf61972dbb955addb293b5655158d23600411e7	2026-10-15	not-applicable		[read-fonts] Add PairPosFormat4::value_record_refs. It changes only read-fonts
+b6d0d959796740aed7d23e7f59a6194a379c958f	2026-10-15	not-applicable		[skrifa] Apply a feature's lookups in lookup list order. It changes only skrifa
+10e077ae8cb740910f29cf921044684ed5920f01	2026-10-15	not-applicable		[skera] Subset metrics from the table being processed. It changes only read-fonts, skera
+e1342bff4d14825b169cddc386f59aea320aeb9e	2026-10-15	not-applicable		Merge pull request #2352 from googlefonts/beyond64k-consolidated. A merge commit. Each commit that it merges has a line of its own
+9be98f2dbc2e90a0059d80638951a3f6659af0cd	2026-10-15	not-applicable		Merge commit 'e1342bff4d14825b169cddc386f59aea320aeb9e' into rework/skera-beyond64k-merge. A merge commit. Each commit that it merges has a line of its own
+5f924163649eda31b06e04e092f93442dfe6eae1	2026-10-16	not-applicable		Take on smallvec in read-fonts and skrifa (#2081). It changes only read-fonts, skrifa, the root
+5236f107c37b55a2e72ccc9e339f72f2a919f624	2026-10-16	not-applicable		Merge pull request #2360 from googlefonts/opt_graph. A merge commit. Each commit that it merges has a line of its own
+90ce98165c0de898bd972f6db9e07b263dace264	2026-10-16	not-applicable		[skera] Fix test failures caused by merge conflicts. It changes only skera
+160a4b7bc7f18502e123c050c03ef9914d22b919	2026-10-16	not-applicable		Merge pull request #2364 from googlefonts/fix_build. A merge commit. Each commit that it merges has a line of its own
+7bb9ee84e4811ad4a55d205d7846c35d68c73259	2026-10-16	not-applicable		[skera] refactor cmap4 idRangeOffsets serialization to avoid a temporary Vec. It changes only skera
+50751b2ca8e3374aae62bda8fa0c0b76807bf31e	2026-10-16	not-applicable		[skera] avoid unnecessary temporary vec in repack_last. It changes only skera
+04264bfb4dbefd89209788182ba0f0bb5693f9e6	2026-10-16	not-applicable		[skera] Sort IncBiMap in place. It changes only skera
+58de048ef022f5f6961716789ea16c88b2c98c55	2026-10-16	not-applicable		Merge pull request #2365 from googlefonts/fix_allocs. A merge commit. Each commit that it merges has a line of its own
+5c480698f43ab4ff5b304de5a9204c1b5e720aec	2026-10-16	not-applicable		[IFT] Prevent malicious font from reserving GiB of RAM (#2366). It changes only incremental-font-transfer
+6c5f4771ddcd9e74cfd024555dd72820c0430587	2026-10-17	not-applicable		[shared-brotli-patch-decoder] Fix build inside git hooks. It changes only shared-brotli-patch-decoder
+ae5edefa2e7aafb58f2d6eb1ed82fbfc7fdf68f3	2026-10-17	not-applicable		[read-fonts] Make the morx contextual subtable covariant (#2361). It changes only read-fonts
+7252523f42004392c96b83423fe8206ba3be6334	2026-10-17	not-applicable		[read-fonts] add batched nominal glyph lookups (#2261). It changes only read-fonts, the code generator
+72343116eb57368e0858dd4cdb24cef7a789e67a	2026-10-17	not-applicable		[read-fonts] model: thread bare CFF through our accessors (#2262). It changes only read-fonts
+80a528254869335fb44669b26d4ed58c0bd54194	2026-10-19	not-applicable		[write-fonts] Compute optimal cmap format 4 segments. It changes write-fonts outside the code that writes a simple glyph
+ce6feaad31866bea39fc270ae431e27af7de0d34	2026-10-19	not-applicable		[skera] Revert "Preserve the full distance range before packing". It changes only skera
+8299e48296f74ec0aaea401da6a046ba3b0fcc47	2026-10-19	not-applicable		[skera] Revert "Move already isolated subgraphs into new spaces". It changes only skera
+28e73467591f84ea34cde75a5114dd78b9fca802	2026-10-19	not-applicable		[skera] Avoid intermediate glyph/index collections in more subtables. It changes only skera
+e1d6eacfdff5e92d519fd71587f4dfb43e5d8508	2026-10-19	not-applicable		[read-fonts] Find tables in an unsorted directory in the model. It changes only read-fonts
+b2840bd64ac11262797ca749bcaeb2d19edfdd36	2026-10-19	not-applicable		[read-fonts] Report glyph and charstring failures as one model::Error. It changes only read-fonts, skera, skrifa
+50af1111bcd406d73a7a6fcbb8481205be7a3a76	2026-10-19	not-applicable		[read-fonts] Rename the outline pens to sinks and add UnscaledOutlineSink. It changes only read-fonts, skrifa
+7476d89ed53e2d46e22e4bb660f3321c8512dad2	2026-10-19	not-applicable		[read-fonts] Let a hinter shape glyf composites, and detect hint-reliant fonts. It changes only read-fonts
+0718cd8ff5767b837f623adc5cfa42794ffbcf7c	2026-10-19	not-applicable		[read-fonts] Bind Font's caches to its kind and location, and round out its data. It changes only read-fonts, skrifa
+a75a7329c1f13da772131d457ae11bf97eb2ca3f	2026-10-19	not-applicable		[read-fonts] Add variation axes, named instances and attributes to Font. It changes only read-fonts
+177cc7165647f57efc4fca46857eaa1ac9bfcd5f	2026-10-19	not-applicable		[read-fonts] Add OutlineGlyphs: draw a Font's glyf, CFF, CFF2 and Type 1 outlines. It changes only read-fonts
+310d34dd264fd3694c28645dab6749c5b1232065	2026-10-19	not-applicable		[read-fonts] Draw VARC composites through OutlineGlyphs. It changes only read-fonts
+a9efe19ab6e388f20001540ec03df3ec7e6e3b3b	2026-10-19	not-applicable		[read-fonts] Add bitmap glyphs from sbix, CBDT and EBDT. It changes only read-fonts
+4c88c335365550711c4a2cfc1d840aa2fe966b2d	2026-10-19	not-applicable		[skrifa] Use read-fonts' hint-reliant check. It changes only skrifa
+89653b7f56d3ba1f935eaa248092495ed263d62f	2026-10-19	not-applicable		[read-fonts] Add COLR color glyphs and palettes. It changes only read-fonts
+13b7c17474ab446c298b4b6cac4b59a0b99dd9b6	2026-10-19	not-applicable		[skrifa] Run the TrueType interpreter over HintTables, with ClearType policy and dropout control. It changes only skrifa
+3b3ef83717e3de1bdd0b7bf26c76e94c68fc0750	2026-10-19	not-applicable		[skrifa] Read the automatic hinter's font data through AutohintContext. It changes only skrifa
+d40c68338a98d3cd35d09fcde5fe6701a657bf43	2026-10-19	not-applicable		[skrifa] Add ScalerFont, which draws a Font's glyphs at a size. It changes only read-fonts, skrifa, the root
+f5508c695b8a72b5805e9baba67d38f04656f0a2	2026-10-19	not-applicable		[skrifa] Move along a horizontal projection in backward compatibility mode. It changes only skrifa
+b1205a7cb6475dca57223beef7f561262b6aad9a	2026-10-20	not-applicable		Merge pull request #2374 from googlefonts/read/font-model. A merge commit. Each commit that it merges has a line of its own
+7e36252dbe31df753a57cf000e44630a1aa82d13	2026-10-20	not-applicable		API polish. It changes only read-fonts, skrifa
+9c0c02d4a19c3321517ff5ad382b441d8b1cacf0	2026-10-20	not-applicable		Merge pull request #2375 from googlefonts/skrifa/scaler-font. A merge commit. Each commit that it merges has a line of its own
+dd6f6c032e637dc1553aadae0cd7492d98502153	2026-10-20	not-applicable		Merge pull request #2371 from googlefonts/fix_merge_issue. A merge commit. Each commit that it merges has a line of its own
+eceb79cef72de71b8bbd39a2e2c2b624c63884c7	2026-10-20	not-applicable		Merge pull request #2370 from googlefonts/fix_repacker. A merge commit. Each commit that it merges has a line of its own
+2a6bdb532a4920fc9fa381a67e1146ee595b8064	2026-10-20	not-applicable		consume the whole BCD real when its exponent overflows (#2359). A merge commit. Each commit that it merges has a line of its own
+53738ff007f9b76dff4ec46c59bedb6cc81c0c86	2026-10-20	not-applicable		docs: Update release documentation (#2372). It changes only the docs, the root
+ffed1858f4a137afd89d0aafe2aec18dff3e7232	2026-10-20	not-applicable		Merge pull request #2376 from metsw24-max/cmap4-range-offset-underflow. It changes only read-fonts
+13c919d2ccd9d9da5e04bc6fdf4cbf106ce80585	2026-10-20	not-applicable		[read-fonts] Stop CFF charset lookups at the glyph count (#2379). It changes only read-fonts
+24df534fb10acabd2077fef45af54763488f767f	2026-10-20	not-applicable		[metrics] Clamp negative varied advances before scaling (#2383). It changes only font-test-data, read-fonts, skrifa
+062d79493763785352cf00e2fae28d8a37f67461	2026-10-20	not-applicable		[read-fonts] Evaluate the charstring arithmetic, logic, storage and stack operators. It changes only read-fonts
+d285a314e9ef2ac8dcfc9111ee043191735c8c76	2026-10-20	not-applicable		[skera] Match harfbuzz when deduplicating layout features. It changes only skera
+38b5731d1a06591d648a100ff9f2be701b8ce348	2026-10-20	not-applicable		[read-fonts] Drop glyphs outside the font during GSUB closure. It changes only read-fonts, skera
+9ee54c3208308388cd7ed123d1ad05d4616a32f7	2026-10-20	not-applicable		Merge pull request #2384 from googlefonts/bug_fix. A merge commit. Each commit that it merges has a line of its own
+bceb5740784f469e824d5d23520e53077ee02324	2026-10-20	not-applicable		[skrifa] Align an edge linked to a blue edge the loop already placed (#2382). It changes only skrifa
+78a7abede160a774132ba03e741939081142128a	2026-10-20	not-applicable		Merge pull request #2385 from googlefonts/fix_closure_num_glyphs. A merge commit. Each commit that it merges has a line of its own
+5e15a9971bec3177e7f4283fcfd110362fa1f8e3	2026-10-21	not-applicable		[read-fonts] Read and blend Type 1 multiple master fonts. It changes only read-fonts
+7c54c8bf69203bc1e8dc05da4276a35a7ef58386	2026-10-21	not-applicable		[read-fonts] Vary Type 1 multiple master fonts in the font model. It changes only read-fonts
+72ef686e81f87d518e68103baad68f6824ce3fca	2026-10-21	not-applicable		[read-fonts] Read Type 1 font boxes and font info as FreeType does. It changes only read-fonts
+494c19f45e65fd5c5b99a3f25c1fa1030294b47b	2026-10-21	not-applicable		[skera] Speed up simple glyph padding trimming. It changes only skera
+18a8523b0211e854d28b33ca8e8a3bd25ace906c	2026-10-21	not-applicable		[skera] Size the glyf buffer from loca to avoid a second subset pass. It changes only skera
+c4785b7bcb24996198f48b733db29c370d4cecc8	2026-10-21	not-applicable		Merge pull request #2346 from googlefonts/opt_skera. A merge commit. Each commit that it merges has a line of its own
+1d318b447445f99a2f6d66fc47a8c1c1446801c5	2026-10-21	not-applicable		Add Zapf Dingbats and match FT’s synthesized Unicode cmap (#2378). It changes only read-fonts, the root
+04230ccc1d849e66f80c531cbcb5a8e2b83c6d52	2026-10-21	not-applicable		[read-fonts] type1: add multiple master support (#2380). A merge commit. Each commit that it merges has a line of its own
+624b56152f04e8c953fd4605e42df0b72106bf46	2026-10-21	not-applicable		[skera] Match harfbuzz when collecting GSUB/GPOS name IDs. It changes only skera
+a0a004e77b6566bccce57a4e39e775efd88e4cc4	2026-10-21	not-applicable		[skera] Subset FeatureParams of FeatureVariations alternate features. It changes only read-fonts, skera
+4aa488b51a21cafbfb7d135fa9dc5cf5eeb9f902	2026-10-21	not-applicable		[skrifa] Rewrite the README for Font and ScalerFont (#2390). It changes only skrifa
+393466e030ad4ba8e6e6ab789cb167b7ff6861a2	2026-10-21	not-applicable		[skera] Merge current main before CFF review fixes. A merge commit. Each commit that it merges has a line of its own
+47a301615fd95acf0da9fb7dbcd0ea7c7df36943	2026-10-21	not-applicable		Release almost everything (#2391). It changes only font-test-data, incremental-font-transfer, read-fonts, shared-brotli-patch-decoder, skera, skrifa, the root, write-fonts
+0cd6ec50e276cf0eb2598b1decd8245a88bbdd88	2026-10-21	not-applicable		[skera] Add CFF1 and CFF2 subsetting (#2248). It changes only skera
+c4855c2453d628d8d81883b9e4dff83ff888930d	2026-10-22	not-applicable		[codegen] Always .saturating_add for field offsets. It changes only font-codegen, read-fonts
+ca56d89650932e6b53f1d769450f4aced34319c7	2026-10-22	not-applicable		[read-fonts] don't overflow negating an i32::MIN roll shift (#2393). It changes only read-fonts
+72d4b32d96ad44cce4f30bcfc161f699c7b27964	2026-10-22	not-applicable		Merge pull request #2388 from googlefonts/fix_alternate_feature_params. A merge commit. Each commit that it merges has a line of its own
+bad3ef365307b34c882bf74e06cb270b4d7fea23	2026-10-22	not-applicable		[read-fonts] Add IntSet::next_after for cheap successor lookup. It changes only read-fonts
+298ea98838c7ea910cf7f467b01830935bc852b9	2026-10-22	not-applicable		[skera] Use next_after when copying cmap14 default UVS ranges. It changes only skera
+60e7b617862bbff991fb16291902a1aad111cab7	2026-10-22	not-applicable		[read-fonts] Use next_after in ClassDef intersection checks. It changes only read-fonts
+53803595ca68fac78e2aca74f1c7b392344a6035	2026-10-22	not-applicable		Merge pull request #2331 from googlefonts/skera-no-write-fonts. A merge commit. Each commit that it merges has a line of its own
+36d11ef3f8fcfeedb8b18001f6d6841b15482388	2026-10-23	not-applicable		[fuzz] Check IntSet::next_after in the int set fuzzer. It changes only the fuzzers
+dfbb6963dbdcd92bbf5f5f0fc167d31761e0b964	2026-10-23	not-applicable		[read-fonts] Fix ClassDefFormat2 class 0 intersection. It changes only read-fonts
+5099e04f4e7705383f6c0d14a668345b81367f69	2026-10-23	not-applicable		Merge pull request #2394 from googlefonts/intset_next_after. A merge commit. Each commit that it merges has a line of its own
+c1f2a110be842539c2591b54908d6b43ecdfd563	2026-10-23	not-applicable		Merge pull request #2395 from googlefonts/bug_fixes_2. A merge commit. Each commit that it merges has a line of its own
+cf5676b29faa8c7787abe003c5dfb85fd81e8a7c	2026-10-23	not-applicable		Merge pull request #2389 from googlefonts/fix_alternate_feature_params_subset. A merge commit. Each commit that it merges has a line of its own
+4ba2962eb900f788b002b244a84b88e6b3f8e06e	2026-10-23	not-applicable		[skera] Name the nameIDs option --name-IDs. It changes only skera
+6881561ee31ef3404f79ddd01fcff6397168b78c	2026-10-23	not-applicable		[skera] Support hb-subset's list option forms on the command line. It changes only skera
+a8c82dcb907aef3c5b9831cd3e003180c1b2b784	2026-10-23	not-applicable		[skera] Support --retain-num-glyphs. It changes only skera
+870448f9b0de1fb1e81b370327dcc62b500dee9d	2026-10-23	not-applicable		[skera] Support --gid-map. It changes only skera
+189db2e32a8dea8003083d2d861fe0cb89f160ef	2026-10-23	not-applicable		[skera] Support --iftb-requirements. It changes only skera
+3f6a1faf1b6d7eda00975dff8849acea380329d7	2026-10-26	not-applicable		Merge pull request #2400 from googlefonts/fix_name_ids_option. A merge commit. Each commit that it merges has a line of its own
+4a2377d8703db375059d8df496dc0b982bcd5877	2026-10-27	not-applicable		[ci] Install toolchains with rustup directly. It changes only the CI
+8f55efb10f92c3b4bac79b09bf6d001f3400ea05	2026-10-27	not-applicable		[ci] Pin backtrace for Rust 1.85 (#2405). It changes only font-codegen
+42e0f877d7a4d9f10cd630e738e65184e80d3955	2026-10-27	not-applicable		bound the format 0 charset scan to the glyph count (#2397). It changes only read-fonts
+ed2054986630b6aef5317f53cfd356c82ac02fa8	2026-10-27	not-applicable		[skera] Speed up remapped CFF subsetting (#2406). It changes only skera
+06aa568688781b2c6a4b4a67bf397203a7ab1045	2026-10-27	not-applicable		[skera] Add assembled CFF tables directly. It changes only skera
+0f5d736138cf7eaa060cca0f10b90f8c8527e6af	2026-10-27	not-applicable		[skera] Match HarfBuzz CFF global subroutine order (#2408). It changes only skera
+9fd34fe433b9816ff3d1edef7f47db4b4b799d04	2026-10-27	not-applicable		[skera] Add keep-everything presets. It changes only skera
+d08960bff256c234bc6353403d5fb8c0f18ade14	2026-10-27	not-applicable		Select Unicode characters from text in the CLI. It changes only skera
+b85c36cad865968fa8cdd47373ef13dbcdb3f32a	2026-10-27	not-applicable		[skera] Speed up CFF program recording. It changes only skera
+64f740ffb92ead725f6f4cb097f505d5d2c815ed	2026-10-27	not-applicable		[skera] Speed up CFF program closure. It changes only skera
+36be261cd1965ea7699efcd2a79439b74ccfb0c1	2026-10-27	not-applicable		Speed up full CFF subsetting. It changes only skera
+6cf9fb59004e227599bfedc9ed2fc235601236df	2026-10-27	not-applicable		[skera] Speed up CFF program processing. It changes only skera
+a1983bb5fad0598902d034f7e9fcd4ae92725e66	2026-10-27	not-applicable		[skera] Make CFF performance checks conservative. It changes only skera
+4657e0ff0446ed8738614c7354085b0443b60e77	2026-10-29	not-applicable		Update IFT benchmarks (#2341). It changes only incremental-font-transfer
+1af00dd62311cf146bbcfdc6ec7c43818dab51f4	2026-10-29	not-applicable		[skera] Add script to generate expected test outputs. It changes only skera
+f2bf97a9b3634796d530b2060c116b56f0865e41	2026-10-29	not-applicable		[skera] Stop dropping CFF, CFF2 and BASE in integration tests. It changes only skera
+0bc356d24c2170775c3ccecc910477f515091063	2026-10-29	not-applicable		[skera] Always use FDSelect format 3. It changes only skera
+146a3e099c533d160e1a4e429cac52f842b7c5b0	2026-10-29	not-applicable		[skera] Only emit a CFF2 FDSelect when the source has one. It changes only skera
+253d543b92392cf1d4203cefac1ff659d4970004	2026-10-29	not-applicable		[skera] Drop LanguageGroup from CFF Private DICTs with --no-hinting. It changes only skera
+01a3509859d7a884b08fd433fb2dbe38610f6af9	2026-10-29	not-applicable		[skera] Keep subroutines when dropping CFF hints. It changes only skera
+eca034cf169cf063e1315b3f08f8a2bfd71a4b28	2026-10-29	not-applicable		[skera] Update expected outputs now that CFF, CFF2 and BASE are kept. It changes only skera
+1d9336ab77b7cbedae123a514985de9516993183	2026-10-29	not-applicable		[skera] Use the i16 range when subsetting ItemVariationData deltas. It changes only skera
+37ad4fbff2c9a08ec86dfe05d2e4e1cb6e534a70	2026-10-29	not-applicable		[skera] Add more subset tests from harfbuzz. It changes only skera
+8cf9cbf413ddcd6c3f7ddff468c3f0e3780e2e0e	2026-10-29	not-applicable		Merge pull request #2396 from googlefonts/skrifa/classic-hdmx. It changes only skrifa
+5662cdb74cf29dd450298dfdc6b461cf32912884	2026-10-29	not-applicable		Merge pull request #2401 from googlefonts/fix_integration_tests. A merge commit. Each commit that it merges has a line of its own
+7e40d6c3a6e89067ae7ae8b1de24137dd543a5d7	2026-10-29	not-applicable		Merge pull request #2403 from googlefonts/copy_more_tests. A merge commit. Each commit that it merges has a line of its own
+7bdbbde1d2b2416392328d8aaf40efe408779210	2026-10-30	not-applicable		[read-fonts] kerx: read format 2 class values as byte offsets. It changes only read-fonts
+ef75e8b7aa0a2cecd8fac11ffb9f930bbb36120d	2026-10-30	not-applicable		[skera] Compact CFF program IDs and operand origins. It changes only skera
+4f38ba075a967d4449716d660b4bf29c8d208f11	2026-10-30	not-applicable		[skera] Borrow reusable operand stacks across CFF glyphs. It changes only skera
+5884b3f549205f22a85a6625eff4ff5126cdbc00	2026-10-30	not-applicable		[skera] Allocate the Type 2 transient array on first put. It changes only skera
+e79d24a6da8ca702e70b36f8c77213a34558015f	2026-10-30	not-applicable		[skera] Match HarfBuzz seac operand decoding. It changes only skera
+262cb9e1f38869a03a5db9514242792ffe67ee98	2026-10-30	not-applicable		[skera] Support naming record overrides. It changes only skera
+96a019308758c5216cfc91d71e127222f3dd3680	2026-10-30	not-applicable		[skera] Drop unmappable variation devices without failing parent subtables. It changes only skera
+d3e338d9e22bf23a3f8512f10f7bbcd0cc250fee	2026-10-30	not-applicable		[skera] Subset MATH variants and glyph information. It changes only skera, the root
+a72bfb035960ab8196a403e9790c7e2d1a3b3bf7	2026-10-30	not-applicable		[skera] Collect CFF seac components in a single pass. It changes only skera
+b0895712aff33a394c31912aaea8e72ad9b048e4	2026-10-30	not-applicable		[skera] Scan bounded subroutine INDEXes for possible seac. It changes only skera
+36ea35d84395846c857fc61c1217bee39fa042b6	2026-10-30	not-applicable		Merge pull request #2425 from googlefonts/codex/cff-seac-subr-prepass. A merge commit. Each commit that it merges has a line of its own
+745959f32563ea532db0b89a89247aa8f21ec507	2026-10-30	not-applicable		Merge pull request #2415 from googlefonts/codex/math-subset-main. A merge commit. Each commit that it merges has a line of its own
+fd5d51999f40514d22d712b82a9f546153364659	2026-11-01	not-applicable		Merge pull request #2398 from metsw24-max/cff-encoding-glyph-count. It changes only read-fonts
+1d1672367c7909013b4e366085d68d5ad612ee67	2026-11-02	not-applicable		[read-fonts] Stop VARC axis-index scans on malformed entries (#2433). It changes only read-fonts
+a49bbb5c431d3f47b83180671fa28c7775167bbb	2026-11-02	not-applicable		[write-fonts] Select IUP references using serialized values (#2434). It changes write-fonts outside the code that writes a simple glyph
+f1857822c6e23c10ed80ff16ed6a39d419d2f05c	2026-11-04	not-applicable		[skera] Match HarfBuzz repacker overflow resolution. It changes only skera
+88dec37f3289dba661eef596b09f3c0300fe4394	2026-11-05	not-applicable		Merge pull request #2444 from googlefonts/bug_fixes. A merge commit. Each commit that it merges has a line of its own
+0093cd84bf029796f30f4a8b5416218d7bbebe10	2026-11-05	not-applicable		[read-fonts] Honor MVAR valueRecordSize in the generated accessor (#2430). It changes only read-fonts, the code generator, write-fonts
+582993462d356741fc81d858f72aa0dec35aae96	2026-11-05	not-applicable		[skera] Speed up the repacker's priority queue. It changes only skera
+c38af53040d6a21ea857d2081cec9aaaa9d8d1b4	2026-11-05	not-applicable		[skera] Make ObjIdx a u32. It changes only skera
+5354ee57d849f33be0a4b4fa8409f887ab4635e0	2026-11-05	not-applicable		[skera] Shrink the repacker's graph vertices. It changes only skera
+c2d1a91a49b72249debbdcf1e4c4b11910ca3d22	2026-11-05	not-applicable		[skera] Grow the repacker's vertex list by 1.5x. It changes only skera
+ebaf261d1416d56898d66a112e3ae05d10577a05	2026-11-05	not-applicable		[skera] Reserve the serializer for the repacked graph. It changes only skera
+f9d83298ff6ea8b86d136128baa77f586e123dfb	2026-11-05	not-applicable		[skera] Make the serializer's PoolIdx a u32. It changes only skera
+0f64f3bac6e2eb6515d5ffe3588803fb6b648103	2026-11-05	not-applicable		[skera] Store bounded vertex fields as u32. It changes only skera
+c3fdc3b300b7ed5b228a39c357865013ba3bed69	2026-11-06	not-applicable		Merge pull request #2446 from googlefonts/reduce_alloc. A merge commit. Each commit that it merges has a line of its own
+af24df98aa1c9952fb131acab7322480dc10973c	2026-11-06	not-applicable		[read-fonts] Resolve each coverage array once in ContextFormat3::matches_glyphs. It changes only read-fonts
+32238ac89c44586e9190a2aba1bf0533e296bb45	2026-11-06	not-applicable		[read-fonts] Check each contextual subtable once in closure_lookups. It changes only read-fonts
+1dacd72c894f28a2a9a7f0354bc4b12773a5e0dd	2026-11-06	not-applicable		[read-fonts] Speed up IntSet::insert_range for sorted ranges. It changes only read-fonts
+567b2b39598818c830c5c7d3ad84e20443967f01	2026-11-06	not-applicable		[read-fonts] Inline Intersect for SequenceContext and ChainedSequenceContext. It changes only read-fonts
+f0d990826b1b5dd7bda23b25a19967b66fb8fffb	2026-11-06	not-applicable		Merge pull request #2445 from googlefonts/fix_priority_queue. A merge commit. Each commit that it merges has a line of its own
+e5e7f43335e74a605268a8f41c52638c7611ba3b	2026-11-06	not-applicable		Merge pull request #2449 from googlefonts/speedup. A merge commit. Each commit that it merges has a line of its own
+018b3fb82b17b9d168976ac9ff6338f89e7f9c2b	2026-11-09	not-applicable		[read-fonts] Scan the class array in ClassDefFormat1::intersects_class_glyphs. It changes only read-fonts
+9661ca9ad8d1b0ad65bd2930781f8c69f39b46d3	2026-11-09	not-applicable		Merge pull request #2450 from googlefonts/speedup. A merge commit. Each commit that it merges has a line of its own
+ef03b2a3ff8b63f2e5c52cff5b275f28f8f24173	2026-11-09	not-applicable		[skera] Don't let loca choose the glyf buffer size. It changes only skera
+94f5d6d4c81b0b6f9bf217beb5e5bd0df6885809	2026-11-09	not-applicable		[skera] Make serializer buffer allocation fallible. It changes only incremental-font-transfer, skera
+e79f0fc0be3d658b412911bddbae171499cdfc08	2026-11-09	not-applicable		[read-fonts] Resolve negative AAT legacy state indices (#2455). It changes only read-fonts
+33fba788256f86b693d2a7f397f5b3cbe8c9c6f6	2026-11-09	not-applicable		[read-fonts] QOL improvements for color (#2456). It changes only read-fonts, the code generator, write-fonts
+6be151af909fdec648ffcd0a7f9a25042931556b	2026-11-09	not-applicable		use a 2.14 multiply for MIRP twilight points (#2452). It changes only skrifa
+1d33dbc9c65115393ff7f4ef969c3076670bc87d	2026-11-09	not-applicable		[skera] Cap the serializer buffer at twice the font file size. It changes only skera
+36173f6a50ed4b69a9be3f09da621d8fb4300b4c	2026-11-10	not-applicable		Feature gate type1 support (#2457). It changes only fauntlet, read-fonts, skrifa
+5293716193f33cce7893dbed3aa5c178c0b9ed0b	2026-11-10	not-applicable		Merge pull request #2454 from googlefonts/fix_oss_scanner_issues. A merge commit. Each commit that it merges has a line of its own
+54a0f7f00eaf59ab3fc9fe81750d9a9df70013c7	2026-11-10	not-applicable		[skera] Bound the repacker's total graph sorting work. It changes only skera
+67490010998e868eb0c1c4f23ae42d22d5358548	2026-11-10	not-applicable		[skera] Don't repeat refused overflow resolutions in process_overflows. It changes only skera
+c7998032f0bc2ff63c31059e06639b2bd657eb2f	2026-11-10	not-applicable		[read-fonts] type1: support CID-keyed Type 1 (#2458). It changes only fauntlet, font-test-data, read-fonts, skrifa, the fuzzers, the root
+78e1734da53b91fc62d1a601a7022435c5a2411d	2026-11-10	not-applicable		[read-fonts] reject a doubled sign in Type 1 fixed-point numbers (#2402). It changes only read-fonts
+d9cb235c68b4d540b77d68c40f03d91337229e45	2026-11-10	pending		[write-fonts] Fix bbox in CompositeGlyph::try_from_iter (#2453). It changes write-fonts/src/tables/glyf.rs
+c6de757213376945971098065ca9ee14784f0d09	2026-11-10	not-applicable		[skera] Walk the links of wide parents once when assigning spaces. It changes only skera
+73fab6938e44c6bd9f3afe2f4eda1cd66a603eec	2026-11-10	not-applicable		Release read, write, skrifa, skera, ifc, test-data (#2459). It changes only font-test-data, incremental-font-transfer, read-fonts, skera, skrifa, the root, write-fonts
+651c2d589fa22f53b97962cde58b291bcd0b016e	2026-11-10	not-applicable		Merge pull request #2460 from googlefonts/fix_oss_scanner_issues_2. A merge commit. Each commit that it merges has a line of its own
+5fb33e34e09fa1d55ea9d486f2705b8c79c80fe8	2026-11-11	not-applicable		[skera] Fix each shared LigatureSet's virtual links once per split. It changes only skera
+7422e648bc6d40972db8406351c99df405585eea	2026-11-11	not-applicable		[skera] Sort links before lookups by position and move links in one pass. It changes only skera
+2d0832d15971358d30f4dd61eec7e3408a3c5002	2026-11-12	not-applicable		Merge pull request #2461 from googlefonts/fix_oss_scanner_issues. A merge commit. Each commit that it merges has a line of its own
+35c20872fd37d7692a2defdf0f2a09979d3a2e54	2026-11-14	pending		[write-fonts] Preserve TrueType coordinate and instruction boundaries (#2435). It changes write-fonts/src/tables/glyf.rs, write-fonts/src/tables/glyf/simple.rs
+9b348ee5e4a869386e985de9b3e5e8e65db53a79	2026-11-16	not-applicable		[skera] Compute the repacker's distance weights in u64. It changes only skera
+6497fe6f533f5b8b6ed94538aac044dd5d1074e8	2026-11-17	not-applicable		Merge pull request #2467 from Lynth-KR/skera-distance-weight-u64. A merge commit. Each commit that it merges has a line of its own

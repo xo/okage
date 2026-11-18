@@ -28,8 +28,8 @@ import (
 // table holds them: the points of a simple glyph, and the components of a
 // composite glyph with their new glyph IDs.
 //
-// A line whose font is not in testdata is skipped. The CFF fonts come with
-// unit 3 of phase 13.
+// A line whose font is not in testdata is skipped. The tests of a CFF font
+// are in cff_subsets_test.go.
 
 // testContext is TestContext in subsetter tests/src/main.rs.
 type testContext struct {
@@ -68,6 +68,11 @@ func TestSubsets(t *testing.T) {
 				t.Skip("every glyph of the font")
 			}
 			ctx := getTestContext(t, fontFile, gids)
+			if isCFFFont(t, ctx.font) {
+				glyphMetricsCFF(t, ctx)
+				glyphOutlinesCFF(t, ctx)
+				return
+			}
 			glyphMetrics(t, ctx)
 			glyphOutlines(t, ctx)
 		})
@@ -84,8 +89,7 @@ func TestSubsets(t *testing.T) {
 func getTestContext(t *testing.T, fontFile, gids string) testContext {
 	t.Helper()
 	data := readTestFont(t, fontFile)
-	old := readGlyphTables(t, data)
-	glyphs := parseGids(gids, old.numGlyphs)
+	glyphs := parseGids(gids, testNumGlyphs(t, data))
 	glyphRemapper := NewGlyphRemapperFromGlyphs(glyphs)
 	subset, err := Subset(data, 0, glyphRemapper)
 	if err != nil {

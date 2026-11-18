@@ -37,7 +37,12 @@ of one repository. Their column `matched` stays empty until the base port of
 phases 11 to 18 of [`PLAN.md`](PLAN.md) is done. siphasher came on 2026-11-18, in phase 12. Its
 base commit is `1.0.2`, the version in the `Cargo.lock` of krilla. The port
 of `sip128` at the base commit is done, but the column `matched` stays empty
-until okage ports the pending commit of its ledger.
+until okage ports the pending commit of its ledger. write-fonts came on
+2026-11-18, in phase 13. Its checkout is a clone of the repository
+fontations, which holds write-fonts, read-fonts, skrifa and other crates.
+Its base commit is the tag `write-fonts-v0.48.0`, which is `9af3f318`, the
+version in the `Cargo.lock` of krilla. The column `matched` stays empty
+until okage ports the pending commits of its ledger.
 
 ## The checkouts
 
@@ -303,6 +308,23 @@ on 2026-11-18.
 | `Cargo.toml`, `COPYING`, `LICENSE-*` | none | Review |
 | everything else | none | Not applicable |
 
+### write-fonts
+
+The port is in `internal/subsetter`, and it holds only the code of
+write-fonts that writes a simple glyph, which subsetter calls (D62).
+subsetter reads fonts with skrifa and read-fonts, and the port reads them
+with typesetting (D52). `internal/subsetter/interjector_skrifa.go` gives the
+outlines of typesetting to the pen as skrifa does. skrifa and read-fonts are
+not ported, and subsetter requires their versions, so a change to them
+reaches okage only with a new version of subsetter.
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `write-fonts/src/tables/glyf/simple.rs` | `internal/subsetter/writefonts_simple.go` and its tests | Port, for `SimpleGlyph::from_bezpath` with one path, and the writing of a simple glyph. A change to another part is Not applicable |
+| `write-fonts/src/tables/glyf.rs`, `write-fonts/src/round.rs`, `write-fonts/src/util.rs`, `write-fonts/src/write.rs` | `internal/subsetter/writefonts_simple.go` | Port, for `Bbox`, `OtRound`, `isclose`, `WrappingGet` and `dump_table`. A change to another part is Not applicable |
+| `LICENSE-MIT`, `LICENSE-APACHE`, `write-fonts/Cargo.toml` | `internal/subsetter/LICENSE` | Review |
+| everything else | none | Not applicable |
+
 ### File names
 
 The name of a Go file uses the base name of the Rust file without the suffix
@@ -526,7 +548,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-18 seventeen ledgers exist:
+On 2026-11-18 eighteen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -566,7 +588,10 @@ On 2026-11-18 seventeen ledgers exist:
    panic on a malformed font. 16 are `not-applicable`: merge commits, and
    commits that change only `fontscan`, the CI or other files that okage does
    not copy. One is `ported`: okage applied `e8da365e` out of order, for the
-   kerning of Calibri (D59). The column `matched` is empty.
+   kerning of Calibri (D59). The column `matched` is empty. Later, okage
+   applied more commits out of order, for the limits of the loader (D61)
+   and for the variable fonts of `internal/subsetter` (D65). On 2026-11-18,
+   13 commits are `ported` and 97 are `pending`.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
    pdf-writer has two commits after `fdf09012`. `a10fe0a3` changes only a
@@ -581,6 +606,12 @@ On 2026-11-18 seventeen ledgers exist:
    `pending`. The other 7 change the versions, the license files, the
    description or the links in comments, so they are `not-applicable`. The
    column `matched` is empty, because it cannot move past a pending commit.
+10. `write-fonts.tsv` starts at `write-fonts-v0.48.0`, which is
+    `9af3f318`. On 2026-11-18 it holds the 859 commits of fontations after
+    it. 12 change a file that the port follows, and they are `pending`. The
+    other 847 are merge commits, or change only other crates, or change
+    other parts of write-fonts, so they are `not-applicable`. The column
+    `matched` is empty.
 
 ## A difference from upstream
 

@@ -249,7 +249,10 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 	out.fvar = newFvar(fvar)
 
 	raw, _ = ld.RawTable(ot.MustNewTag("avar"))
-	out.avar, _, _ = tables.ParseAvar(raw)
+	avar, _, err := tables.ParseAvar(raw)
+	if err == nil && len(avar.AxisSegmentMaps) == len(out.fvar) {
+		out.avar = avar
+	}
 
 	out.upem = out.head.Upem()
 
@@ -305,7 +308,7 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 
 		raw, _ = ld.RawTable(ot.MustNewTag("gvar"))
 		gvar, _, _ := tables.ParseGvar(raw)
-		out.gvar, _ = newGvar(gvar, out.glyf)
+		out.gvar, _ = newGvar(gvar, out.glyf, axisCount)
 
 		raw, _ = ld.RawTable(ot.MustNewTag("HVAR"))
 		hvar, _, err := tables.ParseHVAR(raw)
@@ -554,7 +557,10 @@ func loadHVtmx(hheaRaw, htmxRaw []byte, numGlyphs int) (*tables.Hhea, tables.Hmt
 		return nil, tables.Hmtx{}, err
 	}
 
-	hmtx, _, err := tables.ParseHmtx(htmxRaw, int(hhea.NumOfLongMetrics), numGlyphs-int(hhea.NumOfLongMetrics))
+	// okage: the table holds no side bearing of its own when hhea gives at
+	// least as many long metrics as maxp gives glyphs. go-text passes a
+	// negative count to ParseHmtx (D65).
+	hmtx, _, err := tables.ParseHmtx(htmxRaw, int(hhea.NumOfLongMetrics), max(0, numGlyphs-int(hhea.NumOfLongMetrics)))
 	if err != nil {
 		return nil, tables.Hmtx{}, err
 	}

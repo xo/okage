@@ -47,6 +47,12 @@ func ParseGlyf(src []byte, locaOffsets []uint32) (Glyf, error) {
 		if start == end {
 			continue
 		}
+		// okage: go-text slices the table with the range of loca, and
+		// panics when the range is out of the table. Such a glyph has no
+		// outline, as in read-fonts and FreeType (D65).
+		if start > end || uint64(end) > uint64(len(src)) {
+			continue
+		}
 		out[i], _, err = ParseGlyph(src[start:end])
 		if err != nil {
 			return nil, err

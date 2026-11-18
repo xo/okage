@@ -5,9 +5,10 @@
 
 package kurbo
 
-// This file ports the subset of kurbo kurbo/src/cubicbez.rs that svgtypes
-// and usvg need: CubicBez, and the impls of ParamCurve, ParamCurveDeriv and
-// ParamCurveArclen with the arc length helpers.
+// This file ports the subset of kurbo kurbo/src/cubicbez.rs that svgtypes,
+// usvg and subsetter need: CubicBez, CubicBez::to_quads with its iterator
+// ToQuads, and the impls of ParamCurve, ParamCurveDeriv and ParamCurveArclen
+// with the arc length helpers.
 
 // CubicBez is CubicBez in kurbo kurbo/src/cubicbez.rs.
 //
@@ -24,6 +25,72 @@ type CubicBez struct {
 // Create a new cubic Bézier segment.
 func NewCubicBez(p0, p1, p2, p3 Point) CubicBez {
 	return CubicBez{P0: p0, P1: p1, P2: p2, P3: p3}
+}
+
+// ToQuads is CubicBez::to_quads in kurbo kurbo/src/cubicbez.rs.
+//
+// Convert to quadratic Béziers.
+//
+// The iterator returns the start and end parameter in the cubic of each
+// quadratic segment, along with the quadratic.
+//
+// Note that the resulting quadratic Béziers are not in general G1
+// continuous. They are optimized for minimizing distance error.
+//
+// This iterator will always produce at least one QuadBez.
+func (c CubicBez) ToQuads(accuracy float64) *ToQuads {
+	// The maximum error, as a vector from the cubic to the best approximating
+	// quadratic, is proportional to the third derivative, which is constant
+	// across the segment. Thus, the error scales down as the third power of
+	// the number of subdivisions. Our strategy then is to subdivide `t`
+	// evenly.
+	//
+	// This is an overestimate of the error because only the component
+	// perpendicular to the first derivative is important. But the simplicity
+	// is appealing.
+
+	// This magic number is the square of 36 / sqrt(3).
+	// See: http://caffeineowl.com/graphics/2d/vectorial/cubic2quad01.html
+	maxHypot2 := 432.0 * accuracy * accuracy
+	p1x2 := c.P1.ToVec2().Mul(3.0).Sub(c.P0.ToVec2())
+	p2x2 := c.P2.ToVec2().Mul(3.0).Sub(c.P3.ToVec2())
+	err := p2x2.Sub(p1x2).Hypot2()
+	n := max(f64ToUsize(Ceil(Powf(err/maxHypot2, 1.0/6.0))), 1)
+
+	return &ToQuads{c: c, n: n, i: 0}
+}
+
+// ToQuads is ToQuads in kurbo kurbo/src/cubicbez.rs, the iterator of
+// CubicBez.ToQuads, which produces quadratic Bézier segments. Upstream keeps
+// it private and returns it as an iterator.
+type ToQuads struct {
+	c CubicBez
+	i uint
+	n uint
+}
+
+// Next is Iterator::next for ToQuads in kurbo kurbo/src/cubicbez.rs. It
+// returns the start and the end parameter in the cubic of the next quadratic
+// segment, and the quadratic. It returns false at the end.
+func (it *ToQuads) Next() (float64, float64, QuadBez, bool) {
+	if it.i == it.n {
+		return 0, 0, QuadBez{}, false
+	}
+	t0 := float64(it.i) / float64(it.n)
+	t1 := float64(it.i+1) / float64(it.n)
+	seg := it.c.Subsegment(t0, t1)
+	p1x2 := seg.P1.ToVec2().Mul(3.0).Sub(seg.P0.ToVec2())
+	p2x2 := seg.P2.ToVec2().Mul(3.0).Sub(seg.P3.ToVec2())
+	// Upstream divides by 4 as Vec2 does, with a multiply by the reciprocal.
+	result := NewQuadBez(seg.P0, p1x2.Add(p2x2).Mul(1/4.0).ToPoint(), seg.P3)
+	it.i++
+	return t0, t1, result, true
+}
+
+// Len is Iterator::size_hint for ToQuads in kurbo kurbo/src/cubicbez.rs. It
+// returns the number of segments that Next has not returned yet.
+func (it *ToQuads) Len() int {
+	return int(it.n - it.i)
 }
 
 // Eval is ParamCurve::eval for CubicBez in kurbo kurbo/src/cubicbez.rs.

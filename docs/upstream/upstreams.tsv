@@ -16,3 +16,4 @@ krilla	https://github.com/LaurenzV/krilla	upstream/krilla	krilla 0.8.2, krilla-s
 pdf-writer	https://github.com/typst/pdf-writer	upstream/pdf-writer	pdf-writer 0.15.0	internal/pdfwriter	subset	fdf090125f1e7209fa630c4ca1f5f29910c87c93	
 subsetter	https://github.com/typst/subsetter	upstream/subsetter	subsetter 0.2.6	internal/subsetter	port	c3f23c67bc0190587f639bda84dc0005ca3f54d5	
 siphasher	https://github.com/jedisct1/rust-siphash	upstream/siphasher	siphasher 1.0.2	internal/siphasher	subset	db8172048a1c9bdef0dcec782d965c236161af13	
+write-fonts	https://github.com/googlefonts/fontations	upstream/write-fonts	write-fonts 0.48.0	internal/subsetter	subset	9af3f3188ab5522e23446a1fb98135cb3f7d96b6	

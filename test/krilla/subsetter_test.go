@@ -297,7 +297,9 @@ func fontCases(t *testing.T, file string) []subsetCase {
 // compareSubsets asks the oracle for the subset of each case, and compares
 // the tag and the bytes with internal/subsetter. A case for which
 // internal/subsetter returns an error that a unit of phase 13 that is not
-// ported yet gives is skipped.
+// ported yet gives is skipped. An instance of a variable font at a location
+// other than the default can differ by 1 unit, and is compared as
+// TestSubsetterVariable compares it.
 func compareSubsets(t *testing.T, cases []subsetCase) {
 	t.Helper()
 	questions := make([]any, len(cases))
@@ -314,6 +316,19 @@ func compareSubsets(t *testing.T, cases []subsetCase) {
 		tag, got, err := goSubset(data, c.index, c.glyphs, c.coords)
 		if notPorted(err) {
 			skipped++
+			continue
+		}
+		if c.coords != nil && err == nil && answers[i].Err == "" && !vfIsDefault(t, c) &&
+			len(answers[i].Data) >= 6 && string(answers[i].Data[:6]) == tag {
+			d, err := vfCompare(got, answers[i].Data[6:])
+			if err != nil {
+				t.Errorf("%s: %v", c.name, err)
+				continue
+			}
+			for _, msg := range d.messages {
+				t.Errorf("%s: %s", c.name, msg)
+			}
+			compared++
 			continue
 		}
 		if !sameResult(t, c.name, answers[i], tag, got, err) {

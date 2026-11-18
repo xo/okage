@@ -67,13 +67,20 @@ func checksum(table []byte) uint32 {
 	// "To accommodate data with a length that is not a multiple of four,
 	// the above algorithm must be modified to treat the data as though
 	// it contains zero padding to a length that is a multiple of four."
-	if r := len(table) % 4; r != 0 {
-		table = append(table, make([]byte, r)...)
-	}
-
+	//
+	// okage: go-text appends the padding to the slice of the caller. When
+	// the slice has more capacity, the append writes zeros into the data
+	// after the table, and it pads with len%4 bytes instead of 4-len%4. The
+	// last bytes are now read into a word of their own (D65).
 	var sum uint32
-	for i := 0; i < len(table)/4; i++ {
+	n := len(table) / 4
+	for i := 0; i < n; i++ {
 		sum += binary.BigEndian.Uint32(table[i*4:])
+	}
+	if rest := table[4*n:]; len(rest) != 0 {
+		var last [4]byte
+		copy(last[:], rest)
+		sum += binary.BigEndian.Uint32(last[:])
 	}
 
 	return sum

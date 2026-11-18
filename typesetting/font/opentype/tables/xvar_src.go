@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math"
 )
 
 // ------------------------------------ fvar ------------------------------------
@@ -542,8 +541,31 @@ func (sm SegmentMaps) Map(value Coord) Coord {
 	// Actually interpolate.
 	before := l[i-1]
 	after := l[i]
-	denom := float64(after.FromCoordinate - before.FromCoordinate) // Can't be zero by now.
-	return before.ToCoordinate + Coord(math.Round(float64(after.ToCoordinate-before.ToCoordinate)*float64(value-before.FromCoordinate))/denom)
+	// okage: go-text rounds the product, and then truncates the quotient
+	// of the division. skrifa interpolates in 16.16 with a rounded
+	// division, and rounds the result to 2.14, as FreeType does (D65).
+	delta := roundedMulDiv(int64(after.ToCoordinate-before.ToCoordinate)*4,
+		int64(value-before.FromCoordinate)*4, int64(after.FromCoordinate-before.FromCoordinate)*4)
+	return before.ToCoordinate + Coord((delta+2)>>2)
+}
+
+// roundedMulDiv returns a * b / c, rounded to the nearest integer, with
+// ties away from zero, as Fixed::mul_div of font-types does on the bits of
+// numbers in 16.16. c is not zero.
+//
+// okage: this function is not in go-text (D65).
+func roundedMulDiv(a, b, c int64) int64 {
+	sign := int64(1)
+	if a < 0 {
+		a, sign = -a, -sign
+	}
+	if b < 0 {
+		b, sign = -b, -sign
+	}
+	if c < 0 {
+		c, sign = -c, -sign
+	}
+	return sign * ((a*b + c/2) / c)
 }
 
 type AxisValueMap struct {

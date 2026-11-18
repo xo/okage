@@ -20,7 +20,9 @@ func (table Hmtx) Advance(gid GlyphID) int16 {
 	index := int(gid)
 	if index < LM {
 		return table.Metrics[index].AdvanceWidth
-	} else if index < LS+LM { // return the last value
+	} else if index < LS+LM && LM > 0 { // return the last value
+		// okage: go-text indexes the last metric of a table without a long
+		// metric, and panics. Such a glyph has the advance 0 (D65).
 		return table.Metrics[len(table.Metrics)-1].AdvanceWidth
 	}
 	return 0

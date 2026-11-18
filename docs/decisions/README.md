@@ -84,3 +84,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32 |
 | D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52 |
 | D64 | [Radial gradients with the extend rule of PDF](D064-radial-gradients-with-the-extend-rule-of-pdf.md) | Decided |
+| D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided |
