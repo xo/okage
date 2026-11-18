@@ -149,3 +149,189 @@ func TestRendererShapeText(t *testing.T) {
 		t.Error("the serif of the renderer is not Noto Serif")
 	}
 }
+
+// TestShapeTextClusters checks the clusters of a run: their bytes in the
+// order of the text, their positions and advances, and their glyphs (D57).
+func TestShapeTextClusters(t *testing.T) {
+	db, ids := testFontDB(t, "RobotoFlex.subset.ttf")
+	// Roboto Flex draws "fi" as one ligature, so "fib" has two clusters.
+	run, err := ShapeText("fib", TextStyle{Family: "Roboto Flex", Size: 100}, WithFontDatabase(db))
+	if err != nil {
+		t.Fatal(err)
+	}
+	clusters := run.Clusters()
+	if len(clusters) != 2 {
+		t.Fatalf("got %d clusters, want 2", len(clusters))
+	}
+	var x float32
+	for i, c := range clusters {
+		want := [2]int{0, 2}
+		if i == 1 {
+			want = [2]int{2, 3}
+		}
+		if c.Start != want[0] || c.End != want[1] {
+			t.Errorf("cluster %d is the bytes %d to %d, want %v", i, c.Start, c.End, want)
+		}
+		if c.X != x {
+			t.Errorf("cluster %d at %v, want %v", i, c.X, x)
+		}
+		if c.Font != ids[0] || len(c.Glyphs) != 1 || c.Advance <= 0 {
+			t.Errorf("cluster %d = %+v, want one glyph of the font", i, c)
+		}
+		if ts := c.Glyphs[0].Transform(); ts.TX != c.X {
+			t.Errorf("cluster %d: the glyph is at %v, want %v", i, ts.TX, c.X)
+		}
+		x += c.Advance
+	}
+	if abs32(x-run.Width()) > 1e-3 {
+		t.Errorf("the advances add up to %v, want the width %v", x, run.Width())
+	}
+	if (&TextRun{}).Clusters() != nil {
+		t.Error("an empty run has clusters")
+	}
+}
+
+// TestShapeTextClustersRTL checks that the clusters of a run from right to
+// left are in the order of the text, with the first one at the right.
+func TestShapeTextClustersRTL(t *testing.T) {
+	db, _ := testFontDB(t, "Amiri-Regular.ttf")
+	text := "אב" // Hebrew alef and bet, which Amiri draws.
+	run, err := ShapeText(text, TextStyle{Family: "Amiri", Size: 100}, WithFontDatabase(db))
+	if err != nil {
+		t.Fatal(err)
+	}
+	clusters := run.Clusters()
+	if len(clusters) != 2 {
+		t.Fatalf("got %d clusters, want 2", len(clusters))
+	}
+	if clusters[0].Start != 0 || clusters[0].End != 2 || clusters[1].Start != 2 || clusters[1].End != len(text) {
+		t.Errorf("clusters = %+v, want the bytes of each letter", clusters)
+	}
+	if clusters[0].X <= clusters[1].X {
+		t.Errorf("the first letter is at %v and the second at %v, want the first at the right", clusters[0].X, clusters[1].X)
+	}
+}
+
+// TestShapeTextSpacing checks the letter spacing and the word spacing of
+// TextStyle.
+func TestShapeTextSpacing(t *testing.T) {
+	db, _ := testFontDB(t, "NotoSans-Regular.ttf")
+	width := func(text string, style TextStyle) float32 {
+		t.Helper()
+		style.Family, style.Size = "Noto Sans", 100
+		run, err := ShapeText(text, style, WithFontDatabase(db))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return run.Width()
+	}
+	base := width("ab cd", TextStyle{})
+	// The letter spacing goes after each cluster but the last.
+	if got, want := width("ab cd", TextStyle{LetterSpacing: 2}), base+4*2; abs32(got-want) > 1e-3 {
+		t.Errorf("letter spacing: width %v, want %v", got, want)
+	}
+	if got, want := width("ab cd", TextStyle{WordSpacing: 7}), base+7; abs32(got-want) > 1e-3 {
+		t.Errorf("word spacing: width %v, want %v", got, want)
+	}
+}
+
+// TestShapeTextFeaturesAndLanguage checks that the features and the language
+// of TextStyle reach the shaper.
+func TestShapeTextFeaturesAndLanguage(t *testing.T) {
+	db, _ := testFontDB(t, "NotoSerif-Regular.ttf", "NotoSans-Regular.ttf")
+	glyphs := func(text string, style TextStyle) []GlyphID {
+		t.Helper()
+		style.Size = 100
+		run, err := ShapeText(text, style, WithFontDatabase(db))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var ids []GlyphID
+		for _, c := range run.Clusters() {
+			for _, g := range c.Glyphs {
+				ids = append(ids, g.ID)
+			}
+		}
+		return ids
+	}
+	// Noto Serif draws "fi" as a ligature, unless liga is off.
+	if got := glyphs("fi", TextStyle{Family: "Noto Serif"}); len(got) != 1 {
+		t.Errorf("fi: %v, want the ligature", got)
+	}
+	noLiga := []FontFeature{{Tag: [4]byte{'l', 'i', 'g', 'a'}, Value: 0}}
+	if got := glyphs("fi", TextStyle{Family: "Noto Serif", Features: noLiga}); len(got) != 2 {
+		t.Errorf("fi without liga: %v, want two glyphs", got)
+	}
+	// Noto Sans draws the Serbian form of б for the language sr.
+	ru, sr := glyphs("б", TextStyle{Family: "Noto Sans"}), glyphs("б", TextStyle{Family: "Noto Sans", Language: "sr"})
+	if len(ru) != 1 || len(sr) != 1 || ru[0] == sr[0] {
+		t.Errorf("б: %v without a language and %v for sr, want two glyphs", ru, sr)
+	}
+}
+
+// TestShapeTextStretchAndVariations checks that the weight, the stretch and
+// the variations of TextStyle set the axes of a variable font, as
+// AutoFontVariations maps them.
+func TestShapeTextStretchAndVariations(t *testing.T) {
+	db, _ := testFontDB(t, "RobotoFlex.subset.ttf")
+	width := func(style TextStyle) float32 {
+		t.Helper()
+		style.Family, style.Size = "Roboto Flex", 100
+		run, err := ShapeText("ab", style, WithFontDatabase(db))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return run.Width()
+	}
+	wdth := [4]byte{'w', 'd', 't', 'h'}
+	normal := width(TextStyle{})
+	if width(TextStyle{Weight: 700}) <= normal {
+		t.Error("the weight 700 is not wider")
+	}
+	condensed := width(TextStyle{Stretch: 75})
+	if condensed >= normal {
+		t.Error("the stretch 75 is not narrower")
+	}
+	if got := width(TextStyle{Variations: []FontVariation{NewFontVariation(wdth, 75)}}); got != condensed {
+		t.Errorf("wdth 75: width %v, want %v as the stretch 75", got, condensed)
+	}
+	// The nearest keyword of 80 is condensed, 75.
+	if got := width(TextStyle{Stretch: 80}); got != condensed {
+		t.Errorf("stretch 80: width %v, want %v as condensed", got, condensed)
+	}
+	// Variations win over the stretch.
+	if got := width(TextStyle{Stretch: 75, Variations: []FontVariation{NewFontVariation(wdth, 100)}}); got != normal {
+		t.Errorf("stretch 75 with wdth 100: width %v, want %v", got, normal)
+	}
+}
+
+// TestAutoFontVariations checks the axes of AutoFontVariations, and that it
+// does not change its argument.
+func TestAutoFontVariations(t *testing.T) {
+	wght, wdth := [4]byte{'w', 'g', 'h', 't'}, [4]byte{'w', 'd', 't', 'h'}
+	ital, slnt := [4]byte{'i', 't', 'a', 'l'}, [4]byte{'s', 'l', 'n', 't'}
+	for _, c := range []struct {
+		in      []FontVariation
+		weight  uint16
+		stretch FontStretch
+		style   FontStyle
+		want    []FontVariation
+	}{
+		{nil, 400, FontStretchNormal, FontStyleNormal, []FontVariation{{wght, 400}}},
+		{nil, 700, FontStretchCondensed, FontStyleItalic, []FontVariation{{wght, 700}, {wdth, 75}, {ital, 1}}},
+		{nil, 300, FontStretchUltraExpanded, FontStyleOblique, []FontVariation{{wght, 300}, {wdth, 200}, {slnt, -12}}},
+		{[]FontVariation{{wght, 550}, {slnt, -5}}, 700, FontStretchNormal, FontStyleOblique, []FontVariation{{wght, 550}, {slnt, -5}}},
+	} {
+		in := make([]FontVariation, len(c.in), len(c.in)+4)
+		copy(in, c.in)
+		got := AutoFontVariations(in, c.weight, c.stretch, c.style)
+		if !slices.Equal(got, c.want) {
+			t.Errorf("AutoFontVariations(%v, %d, %v, %v) = %v, want %v", c.in, c.weight, c.stretch, c.style, got, c.want)
+		}
+		// The spare capacity of in stays empty, so the result does not
+		// share it.
+		if !slices.Equal(in, c.in) || in[:len(in)+1][len(in)] != (FontVariation{}) {
+			t.Errorf("AutoFontVariations changed its argument")
+		}
+	}
+}

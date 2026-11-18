@@ -7,7 +7,7 @@ a0d4802591a51a717c612532238de59dd860b844	2026-09-21	pending		[shaping] expose an
 ecb1fc75cb1803b489f42f7fe7d2d7e14d3d170d	2026-09-22	pending		[shaping] expose and document Level fields. It changes shaping
 9e91f9d54cfd218c1085bca26e807588eb83a2d3	2026-09-22	pending		fix rebase. It changes shaping
 662ba5319a81c6732f28d405e73daad224e72fac	2026-09-22	not-applicable		Merge branch 'bidi-ordering' of github.com:go-text/typesetting into bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
-e8da365e472d830d11183cbe53fcee3b537292e2	2026-09-22	pending		[harfbuzz] setDigest: add a range to each sub-digest on its own (#279). It changes go.mod, harfbuzz
+e8da365e472d830d11183cbe53fcee3b537292e2	2026-09-22	ported		[harfbuzz] setDigest: add a range to each sub-digest on its own (#279). It changes go.mod, harfbuzz. Applied out of order for the kerning of Calibri (D59). The go.mod change and the two tests that read typesetting-utils are left out
 35e0e433b186e301839e7bf0210b107ac0188948	2026-09-28	not-applicable		Merge pull request #276 from go-text/bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
 6f8568f76ce2fdaa82b5dab63f34c41c24ba2385	2026-09-28	not-applicable		Merge pull request #277 from go-text/write-ttf. It is a merge commit, and the commits that it merges are in this ledger
 f199d9b038974afffdb2262ad5c0f2953572de7f	2026-09-29	pending		[harfbuzz,font,segmenter] cleanup/dedupe dead code (#280). It changes font, harfbuzz, segmenter

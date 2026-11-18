@@ -140,6 +140,10 @@ func (d *Document) Tree() *Tree {
 // size of the tree and the options of the renderer.
 func (d *Document) scale() (int, int, float32, float32, error) {
 	ro := &d.r.options().render
+	if d.tree.Size() == (Size{}) {
+		// The tree of an image of size zero, with WithZeroSize (D58).
+		return 0, 0, 0, 0, okage.ErrSVGInvalidRenderSize
+	}
 	size := d.tree.Size().ToIntSize()
 	width, height, scaleX, scaleY := ro.scaleMode.Scale(uint(size.Width()), uint(size.Height()), ro.width, ro.height)
 	switch {

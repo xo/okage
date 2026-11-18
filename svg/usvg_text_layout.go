@@ -425,6 +425,12 @@ func layoutText(
 						gc.glyphs[l].spanTs = spanTs
 					}
 					positionedGlyphs = append(positionedGlyphs, gc.glyphs...)
+
+					// Port: upstream keeps no clusters. ShapeText keeps
+					// them for TextRun.Clusters (D57).
+					if textNode.keepClusters {
+						textNode.clusters = append(textNode.clusters, newTextCluster(gc, spanTs))
+					}
 				}
 
 				spans = append(spans, Span{
@@ -1116,6 +1122,8 @@ func processChunk(
 			font,
 			span.smallCaps,
 			span.applyKerning,
+			span.features,
+			span.language,
 			span.font.variations,
 			span.fontSize.Get(),
 			span.fontOpticalSizing,
@@ -1786,12 +1794,16 @@ func asI16(x float32) int16 {
 //
 // Port: opt holds the logger (D20). The fallback differs from upstream (D39,
 // D40). When upstream changes its fallback, remove the code of D39 and D40
-// and port the change, as "When upstream changes" in D40 says.
+// and port the change, as "When upstream changes" in D40 says. features and
+// lang are the features and the language of ShapeText, which upstream does
+// not have (D57). The parser gives none.
 func shapeText(
 	text string,
 	font *resolvedFont,
 	smallCaps bool,
 	applyKerning bool,
+	features []FontFeature,
+	lang string,
 	variations []FontVariation,
 	fontSize float32,
 	fontOpticalSizing FontOpticalSizing,
@@ -1806,6 +1818,8 @@ func shapeText(
 		font,
 		smallCaps,
 		applyKerning,
+		features,
+		lang,
 		shapingVariations,
 		fonts,
 	)
@@ -1863,6 +1877,8 @@ outer:
 			fallbackFont,
 			smallCaps,
 			applyKerning,
+			features,
+			lang,
 			shapingVariations,
 			fonts,
 		)
@@ -2157,12 +2173,15 @@ func guessScript(runes []rune) language.Script {
 // harfrust::shape fails, which each caller takes as no glyphs, so Go returns
 // nil. harfrust becomes the package harfbuzz of go-text, with the face of
 // the font instance, whose coordinates are the variations, and unicode-bidi
-// becomes visualRuns. The shaping of go-text does not fail.
+// becomes visualRuns. The shaping of go-text does not fail. runFeatures and
+// lang come from ShapeText, and upstream does not have them (D57).
 func shapeTextWithFont(
 	text string,
 	font *resolvedFont,
 	smallCaps bool,
 	applyKerning bool,
+	runFeatures []FontFeature,
+	lang string,
 	variations []FontVariation,
 	fonts *fontCache,
 ) []glyph {
@@ -2184,6 +2203,14 @@ func shapeTextWithFont(
 	if !applyKerning {
 		features = append(features, harfbuzz.Feature{
 			Tag: ot.MustNewTag("kern"), Value: 0,
+			Start: harfbuzz.FeatureGlobalStart, End: harfbuzz.FeatureGlobalEnd,
+		})
+	}
+	// Port: the features of ShapeText come after those of upstream, so that
+	// they can set smcp and kern too (D57).
+	for _, f := range runFeatures {
+		features = append(features, harfbuzz.Feature{
+			Tag: ot.NewTag(f.Tag[0], f.Tag[1], f.Tag[2], f.Tag[3]), Value: f.Value,
 			Start: harfbuzz.FeatureGlobalStart, End: harfbuzz.FeatureGlobalEnd,
 		})
 	}
@@ -2216,6 +2243,10 @@ func shapeTextWithFont(
 
 		// TODO: explicitly set language?
 		buffer.Props.Script = guessScript(runes)
+		// Port: upstream sets no language. ShapeText can set one (D57).
+		if lang != "" {
+			buffer.Props.Language = language.NewLanguage(lang)
+		}
 
 		buffer.Shape(hbFont, features)
 

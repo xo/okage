@@ -22,8 +22,10 @@ import (
 //
 // Port: logger is the logger of D20, which buildEdges logs to. A nil logger
 // logs nothing.
+//
+// Port: the bounds go through scanBounds first (D53).
 func fillPathPath(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, logger *slog.Logger) {
-	ir, ok := conservativeRoundToInt(p.Bounds())
+	ir, ok := conservativeRoundToInt(scanBounds(p.Bounds()))
 	if !ok {
 		return
 	}
@@ -48,6 +50,45 @@ func fillPathPath(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, lo
 		b,
 		logger,
 	)
+}
+
+// scanBoundsLimit is the largest distance from the origin, in pixels, of the
+// bounds that fillPathPath and fillPathPathAA give to fillPathImplPath (D53).
+// A bound of 2^26 shifted left by 3, the shift of Coverage8x8 (D54), still
+// fits in an int32, and so does a width of 2^27.
+const scanBoundsLimit float32 = 1 << 26
+
+// scanBounds clamps each side of the bounds of a path to the range
+// -scanBoundsLimit..scanBoundsLimit (D53). It ports no upstream function.
+//
+// Upstream rounds the bounds to an IntRect with saturation, and shifts the
+// top and the bottom left by the shift of the supersampling. A path with a
+// point past about 2^29 pixels then gets a wrong IntRect: its right side or
+// its bottom side saturates, or its top side wraps around and becomes a
+// large positive number. The scan converter then walks rows that are out of
+// the clip, or blits past the end of the runs, and panics. tiny-skia 0.12 has
+// the same fault. The clip of a fill is never larger than 32767 pixels,
+// because the painter splits a larger pixmap into tiles. A side past the
+// limit is then out of the clip both before and after the clamp, and the
+// edges are still clipped to the clip. So the clamp changes only the fills
+// that panicked or that left out rows.
+func scanBounds(r Rect) Rect {
+	c, ok := path.RectFromLTRB(
+		clampScanBound(r.Left()),
+		clampScanBound(r.Top()),
+		clampScanBound(r.Right()),
+		clampScanBound(r.Bottom()),
+	)
+	if !ok {
+		return r
+	}
+	return c
+}
+
+// clampScanBound clamps v to the range -scanBoundsLimit..scanBoundsLimit. It
+// ports no upstream function.
+func clampScanBound(v float32) float32 {
+	return min(max(v, -scanBoundsLimit), scanBoundsLimit)
 }
 
 // conservativeRoundToInt is conservative_round_to_int in tiny-skia

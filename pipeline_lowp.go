@@ -160,6 +160,11 @@ var lowpStages = [stagesCount]func(*lowpPipeline){
 	nil, // GammaExpandSrgb
 	nil, // GammaExpandDestinationSrgb
 	nil, // GammaCompressSrgb
+	// okage: the stages of D55 have no lowp implementation.
+	nil, // DecalX1
+	nil, // CheckDecalMask
+	nil, // MeshGradient
+	nil, // GatherAligned (D53)
 }
 
 // startLowp is start in tiny-skia src/pipeline/lowp.rs.

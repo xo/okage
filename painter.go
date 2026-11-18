@@ -85,6 +85,66 @@ type Paint struct {
 	//
 	// Default: false
 	ForceHQPipeline bool
+
+	// Coverage is the grid of samples from which an antialiased fill
+	// computes the coverage of a pixel. It applies to FillPath, and to a
+	// stroke that StrokePath fills. It does not apply to FillRect, to a
+	// hairline or to a Mask.
+	//
+	// Port (D54): upstream has no such field, and always takes 4 by 4
+	// samples.
+	//
+	// Default: Coverage4x4
+	Coverage Coverage
+
+	// StrokeAdjust turns on the automatic stroke adjustment of PDF, the SA
+	// entry of a graphics state. StrokePath then rounds the width of the
+	// stroke on the device to a whole number of pixels, at least 1, and
+	// moves each horizontal or vertical line of the path so that the edges
+	// of its stroke fall on the borders of the pixels. A thin line then
+	// covers whole pixels, and does not spread over two light rows. FillPath
+	// ignores it.
+	//
+	// Port (D54): upstream has no such field.
+	//
+	// Default: false
+	StrokeAdjust bool
+}
+
+// Coverage is the grid of samples from which an antialiased fill computes
+// the coverage of a pixel. It ports no upstream type (D54).
+type Coverage uint8
+
+const (
+	// Coverage4x4 takes 4 by 4 samples in each pixel, as tiny-skia does. The
+	// coverage of a pixel moves in steps of 1/16. It is the zero value and
+	// the default, and it gives the same bytes as tiny-skia.
+	Coverage4x4 Coverage = iota
+	// Coverage8x8 takes 8 by 8 samples in each pixel. The coverage of a
+	// pixel moves in steps of 1/64, so the edges of small text are closer
+	// to the edges that FreeType and Cairo draw. A fill whose area on the
+	// pixmap is wider or higher than 4095 pixels takes 4 by 4 samples.
+	Coverage8x8
+)
+
+// String satisfies the fmt.Stringer interface.
+func (c Coverage) String() string {
+	switch c {
+	case Coverage4x4:
+		return "Coverage4x4"
+	case Coverage8x8:
+		return "Coverage8x8"
+	}
+	return "Coverage(?)"
+}
+
+// shift returns the shift of the grid of samples of c. An unknown value
+// takes the grid of upstream.
+func (c Coverage) shift() uint32 {
+	if c == Coverage8x8 {
+		return shiftPathAA8x8
+	}
+	return shiftPathAA
 }
 
 // DefaultPaint is the Default impl of Paint in tiny-skia src/painter.rs. It
@@ -96,6 +156,8 @@ func DefaultPaint() Paint {
 		AntiAlias:       true,
 		Colorspace:      ColorSpaceLinear,
 		ForceHQPipeline: false,
+		Coverage:        Coverage4x4,
+		StrokeAdjust:    false,
 	}
 }
 
@@ -313,7 +375,7 @@ func (m *PixmapMut) FillPath(
 				// when rendering a tile that does not have a path on it.
 				// Which is not an error in this case.
 				if paint.AntiAlias {
-					fillPathPathAA(p, fillRule, &clipRect, blitter, m.logger)
+					fillPathPathAA(p, fillRule, &clipRect, blitter, paint.Coverage.shift(), m.logger)
 				} else {
 					fillPathPath(p, fillRule, &clipRect, blitter, m.logger)
 				}
@@ -335,7 +397,7 @@ func (m *PixmapMut) FillPath(
 			}
 
 			if paint.AntiAlias {
-				fillPathPathAA(p, fillRule, &clipRect, blitter, m.logger)
+				fillPathPathAA(p, fillRule, &clipRect, blitter, paint.Coverage.shift(), m.logger)
 			} else {
 				fillPathPath(p, fillRule, &clipRect, blitter, m.logger)
 			}
@@ -395,6 +457,11 @@ func (m *PixmapMut) StrokePath(
 			return
 		}
 		p = dashPath
+	}
+
+	if paint.StrokeAdjust {
+		m.strokeAdjusted(p, paint, stroke, transform, mask)
+		return
 	}
 
 	if coverage, ok := treatAsHairline(paint, stroke, transform); ok {
@@ -480,6 +547,144 @@ func (m *PixmapMut) StrokePath(
 	}
 }
 
+// strokeAdjusted strokes p, which is already dashed, with the automatic
+// stroke adjustment of PDF. It ports no upstream function (D54).
+//
+// It maps p onto the device, rounds the width of the stroke on the device to
+// a whole number of pixels, at least 1, and snaps each horizontal or
+// vertical line of p with snapLines. Then it strokes the result and fills
+// the stroke on the device. A stroke of 1 pixel is filled too, and is not a
+// hairline, so that its joins cover whole pixels.
+func (m *PixmapMut) strokeAdjusted(p *Path, paint *Paint, stroke *Stroke, transform Transform, mask *Mask) {
+	adjPaint := *paint
+	adjPaint.StrokeAdjust = false
+	if !transform.IsIdentity() {
+		var ok bool
+		p, ok = p.Clone().Transform(transform)
+		if !ok {
+			warn(m.logger, "path transformation failed")
+			return
+		}
+		adjPaint.Shader = adjPaint.Shader.Transform(transform)
+	}
+
+	// The scale of the width is the square root of the area that the
+	// transform gives to a unit square: the mean scale of the transform.
+	det := float32(transform.SX*transform.SY) - float32(transform.KX*transform.KY)
+	width := floorF32(float32(stroke.Width*sqrtF32(absF32(det))) + 0.5)
+	if !(width >= 1) {
+		width = 1
+	}
+
+	sp, ok := snapLines(p, width)
+	if !ok {
+		return
+	}
+
+	adjStroke := *stroke
+	adjStroke.Width = width
+	adjStroke.Dash = nil
+	stroked, ok := sp.Stroke(&adjStroke, 1)
+	if !ok {
+		warn(m.logger, "path stroking failed")
+		return
+	}
+	m.FillPath(stroked, &adjPaint, FillRuleWinding, path.IdentityTransform(), mask)
+}
+
+// snapLines returns p with each horizontal or vertical line moved onto the
+// grid of the pixels, for a stroke of width pixels, a whole number. An odd
+// width puts the line at the center of a pixel, and an even width on the
+// border of two pixels, so that the edges of the stroke fall on the borders
+// of the pixels. A point that ends a horizontal line moves only up or down,
+// and a point that ends a vertical line moves only left or right. A curve
+// keeps its shape, and moves only with the points that it shares with a
+// line. It ports no upstream function (D54).
+func snapLines(p *Path, width float32) (*Path, bool) {
+	// A line is horizontal or vertical when its ends differ by less than
+	// 1/64 of a pixel, the precision of the edges of the rasterizer.
+	const eps float32 = 1.0 / 64
+
+	verbs := p.Verbs()
+	points := p.Points()
+	const snapX, snapY = 1, 2
+	snap := make([]uint8, len(points))
+	mark := func(a, b int) {
+		if absF32(points[a].Y-points[b].Y) < eps {
+			snap[a] |= snapY
+			snap[b] |= snapY
+		}
+		if absF32(points[a].X-points[b].X) < eps {
+			snap[a] |= snapX
+			snap[b] |= snapX
+		}
+	}
+	start, k := 0, 0
+	for _, verb := range verbs {
+		switch verb {
+		case path.PathVerbMove:
+			start = k
+			k++
+		case path.PathVerbLine:
+			mark(k-1, k)
+			k++
+		case path.PathVerbQuad:
+			k += 2
+		case path.PathVerbCubic:
+			k += 3
+		case path.PathVerbClose:
+			if k > 0 {
+				mark(k-1, start)
+			}
+		}
+	}
+
+	// The width is a whole number, at least 1. A width past 1<<24 is even.
+	odd := width-float32(2*floorF32(width*0.5)) == 1
+	grid := func(v float32) float32 {
+		if odd {
+			return floorF32(v) + 0.5
+		}
+		return floorF32(v + 0.5)
+	}
+	pt := func(i int) Point {
+		q := points[i]
+		if snap[i]&snapX != 0 {
+			q.X = grid(q.X)
+		}
+		if snap[i]&snapY != 0 {
+			q.Y = grid(q.Y)
+		}
+		return q
+	}
+
+	b := path.NewPathBuilderWithCapacity(len(verbs), len(points))
+	k = 0
+	for _, verb := range verbs {
+		switch verb {
+		case path.PathVerbMove:
+			q := pt(k)
+			b.MoveTo(q.X, q.Y)
+			k++
+		case path.PathVerbLine:
+			q := pt(k)
+			b.LineTo(q.X, q.Y)
+			k++
+		case path.PathVerbQuad:
+			q1, q2 := pt(k), pt(k+1)
+			b.QuadTo(q1.X, q1.Y, q2.X, q2.Y)
+			k += 2
+		case path.PathVerbCubic:
+			q1, q2, q3 := pt(k), pt(k+1), pt(k+2)
+			b.CubicTo(q1.X, q1.Y, q2.X, q2.Y, q3.X, q3.Y)
+			k += 3
+		case path.PathVerbClose:
+			b.Close()
+		}
+	}
+	return b.Finish()
+}
+
 // strokeHairline is PixmapMut::stroke_hairline in tiny-skia src/painter.rs.
 // It strokes a path with subpixel/hairline width.
 func strokeHairline(
@@ -507,7 +712,27 @@ func strokeHairline(
 // It is the same as filling a rectangle with a pixmap pattern.
 //
 // A nil mask is the Rust None.
+//
+// Port (D53): an image that is aligned to the pixels and drawn with
+// SourceOver takes drawPixmapAligned, which gives the same bytes without the
+// raster pipeline.
 func (m *PixmapMut) DrawPixmap(
+	x, y int32,
+	pixmap PixmapRef,
+	paint *PixmapPaint,
+	transform Transform,
+	mask *Mask,
+) {
+	if m.drawPixmapAligned(x, y, pixmap, paint, transform, mask) {
+		return
+	}
+	m.drawPixmapPipeline(x, y, pixmap, paint, transform, mask)
+}
+
+// drawPixmapPipeline is the body of PixmapMut::draw_pixmap in tiny-skia
+// src/painter.rs, which draws with the raster pipeline. DrawPixmap calls it
+// for each image that drawPixmapAligned does not draw (D53).
+func (m *PixmapMut) drawPixmapPipeline(
 	x, y int32,
 	pixmap PixmapRef,
 	paint *PixmapPaint,

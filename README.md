@@ -161,6 +161,14 @@ okage differs from upstream only where a decision says so:
     selectors, where upstream has no limit. Where upstream raises an
     exception for a selector or a color, the port returns a `SelectorError`
     or no color (D50).
+12. A fill clamps each side of the bounds of a path to 2^26 pixels from the
+    origin before it rounds them. Upstream panics or leaves out rows for an
+    antialiased fill with a point past about 2^29 pixels, and draws nothing
+    for a fill without antialiasing of a path wider or taller than 2^31
+    pixels. `DrawPixmap` of an image that is aligned to the pixels skips the
+    stages of the pipeline, with the same bytes (D53).
+13. A hairline on a pixmap of 1 or 2 rows or columns draws its pixels.
+    Upstream draws nothing there (D54).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -199,6 +207,32 @@ okage also adds APIs that upstream does not have:
    the name table of a face, such as the version or the sample text (D45).
    The package `webfont` gives the same conversion to a program that does not
    use `svg` (D51).
+8. `Paint.Coverage` fills a path with 8 by 8 samples in each pixel, in place
+   of the 4 by 4 of tiny-skia, and `Paint.StrokeAdjust` moves a thin stroke
+   onto the pixel grid, as stroke adjustment does in PDF (D54).
+9. `MeshGradient`, which `NewMeshGradient` makes, fills a mesh of triangles
+   with a color at each corner, for the shadings of the types 4 to 7 of PDF
+   and PostScript. `SpreadModeDecal` makes a gradient transparent before its
+   start and after its end, as the decal tile mode of Skia does (D55).
+10. `MaskFromLuminance` and `Mask.ApplyTransfer` make the soft masks of PDF
+    with a backdrop color and a transfer function. `Pixmap.RemoveBackdrop`
+    and `Pixmap.Knockout` composite the groups of PDF that are not isolated
+    and the knockout groups (D56).
+11. `TextStyle` also takes the stretch, the variations, the features, the
+    language and the spacing of a run, and `TextRun.Clusters` gives the
+    bytes, the advance and the glyphs of each cluster. `FontDatabase` gives
+    the parsed faces, the cmaps and the metrics that it keeps, and
+    `AutoFontVariations` maps a CSS weight, stretch and style to the axes of
+    a variable font. `FontDatabase.ColorGlyph` gives a glyph of COLR or of
+    the table SVG as a tree (D57).
+12. `svg.ReadDimensions` reads the size and the viewBox of an SVG image
+    before the parse. `svg.FromXMLTree` and `svg.FromXMLNode` make a tree
+    from a document of roxmltree, and `roxmltree.Builder` makes such a
+    document without XML text. `svg.WithZeroSize` accepts an image of size
+    zero (D58).
+13. The package `typesetting/font/cff` exports the predefined charsets of
+    CFF, and draws the accented glyphs of `seac` and the FontMatrix of each
+    font dictionary (D59).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

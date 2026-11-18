@@ -35,7 +35,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49, D50 and D52 |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
-| D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34 |
+| D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34 and D54 |
 | D17 | [A prototype chooses the form of the pipeline](D017-a-prototype-chooses-the-form-of-the-pipeline.md) | Decided |
 | D18 | [The SIMD build is within twice the time of upstream](D018-the-simd-build-is-within-twice-the-time-of-upstream.md) | Decided, amended by D35 |
 | D19 | [A `Pixmap` works with the package `image`](D019-a-pixmap-works-with-the-image-package.md) | Decided |
@@ -56,7 +56,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D34 | [Powf reads one NaN for every NaN](D034-powf-reads-one-nan-for-every-nan.md) | Decided, amends D16 |
 | D35 | [Speed has no target, and stays open work](D035-speed-has-no-target-and-stays-open-work.md) | Decided, amends D18 |
 | D36 | [`svg` has a renderer that loads the system fonts](D036-svg-has-a-renderer-that-loads-the-system-fonts.md) | Decided, amends D9, amended by D46 |
-| D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided, amended by D39 |
+| D37 | [`svg` shapes a run of text without SVG data](D037-svg-shapes-a-run-of-text-without-svg-data.md) | Decided, amended by D39 and D57 |
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5, amended by D49 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
 | D40 | [Text falls back for an emoji that the font does not draw as an emoji](D040-text-falls-back-for-an-emoji-that-the-font-does-not-draw-as-emoji.md) | Decided, amends D39 |
@@ -66,9 +66,16 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
 | D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13, amended by D51 |
 | D46 | [`FontDatabase` loads the fonts of the system as the renderer does](D046-fontdatabase-loads-the-fonts-of-the-system-as-the-renderer-does.md) | Decided, amends D36 |
-| D47 | [roxmltree is a public package](D047-roxmltree-is-a-public-package.md) | Decided, amends D5 and D8 |
+| D47 | [roxmltree is a public package](D047-roxmltree-is-a-public-package.md) | Decided, amends D5 and D8, amended by D58 |
 | D48 | [kurbo is a public package](D048-kurbo-is-a-public-package.md) | Decided, amends D5 and D7 |
 | D49 | [`html` parses HTML documents, as a port of tinyhtml5](D049-html-parses-html-documents-as-a-port-of-tinyhtml5.md) | Decided, amends D5, D13 and D38 |
-| D50 | [tinycss2 and cssselect2 are public ports](D050-tinycss2-and-cssselect2-are-public-ports.md) | Decided, amends D5, D8 and D13 |
+| D50 | [tinycss2 and cssselect2 are public ports](D050-tinycss2-and-cssselect2-are-public-ports.md) | Decided, amends D5, D8 and D13, amended by D58 |
 | D51 | [webfont is a public package](D051-webfont-is-a-public-package.md) | Decided, amends D5 and D45 |
 | D52 | [typesetting is a public copy of go-text](D052-typesetting-is-a-public-copy-of-go-text.md) | Decided, amends D5, D6, D7, D9, D12 and D13 |
+| D53 | [Huge paths fill, and aligned images skip the pipeline](D053-huge-paths-fill-and-aligned-images-skip-the-pipeline.md) | Decided |
+| D54 | [`Paint` takes a finer coverage and stroke adjustment](D054-paint-takes-a-finer-coverage-and-stroke-adjustment.md) | Decided, amends D16 |
+| D55 | [Mesh gradients and the decal spread mode](D055-mesh-gradients-and-the-decal-spread-mode.md) | Decided |
+| D56 | [okage composites the transparency groups of PDF](D056-okage-composites-the-transparency-groups-of-pdf.md) | Decided |
+| D57 | [`svg` gives the faces, the clusters and the color glyphs of text](D057-svg-gives-the-faces-the-clusters-and-the-color-glyphs-of-text.md) | Decided, amends D37 |
+| D58 | [SVG images for a layout, and :has() in linear time](D058-svg-images-for-a-layout-and-has-in-linear-time.md) | Decided, amends D47 and D50 |
+| D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |

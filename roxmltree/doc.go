@@ -20,6 +20,11 @@
 // Each error is a *Error that wraps a sentinel error of the root package,
 // such as okage.ErrXMLUnknownToken (D21).
 //
+// Two functions are not in upstream (D58). ParseRoot parses only up to the
+// start tag of the root element. Builder makes a Document from the tree of
+// another parser, without XML text. An error of a Builder is a sentinel
+// error itself, without a position.
+//
 // The tree structure itself is a heavily modified
 // <https://github.com/causal-agent/ego-tree>, under the license ISC.
 package roxmltree

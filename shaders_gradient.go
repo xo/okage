@@ -143,6 +143,13 @@ func (g *gradient) pushStages(
 		p.push(stageReflectX1)
 	case SpreadModeRepeat:
 		p.push(stageRepeatX1)
+	case SpreadModeDecal:
+		// okage: the decal mode of Skia (D55). Skia keeps the mask of the
+		// lanes inside 0..=1, and then clamps as for the pad mode.
+		p.push(stageDecalX1)
+		if g.hasUniformStops {
+			p.push(stagePadX1)
+		}
 	case SpreadModePad:
 		if g.hasUniformStops {
 			// We clamp only when the stops are evenly spaced.
@@ -252,6 +259,12 @@ func (g *gradient) pushStages(
 		p.ctx.gradient = ctx
 	}
 
+	// okage: as Skia, the decal mode makes the lanes outside 0..=1
+	// transparent before the premultiplication (D55).
+	if g.tileMode == SpreadModeDecal {
+		p.push(stageCheckDecalMask)
+	}
+
 	if !g.colorsAreOpaque {
 		p.push(stagePremultiply)
 	}
@@ -259,6 +272,13 @@ func (g *gradient) pushStages(
 	pushStagesPost(p)
 
 	return true
+}
+
+// isOpaque reports whether the gradient gives only opaque colors. It is
+// colors_are_opaque in tiny-skia src/shaders/gradient.rs. okage adds that a
+// gradient in the decal mode is never opaque, as in Skia (D55).
+func (g *gradient) isOpaque() bool {
+	return g.colorsAreOpaque && g.tileMode != SpreadModeDecal
 }
 
 // applyOpacity is Gradient::apply_opacity in tiny-skia

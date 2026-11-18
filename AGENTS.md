@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D52. The package `html` parses and lays out the HTML-like labels of
+to D59. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -61,16 +61,20 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | porting upstream code or an upstream change | [docs/UPSTREAM.md](docs/UPSTREAM.md), then the list of upstreams in `docs/upstream/upstreams.tsv` |
 | adding an upstream repository, or a new version of a dependency | "A new version of a dependency" in [docs/UPSTREAM.md](docs/UPSTREAM.md), then D12 and D7 |
 | naming a function whose Rust name collides with another | D10 |
+| working on the scan converter, a huge path, or the fast path of `DrawPixmap` | D53 |
+| working on the coverage of a fill, stroke adjustment or the clip of a hairline | D16, then D54 |
+| working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |
+| working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |
 | writing or changing the vector types, or anything with a build tag | [docs/SIMD.md](docs/SIMD.md), then D15 and D16 |
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45 and D46 |
+| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45, D46 and D57 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52 and D59, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |

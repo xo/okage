@@ -138,6 +138,10 @@ var highpStages = [stagesCount]func(*highpPipeline){
 	(*highpPipeline).gammaExpandSrgb,
 	(*highpPipeline).gammaExpandDstSrgb,
 	(*highpPipeline).gammaCompressSrgb,
+	(*highpPipeline).decalX1,
+	(*highpPipeline).checkDecalMask,
+	(*highpPipeline).meshGradient,
+	(*highpPipeline).gatherAligned,
 }
 
 // startHighp is start in tiny-skia src/pipeline/highp.rs.
@@ -340,6 +344,65 @@ func (p *highpPipeline) gather() {
 	ix := gatherIx(p.pixmapSrc, p.r, p.g)
 	pixels := p.pixmapSrc.gather(ix)
 	load8888Highp(&pixels, &p.r, &p.g, &p.b, &p.a)
+
+	p.nextStage()
+}
+
+// gatherAlignedMax is the largest coordinate for which stageGatherAligned
+// reads the pixels of a row directly (D53). The sum of a coordinate and an
+// offset of up to 2^21 each is less than 2^23, so the pixel center of the sum
+// is exact in a float32, and the stages SeedShader, Transform and Gather find
+// the same pixel.
+const gatherAlignedMax = 1 << 21
+
+// gatherAligned is stageGatherAligned (D53). It ports no upstream stage. It
+// does the work of the stages seed_shader, transform and gather of tiny-skia
+// src/pipeline/highp.rs for a pattern whose inverse transform moves by whole
+// pixels, and it leaves the same values in the registers.
+//
+// The pixel at x of the destination is the pixel at x + ctx.x of the
+// pattern, clamped to the pattern, as gather clamps it. When eight pixels of
+// a row are in the pattern, the stage loads them at once.
+func (p *highpPipeline) gatherAligned() {
+	ctx := &p.ctx.gatherAligned
+	src := p.pixmapSrc
+	w, h := int(src.Width()), int(src.Height())
+	if p.dx > gatherAlignedMax || p.dy > gatherAlignedMax {
+		// Too far for the integer coordinates: do what the three stages
+		// do.
+		iota := wide.F32x8{0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5}
+		ts := &ctx.transform
+		var x, y wide.F32x8
+		dx, dy := float32(p.dx), float32(p.dy)+0.5
+		for i := range x {
+			x[i], y[i] = dx+iota[i], dy
+			if !ts.IsIdentity() {
+				x[i], y[i] = madHighp(x[i], ts.SX, madHighp(y[i], ts.KX, ts.TX)), madHighp(x[i], ts.KY, madHighp(y[i], ts.SY, ts.TY))
+			}
+		}
+		pixels := src.gather(gatherIx(src, x, y))
+		load8888Highp(&pixels, &p.r, &p.g, &p.b, &p.a)
+	} else {
+		sy := min(max(p.dy+ctx.y, 0), h-1)
+		row := src.data[sy*w*BytesPerPixel : (sy+1)*w*BytesPerPixel]
+		sx := p.dx + ctx.x
+		if sx >= 0 && sx+highpStageWidth <= w {
+			load8888Highp((*[highpStageWidth * BytesPerPixel]byte)(row[sx*BytesPerPixel:]), &p.r, &p.g, &p.b, &p.a)
+		} else {
+			var pixels [highpStageWidth * BytesPerPixel]byte
+			for i := range highpStageWidth {
+				j := min(max(sx+i, 0), w-1) * BytesPerPixel
+				copy(pixels[i*BytesPerPixel:(i+1)*BytesPerPixel], row[j:j+BytesPerPixel])
+			}
+			load8888Highp(&pixels, &p.r, &p.g, &p.b, &p.a)
+		}
+	}
+
+	// seed_shader clears the destination registers.
+	p.dr = wide.F32x8{}
+	p.dg = wide.F32x8{}
+	p.db = wide.F32x8{}
+	p.da = wide.F32x8{}
 
 	p.nextStage()
 }
@@ -1893,6 +1956,52 @@ func (p *highpPipeline) gammaCompressSrgb() {
 	p.r = srgbCompress(p.r)
 	p.g = srgbCompress(p.g)
 	p.b = srgbCompress(p.b)
+
+	p.nextStage()
+}
+
+// decalX1 is the stage decal_x of Skia, for the t of a gradient (D55).
+// tiny-skia has no such stage. It keeps the mask of the lanes whose t is in
+// 0..=1, as Skia does with the limit 1 + 1 ulp. A lane whose t is NaN is
+// outside the mask.
+func (p *highpPipeline) decalX1() {
+	// One loop on the lanes (D33).
+	var inside wide.U32x8
+	for i := range p.r {
+		t := p.r[i]
+		if t >= 0 && t <= 1.0 {
+			inside[i] = ^uint32(0)
+		}
+	}
+	p.ctx.decalMask = inside
+
+	p.nextStage()
+}
+
+// checkDecalMask is the stage check_decal_mask of Skia (D55). tiny-skia has
+// no such stage. It makes the lanes outside the mask of decalX1 transparent.
+func (p *highpPipeline) checkDecalMask() {
+	// One loop on the lanes (D33).
+	for i := range p.r {
+		m := p.ctx.decalMask[i]
+		p.r[i] = math.Float32frombits(math.Float32bits(p.r[i]) & m)
+		p.g[i] = math.Float32frombits(math.Float32bits(p.g[i]) & m)
+		p.b[i] = math.Float32frombits(math.Float32bits(p.b[i]) & m)
+		p.a[i] = math.Float32frombits(math.Float32bits(p.a[i]) & m)
+	}
+
+	p.nextStage()
+}
+
+// meshGradient gives the color of a MeshGradient at the x and the y of each
+// lane (D55). tiny-skia has no such stage.
+func (p *highpPipeline) meshGradient() {
+	ctx := &p.ctx.mesh
+
+	// One loop on the lanes (D33).
+	for i := range p.r {
+		p.r[i], p.g[i], p.b[i], p.a[i] = ctx.shade(p.r[i], p.g[i])
+	}
 
 	p.nextStage()
 }

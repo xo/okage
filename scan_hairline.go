@@ -184,16 +184,20 @@ func strokePathImpl(p *Path, lineCap LineCap, clip *screenIntRect, lp lineProc, 
 			//
 			// outsetClip is used for quick-reject (i.e. the segment is entirely outside), so we
 			// outset it from the clip-bounds.
+			//
+			// Port (D54): upstream returns and draws nothing when the clip
+			// is 2 pixels wide or high, or less, because the inset clip is
+			// then empty. Skia keeps the empty inset clip, and draws each
+			// segment with the clip. okage leaves both culling rects out
+			// in that case, so each segment is clipped and drawn.
 			v, ok := clip.ToIntRect().MakeOutset(1, 1)
 			if !ok {
 				return
 			}
-			outsetClip = &v
-			v2, ok := clip.ToIntRect().Inset(1, 1)
-			if !ok {
-				return
+			if v2, ok := clip.ToIntRect().Inset(1, 1); ok {
+				outsetClip = &v
+				insetClip = &v2
 			}
-			insetClip = &v2
 		}
 	}
 

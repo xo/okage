@@ -34,6 +34,12 @@ type CFF struct {
 	// array of length 1 for non CIDFonts
 	// For CIDFonts, it can be safely indexed by `fdSelect` output
 	localSubrs [][][]byte
+
+	// okage: transforms holds the FontMatrix of each font dictionary, as
+	// LoadGlyph applies it, with the same indexes as localSubrs.
+	// unitsPerEm is the value of UnitsPerEm (D59).
+	transforms []fontMatrix
+	unitsPerEm float64
 }
 
 // Parse parses a .cff font file.
@@ -210,6 +216,8 @@ func (p *cffParser) parse() ([]CFF, error) {
 				return nil, err
 			}
 			out[i].localSubrs = [][][]byte{localSubrs}
+			// okage: D59.
+			out[i].transforms, out[i].unitsPerEm = fontTransforms(topDict, nil)
 		} else {
 			// Parse the Font Dict Select data, whose location was found in the Top
 			// DICT.
@@ -239,6 +247,8 @@ func (p *cffParser) parse() ([]CFF, error) {
 				}
 			}
 			out[i].localSubrs = multiSubrs
+			// okage: D59. The font dictionaries are the parsed topDicts.
+			out[i].transforms, out[i].unitsPerEm = fontTransforms(topDict, topDicts)
 		}
 	}
 
@@ -533,6 +543,10 @@ type topDict struct {
 	cidFontName                                        uint16
 	privateDictOffset                                  int32
 	privateDictLength                                  int32
+
+	// okage: the FontMatrix, if hasFontMatrix (D59).
+	fontMatrix    fontMatrix
+	hasFontMatrix bool
 }
 
 func (tp *topDict) Context() ps.Context { return ps.TopDict }
@@ -644,7 +658,14 @@ var topDictOperators = [2][]topDictOperator{
 			}
 			return nil
 		}, +1 /*CharstringType*/},
-		7:  {topDictNoOp, -1 /*FontMatrix*/},
+		// okage: go-text ignores the FontMatrix (D59).
+		7: {func(t *topDict, s *ps.Machine) error {
+			if s.ArgStack.Top == 6 {
+				copy(t.fontMatrix[:], s.ArgStack.Vals[:6])
+				t.hasFontMatrix = true
+			}
+			return nil
+		}, -1 /*FontMatrix*/},
 		8:  {topDictNoOp, +1 /*StrokeWidth*/},
 		20: {topDictNoOp, +1 /*SyntheticBase*/},
 		21: {topDictNoOp, +1 /*PostScript*/},

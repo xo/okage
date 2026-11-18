@@ -128,6 +128,50 @@ func (p Pattern) pushStages(cs ColorSpace, b *rasterPipelineBuilder) bool {
 		return false
 	}
 
+	// Port (D53): a pattern that moves by whole pixels and pads takes one
+	// stage, which gives the same colors as the stages of upstream.
+	if x, y, ok := alignedOffset(ts); ok && p.spreadMode == SpreadModePad {
+		b.ctx.gatherAligned = gatherAlignedCtx{x: x, y: y, transform: ts}
+		b.push(stageGatherAligned)
+	} else {
+		p.pushGather(ts, b)
+	}
+
+	// Unlike Skia, we do not support global opacity and only Pattern allows it.
+	if p.opacity != path.NormalizedF32One {
+		b.ctx.currentCoverage = p.opacity.Get()
+		b.push(stageScale1Float)
+	}
+
+	if s, ok := cs.expandStage(); ok {
+		// TODO: it is better to gamma-expand prior to sampling, but
+		// there is not currently an intermediate pipeline stage for that.
+		b.push(s)
+	}
+
+	return true
+}
+
+// alignedOffset returns the offset of a transform that only moves by whole
+// pixels, of up to gatherAlignedMax on each axis (D53). It ports no upstream
+// function.
+func alignedOffset(ts Transform) (int, int, bool) {
+	if ts.SX != 1 || ts.SY != 1 || ts.KX != 0 || ts.KY != 0 {
+		return 0, 0, false
+	}
+	const limit float32 = gatherAlignedMax
+	if !(ts.TX >= -limit && ts.TX <= limit && ts.TY >= -limit && ts.TY <= limit) ||
+		ts.TX != truncF32(ts.TX) || ts.TY != truncF32(ts.TY) {
+		return 0, 0, false
+	}
+	return int(ts.TX), int(ts.TY), true
+}
+
+// pushGather is the part of Pattern::push_stages in tiny-skia
+// src/shaders/pattern.rs that pushes the stages that read the pixels of the
+// pattern. It ports no upstream function. pushStages calls it for each
+// pattern that does not take stageGatherAligned (D53).
+func (p Pattern) pushGather(ts Transform, b *rasterPipelineBuilder) {
 	b.push(stageSeedShader)
 
 	b.pushTransform(ts)
@@ -189,20 +233,6 @@ func (p Pattern) pushStages(cs ColorSpace, b *rasterPipelineBuilder) bool {
 		b.push(stageClamp0)
 		b.push(stageClampA)
 	}
-
-	// Unlike Skia, we do not support global opacity and only Pattern allows it.
-	if p.opacity != path.NormalizedF32One {
-		b.ctx.currentCoverage = p.opacity.Get()
-		b.push(stageScale1Float)
-	}
-
-	if s, ok := cs.expandStage(); ok {
-		// TODO: it is better to gamma-expand prior to sampling, but
-		// there is not currently an intermediate pipeline stage for that.
-		b.push(s)
-	}
-
-	return true
 }
 
 // truncF32 is f32::trunc. It ports no upstream function.

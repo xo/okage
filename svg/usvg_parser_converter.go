@@ -438,6 +438,11 @@ func convertDoc(svgDoc *document, opt *options) (*Tree, error) {
 	if sizeErr != nil {
 		return nil, sizeErr
 	}
+	if size == (Size{}) {
+		// Port: an image of size zero with WithZeroSize gives an empty
+		// tree (D58).
+		return &Tree{root: emptyGroupValue(), fontdb: opt.fontdb}, nil
+	}
 	rect, ok := svg.parseViewbox()
 	if !ok {
 		rect = size.ToNonZeroRect(0.0, 0.0)
@@ -613,6 +618,9 @@ func resolveSvgSize(svg svgNode, opt *options) (Size, error, bool) { //nolint:re
 	}
 
 	var size Size
+	// Port: width and height keep the size that SizeFromWH reads, for
+	// WithZeroSize (D58).
+	var width32, height32 float32
 	if hasViewBox {
 		state.viewBox = vbox
 
@@ -635,20 +643,24 @@ func resolveSvgSize(svg svgNode, opt *options) (Size, error, bool) { //nolint:re
 		_, hasH := svg.attributeLength(AIdHeight)
 		switch {
 		case hasW && !hasH:
-			size, ok = path.SizeFromWH(w, float32(vbox.Height()*w)/vbox.Width())
+			width32, height32 = w, float32(vbox.Height()*w)/vbox.Width()
 		case !hasW && hasH:
-			size, ok = path.SizeFromWH(float32(vbox.Width()*h)/vbox.Height(), h)
+			width32, height32 = float32(vbox.Width()*h)/vbox.Height(), h
 		default:
-			size, ok = path.SizeFromWH(w, h)
+			width32, height32 = w, h
 		}
 	} else {
-		size, ok = path.SizeFromWH(
-			svg.convertUserLength(AIdWidth, state, def),
-			svg.convertUserLength(AIdHeight, state, def),
-		)
+		width32 = svg.convertUserLength(AIdWidth, state, def)
+		height32 = svg.convertUserLength(AIdHeight, state, def)
 	}
+	size, ok = path.SizeFromWH(width32, height32)
 
 	if !ok {
+		if opt.zeroSize && isZeroSize(width32, height32) {
+			// Port: the zero Size and no error tell convertDoc to return
+			// an empty tree (D58).
+			return Size{}, nil, false
+		}
 		return Size{}, okage.ErrSVGInvalidSize, restoreViewbox
 	}
 	return size, nil, restoreViewbox

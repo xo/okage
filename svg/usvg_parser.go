@@ -140,13 +140,18 @@ func fromStr(text string, opt *options) (*Tree, error) {
 	return convertDoc(doc, opt)
 }
 
-// fromXMLTree is Tree::from_xmltree in usvg src/parser/mod.rs. It parses
+// FromXMLTree is Tree::from_xmltree in usvg src/parser/mod.rs. It parses
 // `Tree` from `roxmltree::Document`.
 //
-// Port: the function is unexported. It was ported while roxmltree was
-// internal, and a user could not make its document (D5). D47 exports
-// roxmltree, and the export of this function is in docs/BACKLOG.md.
-func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) { //nolint:unused // the port of a public function of upstream
+// A program makes the document with roxmltree.Parse, or from the tree of
+// another parser with roxmltree.Builder, without XML text (D58).
+// FromXMLNode parses an svg element inside a larger document.
+func FromXMLTree(doc *roxmltree.Document, opts ...Option) (*Tree, error) {
+	return fromXMLTree(doc, newOptions(opts...))
+}
+
+// fromXMLTree is FromXMLTree with the options already made.
+func fromXMLTree(doc *roxmltree.Document, opt *options) (*Tree, error) {
 	svgDoc, err := parseTree(doc, opt.styleSheet, opt.maxDepth, opt)
 	if err != nil {
 		return nil, parsingFailed(err)

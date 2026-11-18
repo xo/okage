@@ -242,16 +242,13 @@ func convertText(text *Text, resolver *FontResolver, cache *converterCache) bool
 // Port: skrifa::charmap::Charmap::map becomes the cmap of go-text. The
 // database keeps the cmap of each face that it reads, as the TODO of upstream
 // asks, and it reads only the tables cmap and OS/2 of the face, as skrifa
-// does. The result is the same as a new charmap for each lookup.
+// does. The result is the same as a new charmap for each lookup. The lookup
+// is FontDatabase.NominalGlyph, which a program can call too (D57).
 func hasChar(fontdb *FontDatabase, id FontID, c rune) bool {
 	// Unlike for the main fonts where we use skrifa's owned font abstraction,
 	// here we just call `with_face_data` repeatedly so we don't need to call `to_vec`
 	// for all fallback fonts.
 	// TODO: Cache the charmaps of fallback candidates, building one for every lookup is expensive.
-	cmap, ok := fontdb.faceCharmap(id)
-	if !ok {
-		return false
-	}
-	_, ok = cmap.Lookup(c)
+	_, ok := fontdb.NominalGlyph(id, c)
 	return ok
 }

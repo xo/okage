@@ -494,10 +494,11 @@ On 2026-11-17 thirteen ledgers exist:
    `fc22accd` for cssselect2 (D50). The column `matched` of each one is the
    same commit.
 7. `typesetting.tsv` holds the 126 commits of go-text after `v0.3.5`, up to
-   `bafa8730` of 2026-11-10 (D52). 110 are `pending`, and many of them fix a
+   `bafa8730` of 2026-11-10 (D52). 109 are `pending`, and many of them fix a
    panic on a malformed font. 16 are `not-applicable`: merge commits, and
    commits that change only `fontscan`, the CI or other files that okage does
-   not copy. The column `matched` is empty.
+   not copy. One is `ported`: okage applied `e8da365e` out of order, for the
+   kerning of Calibri (D59). The column `matched` is empty.
 
 ## A difference from upstream
 

@@ -1,6 +1,6 @@
 # D47. roxmltree is a public package
 
-Status: Decided, amends D5 and D8.
+Status: Decided, amends D5 and D8, amended by D58.
 
 The port of the crate roxmltree moves from `internal/roxmltree` to
 `roxmltree`, a public package of the module `github.com/xo/okage`. The

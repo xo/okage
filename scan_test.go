@@ -352,7 +352,7 @@ func TestScanGolden(t *testing.T) {
 		case 0:
 			fillPathPath(p, fillRule, &clip, rec, nil)
 		case 1:
-			fillPathPathAA(p, fillRule, &clip, rec, nil)
+			fillPathPathAA(p, fillRule, &clip, rec, shiftPathAA, nil)
 		case 2:
 			strokePathHairline(p, lineCap, &clip, rec)
 		case 3:

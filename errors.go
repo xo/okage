@@ -181,6 +181,12 @@ const (
 	// ErrXMLUnexpectedEndOfStream is Error::UnexpectedEndOfStream of
 	// roxmltree. The stream ended earlier than expected.
 	ErrXMLUnexpectedEndOfStream Error = "parsing xml: unexpected end of stream"
+
+	// ErrXMLBuildOrder is the error of a roxmltree.Builder for a call out of
+	// order, such as an attribute after the content of an element, a second
+	// root element, text outside the root element, or a call after Document
+	// (D58). Upstream has no Builder.
+	ErrXMLBuildOrder Error = "building xml: call out of order"
 )
 
 // internal/simplecss wraps each of the following errors in an error whose text

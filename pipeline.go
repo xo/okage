@@ -129,10 +129,29 @@ const (
 	stageGammaExpandSrgb
 	stageGammaExpandDestinationSrgb
 	stageGammaCompressSrgb
+
+	// The stages of okage that tiny-skia does not have (D55). They come after
+	// the stages of tiny-skia, so that those keep their values, and only the
+	// highp pipeline has them.
+
+	// stageDecalX1 is decal_x of Skia for a gradient. It keeps a mask of the
+	// lanes whose t is in 0..=1.
+	stageDecalX1
+	// stageCheckDecalMask is check_decal_mask of Skia. It makes the lanes
+	// outside the mask of stageDecalX1 transparent.
+	stageCheckDecalMask
+	// stageMeshGradient gives the color of a MeshGradient at x and y.
+	stageMeshGradient
+	// stageGatherAligned is not a stage of upstream. It reads the pixels of
+	// a pattern that is aligned to the pixels, in place of the stages
+	// SeedShader, Transform and Gather (D53). Only highp has it.
+	stageGatherAligned
 )
 
 // stagesCount is STAGES_COUNT in tiny-skia src/pipeline/mod.rs.
-const stagesCount = int(stageGammaCompressSrgb) + 1
+//
+// okage: it counts the stages of D53 and D55 too.
+const stagesCount = int(stageGatherAligned) + 1
 
 // gather is PixmapRef::gather in tiny-skia src/pipeline/mod.rs. It returns
 // the pixels at the eight indexes of index, as RGBA bytes.
@@ -238,6 +257,11 @@ type context struct {
 	limitX                    tileCtx
 	limitY                    tileCtx
 	transform                 Transform
+
+	// okage: the contexts of the stages of D55.
+	decalMask     wide.U32x8
+	mesh          meshCtx
+	gatherAligned gatherAlignedCtx
 }
 
 // newContext is the Default impl of Context in tiny-skia
@@ -247,6 +271,16 @@ type context struct {
 // a Go Transform.
 func newContext() context {
 	return context{transform: path.DefaultTransform()}
+}
+
+// gatherAlignedCtx is the context of stageGatherAligned (D53). It is not a
+// type of upstream.
+type gatherAlignedCtx struct {
+	// x and y move a pixel of the destination to its pixel in the pattern.
+	x, y int
+	// transform is the transform that the stage Transform would apply. The
+	// stage uses it only for a pixel too far from the origin.
+	transform Transform
 }
 
 // samplerCtx is SamplerCtx in tiny-skia src/pipeline/mod.rs.

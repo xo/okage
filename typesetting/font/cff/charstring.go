@@ -33,6 +33,15 @@ func (f *CFF) LoadGlyph(glyph tables.GlyphID) ([]ot.Segment, ps.PathBounds, erro
 
 	subrs := f.localSubrs[index]
 	err = psi.Run(f.Charstrings[glyph], subrs, f.globalSubrs, &loader)
+	// okage: go-text ignores the seac of endchar and the FontMatrix. okage
+	// draws the base glyph and the accent of a seac, outside a CIDFont, and
+	// applies the FontMatrix of the font dictionary of the glyph (D59).
+	if err == nil && loader.seac && f.fdSelect == nil {
+		f.loadSeac(&loader)
+	}
+	if int(index) < len(f.transforms) {
+		f.transforms[index].transform(loader.cs.Segments, &loader.cs.Bounds)
+	}
 	return loader.cs.Segments, loader.cs.Bounds, err
 }
 
@@ -45,6 +54,11 @@ type type2CharstringHandler struct {
 	// `width` must be initialized to default width
 	nominalWidthX float64
 	width         float64
+
+	// okage: seac tells whether endchar has the four operands of a seac,
+	// adx ady bchar achar, which seacArgs holds (D59).
+	seac     bool
+	seacArgs [4]float64
 }
 
 func (type2CharstringHandler) Context() ps.Context { return ps.Type2Charstring }
@@ -56,6 +70,12 @@ func (met *type2CharstringHandler) Apply(state *ps.Machine, op ps.Operator) erro
 		case 11: // return
 			return state.Return() // do not clear the arg stack
 		case 14: // endchar
+			// okage: endchar with four operands, after an optional width,
+			// is the seac of Type 1 (D59).
+			if n := state.ArgStack.Top; n == 4 || n == 5 {
+				met.seac = true
+				copy(met.seacArgs[:], state.ArgStack.Vals[n-4:n])
+			}
 			if state.ArgStack.Top > 0 { // width is optional
 				met.width = met.nominalWidthX + state.ArgStack.Vals[0]
 			}

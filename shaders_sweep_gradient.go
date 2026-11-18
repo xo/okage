@@ -83,7 +83,7 @@ func NewSweepGradient(
 // src/shaders/sweep_gradient.rs, and the arm Shader::SweepGradient of
 // Shader::is_opaque in tiny-skia src/shaders/mod.rs.
 func (g SweepGradient) IsOpaque() bool {
-	return g.base.colorsAreOpaque
+	return g.base.isOpaque()
 }
 
 // pushStages is SweepGradient::push_stages in tiny-skia

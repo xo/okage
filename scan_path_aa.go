@@ -18,27 +18,29 @@ const supersampleShift uint32 = 2
 
 // shiftPathAA is SHIFT in tiny-skia src/scan/path_aa.rs.
 //
-// Port: the constants SHIFT, SCALE and MASK take the suffix of their module,
-// because local variables of the package have the names shift and scale, and
-// blitter.rs has the type Mask.
+// Port: the constant SHIFT takes the suffix of its module, because local
+// variables of the package have the name shift. The constants SCALE and MASK
+// of upstream are local variables of superBlitter.blitH, which computes them
+// from the shift of the blitter (D54).
 const shiftPathAA uint32 = supersampleShift
 
-// scalePathAA is SCALE in tiny-skia src/scan/path_aa.rs.
-const scalePathAA uint32 = 1 << shiftPathAA
-
-// maskPathAA is MASK in tiny-skia src/scan/path_aa.rs.
-const maskPathAA uint32 = scalePathAA - 1
+// shiftPathAA8x8 is the shift of Coverage8x8, a grid of 8 by 8 samples in
+// each pixel. It ports no upstream constant (D54).
+const shiftPathAA8x8 uint32 = 3
 
 // fillPathPathAA is fill_path in tiny-skia src/scan/path_aa.rs. The name takes
 // the suffix of its module, because src/scan/path.rs has a function of the
 // same name (D10).
 //
 // Port: logger is the logger of D20, which buildEdges logs to. A nil logger
-// logs nothing.
-func fillPathPathAA(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, logger *slog.Logger) {
+// logs nothing. shift is the shift of the grid of samples: shiftPathAA, the
+// SHIFT of upstream, or shiftPathAA8x8 for Coverage8x8 (D54).
+//
+// Port: the bounds go through scanBounds first (D53).
+func fillPathPathAA(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, shift uint32, logger *slog.Logger) {
 	// Unlike `path.bounds.to_rect()?.round_out()`,
 	// this method rounds out first and then converts into a Rect.
-	bounds := p.Bounds()
+	bounds := scanBounds(p.Bounds())
 	r, ok := path.RectFromLTRB(
 		floorF32(bounds.Left()),
 		floorF32(bounds.Top()),
@@ -61,7 +63,12 @@ func fillPathPathAA(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, 
 	if !ok {
 		return
 	}
-	if rectOverflowsShortShift(&clippedIR, int32(shiftPathAA)) != 0 {
+	// Port (D54): an area that is too large for the grid of 8 by 8 samples
+	// takes the grid of upstream.
+	if shift != shiftPathAA && rectOverflowsShortShift(&clippedIR, int32(shift)) != 0 {
+		shift = shiftPathAA
+	}
+	if rectOverflowsShortShift(&clippedIR, int32(shift)) != 0 {
 		fillPathPath(p, fillRule, clip, b, logger)
 		return
 	}
@@ -79,7 +86,7 @@ func fillPathPathAA(p *Path, fillRule FillRule, clip *screenIntRect, b blitter, 
 	// TODO: SkScanClipper
 	// TODO: AAA
 
-	fillPathImplPathAA(p, fillRule, &ir, clip, b, logger)
+	fillPathImplPathAA(p, fillRule, &ir, clip, shift, b, logger)
 }
 
 // rectOverflowsShortShift is rect_overflows_short_shift in tiny-skia
@@ -106,11 +113,13 @@ func overflowsShortShift(value, shift int32) int32 {
 // fillPathImplPathAA is fill_path_impl in tiny-skia src/scan/path_aa.rs. The
 // name takes the suffix of its module, because src/scan/path.rs has a function
 // of the same name (D10).
-func fillPathImplPathAA(p *Path, fillRule FillRule, bounds *IntRect, clip *screenIntRect, b blitter, logger *slog.Logger) {
+//
+// Port: shift is the shift of the grid of samples, as in fillPathPathAA.
+func fillPathImplPathAA(p *Path, fillRule FillRule, bounds *IntRect, clip *screenIntRect, shift uint32, b blitter, logger *slog.Logger) {
 	// TODO: MaskSuperBlitter
 
 	// TODO: 15% slower than skia, find out why
-	sb, ok := newSuperBlitter(bounds, clip, b)
+	sb, ok := newSuperBlitter(bounds, clip, shift, b)
 	if !ok {
 		return // clipped out, nothing else to do
 	}
@@ -128,7 +137,7 @@ func fillPathImplPathAA(p *Path, fillRule FillRule, bounds *IntRect, clip *scree
 		clip,
 		bounds.Top(),
 		bounds.Bottom(),
-		int32(shiftPathAA),
+		int32(shift),
 		pathContainedInClip,
 		sb,
 		logger,
@@ -159,11 +168,17 @@ type baseSuperBlitter struct {
 	currY int32
 	// top is the initial y coordinate (top of bounds).
 	top int32
+
+	// shift is the shift of the grid of samples: shiftPathAA, the SHIFT of
+	// upstream, or shiftPathAA8x8 (D54).
+	shift uint32
 }
 
 // newBaseSuperBlitter is BaseSuperBlitter::new in tiny-skia
 // src/scan/path_aa.rs.
-func newBaseSuperBlitter(bounds *IntRect, clipRect *screenIntRect, b blitter) (baseSuperBlitter, bool) {
+//
+// Port: shift is the shift of the grid of samples (D54).
+func newBaseSuperBlitter(bounds *IntRect, clipRect *screenIntRect, shift uint32, b blitter) (baseSuperBlitter, bool) {
 	r, ok := bounds.Intersect(clipRect.ToIntRect())
 	if !ok {
 		return baseSuperBlitter{}, false
@@ -177,9 +192,10 @@ func newBaseSuperBlitter(bounds *IntRect, clipRect *screenIntRect, b blitter) (b
 		currIY:      int32(sect.Top()) - 1,
 		width:       sect.WidthSafe(),
 		left:        sect.Left(),
-		superLeft:   sect.Left() << shiftPathAA,
-		currY:       int32(sect.Top()<<shiftPathAA) - 1,
+		superLeft:   sect.Left() << shift,
+		currY:       int32(sect.Top()<<shift) - 1,
 		top:         int32(sect.Top()),
+		shift:       shift,
 	}, true
 }
 
@@ -193,8 +209,10 @@ type superBlitter struct {
 }
 
 // newSuperBlitter is SuperBlitter::new in tiny-skia src/scan/path_aa.rs.
-func newSuperBlitter(bounds *IntRect, clipRect *screenIntRect, b blitter) (*superBlitter, bool) {
-	base, ok := newBaseSuperBlitter(bounds, clipRect, b)
+//
+// Port: shift is the shift of the grid of samples (D54).
+func newSuperBlitter(bounds *IntRect, clipRect *screenIntRect, shift uint32, b blitter) (*superBlitter, bool) {
+	base, ok := newBaseSuperBlitter(bounds, clipRect, shift, b)
 	if !ok {
 		return nil, false
 	}
@@ -233,8 +251,17 @@ func (sb *superBlitter) flush() {
 // blitH is the Blitter impl of SuperBlitter in tiny-skia src/scan/path_aa.rs.
 // It blits a row of pixels, with location and width specified in
 // supersampled coordinates.
+//
+// Port: shift, scale and mask are SHIFT, SCALE and MASK of upstream, from the
+// shift of the blitter (D54).
 func (sb *superBlitter) blitH(x, y uint32, width lengthU32) {
-	iy := int32(y >> shiftPathAA)
+	// The mask keeps the shift, 2 or 3, and tells the compiler that a shift
+	// by it needs no check of its size.
+	shift := sb.base.shift & 3
+	scale := uint32(1) << shift
+	mask := scale - 1
+
+	iy := int32(y >> shift)
 
 	// hack, until I figure out why my cubics (I think) go beyond the bounds
 	if n, ok := checkedSubU32(x, sb.base.superLeft); ok {
@@ -262,9 +289,9 @@ func (sb *superBlitter) blitH(x, y uint32, width lengthU32) {
 	stop := x + width
 
 	// integer-pixel-aligned ends of blit, rounded out
-	fb := start & maskPathAA
-	fe := stop & maskPathAA
-	n := (int32(stop) >> shiftPathAA) - (int32(start) >> shiftPathAA) - 1
+	fb := start & mask
+	fe := stop & mask
+	n := (int32(stop) >> shift) - (int32(start) >> shift) - 1
 
 	if n < 0 {
 		fb = fe - fb
@@ -274,20 +301,20 @@ func (sb *superBlitter) blitH(x, y uint32, width lengthU32) {
 		if fb == 0 {
 			n++
 		} else {
-			fb = scalePathAA - fb
+			fb = scale - fb
 		}
 	}
 
-	mv := (uint32(1) << (8 - shiftPathAA)) - (((y & maskPathAA) + 1) >> shiftPathAA)
+	mv := (uint32(1) << (8 - shift)) - (((y & mask) + 1) >> shift)
 	if mv > 255 {
 		panic("called `Result::unwrap()` on an `Err` value")
 	}
 	maxValue := uint8(mv)
 	sb.offsetX = sb.runs.add(
-		x>>shiftPathAA,
-		coverageToPartialAlpha(fb),
+		x>>shift,
+		coverageToPartialAlpha(fb, shift),
 		int(n),
-		coverageToPartialAlpha(fe),
+		coverageToPartialAlpha(fe, shift),
 		maxValue,
 		sb.offsetX,
 	)
@@ -300,7 +327,9 @@ func (sb *superBlitter) blitH(x, y uint32, width lengthU32) {
 // SCALE pixels worth of "alpha" in [0,(256/SCALE)] to produce a final value in
 // [0, 255] and handles clamping 256->255 itself, with the same (alpha - (alpha
 // >> 8)) correction as coverage_to_exact_alpha().
-func coverageToPartialAlpha(aa uint32) alphaU8 {
-	aa <<= 8 - 2*shiftPathAA
+//
+// Port: shift is the SHIFT of upstream, or shiftPathAA8x8 (D54).
+func coverageToPartialAlpha(aa, shift uint32) alphaU8 {
+	aa <<= (8 - 2*shift) & 7
 	return uint8(aa)
 }

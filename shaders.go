@@ -26,6 +26,12 @@ const (
 	// SpreadModeRepeat is SpreadMode::Repeat. It repeats the shader's image
 	// horizontally and vertically.
 	SpreadModeRepeat
+
+	// SpreadModeDecal is the tile mode kDecal of Skia. tiny-skia does not
+	// have it (D55). A gradient paints transparent black where its t is
+	// outside 0..=1, that is before its start and after its end. A gradient
+	// with this mode is never opaque. A Pattern treats it as SpreadModePad.
+	SpreadModeDecal
 )
 
 // String satisfies the fmt.Stringer interface. It returns the name of the
@@ -38,6 +44,8 @@ func (m SpreadMode) String() string {
 		return "Reflect"
 	case SpreadModeRepeat:
 		return "Repeat"
+	case SpreadModeDecal:
+		return "Decal"
 	}
 	return "SpreadMode(?)"
 }
@@ -54,7 +62,8 @@ func (m SpreadMode) String() string {
 //
 // Port: Shader is a Rust enum with data. In Go it is an interface with one
 // type for each variant: SolidColor, LinearGradient, RadialGradient,
-// SweepGradient and Pattern. Each type is a value type. A type switch on a
+// SweepGradient and Pattern. okage adds MeshGradient, which tiny-skia does
+// not have (D55). Each type is a value type. A type switch on a
 // Shader takes the place of a match on the enum. The unexported method keeps
 // other types out. Transform and ApplyOpacity change a Rust shader in place.
 // In Go they return the changed shader and leave the receiver as it was, so
@@ -97,6 +106,7 @@ var (
 	_ Shader = RadialGradient{}
 	_ Shader = SweepGradient{}
 	_ Shader = Pattern{}
+	_ Shader = MeshGradient{}
 )
 
 // SolidColor is Shader::SolidColor in tiny-skia src/shaders/mod.rs. It is a

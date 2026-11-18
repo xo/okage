@@ -170,6 +170,11 @@ type glyphPainter struct {
 	// `None` means the clip is empty (or its bounds are unknown).
 	clipStack []*Rect
 	opt       *options
+	// palette is the index of the palette of CPAL.
+	//
+	// Port: usvg always takes the first palette. FontDatabase.ColorGlyph
+	// can take another one (D57).
+	palette int
 }
 
 // writeGradientStops is GlyphPainter::write_gradient_stops in usvg
@@ -402,11 +407,17 @@ func (p *glyphPainter) paletteIndexToColor(paletteIndex uint16, alpha float32) s
 	lookup := func() (svgtypes.Color, bool) {
 		// We always use the first palette. `ColorPalettes` handles
 		// per-palette record offsets internally.
+		//
+		// Port: okage takes the palette of the painter, and the first one
+		// when the font does not have it (D57).
 		palettes := p.face.CPAL
 		if len(palettes) == 0 {
 			return svgtypes.Color{}, false
 		}
 		palette := palettes[0]
+		if p.palette > 0 && p.palette < len(palettes) {
+			palette = palettes[p.palette]
+		}
 		if int(paletteIndex) >= len(palette) {
 			return svgtypes.Color{}, false
 		}

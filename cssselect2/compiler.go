@@ -287,48 +287,10 @@ func compileNode(selector SelectorNode, depth int) (expr, error) {
 			if err != nil {
 				return expr{}, err
 			}
-			var sub func(el *ElementWrapper) bool
-			switch relativeSelector.Combinator {
-			case " ":
-				sub = func(el *ElementWrapper) bool {
-					first := true
-					for e := range el.IterSubtree() {
-						if first {
-							first = false
-							continue
-						}
-						if expression.eval(e) {
-							return true
-						}
-					}
-					return false
-				}
-			case ">":
-				sub = func(el *ElementWrapper) bool {
-					for e := range el.IterChildren() {
-						if expression.eval(e) {
-							return true
-						}
-					}
-					return false
-				}
-			case "+":
-				sub = func(el *ElementWrapper) bool {
-					for e := range el.IterNextSiblings() {
-						return expression.eval(e)
-					}
-					return false
-				}
-			case "~":
-				sub = func(el *ElementWrapper) bool {
-					for e := range el.IterNextSiblings() {
-						if expression.eval(e) {
-							return true
-						}
-					}
-					return false
-				}
-			}
+			// Port: upstream walks the elements of the combinator each
+			// time. The port keeps the result for each element (D58).
+			r := &relation{combinator: relativeSelector.Combinator, expression: expression}
+			sub := r.matches
 			subExpressions = append(subExpressions, sub)
 		}
 		return fn(func(el *ElementWrapper) bool {

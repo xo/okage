@@ -24,7 +24,8 @@ type LinearGradient struct {
 //
 // It returns a SolidColor when:
 //   - len(stops) == 1
-//   - start and end are very close
+//   - start and end are very close. In the decal mode, the color is
+//     transparent (D55)
 //
 // It returns false when:
 //   - stops is empty
@@ -72,6 +73,11 @@ func NewLinearGradient(
 			// but approximate the final color as infinite repetitions of the colors, so
 			// it can be represented as the average color of the gradient.
 			return SolidColor(averageGradientColor(stops)), true
+		case SpreadModeDecal:
+			// okage: the band of the colors has no width, and the decal mode paints
+			// transparent black on each side of it (D55). Skia returns an empty
+			// shader, which draws nothing.
+			return SolidColor(ColorTransparent), true
 		}
 	}
 
@@ -97,7 +103,7 @@ func isFiniteF32(x float32) bool {
 // src/shaders/linear_gradient.rs, and the arm Shader::LinearGradient of
 // Shader::is_opaque in tiny-skia src/shaders/mod.rs.
 func (g LinearGradient) IsOpaque() bool {
-	return g.base.colorsAreOpaque
+	return g.base.isOpaque()
 }
 
 // pushStages is LinearGradient::push_stages in tiny-skia

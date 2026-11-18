@@ -139,7 +139,7 @@ func (c *fontCache) colr(id FontID, glyph GlyphID, variations []FontVariation) (
 	instance := l.instance(variations)
 	t, ok := instance.colr[glyph]
 	if !ok {
-		t, _ = colr(l.pf, instance.face, glyph, c.opt)
+		t, _ = colr(l.pf, instance.face, glyph, 0, svgtypes.NewColorRGBA(0, 0, 0, 255), c.opt)
 		instance.colr[glyph] = t
 	}
 	return t, t != nil
@@ -1102,8 +1102,10 @@ func svg(pf *parsedFace, glyphID GlyphID, opt *options) (Node, bool) {
 // Port: skrifa paints a COLR glyph with ColorGlyph::paint, which
 // paintColorGlyph of usvg_text_colr_paint.go does on the tables of go-text.
 // face is the font instance, whose coordinates are the variations. opt
-// holds the logger (D20).
-func colr(pf *parsedFace, face *font.Face, glyphID GlyphID, opt *options) (*Tree, bool) {
+// holds the logger (D20). palette and foreground are the palette of CPAL
+// and the color of the text, which FontDatabase.ColorGlyph gives (D57).
+// usvg takes the palette 0 and black, as FontCache.colr does.
+func colr(pf *parsedFace, face *font.Face, glyphID GlyphID, palette int, foreground svgtypes.Color, opt *options) (*Tree, bool) {
 	svg := xmlwriter.New()
 
 	svg.StartElement("svg")
@@ -1123,7 +1125,8 @@ func colr(pf *parsedFace, face *font.Face, glyphID GlyphID, opt *options) (*Tree
 		pathBuf:          &pathBuf,
 		gradientIndex:    gradientIndex,
 		clipPathIndex:    clipPathIndex,
-		foregroundColor:  svgtypes.NewColorRGBA(0, 0, 0, 255),
+		palette:          palette,
+		foregroundColor:  foreground,
 		transform:        identityColrTransform(),
 		outlineTransform: identityColrTransform(),
 		transformsStack:  []colrTransform{identityColrTransform()},

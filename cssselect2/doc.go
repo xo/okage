@@ -48,4 +48,10 @@
 //     memory in the square of the number of siblings.
 //   - The flag i of an attribute selector compares with strings.ToLower,
 //     where upstream uses str.lower of Python.
+//   - The wrappers of one tree keep the result of each relative selector of
+//     :has() for each element (D58). The results are the results of
+//     upstream, and the time of the matching is about linear in the number
+//     of elements. Upstream takes time in the square of the number of
+//     elements, and in a power of it for :has() inside :has(). Two
+//     different elements of a tree must not be equal as values of Element.
 package cssselect2

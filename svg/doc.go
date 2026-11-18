@@ -46,4 +46,13 @@
 // A text whose families match no font of the database is not drawn, as in
 // resvg. The database reads only the names and the styles of each font file
 // when it loads it, and reads the rest of a file when a face of it is used.
+//
+// A layout of documents, such as the layout of ivy, reads the size of an
+// image with ReadDimensions before it parses the whole image. It parses an
+// svg element that another parser read with FromXMLTree or FromXMLNode, with
+// a document of roxmltree, and WithZeroSize accepts an image of size zero
+// (D58):
+//
+//	dims, err := svg.ReadDimensions(data)
+//	tree, err := svg.FromXMLTree(doc, svg.WithZeroSize(true))
 package svg

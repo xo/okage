@@ -458,6 +458,14 @@ type TextSpan struct {
 	wordSpacing       float32
 	textLength        *float32
 	lengthAdjust      LengthAdjust
+
+	// features and language are the OpenType features and the language
+	// that ShapeText gives the shaper. The parser leaves them empty.
+	//
+	// Port: usvg has no such fields. The shaping of usvg sets only the
+	// features smcp and kern, and no language (D57).
+	features []FontFeature
+	language string
 }
 
 // Start is TextSpan::start in usvg src/tree/text.rs. It returns a span start
@@ -772,6 +780,13 @@ type Text struct {
 	absStrokeBoundingBox Rect
 	flattened            *Group
 	layouted             []Span
+
+	// keepClusters asks layoutText to keep the clusters of the layout in
+	// clusters, for TextRun.Clusters. Only ShapeText sets it.
+	//
+	// Port: usvg has no such fields (D57).
+	keepClusters bool
+	clusters     []TextCluster
 }
 
 // ID is Text::id in usvg src/tree/text.rs. It returns the element's ID.

@@ -6,6 +6,11 @@ survey is from 2026-11-11. It is input for a discussion. It is not a plan and
 not a decision. Nothing in it is decided, and work on a format starts only
 after the maintainers decide it.
 
+On 2026-11-18 the reader of PDF, EPS and PostScript, and Adobe Illustrator,
+are in [ivy][ivy], with EMF, WMF and XPS. ivy reads these formats, and okage
+draws their pages. okage holds the pieces of drawing that they need, such as
+the mesh gradients and the transparency groups of PDF (D55, D56).
+
 ## How the survey was made
 
 Two outside models gave estimates: Gemini Pro and GPT-6 Astra. Other models
@@ -64,6 +69,7 @@ with the smallest ports and the cleanest licenses first:
 5. DWG, a port of acadrust, if CAD files matter.
 6. EPS, EMF, XPS, VSDX and CDR, only when a user asks for them.
 
+[ivy]: https://github.com/xo/ivy
 [krilla]: https://github.com/LaurenzV/krilla
 [svg2pdf]: https://github.com/typst/svg2pdf
 [hayro]: https://github.com/LaurenzV/hayro

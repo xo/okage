@@ -16,7 +16,9 @@ import (
 // Element is an element of a document tree that selectors match. Upstream
 // matches an Element of xml.etree.ElementTree. A program adapts its own tree
 // to this interface, such as a tree of HTML or of roxmltree. Each value of
-// Element must be comparable, such as a pointer or a small struct.
+// Element must be comparable, such as a pointer or a small struct. Two values
+// for the same element must be equal, and two values for different elements
+// must not be, because the results of :has() are kept for each value (D58).
 type Element interface {
 	// Children returns the child elements, in tree order. It skips the
 	// comments, the processing instructions and the text.
@@ -61,6 +63,10 @@ type ElementWrapper struct {
 	TransportContentLanguage string
 
 	etreeSiblings []Element
+
+	// cache holds the results of :has() for the tree. All the wrappers of
+	// one root share it (D58).
+	cache *matchCache
 
 	children      []Element
 	childrenDone  bool
@@ -114,8 +120,10 @@ func newElementWrapper(etreeElement Element, parent *ElementWrapper, index int, 
 	}
 	if parent != nil {
 		e.etreeSiblings = parent.EtreeChildren()
+		e.cache = parent.cache
 	} else {
 		e.etreeSiblings = []Element{etreeElement}
+		e.cache = &matchCache{}
 	}
 	return e
 }
@@ -298,10 +306,14 @@ func (e *ElementWrapper) EtreeChildren() []Element {
 }
 
 // SetEtreeChildren sets the cached property etree_children, as WeasyPrint
-// does for the elements of SVG that it makes.
+// does for the elements of SVG that it makes. It drops the results of :has()
+// that the wrappers of the tree keep (D58).
 func (e *ElementWrapper) SetEtreeChildren(children []Element) {
 	e.children = children
 	e.childrenDone = true
+	if e.cache != nil {
+		e.cache.clear()
+	}
 }
 
 // names caches the local name and the namespace URL.

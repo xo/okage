@@ -1,6 +1,6 @@
 # D50. tinycss2 and cssselect2 are public ports
 
-Status: Decided, amends D5, D8 and D13.
+Status: Decided, amends D5, D8 and D13, amended by D58.
 
 ivy lays out ebooks and web pages with a port of WeasyPrint 70.0 (ivy D15).
 WeasyPrint reads its CSS with [tinycss2](https://github.com/Kozea/tinycss2)

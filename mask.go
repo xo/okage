@@ -418,7 +418,7 @@ func (m *Mask) FillPath(
 				// when rendering a tile that does not have a path on it.
 				// Which is not an error in this case.
 				if antiAlias {
-					fillPathPathAA(p, fillRule, &clipRect, blitter, m.logger)
+					fillPathPathAA(p, fillRule, &clipRect, blitter, shiftPathAA, m.logger)
 				} else {
 					fillPathPath(p, fillRule, &clipRect, blitter, m.logger)
 				}
@@ -438,7 +438,7 @@ func (m *Mask) FillPath(
 			}
 
 			if antiAlias {
-				fillPathPathAA(p, fillRule, &clipRect, blitter, m.logger)
+				fillPathPathAA(p, fillRule, &clipRect, blitter, shiftPathAA, m.logger)
 			} else {
 				fillPathPath(p, fillRule, &clipRect, blitter, m.logger)
 			}

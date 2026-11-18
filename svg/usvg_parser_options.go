@@ -187,6 +187,10 @@ type options struct {
 	// has no such field, and logs with the crate log.
 	logger *slog.Logger
 
+	// zeroSize is the option WithZeroSize (D58). Upstream has no such
+	// field.
+	zeroSize bool
+
 	// render holds the options of the Renderer of renderer.go (D36), which
 	// the parser ignores. Upstream has no such field.
 	render renderOptions
