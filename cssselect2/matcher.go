@@ -79,6 +79,14 @@ func (m *Matcher[P]) AddSelector(selector *CompiledSelector, payload P) {
 		m.namespaceSelectors[selector.Namespace] = append(m.namespaceSelectors[selector.Namespace], entry)
 	case selector.RequiresLangAttr:
 		m.langAttrSelectors = append(m.langAttrSelectors, entry)
+	case selector.hasSubjectNames:
+		// Port: upstream tests such a selector on each element. The subject
+		// of the selector can only have one of the names, so the port keeps
+		// it with the selectors of each name. An element has one name, so
+		// Match finds the selector once at most (D61).
+		for _, name := range selector.subjectNames {
+			m.lowerLocalNameSelectors[name] = append(m.lowerLocalNameSelectors[name], entry)
+		}
 	default:
 		m.otherSelectors = append(m.otherSelectors, entry)
 	}
@@ -91,7 +99,23 @@ func (m *Matcher[P]) AddSelector(selector *CompiledSelector, payload P) {
 // highest specificity, and in the order of AddSelector for an equal
 // specificity.
 func (m *Matcher[P]) Match(element *ElementWrapper) []Match[P] {
-	var relevantSelectors []Match[P]
+	// Port: the port collects the matches in an array on the stack, and
+	// returns a copy of the length of the result. So Match allocates once
+	// (D61).
+	var buffer [16]Match[P]
+	relevantSelectors := m.AppendMatches(buffer[:0], element)
+	if len(relevantSelectors) == 0 {
+		return nil
+	}
+	return slices.Clone(relevantSelectors)
+}
+
+// AppendMatches appends the result of Match to dst, and returns the
+// extended slice. Upstream does not have it. A program that reuses dst for
+// each element does not allocate a slice for each element (D61).
+func (m *Matcher[P]) AppendMatches(dst []Match[P], element *ElementWrapper) []Match[P] {
+	start := len(dst)
+	relevantSelectors := dst
 
 	if id, ok := element.ID(); ok {
 		if entries, ok := m.idSelectors[id]; ok {
@@ -119,13 +143,47 @@ func (m *Matcher[P]) Match(element *ElementWrapper) []Match[P] {
 
 	relevantSelectors = addRelevantSelectors(element, m.otherSelectors, relevantSelectors)
 
-	slices.SortFunc(relevantSelectors, func(a, b Match[P]) int {
-		if c := a.Specificity.Compare(b.Specificity); c != 0 {
-			return c
-		}
-		return a.Order - b.Order
-	})
+	sortMatches(relevantSelectors[start:])
 	return relevantSelectors
+}
+
+// sortMatches sorts matches by specificity, then by order. Each entry has
+// its own order, so the result is the one of a stable sort. Port: upstream
+// sorts with sort() of Python. The port sorts a short list by insertion,
+// because a list of matches is short, and the selectors of each group are
+// already in order (D61).
+func sortMatches[P any](matches []Match[P]) {
+	if len(matches) > 32 {
+		slices.SortFunc(matches, compareMatches)
+		return
+	}
+	for i := 1; i < len(matches); i++ {
+		if !matchLess(&matches[i], &matches[i-1]) {
+			continue
+		}
+		m := matches[i]
+		j := i
+		for ; j > 0 && matchLess(&m, &matches[j-1]); j-- {
+			matches[j] = matches[j-1]
+		}
+		matches[j] = m
+	}
+}
+
+// compareMatches compares two matches by specificity, then by order.
+func compareMatches[P any](a, b Match[P]) int {
+	if c := a.Specificity.Compare(b.Specificity); c != 0 {
+		return c
+	}
+	return a.Order - b.Order
+}
+
+// matchLess reports whether a sorts before b.
+func matchLess[P any](a, b *Match[P]) bool {
+	if a.Specificity != b.Specificity {
+		return a.Specificity.Compare(b.Specificity) < 0
+	}
+	return a.Order < b.Order
 }
 
 // addRelevantSelectors is Matcher.add_relevant_selectors.

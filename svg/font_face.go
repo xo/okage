@@ -1,6 +1,9 @@
 package svg
 
 import (
+	"math"
+
+	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/typesetting/font"
 )
 
@@ -80,8 +83,13 @@ type FontMetrics struct {
 	UnderlinePosition  int16
 	UnderlineThickness uint16
 
-	// LineThroughPosition is the position of the line through the text.
-	LineThroughPosition int16
+	// LineThroughPosition is the position of the line through the text,
+	// and LineThroughThickness is its thickness. A font without the OS/2
+	// table, or with a thickness that is not positive, gets
+	// UnderlineThickness. The layout of text of svg draws the line through
+	// with UnderlineThickness, as usvg does.
+	LineThroughPosition  int16
+	LineThroughThickness uint16
 
 	// SubscriptOffset and SuperscriptOffset are the shifts of the baseline
 	// of a subscript and of a superscript.
@@ -96,19 +104,41 @@ type FontMetrics struct {
 // the face does not exist, cannot be parsed, or has a number of units per
 // em outside 16 to 16384.
 func (db *FontDatabase) FaceMetrics(id FontID, variations []FontVariation) (FontMetrics, bool) {
-	f, ok := resolveFont(id, variations, newFontCache(db, newOptions()))
+	fonts := newFontCache(db, newOptions())
+	f, ok := resolveFont(id, variations, fonts)
 	if !ok {
 		return FontMetrics{}, false
 	}
 	return FontMetrics{
-		UnitsPerEm:          f.unitsPerEm,
-		Ascent:              f.ascent,
-		Descent:             f.descent,
-		XHeight:             f.xHeight,
-		UnderlinePosition:   f.underlinePosition,
-		UnderlineThickness:  f.underlineThickness,
-		LineThroughPosition: f.lineThroughPosition,
-		SubscriptOffset:     f.subscriptOffset,
-		SuperscriptOffset:   f.superscriptOffset,
+		UnitsPerEm:           f.unitsPerEm,
+		Ascent:               f.ascent,
+		Descent:              f.descent,
+		XHeight:              f.xHeight,
+		UnderlinePosition:    f.underlinePosition,
+		UnderlineThickness:   f.underlineThickness,
+		LineThroughPosition:  f.lineThroughPosition,
+		LineThroughThickness: lineThroughThickness(fonts, id, variations, f.underlineThickness),
+		SubscriptOffset:      f.subscriptOffset,
+		SuperscriptOffset:    f.superscriptOffset,
 	}, true
+}
+
+// lineThroughThickness returns the thickness of the line through the text of
+// the face id, from yStrikeoutSize of OS/2 and the delta "strs" of MVAR. It
+// rounds the value as resolveFont rounds the thickness of the underline. If
+// the font gives no positive thickness, it returns underline (D61).
+func lineThroughThickness(fonts *fontCache, id FontID, variations []FontVariation, underline uint16) uint16 {
+	l, ok := fonts.load(id)
+	if !ok {
+		return underline
+	}
+	style := newStyleMetrics(l.pf, l.instance(variations).face.Coords())
+	if style.strikeThrough == nil {
+		return underline
+	}
+	thickness := wide.TruncI32(round32(style.strikeThrough.thickness))
+	if thickness <= 0 || thickness > math.MaxUint16 {
+		return underline
+	}
+	return uint16(thickness)
 }

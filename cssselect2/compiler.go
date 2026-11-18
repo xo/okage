@@ -71,13 +71,19 @@ type CompiledSelector struct {
 
 	// test is the attribute test of upstream, a lambda that upstream
 	// compiles from Python source.
-	test func(el *ElementWrapper) bool
+	test expr
+
+	// subjectNames holds the local names in ASCII lower case that a subject
+	// of the selector can have, when hasSubjectNames is true. Upstream does
+	// not have it. The Matcher reads it (D61).
+	subjectNames    []string
+	hasSubjectNames bool
 }
 
 // Test is the lambda test of upstream. It reports whether el is a subject of
 // the selector.
 func (c *CompiledSelector) Test(el *ElementWrapper) bool {
-	return c.test(el)
+	return c.test.eval(el)
 }
 
 // newCompiledSelector is the constructor of CompiledSelector.
@@ -88,10 +94,12 @@ func newCompiledSelector(parsedSelector *Selector) (*CompiledSelector, error) {
 	}
 	c := &CompiledSelector{
 		NeverMatches:  source.isFalse(),
-		test:          source.eval,
+		test:          source,
 		Specificity:   parsedSelector.Specificity,
 		PseudoElement: parsedSelector.PseudoElement,
 	}
+
+	c.subjectNames, c.hasSubjectNames = subjectNames(parsedSelector.ParsedTree, 0)
 
 	node := parsedSelector.ParsedTree
 	if combined, ok := node.(*CombinedSelector); ok {
@@ -120,6 +128,76 @@ func newCompiledSelector(parsedSelector *Selector) (*CompiledSelector, error) {
 		}
 	}
 	return c, nil
+}
+
+// subjectNames returns the local names in ASCII lower case that a subject of
+// selector can have. It returns false when the subject can have any name.
+// Upstream does not have it. The names come from the type selectors of the
+// last compound selector, and from the selectors in :is() and :where() of
+// that compound selector, at any depth. An element that matches selector has
+// a name of the list, in ASCII lower case, in an HTML document and in an XML
+// document (D61).
+func subjectNames(selector SelectorNode, depth int) ([]string, bool) {
+	if depth > MaxDepth {
+		return nil, false
+	}
+	depth++
+	if combined, ok := selector.(*CombinedSelector); ok {
+		selector = combined.Right
+	}
+	compound, ok := selector.(*CompoundSelector)
+	if !ok {
+		return nil, false
+	}
+	var names []string
+	found := false
+	for _, simple := range compound.SimpleSelectors {
+		var list []*Selector
+		switch s := simple.(type) {
+		case *LocalNameSelector:
+			names, found = intersectNames(names, found, []string{s.LowerLocalName}), true
+			continue
+		case *MatchesAnySelector:
+			list = s.SelectorList
+		case *SpecificityAdjustmentSelector:
+			list = s.SelectorList
+		default:
+			continue
+		}
+		var union []string
+		anyName := false
+		for _, s := range list {
+			sub, ok := subjectNames(s.ParsedTree, depth)
+			if !ok {
+				anyName = true
+				break
+			}
+			for _, name := range sub {
+				if !contains(union, name) {
+					union = append(union, name)
+				}
+			}
+		}
+		if !anyName {
+			names, found = intersectNames(names, found, union), true
+		}
+	}
+	return names, found
+}
+
+// intersectNames returns the names of b that are in a. If found is false, a
+// holds no list yet, and intersectNames returns b.
+func intersectNames(a []string, found bool, b []string) []string {
+	if !found {
+		return b
+	}
+	var names []string
+	for _, name := range b {
+		if contains(a, name) {
+			names = append(names, name)
+		}
+	}
+	return names
 }
 
 // expr is a boolean expression of an element, the Python source that

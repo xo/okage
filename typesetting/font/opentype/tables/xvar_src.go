@@ -127,10 +127,19 @@ type VariationRegion struct {
 }
 
 // Evaluate returns the scalar factor of the region
+//
+// okage: go-text reads only the axes that coords holds. So with no
+// coordinates, the factor of each region is 1, and a face without
+// variations gets every delta of a variable font. The copy reads an axis
+// without a coordinate at its default, 0, as HarfBuzz does (D61).
 func (vr VariationRegion) Evaluate(coords []Coord) float32 {
 	v := float32(1)
-	for axis, coord := range coords {
-		factor := vr.RegionAxes[axis].evaluate(coord)
+	for axis, reg := range vr.RegionAxes {
+		var coord Coord
+		if axis < len(coords) {
+			coord = coords[axis]
+		}
+		factor := reg.evaluate(coord)
 		v *= factor
 	}
 	return v

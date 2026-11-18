@@ -16,7 +16,7 @@ None.
 
 From D52.
 
-1. Apply the 109 pending commits of `docs/upstream/typesetting.tsv` in
+1. Apply the 102 pending commits of `docs/upstream/typesetting.tsv` in
    order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. Many of them
    fix a panic on a malformed font, and ivy reads fonts from strangers.
 2. 33 test files of go-text read the data of

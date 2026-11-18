@@ -6,6 +6,7 @@ import (
 	"testing"
 	"testing/fstest"
 
+	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 )
 
@@ -174,6 +175,7 @@ func TestFaceMetrics(t *testing.T) {
 		SubscriptOffset:     f.subscriptOffset,
 		SuperscriptOffset:   f.superscriptOffset,
 	}
+	want.LineThroughThickness = m.LineThroughThickness
 	if m != want {
 		t.Errorf("FaceMetrics = %+v, want %+v", m, want)
 	}
@@ -193,5 +195,56 @@ func TestFaceMetrics(t *testing.T) {
 	}
 	if _, ok := db.FaceMetrics(ids[0]+1, nil); ok {
 		t.Error("FaceMetrics is true for a face that does not exist")
+	}
+}
+
+// TestFaceMetricsVariable checks that FaceMetrics gives the metrics of
+// go-text for a variable font with MVAR, at the default location and at
+// two others, and that it gives the thickness of the line through (D61).
+// The MVAR of Roboto Flex changes the x-height.
+func TestFaceMetricsVariable(t *testing.T) {
+	db, ids := testFontDB(t, "RobotoFlex.subset.ttf")
+	tests := []struct {
+		name       string
+		variations []FontVariation
+	}{
+		{"default", nil},
+		{"wght", []FontVariation{{Tag: [4]byte{'w', 'g', 'h', 't'}, Value: 800}}},
+		{"wdth", []FontVariation{{Tag: [4]byte{'w', 'd', 't', 'h'}, Value: 30}}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			m, ok := db.FaceMetrics(ids[0], test.variations)
+			if !ok {
+				t.Fatal("FaceMetrics is false")
+			}
+			face, ok := db.NewFace(ids[0], test.variations)
+			if !ok {
+				t.Fatal("NewFace is false")
+			}
+			round := func(v float32) int32 { return int32(round32(v)) }
+			got := []int32{
+				int32(m.XHeight),
+				int32(m.UnderlinePosition),
+				int32(m.UnderlineThickness),
+				int32(m.LineThroughPosition),
+				int32(m.LineThroughThickness),
+			}
+			want := []int32{
+				round(face.LineMetric(font.XHeight)),
+				round(face.LineMetric(font.UnderlinePosition)),
+				round(face.LineMetric(font.UnderlineThickness)),
+				round(face.LineMetric(font.StrikethroughPosition)),
+				round(face.LineMetric(font.StrikethroughThickness)),
+			}
+			if !slices.Equal(got, want) {
+				t.Errorf("FaceMetrics = %v, want the metrics of go-text %v", got, want)
+			}
+		})
+	}
+	// At the default location, the metrics are the values of the tables.
+	m, _ := db.FaceMetrics(ids[0], nil)
+	if m.XHeight != 1052 || m.UnderlinePosition != -183 || m.UnderlineThickness != 166 || m.LineThroughThickness != 102 {
+		t.Errorf("FaceMetrics = %+v, want the values of post and OS/2", m)
 	}
 }

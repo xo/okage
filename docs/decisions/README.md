@@ -80,3 +80,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D58 | [SVG images for a layout, and :has() in linear time](D058-svg-images-for-a-layout-and-has-in-linear-time.md) | Decided, amends D47 and D50 |
 | D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |
 | D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
+| D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |

@@ -22,7 +22,7 @@ c5a303fae56c9c290e8ef78263a85bd25a1ccc21	2026-09-29	pending		[font/opentype] CBL
 a13b86552b78427752b9d70d95f59654ebea1a26	2026-09-29	pending		[font/opentype] guard unsanitized mark attachment data. It changes font, font/opentype
 6bd6edb131a550cac44c767a0c7fa3e91c860741	2026-09-29	pending		[font] sanitize resolved layout extension subtables. It changes font
 c6965dda5b60b53bb29c425ae9ff992f738fa0cf	2026-09-29	pending		[font/opentype] ItemVarStore: guard region indexes and axis count. It changes font/opentype
-0d88d2a5763655f8a578fccd4a5e6baf66bae4e9	2026-09-29	pending		[font/opentype] reader: use io.ReadFull and check the Seek error. It changes font/opentype
+0d88d2a5763655f8a578fccd4a5e6baf66bae4e9	2026-09-29	ported		[font/opentype] reader: use io.ReadFull and check the Seek error. It changes font/opentype. Applied out of order, because the commits of ResourceSlicer change the same lines (D61). The test of reader_test.go reads typesetting-utils and is left out
 fbe0dbae57434a3f90b077544fbcea1c78c510d6	2026-09-29	pending		[font/opentype] honor named instance record sizes. It changes font/opentype
 f7b0a668071a4df82f4d29cd630f4914c7609f65	2026-09-29	pending		[font/opentype] checksum partial words without modifying input. It changes font/opentype
 32bac8a7b09d5c1d51e3840456bb68887a1ee85a	2026-09-29	pending		[bidi] BD16: sort bracket pairs once, drop container/list. It changes bidi
@@ -81,12 +81,12 @@ b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	pending		replace the hand-ro
 54d50bbf7b872ef4b24e39ac2891f2b00f3afd69	2026-10-06	pending		[fontscan, harfbuzz] use min for two clamps. It changes harfbuzz
 e49e2bdf1e4b82a816d663c5861f830800e2ae3b	2026-10-06	not-applicable		[fontscan] say what serializeString does past the uint16 limit. It changes only fontscan, which okage does not copy
 a4cf8f401e160d9addb9de3343d9e02a1e931447	2026-10-20	not-applicable		[CI] attempt to fix CI failure. It changes only .github, which okage does not copy
-23022c6726e16ce18df80b01a1ae5f1403d38b41	2026-10-25	pending		[font/opentype] add NewLoadersFromBytes, which does not copy tables. It changes font, font/opentype
-0d9c25a314b6d345b1586e6e00a5e2406c5299d1	2026-10-25	pending		[font/opentype] drop random-input loop from NewLoadersFromBytes test. It changes font/opentype
-d87fcb8b72e2ea5cbe8f51561c97ab36725c5040	2026-10-25	pending		[font/opentype] NewLoadersFromBytes: document lifetime, reject empty table at EOF. It changes font, font/opentype
-364f0cccf707d8f63e8cc2ed7169ddaf1a0e2fb3	2026-10-25	pending		[font/opentype] replace NewLoadersFromBytes with ResourceSlicer. It changes font, font/opentype
-783ec6a75fea2cbb69e6c7a595d8fc591adf6ac4	2026-10-25	pending		[font/opentype] trust ResourceSlicer.Slice for length and capacity. It changes font/opentype
-be47f20d0c7188662cb777582edff1a145fc2ba5	2026-10-25	pending		[font/opentype] rename NewSliceResource to NewSlicedResource. It changes font, font/opentype
+23022c6726e16ce18df80b01a1ae5f1403d38b41	2026-10-25	ported		[font/opentype] add NewLoadersFromBytes, which does not copy tables. It changes font, font/opentype. Applied out of order for the limits of the loader (D61). The tests of reader_test.go and renderer_test.go read typesetting-utils and are left out
+0d9c25a314b6d345b1586e6e00a5e2406c5299d1	2026-10-25	ported		[font/opentype] drop random-input loop from NewLoadersFromBytes test. It changes font/opentype. Applied out of order for the limits of the loader (D61). It changes only reader_test.go, which reads typesetting-utils and is left out
+d87fcb8b72e2ea5cbe8f51561c97ab36725c5040	2026-10-25	ported		[font/opentype] NewLoadersFromBytes: document lifetime, reject empty table at EOF. It changes font, font/opentype. Applied out of order for the limits of the loader (D61). The tests of reader_test.go and renderer_test.go read typesetting-utils and are left out
+364f0cccf707d8f63e8cc2ed7169ddaf1a0e2fb3	2026-10-25	ported		[font/opentype] replace NewLoadersFromBytes with ResourceSlicer. It changes font, font/opentype. Applied out of order for the limits of the loader (D61). The tests of reader_test.go and renderer_test.go read typesetting-utils and are left out
+783ec6a75fea2cbb69e6c7a595d8fc591adf6ac4	2026-10-25	ported		[font/opentype] trust ResourceSlicer.Slice for length and capacity. It changes font/opentype. Applied out of order for the limits of the loader (D61). The test of reader_test.go reads typesetting-utils and is left out
+be47f20d0c7188662cb777582edff1a145fc2ba5	2026-10-25	ported		[font/opentype] rename NewSliceResource to NewSlicedResource. It changes font, font/opentype. Applied out of order for the limits of the loader (D61). The tests of reader_test.go and renderer_test.go read typesetting-utils and are left out
 b62a7ae27ed91bb5a690134bdddaae92a1fc53e9	2026-10-26	pending		(perf) update benchmark. It changes go.mod, harfbuzz
 4bc3723f1a8a1e478b1da25e99f70d3c3e576384	2026-10-26	pending		GPOS: add recursion guard. It changes harfbuzz
 c7c9aace196f657a9cf232e5e8416217dfacb39d	2026-10-26	pending		[GPOS] Apply mark-attachment cross-direction offsets immediately. It changes harfbuzz
