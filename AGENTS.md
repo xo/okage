@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D59. The package `html` parses and lays out the HTML-like labels of
+to D60. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,

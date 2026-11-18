@@ -79,6 +79,15 @@ test:
    a run of stages, written by a tool, for the SIMD build (D17, D28).
 4. The stages of sRGB and `Powf`, which D33 did not change, because no
    benchmark covers them.
+5. The bilinear sampling of highp, `sampler2x2` and `sample`, costs about
+   80 ns for each pixel. A raster page of ivy that okage scales up spends
+   almost all its time there: a page of a PSD file at 96 dpi takes 2.5 s.
+   Source: the measurement of ivy, 2026-11-18.
+6. The blend modes of highp (`loadDst`, `store`, `blendFn2` and
+   `blendFn3`) take most of the time of the composite of a group in ivy.
+   Source: the measurement of ivy, 2026-11-18.
+7. `blitAntiH` and `blitMask` can skip the rows where the mask is 0, as
+   `blitRect` does (D60).
 
 ### Measure the cost of GOEXPERIMENT=simd in each release of Go
 

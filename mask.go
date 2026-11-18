@@ -13,6 +13,7 @@ import (
 	"log/slog"
 	"math"
 	"os"
+	"sync"
 
 	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/path"
@@ -458,21 +459,79 @@ func (m *Mask) FillPath(
 // intersects the provided path with the current clipping path.
 //
 // A temporary mask with the same size as the current one is created.
+//
+// Port: the temporary mask comes from a pool, and only the rows that the
+// path can cover are cleared and multiplied. The other pixels of the mask
+// are 0, as the multiplication by 0 of upstream gives. A clip of a page
+// then takes a time that depends on the size of the path, not on the size
+// of the page. The bytes are the same as upstream (D60).
 func (m *Mask) IntersectPath(
 	p *Path,
 	fillRule FillRule,
 	antiAlias bool,
 	transform Transform,
 ) {
-	submask, ok := NewMask(m.Width(), m.Height(), WithLogger(m.logger))
-	if !ok {
-		panic("called `Option::unwrap()` on a `None` value")
+	w, h := int(m.Width()), int(m.Height())
+	x0, y0, x1, y1 := pathPixelBounds(p, transform, w, h)
+	if x0 >= x1 || y0 >= y1 {
+		clear(m.data)
+		return
 	}
+	buf, ok := maskPool.Get().(*[]byte)
+	if !ok {
+		buf = new([]byte)
+	}
+	defer maskPool.Put(buf)
+	if cap(*buf) < len(m.data) {
+		*buf = make([]byte, len(m.data))
+	}
+	data := (*buf)[:len(m.data)]
+	// FillPath writes and reads only the pixels that the path covers.
+	clear(data[y0*w : y1*w])
+	submask := &Mask{data: data, size: m.size, logger: m.logger}
 	submask.FillPath(p, fillRule, antiAlias, transform)
 
-	for i := range min(len(m.data), len(submask.data)) {
-		m.data[i] = premultiplyU8(m.data[i], submask.data[i])
+	clear(m.data[:y0*w+x0])
+	for y := y0; y < y1; y++ {
+		row := m.data[y*w : (y+1)*w]
+		sub := data[y*w : (y+1)*w]
+		clear(row[:x0])
+		for x := x0; x < x1; x++ {
+			row[x] = premultiplyU8(row[x], sub[x])
+		}
+		clear(row[x1:])
 	}
+	clear(m.data[(y1-1)*w+x1:])
+}
+
+// maskPool holds the temporary masks of IntersectPath.
+var maskPool = sync.Pool{New: func() any { return new([]byte) }}
+
+// pathPixelBounds returns the pixels of a mask of size w by h that the path
+// p with transform can cover: the columns x0 to x1 and the rows y0 to y1,
+// without x1 and y1. The bounds of the path grow by 2 pixels, for the
+// anti-aliasing and the rounding of the transform. A path whose bounds are
+// not finite covers the whole mask.
+func pathPixelBounds(p *Path, transform Transform, w, h int) (x0, y0, x1, y1 int) {
+	r, ok := p.Bounds().Transform(transform)
+	if !ok {
+		return 0, 0, w, h
+	}
+	clamp := func(v float32, limit int) int {
+		switch {
+		case !(v > 0):
+			return 0
+		case v >= float32(limit):
+			return limit
+		}
+		return int(v)
+	}
+	const margin = 2
+	x0 = clamp(float32(math.Floor(float64(r.Left())))-margin, w)
+	y0 = clamp(float32(math.Floor(float64(r.Top())))-margin, h)
+	x1 = clamp(float32(math.Ceil(float64(r.Right())))+margin, w)
+	y1 = clamp(float32(math.Ceil(float64(r.Bottom())))+margin, h)
+	return x0, y0, x1, y1
 }
 
 // Invert is Mask::invert in tiny-skia src/mask.rs. It inverts the mask.

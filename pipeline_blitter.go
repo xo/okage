@@ -6,6 +6,8 @@
 
 package okage
 
+import "encoding/binary"
+
 // rasterPipelineBlitter is RasterPipelineBlitter in tiny-skia
 // src/pipeline/blitter.rs.
 //
@@ -411,6 +413,14 @@ func (b *rasterPipelineBlitter) blitRect(rect *screenIntRect) {
 
 	maskCtx := b.maskCtx()
 
+	if b.mask != nil {
+		r, ok := maskBounds(rect, maskCtx)
+		if !ok {
+			return
+		}
+		rect = &r
+	}
+
 	b.blitRectRp.run(
 		rect,
 		aaMaskCtx{},
@@ -418,6 +428,75 @@ func (b *rasterPipelineBlitter) blitRect(rect *screenIntRect) {
 		b.pixmapSrc,
 		b.pixmap,
 	)
+}
+
+// maskChunk is the number of pixels that maskBounds keeps together: a
+// multiple of the stage widths of lowp and highp.
+const maskChunk = 16
+
+// maskBounds returns the part of rect that the pipeline must run on for the
+// mask of ctx. It returns false when the mask is zero on the whole rect.
+//
+// Port: upstream runs the pipeline on the whole rect. The stage mask_u8
+// returns without the next stages for a chunk of pixels whose coverage is
+// zero, so such a chunk leaves the pixels as they were. maskBounds leaves
+// out the rows of rect whose coverage is zero, and on the left and on the
+// right the chunks whose coverage is zero. The chunks keep their places,
+// so the pixels are the same bytes as upstream. An image that a small clip
+// cuts, or a shading that fills a clip, then runs on the clip and not on
+// the whole pixmap (D60).
+func maskBounds(rect *screenIntRect, ctx maskCtx) (screenIntRect, bool) {
+	x, w := int(rect.X()), int(rect.Width())
+	row := func(y uint32) []byte {
+		start := ctx.offset(x, int(y))
+		return ctx.data[start : start+w]
+	}
+	top, bottom := rect.Y(), rect.Bottom()
+	for top < bottom && allZero(row(top)) {
+		top++
+	}
+	if top == bottom {
+		return screenIntRect{}, false
+	}
+	for allZero(row(bottom - 1)) {
+		bottom--
+	}
+	// first and last are the first and the last pixel with a coverage.
+	first, last := w, -1
+	for y := top; y < bottom; y++ {
+		r := row(y)
+		for i := 0; i < first; i++ {
+			if r[i] != 0 {
+				first = i
+				break
+			}
+		}
+		for i := w - 1; i > last; i-- {
+			if r[i] != 0 {
+				last = i
+				break
+			}
+		}
+	}
+	left := first / maskChunk * maskChunk
+	right := min(w, (last/maskChunk+1)*maskChunk)
+	return screenIntRectFromXYWHSafe(uint32(x+left), top, lengthU32(right-left), lengthU32(bottom-top)), true
+}
+
+// allZero reports whether each byte of b is zero.
+func allZero(b []byte) bool {
+	for len(b) >= 8 {
+		if binary.NativeEndian.Uint64(b) != 0 {
+			return false
+		}
+		b = b[8:]
+	}
+	for _, c := range b {
+		if c != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // blitMask is Blitter::blit_mask of RasterPipelineBlitter in tiny-skia
