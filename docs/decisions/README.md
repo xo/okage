@@ -24,11 +24,11 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50, D51 and D52 |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50, D51, D52 and D62 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided, amended by D52 |
-| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45, D48 and D52 |
+| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45, D48, D52 and D62 |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided, amended by D47 and D50 |
-| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36, D45 and D52 |
+| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36, D45, D52 and D62 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
 | D11 | [The upstream checkouts are in `upstream/`, and git ignores them](D011-the-upstream-checkouts-are-in-upstream-and-git-ignores-them.md) | Decided |
 | D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided, amended by D52 |
@@ -51,7 +51,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D29 | [The filter types of `svg` take the suffix `Filter`](D029-the-filter-types-of-svg-take-the-suffix-filter.md) | Decided |
 | D30 | [An arc makes at most 4,096 curves](D030-an-arc-makes-at-most-4096-curves.md) | Decided |
 | D31 | [Images are compared with the pixel metric of resvg](D031-images-are-compared-with-the-pixel-metric-of-resvg.md) | Decided |
-| D32 | [`svg` walks the paint graph of COLRv1](D032-svg-walks-the-paint-graph-of-colrv1.md) | Decided, amends D9 |
+| D32 | [`svg` walks the paint graph of COLRv1](D032-svg-walks-the-paint-graph-of-colrv1.md) | Decided, amends D9, amended by D62 |
 | D33 | [A hot stage computes its lanes in one loop](D033-a-hot-stage-computes-its-lanes-in-one-loop.md) | Decided, amends D28 |
 | D34 | [Powf reads one NaN for every NaN](D034-powf-reads-one-nan-for-every-nan.md) | Decided, amends D16 |
 | D35 | [Speed has no target, and stays open work](D035-speed-has-no-target-and-stays-open-work.md) | Decided, amends D18 |
@@ -81,3 +81,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |
 | D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
 | D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |
+| D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32 |

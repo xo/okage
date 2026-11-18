@@ -766,11 +766,337 @@ Each of these was measured on 2026-11-09:
    copy of the pipeline in C beside the Go code, against D1, and its
    assembly cannot be reviewed.
 
+## The PDF writer
+
+This part of the plan was written on 2026-11-18, before any code of the PDF
+writer existed (D3). D62 proposes it, and questions 20 to 27 hold the
+choices that the maintainers make first. No code is written until the
+maintainers decide D62 and answer those questions. Where an answer differs
+from the recommendation, this part changes with it.
+
+### What is ported
+
+D62 holds the sources, their sizes, their licenses and the policy of each
+crate. In short:
+
+1. The crate `krilla`, at the head of its main branch, goes into the package
+   `pdf`. The crate `krilla-svg` goes into the package `pdfsvg`.
+2. The part of `pdf-writer` that krilla calls goes into
+   `internal/pdfwriter`.
+3. `subsetter` goes into `internal/subsetter`, with the code of
+   `write-fonts` that writes a simple glyph, and `sip128` of `siphasher`
+   goes into `internal/siphasher`.
+4. `kurbo` grows by `CubicBez::to_quads` and `QuadSpline`, for the variable
+   fonts of subsetter.
+5. The walk of COLRv1 of D32 moves from `svg` into `internal/colr`.
+6. `typesetting` reads the fonts, and the standard library decodes the
+   images. A function that `typesetting` lacks, such as the `fsType` of the
+   `OS/2` table, is added to `typesetting` as D52 says, with an `okage:`
+   comment.
+
+The checkouts are `upstream/krilla`, `upstream/pdf-writer` and
+`upstream/subsetter` (D11). The crates `siphasher`, `write-fonts` and
+`xmp-writer` have no checkout of their own. In phase 11, a maintainer
+decides how okage follows each one. It can get a row in
+`docs/upstream/upstreams.tsv`, or a note in the ledger of the crate that
+calls it, as the walk of D32 has.
+
+| Repository | URL | Base commit | okage |
+| --- | --- | --- | --- |
+| krilla | https://github.com/LaurenzV/krilla | `e3459d0650682441894feec76603d92487d8510b` | `pdf`, `pdfsvg` |
+| pdf-writer | https://github.com/typst/pdf-writer | `fdf090125f1e7209fa630c4ca1f5f29910c87c93` | `internal/pdfwriter` |
+| subsetter | https://github.com/typst/subsetter | `c3f23c67bc0190587f639bda84dc0005ca3f54d5` | `internal/subsetter` |
+
+### The API
+
+The API follows krilla, in Go form, as "The port is idiomatic Go" above
+says. These are the main types of `pdf`:
+
+| Go | krilla | What it does |
+| --- | --- | --- |
+| `NewDocument(opts ...Option) *Document` | `Document::new_with` | starts a document. The fields of `SerializeSettings` become options, such as `WithPDFVersion`, `WithCompression`, `WithASCIICompatible`, `WithPretty` and `WithSVGGlyphs` |
+| `Document.StartPage(PageSettings) *Page` | `start_page_with` | starts a page with its media box and its other boxes |
+| `Document.SetMetadata`, `SetOutline` | the same | the information dictionary and the outline |
+| `Document.Finish(w io.Writer) error` | `finish` | writes the file. krilla returns the bytes |
+| `Page.Surface() *Surface`, `Page.AddAnnotation`, `Page.Finish` | the same | the content and the links of a page |
+| `Surface.SetFill(*Fill)`, `SetStroke(*Stroke)` | `set_fill`, `set_stroke` | the paint, the opacity and the rule of the fill, and the paint, the width, the dash, the cap and the join of the stroke |
+| `Surface.DrawPath(*okage.Path)` | `draw_path` | draws a path with the fill and the stroke |
+| `Surface.DrawGlyphs(start, []Glyph, *Font, text, size, outlined)` | `draw_glyphs` | draws a run of glyphs. `text` holds the characters of the clusters |
+| `Surface.DrawText(start, *Font, size, text, outlined, dir)` | `draw_text` | shapes the text with `typesetting` and draws it |
+| `Surface.DrawImage(*Image, Size)` | `draw_image` | draws an image |
+| `Surface.PushTransform`, `PushClipPath`, `PushMask`, `PushOpacity`, `PushBlendMode`, `PushIsolated`, `Pop` | the same | the stack of the state |
+| `NewFont(data []byte, index int, opts ...FontOption) (*Font, error)` | `Font::new_with_info` | a TrueType, OpenType or collection font, with the coordinates of its variations |
+| `ImageFromPNG`, `ImageFromJPEG`, `ImageFromGIF`, `ImageFromWebP`, `ImageFromImage` | `from_png` and the others, `from_custom` | an image. A JPEG file and some PNG files go into the PDF without a decode |
+| `Paint`, `Color`, `LinearGradient`, `RadialGradient`, `SweepGradient`, `Pattern`, `Mask`, `BlendMode` | the same | the paints, the masks and the blend modes |
+
+A path, a transform and a rectangle are the types of `path`, which krilla
+takes from `tiny-skia-path`, so a program passes an `*okage.Path` without a
+conversion. `pdfsvg` has these functions:
+
+| Go | krilla-svg | What it does |
+| --- | --- | --- |
+| `Draw(s *pdf.Surface, tree *svg.Tree, size pdf.Size, opts ...Option) bool` | `SurfaceExt::draw_svg` | draws a tree onto a surface. `WithEmbedText` and `WithFilterScale` are the fields of `SvgSettings` |
+| `RenderGlyph` | `render_svg_glyph` | draws an SVG glyph. A program gives it to `pdf.WithSVGGlyphs` |
+
+ivy draws its pages through its display list. Its device for PDF lives in
+ivy, and calls the surface. A save becomes a mark on the stack of pushes,
+and a restore pops to the mark. D62 lists the additions that this device
+needs from okage. Question 23 asks for this split. The other choice is a
+device in okage that takes the calls of a display list.
+
+### What PDF can express
+
+okage draws each pixel itself. A PDF file holds commands, and the viewer
+draws the pixels. This table maps each feature of okage and `svg`:
+
+| okage | PDF | Where PDF cannot |
+| --- | --- | --- |
+| a fill with the rule nonzero or even-odd | `f` or `f*` | |
+| a stroke with its width, cap, join, miter limit and dash | `w`, `J`, `j`, `M` and `d` | |
+| a hairline, a stroke of width 0 | `0 w`, the thinnest line of the device | |
+| a paint without anti-aliasing | the key `AntiAlias` of a shading only | The viewer anti-aliases a path. This is an accepted difference |
+| the stroke adjustment of `Paint` (D54) | the key `SA` of a graphics state | |
+| a solid color with alpha | an RGB color, and `ca` or `CA` | |
+| a linear or radial gradient with the spread mode pad | a shading of type 2 or 3 with `Extend` | |
+| a gradient with the spread mode repeat or reflect, a focal radial gradient, a sweep gradient | a shading with a PostScript function, as krilla writes it | |
+| the stops of a gradient with alpha | a soft mask of a luminosity shading, as krilla writes it | |
+| the decal spread mode (D55) | `Extend` false at both ends | |
+| a mesh gradient (D55) | a shading of type 4 | |
+| a pattern of a pixmap with the spread mode repeat | a tiling pattern of the image | |
+| a pattern with the spread mode reflect | a tiling pattern of four mirrored copies | |
+| a pattern with the spread mode decal | the image, drawn once inside the clip | |
+| a pattern with the spread mode pad | none | The fallback draws the area with okage |
+| the quality of a filter | `Interpolate` false for nearest, true for the others | The viewer chooses its filter |
+| the blend mode source-over and the 15 blend modes of PDF | `BM` | |
+| the blend modes clear, source, destination, the modes in, out and atop, xor, plus, modulate, and `PlusLighter` of usvg | none | The fallback draws the group with okage |
+| a clip path | `W n` or `W* n` | |
+| a clip mask of okage | a soft mask of the type alpha, from an image | |
+| a luminance mask | a soft mask of the type luminosity | PDF weighs red, green and blue as 0.30, 0.59 and 0.11, and okage as 0.2126, 0.7152 and 0.0722. This is an accepted difference |
+| the opacity of a group, isolated and knockout groups (D56) | a transparency group with `ca`, `I` and `K` | |
+| the backdrop and the transfer of a soft mask | `BC` and `TR` of a soft mask | |
+| an RGBA image | an image with `FlateDecode` and an `SMask` | |
+| a fill through a mask of 8 bits | the paint in a group with the mask as its soft mask | |
+| a run of glyphs | a text object with a CID font, or a Type 3 font for color glyphs | A font that is not TrueType or OpenType is drawn as paths (question 25) |
+| a filter of SVG | none | krilla-svg draws it with resvg at a scale, and `pdfsvg` with `svg` |
+| the exact pixels of tiny-skia | none | The viewer draws them. This is an accepted difference |
+
+The fallback is one function of `pdf`. It takes a rectangle in the user
+space, a scale and a function that draws onto an `*okage.Pixmap`. It draws,
+and then draws the pixmap as an image in the rectangle. krilla-svg draws its
+filters in this way, and its code is the model.
+
+### Text
+
+The text of a PDF file is a list of glyph codes in a font. These parts of
+the sources make it:
+
+1. `text/font.rs` of krilla reads a font: its metrics, the name for
+   PostScript, the advances and the outlines, at the coordinates of its
+   variations. The port reads them with `typesetting`.
+2. `text/mod.rs` and `text/glyph/mod.rs` choose, for each glyph, a CID font
+   or a Type 3 font. A glyph with outlines and no color data goes into the
+   CID font of its font.
+3. `text/cid.rs` writes the CID font: the subset from `subsetter`, the
+   widths, the font descriptor, the `CIDSet` for PDF/A-1, and the ToUnicode
+   map. The name of the font starts with a tag of six letters, a hash of the
+   glyphs of the subset by `siphasher`.
+4. `lib.rs` of subsetter subsets the tables `head`, `hhea`, `hmtx`, `maxp`,
+   `name`, `post`, `glyf`, `loca`, `CFF ` and `CFF2`. `cff/` renumbers the
+   glyphs of a CFF font as CIDs and subsets its subroutines. `glyf.rs` keeps
+   the glyphs that a composite glyph uses. `interjector.rs` draws each glyph
+   of a variable font at its coordinates, converts its cubic curves into
+   quadratic curves, and writes it as a simple glyph of `glyf`. A CFF2 font
+   becomes a TrueType font in this way.
+5. `font.rs` of pdf-writer writes the ToUnicode map, with `UnicodeCmap`.
+   `text/group.rs` of krilla splits a run where the font, the size or the
+   offsets change, and writes `ActualText` where the clusters need it.
+6. `text/type3.rs` writes the Type 3 fonts, 256 glyphs each, and
+   `text/glyph/colr.rs`, `bitmap.rs`, `svg.rs` and `outline.rs` draw each
+   color glyph onto a surface. `colr.rs` takes the walk of
+   `internal/colr`.
+
+A font of emoji can have color data and outlines. Each glyph with color data
+then goes into a Type 3 font, and each other glyph into the CID font.
+
+### Testing
+
+The tests follow the tests of each source, and the test module compares
+okage with the sources (D22):
+
+1. The unit tests in the source files of pdf-writer, subsetter and krilla
+   are ported with their files.
+2. `refs/snapshots` of krilla holds 190 files. Each one is a PDF file that a
+   test writes with the settings `pretty` and `ascii_compatible`, so its
+   objects are text. They are copied into `pdf/testdata/snapshots` byte for
+   byte. The ported test writes the same file, decodes each stream of both
+   files, and compares the objects. The tags of the font names and the
+   subsets of the fonts must be the same. Only `Length`, the filters and the
+   ID of the document can differ (D62).
+3. The 131 tests of `refs/visreg` and the 1,781 tests of SVG of krilla are
+   compared through renderers, not through their reference images, which
+   pdfium made. The Rust oracle writes the PDF file of krilla for the same
+   input. MuPDF `mutool draw` and Poppler `pdftoppm` render both files, and
+   the metric of D31 compares the pixels.
+4. The gates of the comparison of item 3: a file without text and without a
+   raster image gives 0 pixels that differ. A file with text or a raster
+   image differs in at most 1 percent of its pixels. A file of SVG that
+   differs because `svg` follows a later usvg than krilla-svg is in a list
+   in the test, with the reason.
+5. The Rust oracle gives the bytes of a subset of `subsetter` for a font and
+   a set of glyphs. The subset of okage must be the same, byte for byte.
+   The fonts are the 15 fonts of `upstream/subsetter/fonts` and the fonts of
+   `svg/testdata`, with the sets of glyphs of `tests/data/subsets.tests`. A variable font at
+   coordinates other than the default compares its outlines within 1 unit,
+   because `typesetting` and skrifa compute them with other code.
+6. The Rust oracle gives the bytes of pdf-writer for a list of calls, which
+   use no compression. The bytes of okage must be the same.
+7. `qpdf --check` reads each file that a test writes, and must find no
+   error. veraPDF is not installed on 2026-11-18. It comes with the checks of
+   PDF/A, if question 22 adds them.
+8. A fuzz test gives random fonts to `internal/subsetter`, and a random list
+   of calls to a `Surface`. Neither one panics or hangs.
+
+A test skips when cargo, a checkout, `mutool`, `pdftoppm` or `qpdf` is
+missing. On 2026-11-18 the machine of the maintainers has MuPDF 1.28.6,
+Poppler 26.11.0 and qpdf 12.4.2.
+
+### Phases 11 to 19
+
+The phases of the PDF writer come after phase 10. An agent claims a unit in
+`BACKLOG.md`, as for any port. One unit is one upstream file with its tests,
+or a few small files. An estimate is in days of work of one agent, and
+counts the lines of Rust of the unit.
+
+#### Phase 11. The harness
+
+1. The checkouts, the rows of `docs/upstream/upstreams.tsv` and the ledgers
+   of krilla, pdf-writer and subsetter (D12). 0.5 days.
+2. The Rust oracle gets krilla, krilla-svg and subsetter. It gives the
+   subset of a font, the bytes of a list of calls of pdf-writer, and the PDF
+   file of an SVG file or of a scene in JSON. 1 day.
+3. The helpers of the test module: decode the streams of a PDF file and
+   compare its objects, render a page with `mutool` and `pdftoppm`, and run
+   `qpdf --check`. 1 day.
+
+Gate: the oracle writes the PDF file of `docs/okage.svg`, and the helpers
+read it and render it, and `qpdf --check` accepts it.
+
+#### Phase 12. `internal/siphasher` and `internal/pdfwriter`
+
+1. `sip128` of siphasher, with its tests. 0.5 days.
+2. `buf.rs`, `macros.rs` and `object.rs` of pdf-writer, about 1,500 lines.
+   1.5 days.
+3. `chunk.rs`, `lib.rs` and `renumber.rs`, about 1,000 lines. 1 day.
+4. `content.rs`, about 1,200 lines. 1 day.
+5. `color.rs` and `functions.rs`, about 1,100 lines. 1 day.
+6. `font.rs`, `xobject.rs` and `files.rs`, about 1,000 lines. 1 day.
+7. The parts of `structure.rs`, `annotations.rs` and `actions.rs` that the
+   base port of krilla calls: the catalog, the pages, the outline, the page
+   labels, the destinations and the links. About 1,500 lines. 1.5 days.
+
+Gate: the ported tests pass, and the oracle gives the same bytes for each
+list of calls.
+
+#### Phase 13. `internal/subsetter`
+
+1. `read.rs`, `write.rs`, `remapper.rs`, `head.rs`, `maxp.rs`, `hmtx.rs`,
+   `post.rs` and `name.rs`, about 750 lines. 1 day.
+2. `glyf.rs` and `lib.rs`, about 700 lines. 1 day.
+3. `cff/`, about 2,000 lines, in two units: the numbers, the indexes, the
+   dictionaries and the char strings, then the subroutines, the remapper and
+   the CID and SID fonts. 2.5 days.
+4. The variable fonts: `cff2.rs` and `interjector.rs` on `typesetting`, the
+   growth of `kurbo`, and the code of `write-fonts` that writes a simple
+   glyph. 2 days.
+
+Gate: item 5 of "Testing".
+
+#### Phase 14. `pdf`, without images and text
+
+1. `geom.rs`, `num.rs`, `util.rs`, `error.rs`, `data.rs` and `lib.rs`, about
+   600 lines. 0.5 days.
+2. `stream.rs`, `resource.rs` and `chunk_container.rs`, about 1,100 lines. 1
+   day.
+3. `serialize.rs`, `document.rs` and `page.rs`, about 1,400 lines. 1.5 days.
+4. `configure/`, about 1,100 lines. It holds the versions of PDF and the
+   errors of the checks, which the serializer records. 1 day.
+5. `content.rs` and `surface.rs`, about 1,700 lines. 2 days.
+6. `graphics/`, without `image/`: the colors, the ICC profiles, the paints,
+   the shading functions, the patterns, the masks, the XObjects, the graphics
+   states and the blend modes, about 2,200 lines. 2 days.
+
+Gate: the snapshots of the paths, the graphics, the masks, the patterns, the
+pages and the streams pass. The tests of `refs/visreg` without text and
+images give 0 pixels that differ.
+
+#### Phase 15. The images of `pdf`
+
+1. `graphics/image/mod.rs` and `png.rs`, about 900 lines, on the decoders
+   of the standard library and a reader of PNG chunks. 1.5 days.
+
+Gate: the 49 snapshots of images and PNG files pass. A PNG file that krilla
+copies without a decode gives the same bytes in its stream.
+
+#### Phase 16. The text of `pdf`
+
+1. `internal/colr`, moved out of `svg`, with its tests. 0.5 days.
+2. `text/font.rs` and `text/mod.rs` on `typesetting`. 1 day.
+3. `text/cid.rs` and `text/group.rs`. 1.5 days.
+4. `text/type3.rs` and `text/glyph/`. 2 days.
+5. `text/shape.rs`, on `typesetting/harfbuzz`. 0.5 days.
+6. The metadata of the information dictionary, the outline, the page labels,
+   the destinations and the links of `interchange/` and `interactive/`. 1.5
+   days.
+
+Gate: the snapshots of text, fonts, metadata, outlines and links pass, with
+the same tags and the same font subsets as krilla. The tests of
+`refs/visreg` with text give 0 pixels that differ.
+
+#### Phase 17. `pdfsvg`
+
+1. The 9 files of krilla-svg, about 960 lines, ported to the tree of `svg`,
+   with the changes of item 8 of D62. 2 days.
+2. The comparison of the 1,780 SVG files of the tests of resvg. 1 day.
+
+Gate: item 4 of "Testing".
+
+#### Phase 18. The additions for ivy
+
+1. The additions of item 11 of D62, each with a test that draws it, and a
+   section in D62. 3 days.
+2. The fallback of item 10 of D62 for a caller other than `pdfsvg`. 1 day.
+
+Gate: each addition renders with MuPDF and with Poppler as okage draws it,
+within the threshold of 32 of D31. `qpdf --check` accepts each file.
+
+#### Phase 19. Follow krilla
+
+Port the commits of krilla, pdf-writer and subsetter after their base
+commits, as `UPSTREAM.md` says. A dependency comes before the commit that
+raises its version (D12).
+
+#### The total and the later work
+
+Phases 11 to 18 are about 40 days of work of one agent: 2.5, 7.5, 6.5, 8,
+1.5, 7, 3 and 4. They port about 25,700 lines of Rust: 13,300 of krilla,
+about 7,200 of pdf-writer, 3,700 of subsetter, 1,000 of krilla-svg and 550
+of write-fonts. The survey of [`FORMATS.md`](FORMATS.md) gave 1.5 months
+for a port, and 8 to 14 months for production quality on hostile input.
+
+These parts of krilla wait for a decision of their own:
+
+1. The tagging for PDF/UA, about 5,200 lines with its generated code.
+2. The forms, about 1,000 lines.
+3. The checks of PDF/A and PDF/UA with `xmp-writer`, about 3,000 lines.
+4. The embedded files and the separation colors.
+5. The embedding of the pages of another PDF file, with `hayro-write`.
+6. A writer that streams (question 24).
+
 ## Open questions
 
 An open question stays here until the maintainers answer it. Then it becomes
 a decision in [`decisions/`](decisions/README.md), and it is deleted from this
-list. The numbers do not repeat. The next question is question 20.
+list. The numbers do not repeat. The maintainers answered questions 20 to 27 on 2026-11-18 with the recommendations of D62. The next question is question 28.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -790,3 +1116,144 @@ maintainers can choose one of these answers:
    their packages.
 3. Leave the tests out, and compare the shaping of `typesetting` with
    HarfBuzz in the test module, as an oracle.
+
+### Question 20: the base commits of the PDF writer
+
+Asked on 2026-11-18, from D62. krilla tagged `krilla-v0.8.2` on 2026-06-04.
+Its main branch has 47 more commits, up to `e3459d06` on 2026-11-11. These
+commits fix the colors and the bounds of COLR glyphs, and the glyphs of
+`sbix` and SVG. They size the rasters of SVG filters by the full transform.
+They draw a line of length 0 with round caps, and they add the forms. Main
+pins pdf-writer at `fdf09012`, a commit after `v0.15.0`, and requires
+subsetter `v0.2.6`. The maintainers can
+choose one of these answers:
+
+1. The head of main of krilla, `e3459d06`, with pdf-writer `fdf09012` and
+   subsetter `v0.2.6`, as velato started from its main branch (D41).
+2. The tag `krilla-v0.8.2`, with pdf-writer `v0.15.0` and subsetter
+   `v0.2.6`, and the 47 commits in the ledger as `pending`.
+
+The recommendation is answer 1. The fixes of the color glyphs and of the SVG
+filters change what okage writes. A port of the tag ports faults that
+upstream already fixed.
+
+### Question 21: the names of the packages of the PDF writer
+
+Asked on 2026-11-18, from D62. The packages of okage take the name of their
+format, such as `svg` and `lottie`, or the name of their crate, such as
+`kurbo`. ivy has its own package `pdf`, which reads PDF files, so a file of
+ivy that imports both names one of them again. The maintainers can choose
+one of these answers:
+
+1. `pdf` for krilla and `pdfsvg` for krilla-svg, with `internal/pdfwriter`,
+   `internal/subsetter`, `internal/siphasher` and `internal/colr`.
+2. `krilla` for krilla and `krillasvg` for krilla-svg, with the same
+   internal packages.
+3. `pdf` for krilla, and the files of krilla-svg in `svg`, which then
+   imports `pdf`. A function that `svg` uses for the glyphs of SVG goes
+   through a function value, as in krilla.
+
+The recommendation is answer 1. It follows `svg` and `lottie`. A program that
+writes PDF without SVG does not link `svg`, which keeps a build with TinyGo
+small (D25).
+
+### Question 22: the scope of the base port of krilla
+
+Asked on 2026-11-18, from D62. krilla also writes the tagging for PDF/UA
+(about 5,200 lines with its generated code), forms (about 1,000 lines), the
+checks of PDF/A and PDF/UA with their XMP metadata (about 3,000 lines with
+`xmp-writer`), embedded files, separation colors, and the pages of other PDF
+files through `hayro-write`. The maintainers can choose one of these answers:
+
+1. The base port leaves them out, and each one waits for a decision when a
+   program needs it.
+2. The base port holds all of them except the pages of other PDF files.
+
+The recommendation is answer 1. ivy needs a file that a person can read and
+search. The base port gives that in about 40 days of work. The other parts
+add about 9,000 lines, and nothing uses them yet.
+
+### Question 23: where the device of ivy for PDF output lives
+
+Asked on 2026-11-18, from D62. ivy draws its pages through a display list,
+with save and restore, groups with knockout, soft masks with a backdrop and
+a transfer function, mesh gradients and stencil masks. The surface of krilla
+pushes and pops its state. It has no knockout, no backdrop, no transfer
+function, no mesh gradient and no stencil of 8 bits. The maintainers can
+choose one of these answers:
+
+1. ivy keeps the device in ivy, on top of `pdf.Surface`. okage adds to `pdf`
+   only the features of PDF that the device needs, as item 11 of D62 lists.
+2. okage adds a device to `pdf` that takes the calls of a display list with
+   the types of okage, and ivy calls it.
+
+The recommendation is answer 1. The display list belongs to ivy, and it
+changes with the formats of ivy. The additions of answer 1 are features of
+PDF, so a later version of krilla can add them, and okage then follows it.
+
+### Question 24: a writer that streams
+
+Asked on 2026-11-18, from D62. krilla keeps the whole file in memory and
+writes it at the end, because a subset of a font needs every glyph of the
+document. A book with many images then holds all of its images, compressed,
+until the end. The maintainers can choose one of these answers:
+
+1. The port keeps the model of krilla. `Document.Finish` writes the file to
+   an `io.Writer`.
+2. The port writes the content of each page and each image to the
+   `io.Writer` when the program finishes the page, and the fonts at the end.
+   This is a deliberate difference from upstream.
+
+The recommendation is answer 1 first, and a decision for answer 2 when a
+program needs it. Answer 2 changes the order of the objects, so the tests
+cannot compare the objects with krilla in the same order.
+
+### Question 25: the fonts that are not TrueType or OpenType
+
+Asked on 2026-11-18, from D62. krilla embeds TrueType, OpenType, CFF2 and
+variable fonts, and the 14 standard fonts of PDF without a font file. ivy
+also draws Type 1 fonts, bare CFF fonts and Type 3 fonts from the PDF files
+that it reads. The maintainers can choose one of these answers:
+
+1. The caller draws the glyphs of such a font as paths. The text cannot be
+   copied or searched.
+2. `pdf` adds a font that the caller makes from an outline and an advance
+   for each glyph. `pdf` writes it as a Type 3 font with a ToUnicode map, as
+   krilla writes its Type 3 fonts.
+
+The recommendation is answer 2, after the base port. It reuses
+`text/type3.rs`, keeps the text, and needs no parser of Type 1 fonts in
+okage.
+
+### Question 26: the oracles of the PDF writer
+
+Asked on 2026-11-18, from D62. On 2026-11-18 MuPDF rendered the PDF files of
+krilla for the 1,768 SVG files that krilla-svg converted. Only 6 were within
+1 percent of the reference images of resvg with the metric of D31, because
+MuPDF anti-aliases in another way. So the tests render the file of krilla
+and the file of okage with the same renderer, and compare the two. The
+maintainers can choose one of these answers:
+
+1. The test module runs `mutool`, `pdftoppm` and `qpdf` as outside programs,
+   as it runs `dot` for `html` (D38), and the Rust oracle links krilla,
+   krilla-svg and subsetter.
+2. The test module renders with one of them only.
+
+The recommendation is answer 1. Two renderers find a fault that one of them
+hides, and `qpdf` finds a file that is not well formed.
+
+### Question 27: the text of a glyph that the caller does not give
+
+Asked on 2026-11-18, from D62. krilla writes the ToUnicode map from the text
+that the caller gives with the glyphs. ivy draws runs of glyphs, and its
+runs do not always carry their text. A glyph without text cannot be copied
+or searched in a viewer. The maintainers can choose one of these answers:
+
+1. Follow krilla. The caller gives the text.
+2. Where the caller gives no text for a glyph, `pdf` takes it from the
+   `cmap` table of the font, when one character maps to the glyph. This is
+   a deliberate difference from upstream.
+
+The recommendation is answer 1, and ivy gives the text of its clusters,
+which its layout knows. Answer 2 guesses wrong for a ligature or a glyph of
+two characters.

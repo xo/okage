@@ -1,6 +1,6 @@
 # D32. `svg` walks the paint graph of COLRv1
 
-Status: Decided, amends D9.
+Status: Decided, amends D9, amended by D62.
 
 A COLRv1 glyph is a color glyph that a font draws as a graph of paints:
 layers, fills, gradients, transforms and composites. usvg draws such a glyph
