@@ -72,6 +72,21 @@ func NewStrokeDash(dashArray []float32, dashOffset float32) (*StrokeDash, bool) 
 	}, true
 }
 
+// Array returns the dash array of the dash. It is the slice that
+// NewStrokeDash took, so do not change it. A writer of PDF or SVG writes the
+// dashes of a stroke with it. It is not in tiny-skia (D69).
+func (d *StrokeDash) Array() []float32 {
+	return d.array
+}
+
+// Offset returns the dash offset of the dash. NewStrokeDash moves the offset
+// that it takes into the range from 0 to the sum of the dash array, so the
+// value can differ from that offset. It gives the same dashes. It is not in
+// tiny-skia (D69).
+func (d *StrokeDash) Offset() float32 {
+	return d.offset
+}
+
 // adjustDashOffset is adjust_dash_offset in tiny-skia-path path/src/dash.rs.
 //
 // Adjust phase to be between 0 and len, "flipping" phase if negative.

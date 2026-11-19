@@ -10,20 +10,37 @@ When the change is committed, delete the claim.
 
 ## Units in progress
 
+
 ## typesetting
 
 From D52.
 
-1. Apply the 74 pending commits of `docs/upstream/typesetting.tsv` in
+1. Apply the 69 pending commits of `docs/upstream/typesetting.tsv` in
    order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. D67 applied
    the commits that fix a panic, a loop or a missing bound on malformed
-   input. Many of the others fix a wrong result on a malformed font.
+   input, and D70 applied five commits that remove allocations of the
+   shaper. Many of the others fix a wrong result on a malformed font.
 2. 33 test files of go-text read the data of
    `github.com/go-text/typesetting-utils`, and the copy leaves them out.
    Copy the fonts and the files that they read, each with its license, and
    put the tests back in their packages, as D63 decides.
 3. A test of `shaping` calls a method of `reflect` that TinyGo does not have,
    so the TinyGo command of `AGENTS.md` leaves `typesetting/shaping` out.
+4. In Amiri, `harfbuzz` places a mark on some ligatures of a short text in
+   another place than HarfBuzz 15.1.0. In `لًكنننننن`, U+064B is at the
+   x offset -10,560, and HarfBuzz puts it at -2,176, at a scale of 64 for
+   each unit of the font. U+064E in `هلَكو` has the same fault. In a longer
+   text that holds the same characters, both give the same offset. go-text
+   `v0.3.5` and its commit `bafa8730` have the fault. `FuzzUnsafeToBreak`
+   found it, and its Arabic alphabet leaves out the marks until a fix
+   (D70). Source: D70, 2026-11-19.
+5. Two fuzz targets of go-text fail at the commit `113f0ea` of okage, before
+   D70. `FuzzBreakOptions` finds that the line breaker of `shaping` gives 2
+   graphemes for `"0! ̽"`, and the segmenter gives 3.
+   `FuzzE2EVariableSize` finds that `WrapParagraph` gives 4,787 runes for
+   the 2,550 runes of `benchParagraphLatin`, at the size 16, the width 100
+   and the packed configuration byte 0x55. A pending commit of go-text can
+   fix them. Source: D70, 2026-11-19.
 
 ## lottie
 

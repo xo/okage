@@ -11,6 +11,7 @@ import (
 	"math"
 
 	"github.com/xo/okage"
+	"github.com/xo/okage/internal/pdfwriter"
 	"github.com/xo/okage/path"
 )
 
@@ -25,11 +26,13 @@ import (
 // mask of okage. With interpolate, a viewer can smooth the mask when it
 // scales it. It is not in krilla (D68).
 //
-// The file holds the mask as a gray image in a soft mask of the type
-// luminosity. Without a fill, the surface fills with black, as DrawPath
-// does. The stroke of the surface does not apply. A nil mask records
-// ErrPDFImage, which Document.Finish returns. A mask with no pixel draws
-// nothing.
+// When the fill is a color and each pixel of the mask is 0 or 255, the file
+// holds the mask as an image mask of 1 bit for each pixel, which the viewer
+// fills with the color (D69). Otherwise, the file holds the mask as a gray
+// image in a soft mask of the type luminosity. Without a fill, the surface
+// fills with black, as DrawPath does. The stroke of the surface does not
+// apply. A nil mask records ErrPDFImage, which Document.Finish returns. A
+// mask with no pixel draws nothing.
 func (s *Surface) FillStencil(mask *image.Alpha, size Size, interpolate bool) {
 	if mask == nil {
 		s.sc.setError(fmt.Errorf("%w: the stencil is nil", okage.ErrPDFImage))
@@ -38,14 +41,28 @@ func (s *Surface) FillStencil(mask *image.Alpha, size Size, interpolate bool) {
 	if mask.Rect.Empty() {
 		return
 	}
+	rect, ok := path.RectFromXYWH(0, 0, size.Width(), size.Height())
+	if !ok {
+		return
+	}
+	fill := DefaultFill()
+	if s.fill != nil {
+		fill = *s.fill
+	}
+	if _, ok := fill.Paint.(Color); ok && isBinaryStencil(mask) {
+		// The limit of the gray image of the soft mask.
+		if err := checkImageBytes(mask.Rect.Dx(), mask.Rect.Dy(), 1); err != nil {
+			s.sc.setError(imageError(err))
+			return
+		}
+		s.bd.getMut().drawImageMask(newImageMask(mask, interpolate), size, &fill, s.sc, s.cc)
+		return
+	}
+
 	gray := &image.Gray{Pix: mask.Pix, Stride: mask.Stride, Rect: mask.Rect}
 	img, err := ImageFromImage(gray, interpolate)
 	if err != nil {
 		s.sc.setError(err)
-		return
-	}
-	rect, ok := path.RectFromXYWH(0, 0, size.Width(), size.Height())
-	if !ok {
 		return
 	}
 
@@ -54,13 +71,110 @@ func (s *Surface) FillStencil(mask *image.Alpha, size Size, interpolate bool) {
 	ms.DrawImage(img, size)
 	ms.Finish()
 
-	fill := DefaultFill()
-	if s.fill != nil {
-		fill = *s.fill
-	}
 	s.PushMask(NewMask(b.Finish(), MaskTypeLuminosity))
 	s.bd.getMut().drawPath(path.PathFromRect(rect), &fill, nil, s.sc, s.cc)
 	s.Pop()
+}
+
+// isBinaryStencil reports whether each pixel of the stencil is 0 or 255.
+func isBinaryStencil(mask *image.Alpha) bool {
+	w := mask.Rect.Dx()
+	for y := range mask.Rect.Dy() {
+		i := y * mask.Stride
+		for _, a := range mask.Pix[i : i+w] {
+			if a != 0 && a != 0xff {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// imageMask is an image mask of 1 bit for each pixel. A bit of 0 marks a
+// pixel that the viewer fills with the current color, and a bit of 1 a pixel
+// that it leaves, as the default Decode array [0 1] of an image mask says.
+// Each row starts at a byte.
+type imageMask struct {
+	width, height int
+	bits          []byte
+	interpolate   bool
+}
+
+// newImageMask makes the image mask of a stencil of 0 and 255. A pixel of
+// 255 is filled.
+func newImageMask(mask *image.Alpha, interpolate bool) imageMask {
+	w, h := mask.Rect.Dx(), mask.Rect.Dy()
+	row := (w + 7) / 8
+	bits := make([]byte, row*h)
+	for y := range h {
+		src := mask.Pix[y*mask.Stride:]
+		dst := bits[y*row:]
+		for x := range w {
+			if src[x] == 0 {
+				dst[x/8] |= 0x80 >> (x % 8)
+			}
+		}
+	}
+	return imageMask{width: w, height: h, bits: bits, interpolate: interpolate}
+}
+
+// typeID names the type for sipHash.
+func (imageMask) typeID() string { return "imageMask" }
+
+// hash writes the size, the flag and the bits of the mask.
+func (m imageMask) hash(h *hasher) {
+	h.usize(m.width)
+	h.usize(m.height)
+	h.bool(m.interpolate)
+	h.bytes(m.bits)
+}
+
+// serialize writes the mask as an image XObject with ImageMask true.
+func (m imageMask) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdfwriter.Ref) {
+	if m.interpolate {
+		sc.registerValidationError(validationError{kind: validationImageInterpolation, location: sc.location})
+	}
+	chunk := sc.newChunk()
+	stream := newFilterStreamAutoCompressed(m.bits).finish(sc.serializeSettings())
+	x := chunk.ImageXObject(rootRef, stream.encodedData())
+	stream.writeFilters(x.Dict)
+	x.Width(int32(m.width))
+	x.Height(int32(m.height))
+	x.ImageMask(true)
+	x.BitsPerComponent(1)
+	if m.interpolate {
+		x.Interpolate(true)
+	}
+	x.Finish()
+	cc.streams.images = append(cc.streams.images, chunkResult{chunk: chunk})
+}
+
+// newResource gives the XObject resource of the mask.
+func (imageMask) newResource(ref pdfwriter.Ref) xObjectResource {
+	return xObjectResource{ref}
+}
+
+// drawImageMask fills an image mask with the color of fill, and its opacity,
+// in the rectangle from 0, 0 to size. It places the mask as drawImage places
+// an image.
+func (b *contentBuilder) drawImageMask(m imageMask, size Size, fill *Fill, sc *serializeContext, cc *chunkContainer) {
+	unit, _ := path.RectFromXYWH(0, 0, 1, 1)
+	b.applyIsolatedOp(
+		func(sb *contentBuilder) {
+			sb.setFillOpacity(fill.Opacity)
+			// Scale the mask from 1x1 to the actual dimensions.
+			transform := path.TransformFromRow(size.Width(), 0, 0, -size.Height(), 0, size.Height())
+			sb.concatTransform(transform)
+			sb.expandBBox(unit)
+		},
+		func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+			sb.contentSetFillProperties(unit, fill, sc, cc)
+			name := sb.rdBuilder.registerResource(registerResourceable(sc, cc, m))
+			sb.content.XObject(pdfwriter.Name(name))
+		},
+		sc,
+		cc,
+	)
 }
 
 // maxRasterPixels is the largest number of pixels on a side of the pixmap of

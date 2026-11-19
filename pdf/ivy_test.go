@@ -487,3 +487,98 @@ type paintKey struct {
 func (paintKey) typeID() string { return "paintKey" }
 
 func (k paintKey) hash(h *hasher) { k.p.hashPaint(h) }
+
+func TestFillStencilImageMask(t *testing.T) {
+	m := image.NewAlpha(image.Rect(0, 0, 10, 2))
+	for i := range m.Pix {
+		if i%3 == 0 {
+			m.Pix[i] = 0xff
+		}
+	}
+	size, _ := path.SizeFromWH(40, 30)
+	file := mustIvyFile(t, func(s *Surface) {
+		s.SetFill(redFill(t, 0.5))
+		s.FillStencil(m, size, false)
+	})
+	wantMatch(t, file, `/Subtype /Image`, `/ImageMask true`, `/BitsPerComponent 1`, `/Width 10`, `/Height 2`,
+		`/ca 0.5`, `1 0 0 rg`, `/x\d+ Do`)
+	wantNoMatch(t, file, `/S /Luminosity`, `/ColorSpace /DeviceGray`, `/Interpolate`)
+
+	// A pixel between 0 and 255, or a fill that is not a color, takes the
+	// soft mask.
+	m.Pix[1] = 0x80
+	file = mustIvyFile(t, func(s *Surface) { s.FillStencil(m, size, true) })
+	wantMatch(t, file, `/S /Luminosity`)
+	wantNoMatch(t, file, `/ImageMask`)
+	m.Pix[1] = 0
+	stops := []Stop{
+		{Offset: NormalizedF32Zero, Color: NewColorRGB(255, 0, 0), Opacity: NormalizedF32One},
+		{Offset: NormalizedF32One, Color: NewColorRGB(0, 0, 255), Opacity: NormalizedF32One},
+	}
+	file = mustIvyFile(t, func(s *Surface) {
+		s.SetFill(&Fill{Paint: LinearGradient{X2: 40, Transform: path.IdentityTransform(), Stops: stops}, Opacity: NormalizedF32One})
+		s.FillStencil(m, size, false)
+	})
+	wantMatch(t, file, `/S /Luminosity`)
+	wantNoMatch(t, file, `/ImageMask`)
+}
+
+func TestNewImageMask(t *testing.T) {
+	m := image.NewAlpha(image.Rect(0, 0, 10, 3))
+	m.Pix[0], m.Pix[12], m.Pix[28] = 0xff, 0xff, 0xff
+	// A sub-image has a stride that is not its width. Its pixels 1, 0 and
+	// 7, 1 are filled, and the bits that pad a row are 0.
+	sub, ok := m.SubImage(image.Rect(1, 1, 10, 3)).(*image.Alpha)
+	if !ok {
+		t.Fatal("no sub-image")
+	}
+	got := newImageMask(sub, false)
+	want := []byte{0xbf, 0x80, 0xfe, 0x80}
+	if got.width != 9 || got.height != 2 || !bytes.Equal(got.bits, want) {
+		t.Errorf("the mask is %d by %d with %x, want 9 by 2 with %x", got.width, got.height, got.bits, want)
+	}
+	if !isBinaryStencil(sub) {
+		t.Error("the stencil is not binary")
+	}
+	m.Pix[29] = 1
+	if isBinaryStencil(sub) {
+		t.Error("the stencil is binary")
+	}
+}
+
+func TestManyStops(t *testing.T) {
+	for _, c := range []struct {
+		stops, stitching int
+	}{
+		{257, 1},
+		{258, 3},
+		{600, 4},
+		{70000, 277},
+	} {
+		stops := make([]Stop, c.stops)
+		for i := range stops {
+			v := uint8(i)
+			stops[i] = Stop{
+				Offset:  path.NormalizedF32Clamped(float32(i) / float32(c.stops-1)),
+				Color:   NewColorRGB(v, 255-v, 0),
+				Opacity: path.NormalizedF32Clamped(float32(i%2+1) / 2),
+			}
+		}
+		file := mustIvyFile(t, func(s *Surface) {
+			s.SetFill(&Fill{Paint: LinearGradient{X2: 200, Transform: path.IdentityTransform(), Stops: stops}, Opacity: NormalizedF32One})
+			s.DrawPath(rectToPath(t, 0, 0, 200, 200))
+		})
+		// The colors and the opacities each have a tree.
+		if n := strings.Count(file, "/FunctionType 3"); n != 2*c.stitching {
+			t.Errorf("%d stops: the file has %d stitching functions, want %d", c.stops, n, 2*c.stitching)
+		}
+		if n := strings.Count(file, "/FunctionType 2"); n != 2*(c.stops-1) {
+			t.Errorf("%d stops: the file has %d exponential functions, want %d", c.stops, n, 2*(c.stops-1))
+		}
+		for _, f := range regexp.MustCompile(`/Functions \[([^\]]*)\]`).FindAllStringSubmatch(file, -1) {
+			if n := strings.Count(f[1], " R"); n > maxStitchedFunctions {
+				t.Errorf("%d stops: a stitching function has %d functions", c.stops, n)
+			}
+		}
+	}
+}

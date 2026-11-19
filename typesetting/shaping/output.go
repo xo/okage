@@ -5,6 +5,7 @@ package shaping
 import (
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
+	"github.com/xo/okage/typesetting/harfbuzz"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -64,7 +65,12 @@ type Glyph struct {
 	// Deprecated: Use GlyphsCount() instead.
 	GlyphCount int
 	GlyphID    font.GID
-	Mask       uint32
+	// Mask holds the glyph flags of HarfBuzz for the cluster of the glyph.
+	// Each glyph of a cluster has the same flags. The shaper sets only
+	// [harfbuzz.GlyphUnsafeToBreak]. [Glyph.UnsafeToBreak] reads it.
+	//
+	// okage: go-text does not document Mask (D70).
+	Mask uint32
 
 	// startLetterSpacing and endLetterSpacing are set when letter spacing is applied,
 	// measuring the whitespace added on one side (half of the user provided letter spacing)
@@ -85,6 +91,18 @@ func (g Glyph) RunesCount() int { return g.RuneCount }
 
 // GlyphsCount is the number of glyphs in this output glyph cluster.
 func (g Glyph) GlyphsCount() int { return g.GlyphCount }
+
+// UnsafeToBreak reports whether the text must be shaped again when it
+// breaks at the start of the cluster of g. When it reports false, the
+// glyphs before the cluster and the glyphs from the cluster on are the
+// glyphs that the shaper gives for the two parts of the text, each shaped
+// on its own with the rest of the text as its context. The start of the
+// output is always safe, even when the first cluster has the flag. This is
+// [harfbuzz.GlyphUnsafeToBreak], which HarfBuzz names
+// HB_GLYPH_FLAG_UNSAFE_TO_BREAK.
+//
+// okage: go-text has no UnsafeToBreak (D70).
+func (g Glyph) UnsafeToBreak() bool { return g.Mask&harfbuzz.GlyphUnsafeToBreak != 0 }
 
 // LeftSideBearing returns the distance from the glyph's X origin to
 // its leftmost edge. This value can be negative if the glyph extends

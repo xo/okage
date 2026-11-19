@@ -576,6 +576,20 @@ func shaderScenes() []ivyScene {
 				polygon(t, 60, 110, 120, 128, 105, 186),
 			}, []okage.Shader{opaque, alpha.ApplyOpacity(0.9), turned}
 		}),
+		// MuPDF 1.28 reads at most 256 functions of a stitching function,
+		// so pdf writes a tree of stitching functions for these gradients
+		// (D69).
+		shaderScene("shader_many_stops", func(t *testing.T) ([]*path.Path, []okage.Shader) {
+			t.Helper()
+			st := manyStops(600, false)
+			pt := okage.PointFromXY
+			id := okage.IdentityTransform()
+			return quadrants(t)[:3], []okage.Shader{
+				must(t)(okage.NewLinearGradient(pt(5, 5), pt(95, 95), st, okage.SpreadModePad, id)),
+				must(t)(okage.NewRadialGradient(pt(150, 50), 0, pt(150, 50), 45, st, okage.SpreadModePad, id)),
+				must(t)(okage.NewLinearGradient(pt(5, 150), pt(95, 150), manyStops(300, true), okage.SpreadModePad, id)),
+			}
+		}),
 		shaderScene("shader_pattern", func(t *testing.T) ([]*path.Path, []okage.Shader) {
 			t.Helper()
 			tile := checker(t)
@@ -589,6 +603,25 @@ func shaderScenes() []ivyScene {
 			}
 		}),
 	}
+}
+
+// manyStops returns n stops whose colors turn in waves, so that each part of
+// the gradient shows. With alpha, the alphas of the stops turn in waves too.
+func manyStops(n int, alpha bool) []okage.GradientStop {
+	out := make([]okage.GradientStop, n)
+	for i := range out {
+		v := float64(i) / float64(n-1)
+		wave := func(cycles, phase float64) float64 {
+			return 0.5 + 0.5*math.Sin(2*math.Pi*(cycles*v+phase))
+		}
+		c := func(phase float64) uint8 { return uint8(255 * wave(2, phase)) }
+		a := uint8(255)
+		if alpha {
+			a = uint8(60 + 195*wave(1, 0))
+		}
+		out[i] = okage.NewGradientStop(float32(v), rgba(c(0), c(1.0/3), c(2.0/3), a))
+	}
+	return out
 }
 
 // checker returns a pixmap of 6 by 4 pixels with colors that differ in each
@@ -627,10 +660,22 @@ func stencil() *image.Alpha {
 	return m
 }
 
+// binaryStencil returns the ring of stencil with the alphas 0 and 255 only.
+func binaryStencil() *image.Alpha {
+	m := stencil()
+	for i, a := range m.Pix {
+		if a != 0 {
+			m.Pix[i] = 255
+		}
+	}
+	return m
+}
+
 // stencilScenes draw a stencil of 8 bits with a color and with a gradient,
-// at 5 units for each pixel of the stencil.
+// and a stencil of 0 and 255 with a color, which pdf writes as an image mask
+// (D69). They draw 5 units for each pixel of the stencil.
 func stencilScenes() []ivyScene {
-	scene := func(name string, shader func(t *testing.T) okage.Shader) ivyScene {
+	scene := func(name string, stencil func() *image.Alpha, shader func(t *testing.T) okage.Shader) ivyScene {
 		return ivyScene{
 			name: name,
 			okage: func(t *testing.T, pm *okage.Pixmap) {
@@ -669,8 +714,9 @@ func stencilScenes() []ivyScene {
 		}
 	}
 	return []ivyScene{
-		scene("stencil_color", func(*testing.T) okage.Shader { return okage.SolidColor(rgba(30, 60, 200, 255)) }),
-		scene("stencil_gradient", func(t *testing.T) okage.Shader {
+		scene("stencil_color", stencil, func(*testing.T) okage.Shader { return okage.SolidColor(rgba(30, 60, 200, 255)) }),
+		scene("stencil_binary", binaryStencil, func(*testing.T) okage.Shader { return okage.SolidColor(rgba(30, 60, 200, 180)) }),
+		scene("stencil_gradient", stencil, func(t *testing.T) okage.Shader {
 			t.Helper()
 			st := stops([]float32{0, 1}, rgba(220, 40, 40, 255), rgba(40, 60, 220, 255))
 			return must(t)(okage.NewLinearGradient(okage.PointFromXY(50, 50), okage.PointFromXY(150, 150), st,

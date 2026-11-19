@@ -1102,7 +1102,9 @@ An open question stays here until the maintainers answer it. Then it becomes a
 decision in [`decisions/`](decisions/README.md), and it is deleted from this
 list. The numbers do not repeat. The maintainers answered question 19 with
 D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
-D68 answers question 28, on 2026-11-19. The next question is question 29.
+D68 answers question 28, on 2026-11-19. D69 answers question 29, and
+D70 answers question 30, on 2026-11-19. No question is open. The next
+question is question 31.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -1263,3 +1265,4 @@ or searched in a viewer. The maintainers can choose one of these answers:
 The recommendation is answer 1, and ivy gives the text of its clusters,
 which its layout knows. Answer 2 guesses wrong for a ligature or a glyph of
 two characters.
+

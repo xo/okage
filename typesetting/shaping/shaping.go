@@ -60,7 +60,10 @@ func clamp(val, low, high int) int {
 // Shape turns an input into an output.
 // [skipExtents] may be provided to avoid computing glyph extents,
 // which is not required for line wrapping, and sometimes expensive.
-func (t *HarfbuzzShaper) shape(input Input, skipExtents bool) Output {
+//
+// okage: shape writes the glyphs into the memory of buf when it has the
+// capacity, for ShapeInto (D70).
+func (t *HarfbuzzShaper) shape(input Input, skipExtents bool, buf []Glyph) Output {
 	// Prepare to shape the text.
 	if t.buf == nil {
 		t.buf = harfbuzz.NewBuffer()
@@ -118,7 +121,13 @@ func (t *HarfbuzzShaper) shape(input Input, skipExtents bool) Output {
 
 	// Convert the shaped text into an Output.
 	isVertical := input.Direction.IsVertical()
-	glyphs := make([]Glyph, len(t.buf.Info))
+	// okage: reuse the memory of buf (D70).
+	glyphs := buf[:0]
+	if cap(glyphs) < len(t.buf.Info) {
+		glyphs = make([]Glyph, len(t.buf.Info))
+	} else {
+		glyphs = glyphs[:len(t.buf.Info)]
+	}
 	for i := range glyphs {
 		g := t.buf.Info[i].Glyph
 		glyphs[i] = Glyph{
@@ -180,11 +189,24 @@ func (t *HarfbuzzShaper) shape(input Input, skipExtents bool) Output {
 }
 
 // Shape turns an input into an output.
-func (t *HarfbuzzShaper) Shape(input Input) Output { return t.shape(input, false) }
+func (t *HarfbuzzShaper) Shape(input Input) Output { return t.shape(input, false, nil) }
 
 // ShapeNoExtents is the same as [Shape], but do not query glyph extents,
 // making if more efficient when only advance is required.
-func (t *HarfbuzzShaper) ShapeNoExtents(input Input) Output { return t.shape(input, true) }
+func (t *HarfbuzzShaper) ShapeNoExtents(input Input) Output { return t.shape(input, true, nil) }
+
+// ShapeInto is the same as [HarfbuzzShaper.Shape], but it writes the glyphs
+// of the output into the memory of buf when buf has the capacity for them.
+// Otherwise it allocates new memory. The glyphs of the output keep the
+// capacity of their memory. A caller that is done with the glyphs of one
+// output before it shapes the next text can give them back as buf. The
+// shaper then allocates glyphs only for a text that has more glyphs than
+// each text before.
+//
+// okage: go-text has no ShapeInto (D70).
+func (t *HarfbuzzShaper) ShapeInto(input Input, buf []Glyph) Output {
+	return t.shape(input, false, buf)
+}
 
 // countClusters tallies the number of runes and glyphs in each cluster
 // and updates the relevant fields on the provided glyph slice.

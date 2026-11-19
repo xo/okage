@@ -812,6 +812,11 @@ func serializeStitching(stops []Stop, chunk *pdfwriter.Chunk, sc *serializeConte
 	if len(bounds) > 0 {
 		bounds = bounds[:len(bounds)-1]
 	}
+	// okage: MuPDF 1.28 reads at most 256 functions of a stitching function,
+	// so more functions go into a tree of stitching functions (D69).
+	if len(functions) > maxStitchedFunctions {
+		functions, bounds, encode = nestStitching(stops, functions, encode, count, chunk, sc)
+	}
 	stitchingFunction := chunk.StitchingFunction(rootRef)
 	stitchingFunction.Domain(0.0, 1.0)
 	stitchingFunction.Range(repeatUnitRange(count)...)

@@ -218,6 +218,10 @@ okage differs from upstream only where a decision says so:
     `svg` draws the filters into images, where krilla-svg uses resvg.
     `Draw` and `RenderGlyph` return false where krilla-svg panics. The
     package comment of `pdfsvg` lists the changes (D62).
+21. `pdf` writes a stitching function of more than 256 functions as a tree
+    of stitching functions. Each one holds at most 256 functions, because
+    MuPDF 1.28 reads no more. krilla writes one stitching function. The
+    tree draws the same gradient (D69).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -316,6 +320,9 @@ okage also adds APIs that upstream does not have:
     `Surface.DrawRaster`, which draws a part of a page with okage as an
     image. The shaders of okage give their parameters with the method
     `Parameters` for that conversion (D68).
+18. `StrokeDash` gives its dash array and its dash offset with the methods
+    `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
+    with them (D69).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

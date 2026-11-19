@@ -1,6 +1,6 @@
 # D68. `pdf` adds what the PDF device of ivy needs
 
-Status: Decided, amends D62.
+Status: Decided, amends D62, amended by D69.
 
 ivy keeps its own device for PDF output, which maps the calls of its display
 list onto a `pdf.Surface` (D62 item 11). krilla does not have some features

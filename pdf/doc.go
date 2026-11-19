@@ -207,13 +207,17 @@
 //     entry Extend of the shading, for the decal spread mode of okage and
 //     the gradients of okage.NewRadialGradientExtend.
 //   - The paint MeshGradient is a shading of type 4.
-//   - Surface.FillStencil fills through a stencil of 8 bits.
+//   - Surface.FillStencil fills through a stencil of 8 bits. A stencil of 0
+//     and 255 with a color is an image mask (D69).
 //   - Surface.PushStrokeAdjustment writes the entry SA.
 //   - Surface.PaintFromShader converts a shader of okage into a paint.
 //   - Surface.DrawRaster draws a part of a page with okage, and draws the
 //     pixmap as an image (D62 item 10).
+//   - A stitching function of more than 256 functions becomes a tree of
+//     stitching functions, because MuPDF 1.28 reads no more (D69).
 //
 // A change to a file of the port for them has a comment that starts with
-// okage: and names D68. Each one keeps the bytes and the hashes of every
-// input of krilla.
+// okage: and names D68 or D69. Each one keeps the bytes and the hashes of
+// every input of krilla, except a stitching function of more than 256
+// functions. MuPDF does not read such a function (D69).
 package pdf

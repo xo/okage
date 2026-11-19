@@ -58,3 +58,32 @@ func TestBug26(t *testing.T) {
 		t.Errorf("Dash is not ok, want ok")
 	}
 }
+
+// TestStrokeDashGetters tests Array and Offset, which are not in tiny-skia
+// (D69). The offset moves into the range from 0 to the sum of the array.
+func TestStrokeDashGetters(t *testing.T) {
+	tests := []struct {
+		offset float32
+		want   float32
+	}{
+		{3, 3},
+		{0, 0},
+		{18, 0},
+		{21, 3},
+		{-3, 15},
+		{-21, 15},
+	}
+	for _, test := range tests {
+		array := []float32{12, 6}
+		d, ok := NewStrokeDash(array, test.offset)
+		if !ok {
+			t.Fatalf("NewStrokeDash(%v, %v) is not ok", array, test.offset)
+		}
+		if got := d.Array(); len(got) != 2 || &got[0] != &array[0] {
+			t.Errorf("Array() = %v, want the slice %v", got, array)
+		}
+		if got := d.Offset(); got != test.want {
+			t.Errorf("Offset() of the offset %v = %v, want %v", test.offset, got, test.want)
+		}
+	}
+}

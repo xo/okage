@@ -68,11 +68,11 @@ a45265919b9bad03e4aeb6608f67d9bb74bbca01	2026-09-30	ported		[font] gvar: reject 
 7f66441ebcc89567f7ad6a75435484df12927514	2026-10-01	pending		[font] cache the un-compressed SVG document and its viewBox. It changes font
 cf60e2df3e7d1a429d2a6315c221dda9bd7de466	2026-10-01	pending		[bidi] preserve embedding levels at run boundaries. It changes bidi
 5052c255b2c4a7923ff7b8f2cc211ff5cc990a6f	2026-10-01	pending		[shaping] reflect visual indices when reversing an L2 sequence. It changes shaping
-c4f9c9e6e2a46d4d60da5b722cb4ef4cb9bd67d8	2026-10-01	pending		[harfbuzz] cache the Arabic fallback plan on the shaper plan. It changes harfbuzz
-09d8f6df1af089b01584b128e6173c9ae5759bde	2026-10-01	pending		[harfbuzz] build context matchers as values instead of closures. It changes harfbuzz
-11522e5820126ba7e9d2bc153017b30d3d87539a	2026-10-01	pending		[harfbuzz] stop allocating on nested lookup recursion. It changes harfbuzz
-117857489da8d2a9eb28195e890fa65b00ac154d	2026-10-01	pending		[harfbuzz] read pair positioning value records without allocating. It changes font/opentype
-64922d2b48df3ea2ebae4733781b7c0d0c00d91b	2026-10-01	pending		[harfbuzz] read base/ligature/mark2 anchors without boxing them. It changes font/opentype, harfbuzz
+c4f9c9e6e2a46d4d60da5b722cb4ef4cb9bd67d8	2026-10-01	ported		[harfbuzz] cache the Arabic fallback plan on the shaper plan. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
+09d8f6df1af089b01584b128e6173c9ae5759bde	2026-10-01	ported		[harfbuzz] build context matchers as values instead of closures. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
+11522e5820126ba7e9d2bc153017b30d3d87539a	2026-10-01	ported		[harfbuzz] stop allocating on nested lookup recursion. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
+117857489da8d2a9eb28195e890fa65b00ac154d	2026-10-01	ported		[harfbuzz] read pair positioning value records without allocating. It changes font/opentype Applied out of order for the allocations of the shaper (D70).
+64922d2b48df3ea2ebae4733781b7c0d0c00d91b	2026-10-01	ported		[harfbuzz] read base/ligature/mark2 anchors without boxing them. It changes font/opentype, harfbuzz Applied out of order for the allocations of the shaper (D70).
 ed71a39ba10fb3055ffdab4b1e1c879ce23b75d5	2026-10-06	pending		bump the minimum Go version to 1.22. It changes go.mod
 b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	pending		replace the hand-rolled min and max helpers with the builtins. It changes bidi, font, harfbuzz, shaping
 00dfa4fd057ccc5bac6bff26edf317aa7b7d74f3	2026-10-06	pending		tests: stop calling the deprecated top-level math/rand functions. It changes font/opentype

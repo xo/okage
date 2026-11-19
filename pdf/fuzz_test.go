@@ -72,7 +72,11 @@ func (r *fuzzReader) color() Color {
 // stops reads at most 7 stops of a gradient, whose colors can be in
 // different color spaces.
 func (r *fuzzReader) stops() []Stop {
-	n := r.u8() % 8
+	n := int(r.u8() % 8)
+	if n == 7 {
+		// More than 257 stops make a tree of stitching functions (D69).
+		n = 250 + int(r.u8())
+	}
 	stops := make([]Stop, 0, n)
 	for range n {
 		stops = append(stops, Stop{Offset: r.opacity(), Color: r.color(), Opacity: r.opacity()})
@@ -181,8 +185,13 @@ func (r *fuzzReader) shader() okage.Shader {
 // stencil reads a stencil of at most 3 by 3 pixels.
 func (r *fuzzReader) stencil() *image.Alpha {
 	m := image.NewAlpha(image.Rect(0, 0, int(r.u8()%4), int(r.u8()%4)))
+	// A stencil of 0 and 255 is an image mask with a color (D69).
+	binary := r.u8()%2 == 0
 	for i := range m.Pix {
 		m.Pix[i] = r.u8()
+		if binary {
+			m.Pix[i] = 0xff * (m.Pix[i] & 1)
+		}
 	}
 	return m
 }
