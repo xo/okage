@@ -13,11 +13,12 @@ import (
 
 // The enum KrillaError of krilla src/error.rs becomes the sentinel errors
 // ErrPDF of the root package (D21, D62). A case with data wraps its sentinel
-// error with the data, as validationFailed does. Each later unit adds the
-// function of its case here or in its own file: KrillaError::Font,
-// DuplicateNamedDestination and StandardFont come with the text and the
-// links, and KrillaError::Image and SixteenBitImage with the images. The
-// cases of the tags and of embedded PDF files are not in the base port (D62).
+// error with the data, as validationFailed does. The function of a case can
+// be in the file of its unit: fontError of KrillaError::Font is in
+// text_cid.go, the error of DuplicateNamedDestination is in destination.go,
+// and the errors of KrillaError::Image and SixteenBitImage are in
+// graphics_image.go. KrillaError::StandardFont, and the cases of the tags
+// and of embedded PDF files, are not in the base port (D62).
 
 // limitError is LimitError in krilla src/error.rs.
 //

@@ -46,6 +46,24 @@ func sanitizeLangSys(langSys *tables.LangSys, featuresCount int) {
 		// invalid index : replace it by the sentinel value
 		langSys.RequiredFeatureIndex = 0xFFFF
 	}
+	// okage: go-text keeps a feature index that is out of the feature list,
+	// and harfbuzz then indexes the list out of range and panics. HarfBuzz
+	// reads such an index as the Null feature, whose tag matches no
+	// feature. The copy drops the index, with the same result (D67).
+	for i, index := range langSys.FeatureIndices {
+		if int(index) < featuresCount {
+			continue
+		}
+		kept := make([]uint16, 0, len(langSys.FeatureIndices))
+		kept = append(kept, langSys.FeatureIndices[:i]...)
+		for _, index := range langSys.FeatureIndices[i+1:] {
+			if int(index) < featuresCount {
+				kept = append(kept, index)
+			}
+		}
+		langSys.FeatureIndices = kept
+		break
+	}
 }
 
 type Script struct {
@@ -172,7 +190,7 @@ func newGSUB(table tables.Layout) (GSUB, error) {
 			}
 
 			// sanitize each lookup
-			switch subtable := subtable.(type) {
+			switch subtable := subtables[j].(type) {
 			case tables.MultipleSubs:
 				err = subtable.Sanitize()
 			case tables.LigatureSubs:
@@ -227,7 +245,7 @@ func newGPOS(table tables.Layout) (GPOS, error) {
 			}
 
 			// sanitize each lookup
-			switch subtable := subtable.(type) {
+			switch subtable := subtables[j].(type) {
 			case tables.SinglePos:
 				err = subtable.Sanitize()
 			case tables.PairPos:
@@ -235,6 +253,8 @@ func newGPOS(table tables.Layout) (GPOS, error) {
 			case tables.MarkBasePos:
 				err = subtable.Sanitize()
 			case tables.MarkLigPos:
+				err = subtable.Sanitize()
+			case tables.MarkMarkPos:
 				err = subtable.Sanitize()
 			case tables.ContextualPos:
 				err = subtable.Sanitize(uint16(len(out.Lookups)))

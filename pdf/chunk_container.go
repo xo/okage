@@ -27,13 +27,14 @@ type chunkResult struct {
 
 // chunkContainer is ChunkContainer in krilla src/chunk_container.rs. The
 // fields of upstream for the forms, the tags, the embedded files and the
-// embedded PDF files are not in the base port (D62). The port of the
-// metadata of interchange/metadata.rs adds the field metadata.
+// embedded PDF files are not in the base port (D62).
 //
 // Collects all chunks that we create while building the PDF and then writes
 // them out in an orderly manner.
 type chunkContainer struct {
-	streams   streamChunks
+	streams streamChunks
+	// metadata is the metadata of Document.SetMetadata. nil is None.
+	metadata  *Metadata
 	nonStream nonStreamChunks
 }
 
@@ -92,12 +93,9 @@ func newChunkContainer(sc *serializeContext) *chunkContainer {
 // numbers the objects of the chunks in the order of the file, writes the
 // chunks, and writes the catalog.
 //
-// The port leaves out the parts of the base port that later units add: the
-// information dictionary and the language of the metadata, the viewer
-// preferences, the page layout and the named destinations. It leaves out the
-// parts that the base port does not have: the XMP metadata, the forms, the
-// output intents, the tags, the embedded files and the associated files
-// (D62).
+// The port leaves out the parts that the base port does not have: the XMP
+// metadata, the forms, the output intents, the tags, the embedded files and
+// the associated files (D62).
 func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 	remappedRef := pdfwriter.NewRef(1)
 	remapper := map[pdfwriter.Ref]pdfwriter.Ref{}
@@ -148,18 +146,26 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 		return nil, err
 	}
 
-	// The port of the metadata registers NoDocumentTitle only when the
-	// metadata has no title, and writes the information dictionary here.
-	sc.registerValidationError(validationError{kind: validationNoDocumentTitle})
+	missingTitle := c.metadata == nil || c.metadata.title == nil
+	if missingTitle {
+		sc.registerValidationError(validationError{kind: validationNoDocumentTitle})
+	}
+
+	// Write the PDF document info metadata.
+	if c.metadata != nil {
+		c.metadata.serializeDocumentInfo(&remappedRef, pdf, sc.serializeSettings().configuration)
+	}
 
 	instanceID := stableHashBase64(func(h *hasher) {
 		h.bytes(pdf.AsBytes())
 	})
-	// The document ID of upstream comes from the metadata when it has an ID,
-	// or a title and authors. Without metadata, it is the instance ID.
-	documentID := instanceID
+	documentID := metadataDocumentID(sc, c.metadata, instanceID)
+	finishMetadata(sc, c.metadata)
 
 	pdf.SetFileID([]byte(documentID), []byte(instanceID))
+
+	namedDestinations := sc.globalObjects.namedDestinations
+	sc.globalObjects.namedDestinations = nil
 
 	catalogRef := remappedRef.Bump()
 	catalog := pdf.Catalog(catalogRef)
@@ -173,12 +179,19 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 		catalog.Pair(pdfwriter.Name("PageLabels"), remapper[pl.ref])
 	}
 
-	// The port of the metadata writes the language of the document here.
-	sc.registerValidationError(validationError{kind: validationNoDocumentLanguage})
+	if c.metadata != nil && c.metadata.language != nil {
+		catalog.Lang(pdfwriter.TextStr(*c.metadata.language))
+	} else {
+		sc.registerValidationError(validationError{kind: validationNoDocumentLanguage})
+	}
+
+	serializeCatalogMetadata(sc, catalog, c.metadata)
 
 	if ol := c.nonStream.outline; ol != nil {
 		catalog.Outlines(remapper[ol.ref])
 	}
+
+	serializeNamedDestinations(catalog, namedDestinations, remapper)
 
 	catalog.Finish()
 

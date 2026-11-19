@@ -16,6 +16,7 @@ import (
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 	"github.com/xo/okage/typesetting/harfbuzz"
 
+	colrpaint "github.com/xo/okage/internal/colr"
 	"github.com/xo/okage/internal/svgtypes"
 	"github.com/xo/okage/internal/xmlwriter"
 	"github.com/xo/okage/path"
@@ -1100,7 +1101,7 @@ func svg(pf *parsedFace, glyphID GlyphID, opt *options) (Node, bool) {
 // colr is colr in usvg src/text/cache.rs.
 //
 // Port: skrifa paints a COLR glyph with ColorGlyph::paint, which
-// paintColorGlyph of usvg_text_colr_paint.go does on the tables of go-text.
+// colrpaint.Paint of internal/colr does on the tables of go-text.
 // face is the font instance, whose coordinates are the variations. opt
 // holds the logger (D20). palette and foreground are the palette of CPAL
 // and the color of the text, which FontDatabase.ColorGlyph gives (D57).
@@ -1127,14 +1128,14 @@ func colr(pf *parsedFace, face *font.Face, glyphID GlyphID, palette int, foregro
 		clipPathIndex:    clipPathIndex,
 		palette:          palette,
 		foregroundColor:  foreground,
-		transform:        identityColrTransform(),
-		outlineTransform: identityColrTransform(),
-		transformsStack:  []colrTransform{identityColrTransform()},
+		transform:        colrpaint.IdentityTransform(),
+		outlineTransform: colrpaint.IdentityTransform(),
+		transformsStack:  []colrpaint.Transform{colrpaint.IdentityTransform()},
 		clipStack:        nil,
 		opt:              opt,
 	}
 
-	if !paintColorGlyph(pf.font, face.Coords(), glyphID, glyphPainter) {
+	if !colrpaint.Paint(pf.font, face.Coords(), colrpaint.GlyphID(glyphID), glyphPainter) {
 		return nil, false
 	}
 	svg.EndElement()

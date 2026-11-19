@@ -11,6 +11,7 @@ import (
 	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 
+	colrpaint "github.com/xo/okage/internal/colr"
 	"github.com/xo/okage/internal/svgtypes"
 	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/internal/xmlwriter"
@@ -19,8 +20,8 @@ import (
 
 // This file ports usvg src/text/colr.rs.
 //
-// Port: the trait ColorPainter of skrifa becomes the interface colorPainter
-// of usvg_text_colr_paint.go, which walks the paint graph of a COLR glyph on
+// Port: the trait ColorPainter of skrifa becomes the interface Painter
+// of internal/colr, which walks the paint graph of a COLR glyph on
 // the tables of go-text (D9). A text that upstream writes with `{}` of an
 // f32 is written with fmtF32, which writes the same text.
 
@@ -122,13 +123,13 @@ func writeColorAttribute(w *xmlwriter.XMLWriter, name string, color svgtypes.Col
 
 // writeTransformAttribute is XmlWriterExt::write_transform_attribute in usvg
 // src/text/colr.rs.
-func writeTransformAttribute(w *xmlwriter.XMLWriter, name string, ts colrTransform) {
-	if ts == identityColrTransform() {
+func writeTransformAttribute(w *xmlwriter.XMLWriter, name string, ts colrpaint.Transform) {
+	if ts == colrpaint.IdentityTransform() {
 		return
 	}
 
 	w.WriteAttributeFmt(name, "matrix(%s %s %s %s %s %s)",
-		fmtF32(ts.xx), fmtF32(ts.yx), fmtF32(ts.xy), fmtF32(ts.yy), fmtF32(ts.dx), fmtF32(ts.dy))
+		fmtF32(ts.XX), fmtF32(ts.YX), fmtF32(ts.XY), fmtF32(ts.YY), fmtF32(ts.DX), fmtF32(ts.DY))
 }
 
 // writeSpreadMethodAttribute is
@@ -163,9 +164,9 @@ type glyphPainter struct {
 	gradientIndex    int
 	clipPathIndex    int
 	foregroundColor  svgtypes.Color
-	transform        colrTransform
-	outlineTransform colrTransform
-	transformsStack  []colrTransform
+	transform        colrpaint.Transform
+	outlineTransform colrpaint.Transform
+	transformsStack  []colrpaint.Transform
 	// The bounding box of every active clip, in the root coordinate space.
 	// `None` means the clip is empty (or its bounds are unknown).
 	clipStack []*Rect
@@ -179,11 +180,11 @@ type glyphPainter struct {
 
 // writeGradientStops is GlyphPainter::write_gradient_stops in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) writeGradientStops(stops []colrColorStop) {
+func (p *glyphPainter) writeGradientStops(stops []colrpaint.ColorStop) {
 	for _, stop := range stops {
-		color := p.paletteIndexToColor(stop.paletteIndex, stop.alpha)
+		color := p.paletteIndexToColor(stop.PaletteIndex, stop.Alpha)
 		p.svg.StartElement("stop")
-		p.svg.WriteAttribute("offset", fmtF32(stop.offset))
+		p.svg.WriteAttribute("offset", fmtF32(stop.Offset))
 		writeColorAttribute(p.svg, "stop-color", color)
 		opacity := float32(color.Alpha) / 255.0
 		p.svg.WriteAttribute("stop-opacity", fmtF32(opacity))
@@ -205,9 +206,9 @@ func (p *glyphPainter) paintSolid(color svgtypes.Color) {
 // paintLinearGradient is GlyphPainter::paint_linear_gradient in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) paintLinearGradient(
-	p0 colrPoint,
-	p1 colrPoint,
-	colorStops []colrColorStop,
+	p0 colrpaint.Point,
+	p1 colrpaint.Point,
+	colorStops []colrpaint.ColorStop,
 	extend tables.Extend,
 ) {
 	gradientID := "lg" + strconv.Itoa(p.gradientIndex)
@@ -217,10 +218,10 @@ func (p *glyphPainter) paintLinearGradient(
 
 	p.svg.StartElement("linearGradient")
 	p.svg.WriteAttribute("id", gradientID)
-	p.svg.WriteAttribute("x1", fmtF32(p0.x))
-	p.svg.WriteAttribute("y1", fmtF32(p0.y))
-	p.svg.WriteAttribute("x2", fmtF32(p1.x))
-	p.svg.WriteAttribute("y2", fmtF32(p1.y))
+	p.svg.WriteAttribute("x1", fmtF32(p0.X))
+	p.svg.WriteAttribute("y1", fmtF32(p0.Y))
+	p.svg.WriteAttribute("x2", fmtF32(p1.X))
+	p.svg.WriteAttribute("y2", fmtF32(p1.Y))
 	p.svg.WriteAttribute("gradientUnits", "userSpaceOnUse")
 	writeSpreadMethodAttribute(p.svg, extend)
 	writeTransformAttribute(p.svg, "gradientTransform", gradientTransform)
@@ -237,11 +238,11 @@ func (p *glyphPainter) paintLinearGradient(
 // paintRadialGradient is GlyphPainter::paint_radial_gradient in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) paintRadialGradient(
-	c0 colrPoint,
+	c0 colrpaint.Point,
 	r0 float32,
-	c1 colrPoint,
+	c1 colrpaint.Point,
 	r1 float32,
-	colorStops []colrColorStop,
+	colorStops []colrpaint.ColorStop,
 	extend tables.Extend,
 ) {
 	gradientID := "rg" + strconv.Itoa(p.gradientIndex)
@@ -256,12 +257,12 @@ func (p *glyphPainter) paintRadialGradient(
 	// remaining stops reparameterized into the 0..1 range.
 	p.svg.StartElement("radialGradient")
 	p.svg.WriteAttribute("id", gradientID)
-	p.svg.WriteAttribute("cx", fmtF32(c1.x))
-	p.svg.WriteAttribute("cy", fmtF32(c1.y))
+	p.svg.WriteAttribute("cx", fmtF32(c1.X))
+	p.svg.WriteAttribute("cy", fmtF32(c1.Y))
 	p.svg.WriteAttribute("r", fmtF32(r1))
 	p.svg.WriteAttribute("fr", fmtF32(r0))
-	p.svg.WriteAttribute("fx", fmtF32(c0.x))
-	p.svg.WriteAttribute("fy", fmtF32(c0.y))
+	p.svg.WriteAttribute("fx", fmtF32(c0.X))
+	p.svg.WriteAttribute("fy", fmtF32(c0.Y))
 	p.svg.WriteAttribute("gradientUnits", "userSpaceOnUse")
 	writeSpreadMethodAttribute(p.svg, extend)
 	writeTransformAttribute(p.svg, "gradientTransform", gradientTransform)
@@ -278,10 +279,10 @@ func (p *glyphPainter) paintRadialGradient(
 // paintSweepGradient is GlyphPainter::paint_sweep_gradient in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) paintSweepGradient(
-	_ colrPoint,
+	_ colrpaint.Point,
 	_ float32,
 	_ float32,
-	_ []colrColorStop,
+	_ []colrpaint.ColorStop,
 	_ tables.Extend,
 ) {
 	// Sweep gradients are not supported.
@@ -289,12 +290,12 @@ func (p *glyphPainter) paintSweepGradient(
 }
 
 // toTspTransform is to_tsp_transform in usvg src/text/colr.rs.
-func toTspTransform(ts colrTransform) Transform {
-	return path.TransformFromRow(ts.xx, ts.yx, ts.xy, ts.yy, ts.dx, ts.dy)
+func toTspTransform(ts colrpaint.Transform) Transform {
+	return path.TransformFromRow(ts.XX, ts.YX, ts.XY, ts.YY, ts.DX, ts.DY)
 }
 
 // paintTransform is paint_transform in usvg src/text/colr.rs.
-func paintTransform(outlineTransform, transform colrTransform, opt *options) colrTransform {
+func paintTransform(outlineTransform, transform colrpaint.Transform, opt *options) colrpaint.Transform {
 	outlineTs := toTspTransform(outlineTransform)
 	gradientTransform := toTspTransform(transform)
 
@@ -305,7 +306,7 @@ func paintTransform(outlineTransform, transform colrTransform, opt *options) col
 	}
 	ts := inv.PreConcat(gradientTransform)
 
-	return colrTransform{xx: ts.SX, yx: ts.KY, xy: ts.KX, yy: ts.SY, dx: ts.TX, dy: ts.TY}
+	return colrpaint.Transform{XX: ts.SX, YX: ts.KY, XY: ts.KX, YY: ts.SY, DX: ts.TX, DY: ts.TY}
 }
 
 // mapRect is map_rect in usvg src/text/colr.rs. It returns the bounding box
@@ -387,17 +388,17 @@ func (p *glyphPainter) outlineGlyph(glyphID GlyphID) (Rect, bool) {
 // paintBrush is GlyphPainter::paint_brush in usvg src/text/colr.rs. It
 // paints `path_buf` (positioned by the outline transform) with the given
 // brush.
-func (p *glyphPainter) paintBrush(brush colrBrush) {
-	switch brush.kind {
-	case colrBrushSolid:
-		color := p.paletteIndexToColor(brush.paletteIndex, brush.alpha)
+func (p *glyphPainter) paintBrush(brush colrpaint.Brush) {
+	switch brush.Kind {
+	case colrpaint.BrushSolid:
+		color := p.paletteIndexToColor(brush.PaletteIndex, brush.Alpha)
 		p.paintSolid(color)
-	case colrBrushLinearGradient:
-		p.paintLinearGradient(brush.p0, brush.p1, brush.colorStops, brush.extend)
-	case colrBrushRadialGradient:
-		p.paintRadialGradient(brush.c0, brush.r0, brush.c1, brush.r1, brush.colorStops, brush.extend)
-	case colrBrushSweepGradient:
-		p.paintSweepGradient(brush.c0, brush.startAngle, brush.endAngle, brush.colorStops, brush.extend)
+	case colrpaint.BrushLinearGradient:
+		p.paintLinearGradient(brush.P0, brush.P1, brush.ColorStops, brush.Extend)
+	case colrpaint.BrushRadialGradient:
+		p.paintRadialGradient(brush.C0, brush.R0, brush.C1, brush.R1, brush.ColorStops, brush.Extend)
+	case colrpaint.BrushSweepGradient:
+		p.paintSweepGradient(brush.C0, brush.StartAngle, brush.EndAngle, brush.ColorStops, brush.Extend)
 	}
 }
 
@@ -445,43 +446,43 @@ func (p *glyphPainter) paletteIndexToColor(paletteIndex uint16, alpha float32) s
 	return color
 }
 
-// pushTransform is ColorPainter::push_transform for GlyphPainter in usvg
+// PushTransform is ColorPainter::push_transform for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) pushTransform(transform colrTransform) {
+func (p *glyphPainter) PushTransform(transform colrpaint.Transform) {
 	p.transformsStack = append(p.transformsStack, p.transform)
-	p.transform = p.transform.mul(transform)
+	p.transform = p.transform.Mul(transform)
 }
 
-// popTransform is ColorPainter::pop_transform for GlyphPainter in usvg
+// PopTransform is ColorPainter::pop_transform for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) popTransform() {
+func (p *glyphPainter) PopTransform() {
 	if n := len(p.transformsStack); n > 0 {
 		p.transform = p.transformsStack[n-1]
 		p.transformsStack = p.transformsStack[:n-1]
 	}
 }
 
-// fillGlyph is ColorPainter::fill_glyph for GlyphPainter in usvg
+// FillGlyph is ColorPainter::fill_glyph for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) fillGlyph(glyphID GlyphID, brushTransform *colrTransform, brush colrBrush) {
+func (p *glyphPainter) FillGlyph(glyphID colrpaint.GlyphID, brushTransform *colrpaint.Transform, brush colrpaint.Brush) {
 	// Fill the glyph outline directly instead of the default
 	// clip-then-fill decomposition. This avoids a redundant clip path
 	// per fill and matches the output of the old ttf-parser based painter.
-	p.outlineGlyph(glyphID)
+	p.outlineGlyph(GlyphID(glyphID))
 
 	if brushTransform != nil {
-		p.pushTransform(*brushTransform)
+		p.PushTransform(*brushTransform)
 		p.paintBrush(brush)
-		p.popTransform()
+		p.PopTransform()
 	} else {
 		p.paintBrush(brush)
 	}
 }
 
-// pushClipGlyph is ColorPainter::push_clip_glyph for GlyphPainter in usvg
+// PushClipGlyph is ColorPainter::push_clip_glyph for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) pushClipGlyph(glyphID GlyphID) {
-	bounds, hasBounds := p.outlineGlyph(glyphID)
+func (p *glyphPainter) PushClipGlyph(glyphID colrpaint.GlyphID) {
+	bounds, hasBounds := p.outlineGlyph(GlyphID(glyphID))
 
 	// Clip with the outline. This must always open a clip group - even
 	// when outlining failed (an empty path clips everything away) - since
@@ -498,13 +499,13 @@ func (p *glyphPainter) pushClipGlyph(glyphID GlyphID) {
 	p.clipStack = append(p.clipStack, rootBounds)
 }
 
-// pushClipBox is ColorPainter::push_clip_box for GlyphPainter in usvg
+// PushClipBox is ColorPainter::push_clip_box for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) pushClipBox(clipBox colrBoundingBox) {
-	xMin := clipBox.xMin
-	xMax := clipBox.xMax
-	yMin := clipBox.yMin
-	yMax := clipBox.yMax
+func (p *glyphPainter) PushClipBox(clipBox colrpaint.BoundingBox) {
+	xMin := clipBox.XMin
+	xMax := clipBox.XMax
+	yMin := clipBox.YMin
+	yMax := clipBox.YMax
 
 	clipPath := "M " + fmtF32(xMin) + " " + fmtF32(yMin) +
 		" L " + fmtF32(xMax) + " " + fmtF32(yMin) +
@@ -524,17 +525,17 @@ func (p *glyphPainter) pushClipBox(clipBox colrBoundingBox) {
 	p.clipStack = append(p.clipStack, bounds)
 }
 
-// popClip is ColorPainter::pop_clip for GlyphPainter in usvg
+// PopClip is ColorPainter::pop_clip for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) popClip() {
+func (p *glyphPainter) PopClip() {
 	p.svg.EndElement()
 	if n := len(p.clipStack); n > 0 {
 		p.clipStack = p.clipStack[:n-1]
 	}
 }
 
-// fill is ColorPainter::fill for GlyphPainter in usvg src/text/colr.rs.
-func (p *glyphPainter) fill(brush colrBrush) {
+// Fill is ColorPainter::fill for GlyphPainter in usvg src/text/colr.rs.
+func (p *glyphPainter) Fill(brush colrpaint.Brush) {
 	// A fill paints the intersection of all currently active clips.
 	// Paint a rectangle covering that intersection and let the enclosing
 	// clip groups shape it.
@@ -573,7 +574,7 @@ func (p *glyphPainter) fill(brush colrBrush) {
 		" L "+fmtF32(region.Left())+" "+fmtF32(region.Bottom())+" Z"...)
 
 	// The covering rectangle is in the root coordinate space.
-	p.outlineTransform = identityColrTransform()
+	p.outlineTransform = colrpaint.IdentityTransform()
 
 	p.paintBrush(brush)
 }
@@ -602,9 +603,9 @@ var compositeModeBlendModes = map[tables.CompositeMode]BlendMode{
 	tables.CompositeHslLuminosity: BlendModeLuminosity,
 }
 
-// pushLayer is ColorPainter::push_layer for GlyphPainter in usvg
+// PushLayer is ColorPainter::push_layer for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) pushLayer(compositeMode tables.CompositeMode) {
+func (p *glyphPainter) PushLayer(compositeMode tables.CompositeMode) {
 	// TODO: Need to figure out how to represent the other blend modes in SVG.
 	blendMode, ok := compositeModeBlendModes[compositeMode]
 	if !ok {
@@ -619,8 +620,8 @@ func (p *glyphPainter) pushLayer(compositeMode tables.CompositeMode) {
 	p.svg.WriteAttributeFmt("style", "mix-blend-mode: %s; isolation: isolate", mode)
 }
 
-// popLayer is ColorPainter::pop_layer for GlyphPainter in usvg
+// PopLayer is ColorPainter::pop_layer for GlyphPainter in usvg
 // src/text/colr.rs.
-func (p *glyphPainter) popLayer() {
+func (p *glyphPainter) PopLayer() {
 	p.svg.EndElement()
 }

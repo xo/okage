@@ -1,0 +1,204 @@
+%PDF-1.7
+%AAAA
+
+1 0 obj
+<<
+  /Type /Pages
+  /Count 1
+  /Kids [6 0 R]
+>>
+endobj
+
+2 0 obj
+<<
+  /ProcSet [/PDF /Text /ImageC /ImageB]
+  /Font <<
+    /f0 3 0 R
+  >>
+>>
+endobj
+
+3 0 obj
+<<
+  /Type /Font
+  /Subtype /Type0
+  /BaseFont /MIOMYS+LibertinusSerif-Regular-Identity-H
+  /Encoding /Identity-H
+  /DescendantFonts [4 0 R]
+  /ToUnicode 8 0 R
+>>
+endobj
+
+4 0 obj
+<<
+  /Type /Font
+  /Subtype /CIDFontType0
+  /BaseFont /MIOMYS+LibertinusSerif-Regular
+  /CIDSystemInfo <<
+    /Registry (Adobe)
+    /Ordering (Identity)
+    /Supplement 0
+  >>
+  /FontDescriptor 5 0 R
+  /DW 0
+  /W [0 0 500 1 1 529]
+>>
+endobj
+
+5 0 obj
+<<
+  /Type /FontDescriptor
+  /FontName /MIOMYS+LibertinusSerif-Regular
+  /Flags 131078
+  /FontBBox [0 -2 500 698]
+  /ItalicAngle 0
+  /Ascent 894
+  /Descent -246
+  /CapHeight 658
+  /StemV 95.4
+  /CIDSet 7 0 R
+  /FontFile3 9 0 R
+>>
+endobj
+
+6 0 obj
+<<
+  /Type /Page
+  /Resources 2 0 R
+  /MediaBox [0 0 200 200]
+  /Parent 1 0 R
+  /Contents 10 0 R
+>>
+endobj
+
+7 0 obj
+<<
+  /Length 18
+  /Filter [/ASCIIHexDecode /FlateDecode]
+>>
+stream
+789C3B000000C100C1
+endstream
+endobj
+
+8 0 obj
+<<
+  /Length 619
+  /Type /CMap
+  /WMode 0
+>>
+stream
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: procset CIDInit
+%%IncludeResource: procset CIDInit
+%%BeginResource: CMap Custom
+%%Title: (Custom Adobe Identity 0)
+%%Version: 1
+%%EndComments
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo 3 dict dup begin
+    /Registry (Adobe) def
+    /Ordering (Identity) def
+    /Supplement 0 def
+end def
+/CMapName /Custom def
+/CMapVersion 1 def
+/CMapType 0 def
+/WMode 0 def
+1 begincodespacerange
+<0000> <FFFF>
+endcodespacerange
+1 beginbfchar
+<0001> <0054>
+endbfchar
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+%%EndResource
+%%EOF
+endstream
+endobj
+
+9 0 obj
+<<
+  /Length 961
+  /Filter [/ASCIIHexDecode /FlateDecode]
+  /Subtype /CIDFontType0C
+>>
+stream
+789C458F4F68134114C6679A64774DC7884D178A49378B44D043A506C11E24180A8254
+837F6FB958B3362BD294EDA6A582B4085BD3CC4277E36E12048D200A2AAD413C88980A
+E249BC09522278F5CFB197997653D24C7BE8E5F7BEF7BEF7E07B10F8FD00423870511D
+57345D9D2C4C5F5334F5F6D05565A270F7A6C6BCF33442A3184974100129086218EF11
+F1D13FF73D273A10D9DA0C0C02009A87BA84C1C35D763AE8281B6DA0382BFFD131E083
+900B8DA5B2F971E5425699D4557D6E343F35A7A913395DDE5789E15389A1C470E2B47C
+3DA7C8FBB1E4CB5AFE8E724B9753053D97D7A64F02D0032000F3559AAA3DA9927E77B5
+F6CAE5BC07155E0AFA2A1D7400A3DEB7C1566FAB8C0ED235D1C796776F20EC373136D9
+032CDB71862F7DA007C24B3F6FE026FDB706BB8C377DD84F8B9BE97691FBB51D154992
+9449D22B07DA1C6D8A4C79AC23F74879D70BB42DDECB90CFA297247680FCE542DAD319
+7A6EC59DED2385161979195E275F49482416DF701FBF915E70DF6AB3A3F598BBE4E047
+9610FEB0F8A9D458FA2884D71FE6C68C3391B3DC892B963515CB94B24646728A4EC931
+851FF54AFD7BE439F7BA3A9F8D79363FB2504C2F4A8681676C436898EFCD95D577A506
+8ADB367E66D8427A7961F9F791D00ED3A0BA0E
+endstream
+endobj
+
+10 0 obj
+<<
+  /Length 169
+>>
+stream
+q
+1 0 0 -1 0 200 cm
+0 g
+BT
+0 Tr
+/f0 12 Tf
+1 0 0 -1 0 50 Tm
+(\000\001) Tj
+/Span <<
+  /ActualText (t)
+>> BDC
+0 Tr
+/f0 12 Tf
+1 0 0 -1 6.3479996 50 Tm
+(\000\001) Tj
+EMC
+ET
+Q
+endstream
+endobj
+
+11 0 obj
+<<
+  /Type /Catalog
+  /Pages 1 0 R
+>>
+endobj
+
+xref
+0 12
+0000000000 65535 f
+0000000016 00000 n
+0000000080 00000 n
+0000000172 00000 n
+0000000351 00000 n
+0000000601 00000 n
+0000000847 00000 n
+0000000963 00000 n
+0000001075 00000 n
+0000001773 00000 n
+0000002855 00000 n
+0000003079 00000 n
+trailer
+<<
+  /Size 12
+  /Root 11 0 R
+  /ID [(CQTqgSkSbg+r24Ys6CUjmQ==) (CQTqgSkSbg+r24Ys6CUjmQ==)]
+>>
+startxref
+3134
+%%EOF

@@ -64,7 +64,7 @@ func propagateAttachmentOffsets(pos []GlyphPosition, i int, direction Direction)
 
 	j := i + int(chain)
 
-	if j >= len(pos) {
+	if j < 0 || j >= len(pos) {
 		return
 	}
 
@@ -294,7 +294,11 @@ func (c *otApplyContext) applyGPOSValueRecord(format tables.ValueFormat, v table
 	return ret
 }
 
-func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, newParent int) {
+func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, newParent, nestingLevel int) {
+	if nestingLevel > maxNestingLevel {
+		return
+	}
+
 	chain, type_ := pos[i].attachChain, pos[i].attachType
 	if chain == 0 || type_&attachTypeCursive == 0 {
 		return
@@ -304,11 +308,16 @@ func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, 
 
 	j := i + int(chain)
 
+	if j >= len(pos) {
+		return
+	}
+
 	// stop if we see new parent in the chain
 	if j == newParent {
 		return
 	}
-	reverseCursiveMinorOffset(pos, j, direction, newParent)
+
+	reverseCursiveMinorOffset(pos, j, direction, newParent, nestingLevel+1)
 
 	if direction.isHorizontal() {
 		pos[j].YOffset = -pos[i].YOffset
@@ -384,6 +393,9 @@ func (c *otApplyContext) applyGPOSPair2(inner tables.PairPosData2) bool {
 func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) bool {
 	buffer := c.buffer
 
+	if covIndex >= len(data.EntryExits) { // tables.Parse does not check this index
+		return false
+	}
 	thisRecord := data.EntryExits[covIndex]
 	if thisRecord.EntryAnchor == nil {
 		return false
@@ -397,7 +409,7 @@ func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) 
 	}
 
 	prevIndex, ok := data.Cov().Index(gID(buffer.Info[skippyIter.idx].Glyph))
-	if !ok {
+	if !ok || prevIndex >= len(data.EntryExits) {
 		buffer.unsafeToConcatFromOutbuffer(skippyIter.idx, buffer.idx+1)
 		return false
 	}
@@ -470,7 +482,7 @@ func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) 
 	 * previous connection now attaches to new parent.  Watch out for case
 	 * where new parent is on the path from old chain...
 	 */
-	reverseCursiveMinorOffset(pos, child, c.direction, parent)
+	reverseCursiveMinorOffset(pos, child, c.direction, parent, 0)
 
 	chain := parent - child
 	if int(int16(chain)) != parent-child { // handle overflow

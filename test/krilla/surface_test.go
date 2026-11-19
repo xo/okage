@@ -22,8 +22,8 @@ import (
 // phase 14 of the PDF writer in docs/PLAN.md): the paths, the fills, the
 // strokes, the transforms, the clips, the opacities, the blend modes, the
 // isolated groups, the masks, the colors, the gradients, the patterns and the
-// ICC color spaces. The images and the text come with phases 15 and 16. The
-// objects of the two files must be the same after the reader decodes the
+// ICC color spaces. image_test.go compares the images, and text_test.go the
+// text, with the same calls of the surface. The objects of the two files must be the same after the reader decodes the
 // streams. When no stream is compressed, the bytes must be the same, with
 // the ID of the document. qpdf must accept each file of pdf.
 
@@ -31,6 +31,8 @@ import (
 // decodes the calls of a scene from JSON, so that it reads each number as
 // the oracle reads it.
 type opSpec struct {
+	textSpec
+
 	Op        string      `json:"op"`
 	Fill      *fillSpec   `json:"fill"`
 	Stroke    *strokeSpec `json:"stroke"`
@@ -42,6 +44,9 @@ type opSpec struct {
 	Ops       []opSpec    `json:"ops"`
 	BBox      *[4]float32 `json:"bbox"`
 	Opacity   *float32    `json:"opacity"`
+	Image     *int        `json:"image"`
+	Width     float32     `json:"width"`
+	Height    float32     `json:"height"`
 }
 
 type fillSpec struct {
@@ -109,7 +114,7 @@ type patternSpec struct {
 // goRun makes the calls of a list on a surface, as run of the oracle does.
 // Each push of the list must have its pop in the same list. If a call fails,
 // goRun pops what the list pushed, so that the surface can finish.
-func goRun(s *pdf.Surface, ops []op) error {
+func goRun(s *pdf.Surface, ops []op, res *sceneResources) error {
 	data, err := json.Marshal(ops)
 	if err != nil {
 		return err
@@ -118,13 +123,13 @@ func goRun(s *pdf.Surface, ops []op) error {
 	if err := json.Unmarshal(data, &specs); err != nil {
 		return err
 	}
-	return goRunSpecs(s, specs)
+	return goRunSpecs(s, specs, res)
 }
 
-func goRunSpecs(s *pdf.Surface, ops []opSpec) error {
+func goRunSpecs(s *pdf.Surface, ops []opSpec, res *sceneResources) error {
 	depth := 0
 	for _, o := range ops {
-		if err := goStep(s, o, &depth); err != nil {
+		if err := goStep(s, o, &depth, res); err != nil {
 			for range depth {
 				s.Pop()
 			}
@@ -140,14 +145,14 @@ func goRunSpecs(s *pdf.Surface, ops []opSpec) error {
 	return nil
 }
 
-func goStep(s *pdf.Surface, o opSpec, depth *int) error {
+func goStep(s *pdf.Surface, o opSpec, depth *int, res *sceneResources) error {
 	switch o.Op {
 	case "set_fill":
 		if o.Fill == nil {
 			s.SetFill(nil)
 			return nil
 		}
-		paint, err := goPaint(s, o.Fill.Paint)
+		paint, err := goPaint(s, o.Fill.Paint, res)
 		if err != nil {
 			return err
 		}
@@ -166,7 +171,7 @@ func goStep(s *pdf.Surface, o opSpec, depth *int) error {
 			return nil
 		}
 		k := pdf.DefaultStroke()
-		paint, err := goPaint(s, o.Stroke.Paint)
+		paint, err := goPaint(s, o.Stroke.Paint, res)
 		if err != nil {
 			return err
 		}
@@ -248,7 +253,7 @@ func goStep(s *pdf.Surface, o opSpec, depth *int) error {
 		} else {
 			sub = sb.Surface()
 		}
-		err := goRunSpecs(sub, o.Ops)
+		err := goRunSpecs(sub, o.Ops, res)
 		sub.Finish()
 		stream := sb.Finish()
 		if err != nil {
@@ -272,8 +277,19 @@ func goStep(s *pdf.Surface, o opSpec, depth *int) error {
 		}
 		s.Pop()
 		*depth--
+	case "draw_image":
+		if o.Image == nil || res == nil || *o.Image < 0 || *o.Image >= len(res.images) {
+			return errors.New("the image of draw_image does not exist")
+		}
+		size, ok := path.SizeFromWH(o.Width, o.Height)
+		if !ok {
+			return errors.New("the size of an image is not valid")
+		}
+		s.DrawImage(res.images[*o.Image], size)
+	case "draw_glyphs", "draw_text":
+		return goDrawText(s, o, res)
 	default:
-		return fmt.Errorf("the call %q comes with a later unit", o.Op)
+		return fmt.Errorf("the call %q is not ported", o.Op)
 	}
 	return nil
 }
@@ -290,7 +306,7 @@ var surfaceBlendModes = map[string]pdf.BlendMode{
 
 // goPaint makes a paint as paint of the oracle does. No paint is black. A
 // pattern draws its calls into a stream of the surface.
-func goPaint(s *pdf.Surface, p *paintSpec) (pdf.Paint, error) {
+func goPaint(s *pdf.Surface, p *paintSpec, res *sceneResources) (pdf.Paint, error) {
 	switch {
 	case p == nil:
 		return pdf.ColorLumaBlack(), nil
@@ -333,7 +349,7 @@ func goPaint(s *pdf.Surface, p *paintSpec) (pdf.Paint, error) {
 	case p.Pattern != nil:
 		sb := s.StreamBuilder()
 		sub := sb.Surface()
-		err := goRunSpecs(sub, p.Pattern.Ops)
+		err := goRunSpecs(sub, p.Pattern.Ops, res)
 		sub.Finish()
 		stream := sb.Finish()
 		if err != nil {
@@ -366,7 +382,7 @@ func goGradient(g *gradientSpec) (pdf.SpreadMethod, []pdf.Stop, error) {
 		if err != nil {
 			return 0, nil, err
 		}
-		color, err := goPaint(nil, &st.Color)
+		color, err := goPaint(nil, &st.Color, nil)
 		if err != nil {
 			return 0, nil, err
 		}
@@ -860,11 +876,11 @@ func compareScene(t *testing.T, c documentCase, a answer) {
 	}
 	want := a.Data
 	var diffs []string
-	// krilla compresses the ICC profiles of no_device_cs in every case, so
-	// their bytes differ (D62).
+	// krilla compresses the ICC profiles of no_device_cs and the fonts in
+	// every case, so their bytes differ (D62).
 	compress, ok := c.scene.Settings["compress_content_streams"].(bool)
 	noDeviceCS, _ := c.scene.Settings["no_device_cs"].(bool)
-	if ok && !compress && !noDeviceCS && !bytes.Equal(got, want) {
+	if ok && !compress && !noDeviceCS && len(c.scene.Fonts) == 0 && !bytes.Equal(got, want) {
 		diffs = append(diffs, "the bytes differ: "+firstDiff(got, want))
 	}
 	gotFile, err := readPDF(got)

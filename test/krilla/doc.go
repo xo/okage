@@ -174,7 +174,17 @@
 //
 // A font is a font file with Font::new_variable. An image is a PNG, JPEG, GIF
 // or WebP file, with the kind from the extension unless "kind" gives it, or
-// the RGBA bytes of Image::from_rgba8, not premultiplied. Each page is
+// the RGBA bytes of Image::from_rgba8, not premultiplied. The module image
+// of the oracle adds two forms of an image:
+//
+//	{"file": "/abs/image.png", "kind": "png_native"}
+//	{"custom": {"color": "<base64>", "alpha": "<base64>", "bits": 8,
+//	            "width": 4, "height": 4, "color_space": "rgb", "icc": "/abs/p.icc"}}
+//
+// The kind "png_native" is Image::from_png_native. "custom" is
+// Image::from_custom, with the samples of the colors and of the alpha, 8 or
+// 16 bits each in big-endian order. "color_space" is "rgb", "luma" or
+// "cmyk". "alpha" and "icc" are optional. Each page is
 // PageSettings::from_wh, and its calls make its content.
 //
 // A page has more fields, which are optional:
@@ -248,12 +258,64 @@
 // size of the font, as in KrillaGlyph. The fields other than "id" are
 // optional, and their default is 0.
 //
+// A scene and a page have more fields for the metadata, the outline and
+// the links. The module interchange.rs of the oracle reads them. Each field
+// is optional:
+//
+//	{"krilla": {..., "metadata": M, "outline": [N, ...],
+//	            "named_destinations": [{"name": "a", "page": 0, "x": 1, "y": 2}, ...],
+//	            "pages": [{..., "annotations": [A, ...]}]}}
+//
+// The oracle registers the named destinations with
+// Document::register_named_destination before the pages, and ignores the
+// result. It adds the annotations of a page with Page::add_annotation before
+// the surface of the page. After the pages, it sets the metadata with
+// Document::set_metadata and the outline with Document::set_outline. An
+// outline that is there, even empty, calls set_outline.
+//
+// The metadata M has the fields "title", "description", "creator",
+// "producer", "document_id", "version_id" and "language", which are
+// strings, "keywords" and "authors", which are lists of strings, and
+// "display_doc_title", a boolean. Each one calls the method of Metadata of
+// the same name. "text_direction" is "ltr" or "rtl". "page_layout" is the
+// name of a case of PageLayout, such as "TwoColumnRight". "creation_date" is
+// {"year": 2024, "month": 11, "day": 8, "hour": 22, "minute": 23, "second":
+// 18, "utc_offset_hour": 1, "utc_offset_minute": 12}, where each field
+// except "year" is optional. "custom_fields" is a list of pairs [name,
+// value] for Metadata::custom_field, in their order. The oracle leaves out
+// a field that krilla does not accept.
+//
+// A node N of the outline is {"text": "Heading", "dest": {"page": 0, "x":
+// 0, "y": 0}, "open": false, "children": [N, ...]}. The destination is an
+// XyzDestination.
+//
+// An annotation A is a LinkAnnotation, with "rect": [x, y, w, h] for
+// LinkAnnotation::new, or "quad_points": [[x1, y1, x2, y2, x3, y3, x4, y4],
+// ...] for LinkAnnotation::new_with_quad_points. "target" is one of
+// {"xyz": {"page", "x", "y"}}, {"named": {"name", "page", "x", "y"}}, which
+// are destinations, {"link": "https://..."}, a LinkAction, and {"goto": D},
+// the action Action::Goto, where D is {"xyz": ...} or {"named": ...}. The
+// optional "border" is {"width": 1, "color": C}, with a color C of the
+// paints, and the optional "alt" is the alt text of Annotation::new_link.
+//
 // The tests of document_test.go build the scenes of the pages without a
 // surface with the package pdf, and compare the files with the answers by
 // their objects. When no stream is compressed, the bytes must be the same,
 // with the ID of the document. The tests of surface_test.go make the calls
 // of the surface in the same way, with goRun, for scenes of every paint and
-// for random scenes. Phase 16 adds the metadata, the outline and the links.
+// for random scenes. The tests of image_test.go draw images with pdf, from
+// the image files of the tests of pdf, of Go and of golang.org/x/image, from
+// PNG files with faults in their image data, and from the images of Go with
+// ImageFromImage, and compare them with the files of krilla in the same way.
+// The tests of text_test.go draw the glyphs and the texts of the fonts of
+// pdf/testdata/fonts and of the checkout of krilla, without the SVG glyphs:
+// the snapshots of text and fonts of krilla, the COLR glyphs of Noto Color
+// Emoji, the bitmap glyphs of the tables sbix and CBDT, and random runs of
+// glyphs. The font files of their subsets must be the bytes of krilla,
+// except for an instance of a variable font (D65). The tests of
+// interchange_test.go do the same for the metadata, the outlines and the
+// links, for fixed and for random scenes, and compare the errors where
+// krilla panics.
 //
 // # The question "point_ts"
 //

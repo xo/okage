@@ -49,7 +49,9 @@ func ParseGlyf(src []byte, locaOffsets []uint32) (Glyf, error) {
 		}
 		// okage: go-text slices the table with the range of loca, and
 		// panics when the range is out of the table. Such a glyph has no
-		// outline, as in read-fonts and FreeType (D65).
+		// outline, as in read-fonts and FreeType (D65). The commit 1e1f4714
+		// of go-text returns an error for the whole table instead, and okage
+		// keeps the glyph without an outline (D67).
 		if start > end || uint64(end) > uint64(len(src)) {
 			continue
 		}
@@ -109,6 +111,11 @@ func (sg *SimpleGlyph) parsePoints(src []byte, _ int) error {
 		return nil
 	}
 
+	for i := 1; i < len(sg.EndPtsOfContours); i++ {
+		if sg.EndPtsOfContours[i] <= sg.EndPtsOfContours[i-1] {
+			return errors.New("invalid simple glyph: endPtsOfContours is not increasing")
+		}
+	}
 	numPoints := int(sg.EndPtsOfContours[len(sg.EndPtsOfContours)-1]) + 1
 
 	const repeatFlag = 0x08

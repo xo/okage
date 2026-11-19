@@ -190,6 +190,9 @@ pub struct Scene {
     #[serde(default)]
     images: Vec<ImageSpec>,
     pages: Vec<PageSpec>,
+    /// The metadata, the outline and the named destinations.
+    #[serde(flatten)]
+    interchange: crate::interchange::DocSpec,
 }
 
 #[derive(Deserialize)]
@@ -221,6 +224,9 @@ struct ImageSpec {
     width: u32,
     #[serde(default)]
     height: u32,
+    /// The fields that the module `image` reads.
+    #[serde(flatten)]
+    extra: crate::image::ExtraSpec,
 }
 
 #[derive(Deserialize)]
@@ -248,6 +254,9 @@ struct PageSpec {
     /// false finishes the page without a call of Page::surface.
     #[serde(default = "yes")]
     surface: bool,
+    /// The link annotations of the page.
+    #[serde(default)]
+    annotations: Vec<crate::interchange::AnnotationSpec>,
 }
 
 fn yes() -> bool {
@@ -535,8 +544,10 @@ pub fn answer_scene(q: &Scene) -> Result<Vec<u8>, String> {
         res.images.push(image(i)?);
     }
     let mut doc = Document::new_with(settings(&q.settings)?);
+    crate::interchange::register_named_destinations(&mut doc, &q.interchange);
     for p in &q.pages {
         let mut page = doc.start_page_with(page_settings(p)?);
+        crate::interchange::add_annotations(&mut page, &p.annotations)?;
         if p.surface {
             let mut surface = page.surface();
             run(&mut surface, &p.ops, &res)?;
@@ -544,10 +555,14 @@ pub fn answer_scene(q: &Scene) -> Result<Vec<u8>, String> {
         }
         page.finish();
     }
+    crate::interchange::finish_document(&mut doc, &q.interchange)?;
     doc.finish().map_err(|e| format!("{e:?}"))
 }
 
 fn image(i: &ImageSpec) -> Result<Image, String> {
+    if let Some(img) = crate::image::custom(&i.extra, i.interpolate) {
+        return img.map_err(|e| format!("krilla cannot make the custom image: {e}"));
+    }
     if let Some(b) = &i.rgba {
         let data = base64::engine::general_purpose::STANDARD
             .decode(b)
@@ -567,6 +582,9 @@ fn image(i: &ImageSpec) -> Result<Image, String> {
             .unwrap_or_default()
             .to_ascii_lowercase(),
     };
+    if let Some(img) = crate::image::by_kind(&kind, &data, i.interpolate) {
+        return img.map_err(|e| format!("krilla cannot read the image {file}: {e}"));
+    }
     match kind.as_str() {
         "png" => Image::from_png(data.into(), i.interpolate),
         "jpeg" | "jpg" => Image::from_jpeg(data.into(), i.interpolate),

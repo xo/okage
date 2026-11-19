@@ -192,7 +192,8 @@ func TestSlicedResourceRoboto(t *testing.T) {
 
 // TestWriteTTFKeepsInput checks that WriteTTF does not write into the data
 // after a table, and that it computes the checksum of a table whose length
-// is not a multiple of four with zero padding (D65).
+// is not a multiple of four with zero padding. The commit f7b0a668 of
+// go-text fixes it, and its test reads typesetting-utils (D65, D67).
 func TestWriteTTFKeepsInput(t *testing.T) {
 	data := []byte{1, 2, 3, 4, 5, 0xAA, 0xBB, 0xCC}
 	out := WriteTTF([]Table{{Content: data[:5], Tag: MustNewTag("abcd")}})

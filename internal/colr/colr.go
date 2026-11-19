@@ -3,7 +3,17 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-package svg
+// Package colr walks the paint graph of a COLR glyph, as
+// ColorGlyph::paint of skrifa 0.44 does (D32). svg draws the color glyphs of
+// a text with it, as usvg src/text/colr.rs does, and pdf draws the color
+// glyphs of a Type 3 font with it, as krilla src/text/glyph/colr.rs does.
+// D62 moved it out of svg so that both packages share it.
+//
+// go-text parses the tables COLR and CPAL, but it does not walk the graph
+// (D9). This file walks it as skrifa does: ColorGlyph::paint of
+// src/color/mod.rs, traverse.rs, instance.rs and transform.rs of src/color.
+// Each item names the item of skrifa that it replaces.
+package colr
 
 import (
 	"cmp"
@@ -16,107 +26,111 @@ import (
 	"github.com/xo/okage/internal/crmath"
 )
 
-// This file ports no file of usvg. usvg src/text/flatten.rs paints a COLR
-// glyph with ColorGlyph::paint of skrifa 0.44, which walks the paint graph
-// of the glyph and calls the methods of the trait ColorPainter, which
-// GlyphPainter of usvg src/text/colr.rs implements. go-text parses the
-// tables COLR and CPAL, but it does not walk the graph (D9). This file walks
-// it as skrifa does (D32): ColorGlyph::paint of src/color/mod.rs,
-// traverse.rs, instance.rs and transform.rs of src/color. Each item names
-// the item of skrifa that it replaces.
+// GlyphID is the ID of a glyph, GlyphId of skrifa.
+type GlyphID uint32
 
-// colrTransform is skrifa::color::Transform, Matrix<f32> of font-types: an
+// Transform is skrifa::color::Transform, Matrix<f32> of font-types: an
 // affine transform with the elements xx, yx, xy, yy, dx and dy.
-type colrTransform struct {
-	xx float32
-	yx float32
-	xy float32
-	yy float32
-	dx float32
-	dy float32
+type Transform struct {
+	XX float32
+	YX float32
+	XY float32
+	YY float32
+	DX float32
+	DY float32
 }
 
-// identityColrTransform is the impl Default for Matrix in font-types, the
+// IdentityTransform is the impl Default for Matrix in font-types, the
 // identity.
-func identityColrTransform() colrTransform {
-	return colrTransform{xx: 1, yy: 1}
+func IdentityTransform() Transform {
+	return Transform{XX: 1, YY: 1}
 }
 
-// mul is the impl Mul for Matrix in font-types: t applied after rhs.
-func (t colrTransform) mul(rhs colrTransform) colrTransform {
-	return colrTransform{
-		xx: float32(t.xx*rhs.xx) + float32(t.xy*rhs.yx),
-		yx: float32(t.yx*rhs.xx) + float32(t.yy*rhs.yx),
-		xy: float32(t.xx*rhs.xy) + float32(t.xy*rhs.yy),
-		yy: float32(t.yx*rhs.xy) + float32(t.yy*rhs.yy),
-		dx: float32(t.xx*rhs.dx) + float32(t.xy*rhs.dy) + t.dx,
-		dy: float32(t.yx*rhs.dx) + float32(t.yy*rhs.dy) + t.dy,
+// Mul is the impl Mul for Matrix in font-types: t applied after rhs.
+func (t Transform) Mul(rhs Transform) Transform {
+	return Transform{
+		XX: float32(t.XX*rhs.XX) + float32(t.XY*rhs.YX),
+		YX: float32(t.YX*rhs.XX) + float32(t.YY*rhs.YX),
+		XY: float32(t.XX*rhs.XY) + float32(t.XY*rhs.YY),
+		YY: float32(t.YX*rhs.XY) + float32(t.YY*rhs.YY),
+		DX: float32(t.XX*rhs.DX) + float32(t.XY*rhs.DY) + t.DX,
+		DY: float32(t.YX*rhs.DX) + float32(t.YY*rhs.DY) + t.DY,
 	}
 }
 
-// colrPoint is Point<f32> of font-types.
-type colrPoint struct {
-	x float32
-	y float32
+// Point is Point<f32> of font-types.
+type Point struct {
+	X float32
+	Y float32
 }
 
-// colrBoundingBox is BoundingBox<f32> of font-types.
-type colrBoundingBox struct {
-	xMin float32
-	yMin float32
-	xMax float32
-	yMax float32
+// BoundingBox is BoundingBox<f32> of font-types.
+type BoundingBox struct {
+	XMin float32
+	YMin float32
+	XMax float32
+	YMax float32
 }
 
-// colrColorStop is skrifa::color::ColorStop.
-type colrColorStop struct {
-	offset       float32
-	paletteIndex uint16
-	alpha        float32
+// ColorStop is skrifa::color::ColorStop.
+type ColorStop struct {
+	Offset       float32
+	PaletteIndex uint16
+	Alpha        float32
 }
 
-// colrBrushKind is the case of a colrBrush.
-type colrBrushKind uint8
+// BrushKind is the case of a Brush.
+type BrushKind uint8
 
 // The cases of skrifa::color::Brush.
 const (
-	colrBrushSolid colrBrushKind = iota
-	colrBrushLinearGradient
-	colrBrushRadialGradient
-	colrBrushSweepGradient
+	// BrushSolid is Brush::Solid, with PaletteIndex and Alpha.
+	BrushSolid BrushKind = iota
+	// BrushLinearGradient is Brush::LinearGradient, with P0, P1,
+	// ColorStops and Extend.
+	BrushLinearGradient
+	// BrushRadialGradient is Brush::RadialGradient, with C0, R0, C1, R1,
+	// ColorStops and Extend.
+	BrushRadialGradient
+	// BrushSweepGradient is Brush::SweepGradient, with C0, StartAngle,
+	// EndAngle, ColorStops and Extend.
+	BrushSweepGradient
 )
 
-// colrBrush is skrifa::color::Brush. The enum has data, so it becomes a
-// struct with a kind (D27). Each case uses the fields that its name gives in
+// Brush is skrifa::color::Brush. The enum has data, so it becomes a struct
+// with a kind (D27). Each case uses the fields that its name gives in
 // upstream.
-type colrBrush struct {
-	kind         colrBrushKind
-	paletteIndex uint16
-	alpha        float32
-	p0           colrPoint
-	p1           colrPoint
-	c0           colrPoint
-	r0           float32
-	c1           colrPoint
-	r1           float32
-	startAngle   float32
-	endAngle     float32
-	colorStops   []colrColorStop
-	extend       tables.Extend
+type Brush struct {
+	Kind         BrushKind
+	PaletteIndex uint16
+	Alpha        float32
+	P0           Point
+	P1           Point
+	C0           Point
+	R0           float32
+	C1           Point
+	R1           float32
+	StartAngle   float32
+	EndAngle     float32
+	ColorStops   []ColorStop
+	Extend       tables.Extend
 }
 
-// colorPainter is the trait skrifa::color::ColorPainter, with the methods
-// that usvg and the traversal call.
-type colorPainter interface {
-	pushTransform(transform colrTransform)
-	popTransform()
-	fillGlyph(glyphID GlyphID, brushTransform *colrTransform, brush colrBrush)
-	pushClipGlyph(glyphID GlyphID)
-	pushClipBox(clipBox colrBoundingBox)
-	popClip()
-	fill(brush colrBrush)
-	pushLayer(compositeMode tables.CompositeMode)
-	popLayer()
+// Painter is the trait skrifa::color::ColorPainter, with the methods that
+// usvg, krilla and the traversal call. FillGlyph has the default method of
+// skrifa in a painter that has no method of its own: PushClipGlyph,
+// PushTransform of the brush transform when there is one, Fill,
+// PopTransform and PopClip.
+type Painter interface {
+	PushTransform(transform Transform)
+	PopTransform()
+	FillGlyph(glyphID GlyphID, brushTransform *Transform, brush Brush)
+	PushClipGlyph(glyphID GlyphID)
+	PushClipBox(clipBox BoundingBox)
+	PopClip()
+	Fill(brush Brush)
+	PushLayer(compositeMode tables.CompositeMode)
+	PopLayer()
 }
 
 // colrInstance is ColrInstance of skrifa src/color/instance.rs: the table
@@ -166,53 +180,53 @@ func fixedDelta(v tables.Float1616, delta float32) float32 {
 }
 
 // resolveClipBox is resolve_clip_box of skrifa src/color/instance.rs.
-func resolveClipBox(inst *colrInstance, clipBox tables.ClipBox) colrBoundingBox {
+func resolveClipBox(inst *colrInstance, clipBox tables.ClipBox) BoundingBox {
 	switch cbox := clipBox.(type) {
 	case tables.ClipBoxFormat2:
 		deltas := inst.varDeltas(cbox.VarIndexBase, 4)
-		return colrBoundingBox{
-			xMin: float32(cbox.XMin) + deltas[0],
-			yMin: float32(cbox.YMin) + deltas[1],
-			xMax: float32(cbox.XMax) + deltas[2],
-			yMax: float32(cbox.YMax) + deltas[3],
+		return BoundingBox{
+			XMin: float32(cbox.XMin) + deltas[0],
+			YMin: float32(cbox.YMin) + deltas[1],
+			XMax: float32(cbox.XMax) + deltas[2],
+			YMax: float32(cbox.YMax) + deltas[3],
 		}
 	case tables.ClipBoxFormat1:
-		return colrBoundingBox{
-			xMin: float32(cbox.XMin),
-			yMin: float32(cbox.YMin),
-			xMax: float32(cbox.XMax),
-			yMax: float32(cbox.YMax),
+		return BoundingBox{
+			XMin: float32(cbox.XMin),
+			YMin: float32(cbox.YMin),
+			XMax: float32(cbox.XMax),
+			YMax: float32(cbox.YMax),
 		}
 	}
-	return colrBoundingBox{}
+	return BoundingBox{}
 }
 
 // getClipboxFontUnits is get_clipbox_font_units of skrifa
 // src/color/traversal.rs.
-func getClipboxFontUnits(inst *colrInstance, glyphID GlyphID) (colrBoundingBox, bool) {
+func getClipboxFontUnits(inst *colrInstance, glyphID GlyphID) (BoundingBox, bool) {
 	clip, ok := inst.colr.ClipList.Search(tables.GlyphID(glyphID))
 	if !ok || clip == nil {
-		return colrBoundingBox{}, false
+		return BoundingBox{}, false
 	}
 	return resolveClipBox(inst, clip), true
 }
 
 // resolveColorStops is ColorStops::resolve of skrifa src/color/instance.rs.
-func resolveColorStops(inst *colrInstance, stops []tables.ColorStop, varStops []tables.VarColorStop) []colrColorStop {
-	out := make([]colrColorStop, 0, len(stops)+len(varStops))
+func resolveColorStops(inst *colrInstance, stops []tables.ColorStop, varStops []tables.VarColorStop) []ColorStop {
+	out := make([]ColorStop, 0, len(stops)+len(varStops))
 	for _, stop := range stops {
-		out = append(out, colrColorStop{
-			offset:       f2dot14(stop.StopOffset),
-			paletteIndex: stop.PaletteIndex,
-			alpha:        f2dot14(stop.Alpha),
+		out = append(out, ColorStop{
+			Offset:       f2dot14(stop.StopOffset),
+			PaletteIndex: stop.PaletteIndex,
+			Alpha:        f2dot14(stop.Alpha),
 		})
 	}
 	for _, stop := range varStops {
 		deltas := inst.varDeltas(stop.VarIndexBase, 2)
-		out = append(out, colrColorStop{
-			offset:       f2dot14Delta(stop.StopOffset, deltas[0]),
-			paletteIndex: stop.PaletteIndex,
-			alpha:        f2dot14Delta(stop.Alpha, deltas[1]),
+		out = append(out, ColorStop{
+			Offset:       f2dot14Delta(stop.StopOffset, deltas[0]),
+			PaletteIndex: stop.PaletteIndex,
+			Alpha:        f2dot14Delta(stop.Alpha, deltas[1]),
 		})
 	}
 	return out
@@ -254,19 +268,19 @@ type resolvedPaint struct {
 	x0, y0, x1, y1, x2, y2 float32
 	radius0, radius1       float32
 	startAngle, endAngle   float32
-	colorStops             []colrColorStop
+	colorStops             []ColorStop
 	extend                 tables.Extend
 
 	glyphID uint16
 	paint   tables.PaintTable
 
-	ts colrTransform
+	ts Transform
 
 	scaleX, scaleY float32
 	angle          float32
 	xSkewAngle     float32
 	ySkewAngle     float32
-	aroundCenter   *colrPoint
+	aroundCenter   *Point
 
 	sourcePaint   tables.PaintTable
 	mode          tables.CompositeMode
@@ -276,7 +290,7 @@ type resolvedPaint struct {
 // resolvePaint is resolve_paint of skrifa src/color/instance.rs. It returns
 // false where upstream returns a ReadError.
 func resolvePaint(inst *colrInstance, paint tables.PaintTable) (resolvedPaint, bool) {
-	center := func(x, y float32) *colrPoint { return &colrPoint{x, y} }
+	center := func(x, y float32) *Point { return &Point{x, y} }
 	switch p := paint.(type) {
 	case tables.PaintColrLayers:
 		layers, err := inst.colr.LayerList.Resolve(p)
@@ -349,22 +363,22 @@ func resolvePaint(inst *colrInstance, paint tables.PaintTable) (resolvedPaint, b
 	case tables.PaintTransform:
 		a := p.Transform
 		return resolvedPaint{kind: resolvedTransform, paint: p.Paint,
-			ts: colrTransform{a.Xx, a.Yx, a.Xy, a.Yy, a.Dx, a.Dy}}, true
+			ts: Transform{a.Xx, a.Yx, a.Xy, a.Yy, a.Dx, a.Dy}}, true
 	case tables.PaintVarTransform:
 		a := p.Transform
 		deltas := inst.varDeltas(a.VarIndexBase, 6)
-		return resolvedPaint{kind: resolvedTransform, paint: p.Paint, ts: colrTransform{
+		return resolvedPaint{kind: resolvedTransform, paint: p.Paint, ts: Transform{
 			fixedDelta(a.Xx, deltas[0]), fixedDelta(a.Yx, deltas[1]),
 			fixedDelta(a.Xy, deltas[2]), fixedDelta(a.Yy, deltas[3]),
 			fixedDelta(a.Dx, deltas[4]), fixedDelta(a.Dy, deltas[5]),
 		}}, true
 	case tables.PaintTranslate:
 		return resolvedPaint{kind: resolvedTranslate, paint: p.Paint,
-			ts: colrTransform{dx: float32(p.Dx), dy: float32(p.Dy)}}, true
+			ts: Transform{DX: float32(p.Dx), DY: float32(p.Dy)}}, true
 	case tables.PaintVarTranslate:
 		deltas := inst.varDeltas(p.VarIndexBase, 2)
 		return resolvedPaint{kind: resolvedTranslate, paint: p.Paint,
-			ts: colrTransform{dx: float32(p.Dx) + deltas[0], dy: float32(p.Dy) + deltas[1]}}, true
+			ts: Transform{DX: float32(p.Dx) + deltas[0], DY: float32(p.Dy) + deltas[1]}}, true
 	case tables.PaintScale:
 		return resolvedPaint{kind: resolvedScale, paint: p.Paint,
 			scaleX: f2dot14(p.ScaleX), scaleY: f2dot14(p.ScaleY)}, true
@@ -439,46 +453,46 @@ func toRadians32(x float32) float32 {
 
 // paintTransformOf is the impl TryFrom<&ResolvedPaint> for Transform of
 // skrifa src/color/transform.rs.
-func paintTransformOf(paint *resolvedPaint) colrTransform {
+func paintTransformOf(paint *resolvedPaint) Transform {
 	switch paint.kind {
 	case resolvedRotate:
 		sinV := crmath.Sin32(toRadians32(paint.angle * 180.0))
 		cosV := crmath.Cos32(toRadians32(paint.angle * 180.0))
-		out := colrTransform{xx: cosV, xy: -sinV, yx: sinV, yy: cosV}
+		out := Transform{XX: cosV, XY: -sinV, YX: sinV, YY: cosV}
 
 		scalarDotProduct := func(a, b, c, d float32) float32 {
 			return float32(a*b) + float32(c*d)
 		}
 
 		if c := paint.aroundCenter; c != nil {
-			out.dx = scalarDotProduct(sinV, c.y, 1.0-cosV, c.x)
-			out.dy = scalarDotProduct(-sinV, c.x, 1.0-cosV, c.y)
+			out.DX = scalarDotProduct(sinV, c.Y, 1.0-cosV, c.X)
+			out.DY = scalarDotProduct(-sinV, c.X, 1.0-cosV, c.Y)
 		}
 		return out
 	case resolvedScale:
-		out := colrTransform{xx: paint.scaleX, yy: paint.scaleY}
+		out := Transform{XX: paint.scaleX, YY: paint.scaleY}
 
 		if c := paint.aroundCenter; c != nil {
-			out.dx = c.x - float32(paint.scaleX*c.x)
-			out.dy = c.y - float32(paint.scaleY*c.y)
+			out.DX = c.X - float32(paint.scaleX*c.X)
+			out.DY = c.Y - float32(paint.scaleY*c.Y)
 		}
 		return out
 	case resolvedSkew:
 		tanX := crmath.Tan32(toRadians32(paint.xSkewAngle * 180.0))
 		tanY := crmath.Tan32(toRadians32(paint.ySkewAngle * 180.0))
-		out := colrTransform{xx: 1, yy: 1, xy: -tanX, yx: tanY}
+		out := Transform{XX: 1, YY: 1, XY: -tanX, YX: tanY}
 
 		if c := paint.aroundCenter; c != nil {
-			out.dx = tanX * c.y
-			out.dy = -tanY * c.x
+			out.DX = tanX * c.Y
+			out.DY = -tanY * c.X
 		}
 		return out
 	case resolvedTransform:
 		return paint.ts
 	case resolvedTranslate:
-		return colrTransform{xx: 1, yy: 1, dx: paint.ts.dx, dy: paint.ts.dy}
+		return Transform{XX: 1, YY: 1, DX: paint.ts.DX, DY: paint.ts.DY}
 	}
-	return identityColrTransform()
+	return IdentityTransform()
 }
 
 // maxTraversalDepth is MAX_TRAVERSAL_DEPTH of skrifa
@@ -509,13 +523,13 @@ func (d *paintDecycler) enter(id uint64) (func(), bool) {
 
 // makeSortedResolvedStops is make_sorted_resolved_stops of skrifa
 // src/color/traversal.rs.
-func makeSortedResolvedStops(stops []colrColorStop) []colrColorStop {
+func makeSortedResolvedStops(stops []ColorStop) []ColorStop {
 	out := slices.Clone(stops)
-	slices.SortStableFunc(out, func(a, b colrColorStop) int {
-		if a.offset != a.offset || b.offset != b.offset {
+	slices.SortStableFunc(out, func(a, b ColorStop) int {
+		if a.Offset != a.Offset || b.Offset != b.Offset {
 			return 0
 		}
-		return cmp.Compare(a.offset, b.offset)
+		return cmp.Compare(a.Offset, b.Offset)
 	})
 	return out
 }
@@ -523,20 +537,20 @@ func makeSortedResolvedStops(stops []colrColorStop) []colrColorStop {
 // collectFillGlyphPainter is CollectFillGlyphPainter of skrifa
 // src/color/traversal.rs.
 type collectFillGlyphPainter struct {
-	brushTransform      *colrTransform
+	brushTransform      *Transform
 	glyphID             GlyphID
-	parentPainter       colorPainter
+	parentPainter       Painter
 	optimizationSuccess bool
 }
 
 // pushTransform is ColorPainter::push_transform for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) pushTransform(transform colrTransform) {
+func (p *collectFillGlyphPainter) PushTransform(transform Transform) {
 	if p.optimizationSuccess {
 		if p.brushTransform == nil {
 			t := transform
 			p.brushTransform = &t
 		} else {
-			t := p.brushTransform.mul(transform)
+			t := p.brushTransform.Mul(transform)
 			p.brushTransform = &t
 		}
 	}
@@ -545,7 +559,7 @@ func (p *collectFillGlyphPainter) pushTransform(transform colrTransform) {
 // popTransform is ColorPainter::pop_transform for CollectFillGlyphPainter.
 //
 //nolint:dupword // the comment of skrifa
-func (p *collectFillGlyphPainter) popTransform() {
+func (p *collectFillGlyphPainter) PopTransform() {
 	// Since we only support fill and and transform operations, we need to
 	// ignore a popped transform, as this would be called after traversing
 	// the graph backup after a fill was performed, but we want to preserve
@@ -554,63 +568,63 @@ func (p *collectFillGlyphPainter) popTransform() {
 
 // fillGlyph is the default ColorPainter::fill_glyph of skrifa
 // src/color/mod.rs, for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) fillGlyph(glyphID GlyphID, brushTransform *colrTransform, brush colrBrush) {
-	p.pushClipGlyph(glyphID)
+func (p *collectFillGlyphPainter) FillGlyph(glyphID GlyphID, brushTransform *Transform, brush Brush) {
+	p.PushClipGlyph(glyphID)
 	if brushTransform != nil {
-		p.pushTransform(*brushTransform)
-		p.fill(brush)
-		p.popTransform()
+		p.PushTransform(*brushTransform)
+		p.Fill(brush)
+		p.PopTransform()
 	} else {
-		p.fill(brush)
+		p.Fill(brush)
 	}
-	p.popClip()
+	p.PopClip()
 }
 
 // fill is ColorPainter::fill for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) fill(brush colrBrush) {
+func (p *collectFillGlyphPainter) Fill(brush Brush) {
 	if p.optimizationSuccess {
-		p.parentPainter.fillGlyph(p.glyphID, p.brushTransform, brush)
+		p.parentPainter.FillGlyph(p.glyphID, p.brushTransform, brush)
 	}
 }
 
 // pushClipGlyph is ColorPainter::push_clip_glyph for
 // CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) pushClipGlyph(GlyphID) {
+func (p *collectFillGlyphPainter) PushClipGlyph(GlyphID) {
 	p.optimizationSuccess = false
 }
 
 // pushClipBox is ColorPainter::push_clip_box for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) pushClipBox(colrBoundingBox) {
+func (p *collectFillGlyphPainter) PushClipBox(BoundingBox) {
 	p.optimizationSuccess = false
 }
 
 // popClip is ColorPainter::pop_clip for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) popClip() {
+func (p *collectFillGlyphPainter) PopClip() {
 	p.optimizationSuccess = false
 }
 
 // pushLayer is ColorPainter::push_layer for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) pushLayer(tables.CompositeMode) {
+func (p *collectFillGlyphPainter) PushLayer(tables.CompositeMode) {
 	p.optimizationSuccess = false
 }
 
 // popLayer is ColorPainter::pop_layer for CollectFillGlyphPainter.
-func (p *collectFillGlyphPainter) popLayer() {
+func (p *collectFillGlyphPainter) PopLayer() {
 	p.optimizationSuccess = false
 }
 
 // projectOnto is the closure project_onto of traverse_with_callbacks in
 // skrifa src/color/traversal.rs.
-func projectOnto(vector, point colrPoint) colrPoint {
-	length := float32(math.Sqrt(float64(float32(point.x*point.x) + float32(point.y*point.y))))
+func projectOnto(vector, point Point) Point {
+	length := float32(math.Sqrt(float64(float32(point.X*point.X) + float32(point.Y*point.Y))))
 	if length == 0.0 {
-		return colrPoint{}
+		return Point{}
 	}
-	pointNormalized := colrPoint{point.x / length, point.y / length}
-	dot := float32(vector.x*point.x) + float32(vector.y*point.y)
+	pointNormalized := Point{point.X / length, point.Y / length}
+	dot := float32(vector.X*point.X) + float32(vector.Y*point.Y)
 	f := dot / length
-	pointNormalized.x *= f
-	pointNormalized.y *= f
+	pointNormalized.X *= f
+	pointNormalized.Y *= f
 	return pointNormalized
 }
 
@@ -620,7 +634,7 @@ func projectOnto(vector, point colrPoint) colrPoint {
 func traverseWithCallbacks(
 	paint *resolvedPaint,
 	inst *colrInstance,
-	painter colorPainter,
+	painter Painter,
 	decycler *paintDecycler,
 	recurseDepth int,
 ) bool {
@@ -647,15 +661,15 @@ func traverseWithCallbacks(
 		}
 		return true
 	case resolvedSolid:
-		painter.fill(colrBrush{kind: colrBrushSolid, paletteIndex: paint.paletteIndex, alpha: paint.alpha})
+		painter.Fill(Brush{Kind: BrushSolid, PaletteIndex: paint.paletteIndex, Alpha: paint.alpha})
 		return true
 	case resolvedLinearGradient:
-		p0 := colrPoint{paint.x0, paint.y0}
-		p1 := colrPoint{paint.x1, paint.y1}
-		p2 := colrPoint{paint.x2, paint.y2}
+		p0 := Point{paint.x0, paint.y0}
+		p1 := Point{paint.x1, paint.y1}
+		p2 := Point{paint.x2, paint.y2}
 
-		sub := func(a, b colrPoint) colrPoint { return colrPoint{a.x - b.x, a.y - b.y} }
-		crossProduct := func(a, b colrPoint) float32 { return float32(a.x*b.y) - float32(a.y*b.x) }
+		sub := func(a, b Point) Point { return Point{a.X - b.X, a.Y - b.Y} }
+		crossProduct := func(a, b Point) float32 { return float32(a.X*b.Y) - float32(a.Y*b.X) }
 
 		resolvedStops := makeSortedResolvedStops(paint.colorStops)
 
@@ -666,20 +680,20 @@ func traverseWithCallbacks(
 		if p1 == p0 || p2 == p0 || crossProduct(sub(p1, p0), sub(p2, p0)) == 0.0 {
 			if len(resolvedStops) != 0 {
 				stop := resolvedStops[0]
-				painter.fill(colrBrush{kind: colrBrushSolid, paletteIndex: stop.paletteIndex, alpha: stop.alpha})
+				painter.Fill(Brush{Kind: BrushSolid, PaletteIndex: stop.PaletteIndex, Alpha: stop.Alpha})
 			}
 			return true
 		}
 
 		perpendicularToP2 := sub(p2, p0)
-		perpendicularToP2 = colrPoint{perpendicularToP2.y, -perpendicularToP2.x}
+		perpendicularToP2 = Point{perpendicularToP2.Y, -perpendicularToP2.X}
 		proj := projectOnto(sub(p1, p0), perpendicularToP2)
-		p3 := colrPoint{p0.x + proj.x, p0.y + proj.y}
+		p3 := Point{p0.X + proj.X, p0.Y + proj.Y}
 
 		if len(resolvedStops) != 0 {
 			firstStop := resolvedStops[0]
 			lastStop := resolvedStops[len(resolvedStops)-1]
-			colorStopRange := lastStop.offset - firstStop.offset
+			colorStopRange := lastStop.Offset - firstStop.Offset
 
 			// Nothing can be drawn for this situation.
 			if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
@@ -695,41 +709,41 @@ func traverseWithCallbacks(
 
 			if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
 				extraStop := lastStop
-				extraStop.offset += 1.0
+				extraStop.Offset += 1.0
 				resolvedStops = append(resolvedStops, extraStop)
 
 				colorStopRange = 1.0
 			}
 
-			if colorStopRange != 1.0 || firstStop.offset != 0.0 {
+			if colorStopRange != 1.0 || firstStop.Offset != 0.0 {
 				p0p3 := sub(p3, p0)
-				p0Offset := colrPoint{float32(p0p3.x * firstStop.offset), float32(p0p3.y * firstStop.offset)}
-				p3Offset := colrPoint{float32(p0p3.x * lastStop.offset), float32(p0p3.y * lastStop.offset)}
+				p0Offset := Point{float32(p0p3.X * firstStop.Offset), float32(p0p3.Y * firstStop.Offset)}
+				p3Offset := Point{float32(p0p3.X * lastStop.Offset), float32(p0p3.Y * lastStop.Offset)}
 
-				p3 = colrPoint{p0.x + p3Offset.x, p0.y + p3Offset.y}
-				p0 = colrPoint{p0.x + p0Offset.x, p0.y + p0Offset.y}
+				p3 = Point{p0.X + p3Offset.X, p0.Y + p3Offset.Y}
+				p0 = Point{p0.X + p0Offset.X, p0.Y + p0Offset.Y}
 
 				scaleFactor := 1.0 / colorStopRange
-				startOffset := firstStop.offset
+				startOffset := firstStop.Offset
 
 				for i := range resolvedStops {
-					resolvedStops[i].offset = (resolvedStops[i].offset - startOffset) * scaleFactor
+					resolvedStops[i].Offset = (resolvedStops[i].Offset - startOffset) * scaleFactor
 				}
 			}
 
-			painter.fill(colrBrush{
-				kind:       colrBrushLinearGradient,
-				p0:         p0,
-				p1:         p3,
-				colorStops: resolvedStops,
-				extend:     paint.extend,
+			painter.Fill(Brush{
+				Kind:       BrushLinearGradient,
+				P0:         p0,
+				P1:         p3,
+				ColorStops: resolvedStops,
+				Extend:     paint.extend,
 			})
 		}
 
 		return true
 	case resolvedRadialGradient:
-		c0 := colrPoint{paint.x0, paint.y0}
-		c1 := colrPoint{paint.x1, paint.y1}
+		c0 := Point{paint.x0, paint.y0}
+		c1 := Point{paint.x1, paint.y1}
 		radius0 := paint.radius0
 		radius1 := paint.radius1
 
@@ -738,7 +752,7 @@ func traverseWithCallbacks(
 		if len(resolvedStops) != 0 {
 			firstStop := resolvedStops[0]
 			lastStop := resolvedStops[len(resolvedStops)-1]
-			colorStopRange := lastStop.offset - firstStop.offset
+			colorStopRange := lastStop.Offset - firstStop.Offset
 			// Nothing can be drawn for this situation.
 			if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
 				return true
@@ -749,39 +763,39 @@ func traverseWithCallbacks(
 
 			if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
 				extraStop := lastStop
-				extraStop.offset += 1.0
+				extraStop.Offset += 1.0
 				resolvedStops = append(resolvedStops, extraStop)
 				colorStopRange = 1.0
 			}
 
 			// If the colorline is not normalized, normalize it by modifying the circles.
-			if colorStopRange != 1.0 || firstStop.offset != 0.0 {
-				c0ToC1 := colrPoint{c1.x - c0.x, c1.y - c0.y}
+			if colorStopRange != 1.0 || firstStop.Offset != 0.0 {
+				c0ToC1 := Point{c1.X - c0.X, c1.Y - c0.Y}
 				radiusDiff := radius1 - radius0
 				scaleFactor := 1.0 / colorStopRange
 
-				c0Offset := colrPoint{float32(c0ToC1.x * firstStop.offset), float32(c0ToC1.y * firstStop.offset)}
-				c1Offset := colrPoint{float32(c0ToC1.x * lastStop.offset), float32(c0ToC1.y * lastStop.offset)}
-				stopsStartOffset := firstStop.offset
+				c0Offset := Point{float32(c0ToC1.X * firstStop.Offset), float32(c0ToC1.Y * firstStop.Offset)}
+				c1Offset := Point{float32(c0ToC1.X * lastStop.Offset), float32(c0ToC1.Y * lastStop.Offset)}
+				stopsStartOffset := firstStop.Offset
 
-				c1 = colrPoint{c0.x + c1Offset.x, c0.y + c1Offset.y}
-				c0 = colrPoint{c0.x + c0Offset.x, c0.y + c0Offset.y}
-				radius1 = radius0 + float32(radiusDiff*lastStop.offset)
-				radius0 += float32(radiusDiff * firstStop.offset)
+				c1 = Point{c0.X + c1Offset.X, c0.Y + c1Offset.Y}
+				c0 = Point{c0.X + c0Offset.X, c0.Y + c0Offset.Y}
+				radius1 = radius0 + float32(radiusDiff*lastStop.Offset)
+				radius0 += float32(radiusDiff * firstStop.Offset)
 
 				for i := range resolvedStops {
-					resolvedStops[i].offset = (resolvedStops[i].offset - stopsStartOffset) * scaleFactor
+					resolvedStops[i].Offset = (resolvedStops[i].Offset - stopsStartOffset) * scaleFactor
 				}
 			}
 
-			painter.fill(colrBrush{
-				kind:       colrBrushRadialGradient,
-				c0:         c0,
-				r0:         radius0,
-				c1:         c1,
-				r1:         radius1,
-				colorStops: resolvedStops,
-				extend:     paint.extend,
+			painter.Fill(Brush{
+				Kind:       BrushRadialGradient,
+				C0:         c0,
+				R0:         radius0,
+				C1:         c1,
+				R1:         radius1,
+				ColorStops: resolvedStops,
+				Extend:     paint.extend,
 			})
 		}
 		return true
@@ -804,12 +818,12 @@ func traverseWithCallbacks(
 
 		firstStop := resolvedStops[0]
 		lastStop := resolvedStops[len(resolvedStops)-1]
-		colorStopRange := lastStop.offset - firstStop.offset
+		colorStopRange := lastStop.Offset - firstStop.Offset
 
-		startAngleScaled := float32(sectorAngle*firstStop.offset) + startAngle
-		endAngleScaled := float32(sectorAngle*lastStop.offset) + startAngle
+		startAngleScaled := float32(sectorAngle*firstStop.Offset) + startAngle
+		endAngleScaled := float32(sectorAngle*lastStop.Offset) + startAngle
 
-		startOffset := firstStop.offset
+		startOffset := firstStop.Offset
 
 		// Nothing can be drawn for this situation.
 		if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
@@ -819,7 +833,7 @@ func traverseWithCallbacks(
 		// In the Pad case, if the color_stop_range is 0 insert a color stop at the end.
 		if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
 			offsetLast := lastStop
-			offsetLast.offset += 1.0
+			offsetLast.Offset += 1.0
 			resolvedStops = append(resolvedStops, offsetLast)
 			colorStopRange = 1.0
 		}
@@ -827,7 +841,7 @@ func traverseWithCallbacks(
 		scaleFactor := 1.0 / colorStopRange
 
 		for i := range resolvedStops {
-			resolvedStops[i].offset = (resolvedStops[i].offset - startOffset) * scaleFactor
+			resolvedStops[i].Offset = (resolvedStops[i].Offset - startOffset) * scaleFactor
 		}
 
 		// /* https://docs.microsoft.com/en-us/typography/opentype/spec/colr#sweep-gradients
@@ -845,7 +859,7 @@ func traverseWithCallbacks(
 			startAngleScaled, endAngleScaled = endAngleScaled, startAngleScaled
 			slices.Reverse(resolvedStops)
 			for i := range resolvedStops {
-				resolvedStops[i].offset = 1.0 - resolvedStops[i].offset
+				resolvedStops[i].Offset = 1.0 - resolvedStops[i].Offset
 			}
 		}
 
@@ -856,13 +870,13 @@ func traverseWithCallbacks(
 			return true
 		}
 
-		painter.fill(colrBrush{
-			kind:       colrBrushSweepGradient,
-			c0:         colrPoint{paint.x0, paint.y0},
-			startAngle: startAngleScaled,
-			endAngle:   endAngleScaled,
-			colorStops: resolvedStops,
-			extend:     paint.extend,
+		painter.Fill(Brush{
+			Kind:       BrushSweepGradient,
+			C0:         Point{paint.x0, paint.y0},
+			StartAngle: startAngleScaled,
+			EndAngle:   endAngleScaled,
+			ColorStops: resolvedStops,
+			Extend:     paint.extend,
 		})
 		return true
 	case resolvedGlyph:
@@ -875,13 +889,13 @@ func traverseWithCallbacks(
 		result := traverseWithCallbacks(&rp, inst, optimizer, decycler, recurseDepth+1)
 
 		if !optimizer.optimizationSuccess {
-			painter.pushClipGlyph(glyphID)
+			painter.PushClipGlyph(glyphID)
 			rp, ok := resolvePaint(inst, paint.paint)
 			if !ok {
 				return false
 			}
 			result = traverseWithCallbacks(&rp, inst, painter, decycler, recurseDepth+1)
-			painter.popClip()
+			painter.PopClip()
 		}
 
 		return result
@@ -900,7 +914,7 @@ func traverseWithCallbacks(
 		clipbox, hasClipbox := getClipboxFontUnits(inst, glyphID)
 
 		if hasClipbox {
-			painter.pushClipBox(clipbox)
+			painter.PushClipBox(clipbox)
 		}
 
 		rp, ok := resolvePaint(inst, baseGlyph)
@@ -909,20 +923,20 @@ func traverseWithCallbacks(
 		}
 		result := traverseWithCallbacks(&rp, inst, painter, decycler, recurseDepth+1)
 		if hasClipbox {
-			painter.popClip()
+			painter.PopClip()
 		}
 		return result
 	case resolvedTransform, resolvedTranslate, resolvedScale, resolvedRotate, resolvedSkew:
-		painter.pushTransform(paintTransformOf(paint))
+		painter.PushTransform(paintTransformOf(paint))
 		rp, ok := resolvePaint(inst, paint.paint)
 		if !ok {
 			return false
 		}
 		result := traverseWithCallbacks(&rp, inst, painter, decycler, recurseDepth+1)
-		painter.popTransform()
+		painter.PopTransform()
 		return result
 	case resolvedComposite:
-		painter.pushLayer(tables.CompositeSrcOver)
+		painter.PushLayer(tables.CompositeSrcOver)
 		rp, ok := resolvePaint(inst, paint.backdropPaint)
 		if !ok {
 			return false
@@ -930,24 +944,24 @@ func traverseWithCallbacks(
 		if !traverseWithCallbacks(&rp, inst, painter, decycler, recurseDepth+1) {
 			return false
 		}
-		painter.pushLayer(paint.mode)
+		painter.PushLayer(paint.mode)
 		rp, ok = resolvePaint(inst, paint.sourcePaint)
 		if !ok {
 			return false
 		}
 		result := traverseWithCallbacks(&rp, inst, painter, decycler, recurseDepth+1)
-		painter.popLayer()
-		painter.popLayer()
+		painter.PopLayer()
+		painter.PopLayer()
 		return result
 	}
 	return false
 }
 
-// paintColorGlyph is font.color_glyphs().get(glyph_id) and ColorGlyph::paint
-// of skrifa src/color/mod.rs, which usvg calls. It paints the color glyph of
+// Paint is font.color_glyphs().get(glyph_id) and ColorGlyph::paint
+// of skrifa src/color/mod.rs, which usvg and krilla call. It paints the color glyph of
 // glyphID of ft at coords, preferring a COLRv1 representation over a COLRv0
 // one, and returns false when the glyph has none or painting fails.
-func paintColorGlyph(ft *font.Font, coords []tables.Coord, glyphID GlyphID, painter colorPainter) bool {
+func Paint(ft *font.Font, coords []tables.Coord, glyphID GlyphID, painter Painter) bool {
 	if ft.COLR == nil {
 		return false
 	}
@@ -964,10 +978,10 @@ func paintColorGlyph(ft *font.Font, coords []tables.Coord, glyphID GlyphID, pain
 	if layers, ok := paint.(tables.PaintColrLayersResolved); ok {
 		// traverse_v0_range
 		for _, layer := range layers {
-			painter.fillGlyph(GlyphID(layer.GlyphID), nil, colrBrush{
-				kind:         colrBrushSolid,
-				paletteIndex: layer.PaletteIndex,
-				alpha:        1.0,
+			painter.FillGlyph(GlyphID(layer.GlyphID), nil, Brush{
+				Kind:         BrushSolid,
+				PaletteIndex: layer.PaletteIndex,
+				Alpha:        1.0,
 			})
 		}
 		return true
@@ -976,7 +990,7 @@ func paintColorGlyph(ft *font.Font, coords []tables.Coord, glyphID GlyphID, pain
 	clipbox, hasClipbox := getClipboxFontUnits(inst, glyphID)
 
 	if hasClipbox {
-		painter.pushClipBox(clipbox)
+		painter.PushClipBox(clipbox)
 	}
 
 	var decycler paintDecycler
@@ -994,7 +1008,18 @@ func paintColorGlyph(ft *font.Font, coords []tables.Coord, glyphID GlyphID, pain
 	}
 
 	if hasClipbox {
-		painter.popClip()
+		painter.PopClip()
+	}
+	return true
+}
+
+// allZero reports whether each coordinate is 0, as
+// LocationRef::effective_coords of skrifa finds the default location.
+func allZero(coords []tables.Coord) bool {
+	for _, c := range coords {
+		if c != 0 {
+			return false
+		}
 	}
 	return true
 }

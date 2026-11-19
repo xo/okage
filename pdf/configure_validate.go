@@ -5,6 +5,8 @@
 
 package pdf
 
+import "github.com/xo/okage/internal/siphasher"
+
 // The validators of PDF/A and PDF/UA of krilla src/configure/validate.rs are
 // not in the base port (D62). The serializer still records each validation
 // error where upstream records it, so that a later decision adds the
@@ -185,9 +187,10 @@ func (k validationErrorKind) String() string {
 // and Hash of upstream make it, so that the serializer removes the errors
 // that repeat.
 //
-// The cases of the text carry a Font of krilla, which the port of the text
-// adds as a field here. The cases of the separation colors and of the
-// embedded files carry types that the base port leaves out.
+// The cases of the text carry a Font of krilla, which the field font holds
+// as the hash of the font, so that the value stays comparable. The cases of
+// the separation colors and of the embedded files carry types that the base
+// port leaves out.
 //
 // An error that occurred during validation.
 type validationError struct {
@@ -203,6 +206,9 @@ type validationError struct {
 	char rune
 	// text is the String of ContainsNotDefGlyph.
 	text string
+	// font is the hash of the Font of the cases of the text, as
+	// Font::eq of upstream compares it.
+	font siphasher.Hash128
 }
 
 // hash is the derived Hash of ValidationError in krilla
@@ -215,6 +221,7 @@ func (e validationError) hash(h *hasher) {
 	h.u32(e.glyph)
 	h.u32(uint32(e.char))
 	h.str(e.text)
+	h.u128(e.font)
 }
 
 // versionedFeature is VersionedFeature in krilla src/configure/validate.rs.
@@ -255,8 +262,8 @@ func (f versionedFeature) minimumPDFVersion() PDFVersion {
 // validators is Validators in krilla src/configure/validate.rs, with no
 // validator. Upstream holds an optional validator of PDF/A and one of
 // PDF/UA. The methods below are the ones that the serializer calls. Each one
-// gives the answer of upstream for an empty set. A later unit that calls
-// another method of Validators adds it, with the same answer.
+// gives the answer of upstream for an empty set. A unit that calls another
+// method of Validators adds it, with the same answer.
 //
 // Collection of validators with at most one validator for each standard.
 type validators struct{}

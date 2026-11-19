@@ -141,6 +141,10 @@ type sceneQuestion struct {
 }
 
 type scene struct {
+	// interchangeSpec holds the metadata, the outline and the named
+	// destinations, at the top level of the JSON of the scene.
+	interchangeSpec
+
 	Settings map[string]any `json:"settings,omitempty"`
 	Fonts    []fontSpec     `json:"fonts,omitempty"`
 	Images   []imageSpec    `json:"images,omitempty"`
@@ -185,6 +189,8 @@ type pageSpec struct {
 	Label    *labelSpec  `json:"label,omitempty"`
 	// Surface false finishes the page without a call of Page::surface.
 	Surface *bool `json:"surface,omitempty"`
+	// Annotations holds the link annotations of the page.
+	Annotations []annotationSpec `json:"annotations,omitempty"`
 }
 
 // labelSpec is a page label: the style as the key /S of PDF, "D", "r", "R",

@@ -773,6 +773,12 @@ func (b *Buffer) moveTo(i int) {
 	outL := len(b.outInfo)
 	if outL < i {
 		count := i - outL
+
+		b.maxOps -= count
+		if b.maxOps < 0 {
+			return
+		}
+
 		b.outInfo = append(b.outInfo, b.Info[b.idx:count+b.idx]...)
 		b.idx += count
 	} else if outL > i {
@@ -787,6 +793,11 @@ func (b *Buffer) moveTo(i int) {
 		}
 
 		// assert(idx >= count)
+
+		b.maxOps -= count
+		if b.maxOps < 0 {
+			return
+		}
 
 		b.idx -= count
 		copy(b.Info[b.idx:], b.outInfo[outL-count:outL])
@@ -858,10 +869,12 @@ type syllableIterator struct {
 	start  int
 }
 
+const maxSyllableLength = 64
+
 func (c *syllableIterator) next() (start, end int) {
 	info := c.buffer.Info
-	count := len(c.buffer.Info)
 	start = c.start
+	count := start + min(len(info)-start, maxSyllableLength)
 	if start >= count {
 		return
 	}

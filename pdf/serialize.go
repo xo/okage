@@ -24,8 +24,8 @@ const (
 // serializeSettings is SerializeSettings in krilla src/serialize.rs. The
 // public fields of upstream are the options of NewDocument (D20). The base
 // port leaves out the field xmp_metadata, because it has no XMP metadata
-// (D62). It keeps enable_tagging without an option. The port of the text
-// adds the field render_svg_glyph_fn with WithSVGGlyphs.
+// (D62). It keeps enable_tagging without an option. The field
+// render_svg_glyph_fn is the option WithSVGGlyphs.
 //
 // Settings that should be applied when creating a PDF document.
 type serializeSettings struct {
@@ -51,6 +51,10 @@ type serializeSettings struct {
 	// It still decides the key /Tabs of a page with annotations, as in
 	// upstream.
 	enableTagging bool
+	// renderSVGGlyphFn is the field render_svg_glyph_fn of upstream, which
+	// WithSVGGlyphs sets. Nil is the default function of upstream, which
+	// draws no SVG glyph.
+	renderSVGGlyphFn SVGGlyphFunc
 
 	// err is the error of an option, such as a version that is not known.
 	// Document.Finish returns it.
@@ -199,15 +203,29 @@ type pageEntry struct {
 
 // globalObjects is GlobalObjects in krilla src/serialize.rs. The wrapper
 // MaybeTaken of upstream makes sure that the serializer takes each field
-// once. The port sets a field to nil when it takes it. The later units add
-// their fields: the fonts, the outline and the destinations. The forms, the
-// tags, the embedded files and the embedded PDF files are not in the base
-// port (D62).
+// once. The port sets a field to nil when it takes it. The forms, the tags,
+// the embedded files and the embedded PDF files are not in the base port
+// (D62).
 type globalObjects struct {
+	// namedDestinations holds all named destinations that have been
+	// registered, with the reference of their destination and the
+	// destination itself.
+	namedDestinations map[string]namedDestinationEntry
+	// xyzDestinations holds all XYZ destinations used in the document. They
+	// can only be written in the very end, once all pages have been written,
+	// so that the reference of the page they belong to is known.
+	xyzDestinations []xyzDestinationEntry
 	// pages holds all pages and their corresponding chunks. Pages need to
 	// be written in the very end, because pages might contain annotations
 	// which in turn depend on future pages.
 	pages []pageEntry
+	// outline stores the document outline. nil is None.
+	outline *Outline
+	// fontMap is the map from fonts to font containers, in the order of
+	// their first use, as the IndexMap of upstream keeps them. fontIndex
+	// finds the container of a font by its hash.
+	fontMap   []*fontContainer
+	fontIndex map[siphasher.Hash128]*fontContainer
 }
 
 // serializeContext is SerializeContext in krilla src/serialize.rs. It is
@@ -318,12 +336,10 @@ func (sc *serializeContext) newPDFWithCapacity(capacity int) *pdfwriter.Pdf {
 
 // finish is SerializeContext::finish in krilla src/serialize.rs. The objects
 // are serialized in the right order: an object that one step takes cannot
-// be read by a later step.
-//
-// The later units add their steps here, in the order of upstream: the
-// outline after the page label tree, the fonts after the page tree, and the
-// destinations after the fonts. The output intents of PDF/A, the forms, the
-// tags and the embedded PDF files are not in the base port (D62).
+// be read by a later step. The fonts come after the page tree, and the
+// destinations after the fonts, as upstream does. The output intents of
+// PDF/A, the forms, the tags and the embedded PDF files are not in the base
+// port (D62).
 func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 	// Serialize all objects that can only be written in the end.
 	sc.serializePageLabelTree(cc)
@@ -332,6 +348,12 @@ func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 		return nil, err
 	}
 	sc.serializePageTree(cc)
+	if err := sc.serializeFonts(cc); err != nil {
+		return nil, err
+	}
+	if err := sc.serializeXYZDestinations(cc); err != nil {
+		return nil, err
+	}
 	sc.serializeTagTree()
 
 	// Create the final PDF.
@@ -447,10 +469,16 @@ func (sc *serializeContext) serializePageLabelTree(cc *chunkContainer) {
 }
 
 // serializeOutline is SerializeContext::serialize_outline in krilla
-// src/serialize.rs. The port of interchange/outline.rs adds the outline.
-// Without it, the document has no outline.
-func (sc *serializeContext) serializeOutline(*chunkContainer) {
-	sc.registerValidationError(validationError{kind: validationMissingDocumentOutline})
+// src/serialize.rs.
+func (sc *serializeContext) serializeOutline(cc *chunkContainer) {
+	outline := sc.globalObjects.outline
+	sc.globalObjects.outline = nil
+	if outline != nil {
+		outlineRef := sc.newRef()
+		outline.serialize(sc, cc, outlineRef)
+	} else {
+		sc.registerValidationError(validationError{kind: validationMissingDocumentOutline})
+	}
 }
 
 // serializePages is SerializeContext::serialize_pages in krilla

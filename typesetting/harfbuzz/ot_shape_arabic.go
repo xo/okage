@@ -521,6 +521,16 @@ func (cs *complexShaperArabic) postprocessGlyphs(plan *otShapePlan, buffer *Buff
 				}
 			}
 
+			const stchMaxGlyphs = 256
+			maxCopies := 0
+			if nRepeating > 0 {
+				baseGlyphs := nFixed + nRepeating
+				if baseGlyphs < stchMaxGlyphs {
+					maxCopies = (stchMaxGlyphs - baseGlyphs) / nRepeating
+				}
+			}
+			nCopies = min(nCopies, maxCopies)
+
 			if step == MEASURE {
 				extraGlyphsNeeded += nCopies * nRepeating
 				if debugMode {
@@ -668,7 +678,7 @@ func (cs *complexShaperArabic) reorderMarks(_ *otShapePlan, buffer *Buffer, star
 		newStart := start + j - i
 		newCc := mcc26
 		if cc == 220 {
-			newCc = mcc26
+			newCc = mcc22
 		}
 		for start < newStart {
 			info[start].setModifiedCombiningClass(newCc)

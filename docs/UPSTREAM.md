@@ -259,6 +259,7 @@ The port is in the packages `pdf` and `pdfsvg` (D62).
 | `crates/krilla/src/interchange/tagging/**`, `crates/krilla/src/interactive/form.rs`, `crates/krilla/src/interchange/embed.rs`, `crates/krilla/src/graphics/separation.rs`, `crates/krilla/src/pdf.rs` | none | Review. The base port of D62 leaves them out. A commit that changes only these files is `not-applicable` until a decision adds them |
 | `crates/krilla-svg/src/<name>.rs` | `pdfsvg/<name>.go` | Port. A change that the tree of `svg` needs has a comment that starts with `okage:` (D62) |
 | `refs/snapshots/**` | `pdf/testdata/snapshots/**`, copied byte for byte | Port |
+| `assets/fonts/**` | `pdf/testdata/fonts/**`, copied byte for byte with their licenses, for the fonts that the ported tests read (D63). The section "The copies of okage" at the end of `README.md` names the license of each font, and the two licenses that okage wrote | Port |
 | `Cargo.toml`, `Cargo.lock`, `crates/*/Cargo.toml` | none | Review. A new version of pdf-writer or subsetter starts the steps of "A new version of a dependency" |
 | everything else | none | Review. "Testing" under "The PDF writer" in [`PLAN.md`](PLAN.md) says which tests okage ports and which ones the test module compares |
 
@@ -590,8 +591,10 @@ On 2026-11-18 eighteen ledgers exist:
    not copy. One is `ported`: okage applied `e8da365e` out of order, for the
    kerning of Calibri (D59). The column `matched` is empty. Later, okage
    applied more commits out of order, for the limits of the loader (D61)
-   and for the variable fonts of `internal/subsetter` (D65). On 2026-11-18,
-   13 commits are `ported` and 97 are `pending`.
+   and for the variable fonts of `internal/subsetter` (D65). On 2026-11-19,
+   okage applied the 23 pending commits that fix a panic, a loop that does
+   not end or a missing bound on malformed input (D67). 36 commits are
+   `ported` and 74 are `pending`.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
    pdf-writer has two commits after `fdf09012`. `a10fe0a3` changes only a

@@ -62,8 +62,8 @@ func (v PDFVersion) String() string {
 // The method write_xmp of PdfVersion is for the XMP metadata, which the base
 // port leaves out (D62). The methods rgb_icc and grey_icc give the ICC
 // profiles of graphics/icc.rs, and the port of that file adds them. The
-// methods supports_icc and supports_bit_depth are for the images, and the
-// port of graphics/image adds them. specifies_associated_files is for the
+// methods supports_icc and supports_bit_depth are for the images, and they
+// are in graphics_image.go. specifies_associated_files is for the
 // embedded files, which the base port leaves out.
 
 // setVersion is PdfVersion::set_version in krilla src/configure/version.rs.

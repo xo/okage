@@ -43,6 +43,10 @@ func goScene(s scene) ([]byte, error) {
 			if flag {
 				return nil, errors.New("pdf has no XMP metadata")
 			}
+		case "svg_glyphs":
+			if flag {
+				return nil, errors.New("the SVG glyphs of pdfsvg come with phase 17")
+			}
 		case "version":
 			versions := map[any]pdf.PDFVersion{
 				"1.4": pdf.PDF14, "1.5": pdf.PDF15, "1.6": pdf.PDF16, "1.7": pdf.PDF17, "2.0": pdf.PDF20,
@@ -57,21 +61,32 @@ func goScene(s scene) ([]byte, error) {
 		}
 	}
 	d := pdf.NewDocument(opts...)
+	goNamedDestinations(d, s.interchangeSpec)
+	res, err := goResources(s)
+	if err != nil {
+		return nil, err
+	}
 	for i, p := range s.Pages {
 		ps, err := goPageSettings(p)
 		if err != nil {
 			return nil, err
 		}
 		page := d.StartPage(ps)
+		if err := goAnnotations(page, p.Annotations); err != nil {
+			return nil, fmt.Errorf("page %d: %w", i, err)
+		}
 		if p.Surface == nil || *p.Surface {
 			surface := page.Surface()
-			err := goRun(surface, p.Ops)
+			err := goRun(surface, p.Ops, res)
 			surface.Finish()
 			if err != nil {
 				return nil, fmt.Errorf("page %d: %w", i, err)
 			}
 		}
 		page.Finish()
+	}
+	if err := goFinishDocument(d, s.interchangeSpec); err != nil {
+		return nil, err
 	}
 	var buf bytes.Buffer
 	if err := d.Finish(&buf); err != nil {

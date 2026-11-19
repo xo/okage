@@ -1,0 +1,81 @@
+%PDF-1.7
+%AAAA
+
+1 0 obj
+<<
+  /Type /Pages
+  /Count 1
+  /Kids [3 0 R]
+>>
+endobj
+
+2 0 obj
+<<
+  /ProcSet [/PDF /Text /ImageC /ImageB]
+>>
+endobj
+
+3 0 obj
+<<
+  /Type /Page
+  /Resources 2 0 R
+  /MediaBox [0 0 595 842]
+  /Parent 1 0 R
+  /Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+  /Length 0
+>>
+stream
+
+endstream
+endobj
+
+5 0 obj
+<<
+  /Title (An awesome title)
+  /Subject (A very interesting subject)
+  /Keywords (keyword1, keyword2, keyword3)
+  /Author (John Doe, Max Mustermann)
+  /Creator (krilla)
+  /Producer (krilla)
+  /ModDate (D:20241108222318+01'12)
+  /CreationDate (D:20241108222318+01'12)
+>>
+endobj
+
+6 0 obj
+<<
+  /Type /Catalog
+  /Pages 1 0 R
+  /Lang (en)
+  /ViewerPreferences <<
+    /DisplayDocTitle true
+    /Direction /L2R
+  >>
+  /PageLayout /TwoColumnRight
+>>
+endobj
+
+xref
+0 7
+0000000000 65535 f
+0000000016 00000 n
+0000000080 00000 n
+0000000142 00000 n
+0000000257 00000 n
+0000000309 00000 n
+0000000597 00000 n
+trailer
+<<
+  /Size 7
+  /Root 6 0 R
+  /Info 5 0 R
+  /ID [(CGF89dB/kZ8HG+0AeiObmg==) (5PugGGJusizcjNP5D9me0A==)]
+>>
+startxref
+769
+%%EOF

@@ -209,17 +209,25 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 	fontPage := os2.FontPage()
 	out.os2, _ = newOs2(os2)
 
-	raw, err = ld.RawTable(ot.MustNewTag("cmap"))
-	if err != nil {
-		return nil, err
-	}
-	tb, _, err := tables.ParseCmap(raw)
-	if err != nil {
-		return nil, err
-	}
-	out.Cmap, out.cmapVar, err = ProcessCmap(tb, fontPage)
-	if err != nil {
-		return nil, err
+	// okage: go-text returns an error for a font without the table cmap. A
+	// font subset of a PDF file has no cmap, and pdf reads the outlines of
+	// such a font as krilla does with skrifa, which needs no cmap. The font
+	// then maps no rune to a glyph (D62).
+	if !ld.HasTable(ot.MustNewTag("cmap")) {
+		out.Cmap = cmap12(nil)
+	} else {
+		raw, err = ld.RawTable(ot.MustNewTag("cmap"))
+		if err != nil {
+			return nil, err
+		}
+		tb, _, err := tables.ParseCmap(raw)
+		if err != nil {
+			return nil, err
+		}
+		out.Cmap, out.cmapVar, err = ProcessCmap(tb, fontPage)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	out.head, _, err = LoadHeadTable(ld, nil)
@@ -259,7 +267,10 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 	raw, _ = ld.RawTable(ot.MustNewTag("glyf"))
 	locaRaw, _ := ld.RawTable(ot.MustNewTag("loca"))
 	loca, err := tables.ParseLoca(locaRaw, out.nGlyphs, out.head.IndexToLocFormat == 1)
-	if err == nil { // ParseGlyf panics if len(loca) == 0
+	// ParseGlyf requires the final loca offset, even for zero glyphs.
+	// NewFont drops an invalid glyf instead of failing. Only cmap, head and maxp
+	// are required, and the font stays usable for cmap and metrics queries.
+	if err == nil {
 		out.glyf, _ = tables.ParseGlyf(raw, loca)
 	}
 

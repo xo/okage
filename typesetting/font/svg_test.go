@@ -4,6 +4,9 @@ package font
 
 import (
 	"testing"
+
+	"github.com/xo/okage/typesetting/font/opentype/tables"
+	tu "github.com/xo/okage/typesetting/testutils"
 )
 
 func TestSVGViewBox(t *testing.T) {
@@ -54,4 +57,12 @@ func TestSVGViewBox(t *testing.T) {
 			t.Fatalf("document %q: expected %v, got %v", test.doc, test.expected, got)
 		}
 	}
+}
+
+func TestSVGOffsetOverflow(t *testing.T) {
+	_, err := newSvg(tables.SVG{SVGDocumentList: tables.SVGDocumentList{
+		DocumentRecords: []tables.SVGDocumentRecord{{SvgDocOffset: 0xFFFFFFF0, SvgDocLength: 0x20}},
+		SVGRawData:      make([]byte, 16),
+	}})
+	tu.Assert(t, err != nil)
 }

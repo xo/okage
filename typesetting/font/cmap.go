@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"sort"
+	"unicode"
 
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 )
@@ -266,12 +267,21 @@ func newCmap4(cm tables.CmapSubtable4) (cmap4, error) {
 		}
 		idRangeOffset := int(cm.IdRangeOffsets[i])
 
-		// some fonts use 0xFFFF for idRangeOff for the last segment
-		if entry.start != 0xFFFF && idRangeOffset != 0 {
+		// some fonts use 0xFFFF for idRangeOffset for the last segment
+		if idRangeOffset != 0 && idRangeOffset != 0xFFFF {
 			// we resolve the indexes
-			entry.indexes = make([]tables.GlyphID, entry.end-entry.start+1)
+			// okage: go-text counts the codes of the segment in uint16. The
+			// segment from 0 to 0xFFFF then has no index, and Lookup and
+			// Char index the empty slice and panic. The count is now an
+			// int, and a segment that ends before it starts is an error
+			// (D67).
+			count := int(entry.end) - int(entry.start) + 1
+			if count <= 0 {
+				return nil, errors.New("invalid cmap subtable format 4 segment")
+			}
+			entry.indexes = make([]tables.GlyphID, count)
 			indexStart := idRangeOffset/2 + i - segCount
-			if len(cm.GlyphIDArray) < 2*(indexStart+len(entry.indexes)) {
+			if indexStart < 0 || len(cm.GlyphIDArray) < 2*(indexStart+len(entry.indexes)) {
 				return nil, errors.New("invalid cmap subtable format 4 glyphs array length")
 			}
 			for j := range entry.indexes {
@@ -364,6 +374,9 @@ func newCmap6(cm tables.CmapSubtable6) cmap6or10 {
 }
 
 func newCmap10(cm tables.CmapSubtable10) cmap6or10 {
+	if cm.StartCharCode > unicode.MaxRune { // no rune reaches this subtable, and rune(firstCode) would overflow
+		return cmap6or10{}
+	}
 	return cmap6or10{entries: cm.GlyphIdArray, firstCode: rune(cm.StartCharCode)}
 }
 
@@ -863,6 +876,9 @@ func (cm cmap4) RuneRanges(dst [][2]rune) [][2]rune {
 }
 
 func (cm *cmap6or10) RuneRanges(dst [][2]rune) [][2]rune {
+	if len(cm.entries) == 0 {
+		return dst[:0]
+	}
 	if cap(dst) < 1 {
 		dst = [][2]rune{{}}
 	}

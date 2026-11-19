@@ -1,6 +1,6 @@
 # D65. typesetting fixes the variable fonts of the subsetter
 
-Status: Decided.
+Status: Decided, amended by D67.
 
 `internal/subsetter` makes the instances of variable fonts with
 `typesetting`, where subsetter makes them with skrifa (D62). Unit 4 of phase
@@ -43,14 +43,9 @@ rounded division, and round the result to 2.14.
 
 ## The checksum of WriteTTF
 
-`opentype.WriteTTF` appended the padding of a table to the slice of the table
-to compute its checksum. When the slice had more capacity, as a table of a
-font file has, the append wrote zeros into the data after the table. It also
-padded with the wrong number of bytes, so the checksum left out the last
-bytes of a table whose length is not a multiple of four.
-
-1. The checksum reads the last bytes of a table into a word of its own, and
-   writes nothing into the slice.
+D67 applies the commit `f7b0a668` of go-text, which fixes the checksum of
+`opentype.WriteTTF` as this decision did. okage follows go-text, and its
+own change is gone.
 
 ## The panics on malformed fonts
 
@@ -78,8 +73,9 @@ okage changes these functions:
    side bearings in that case, so the font keeps its advances.
 4. `CFF2.LoadGlyph` read the regions of the item variation store of CFF2
    with each region index of its item variation data. An index out of the
-   list of regions now gives an error. The pending commit `c6965dda` of
-   go-text guards the same indexes in `ItemVarStore.GetDelta` only.
+   list of regions now gives an error. The commit `c6965dda` of go-text,
+   which D67 applies, guards the same indexes in `ItemVarStore.GetDelta`
+   only.
 5. The tests in `typesetting/font/opentype/okage_test.go` and
    `typesetting/font/opentype/tables/okage_test.go` cover the first three
    changes. `FuzzSubset` of `internal/subsetter` covers the fourth.

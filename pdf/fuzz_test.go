@@ -211,15 +211,155 @@ func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 	s.Finish()
 }
 
+// point reads a point of a destination or of a quadrilateral.
+func (r *fuzzReader) point() Point {
+	return path.PointFromXY(r.coord(), r.coord())
+}
+
+// text reads a string of at most 7 bytes, which need not be UTF-8.
+func (r *fuzzReader) text() string {
+	n := int(r.u8() % 8)
+	b := make([]byte, 0, n)
+	for range n {
+		b = append(b, r.u8())
+	}
+	return string(b)
+}
+
+// xyz reads an XYZ destination, whose page index can be out of range.
+func (r *fuzzReader) xyz() XYZDestination {
+	return NewXYZDestination(int(int8(r.u8())), r.point())
+}
+
+// named reads a named destination, with one of a few names, so that names
+// repeat.
+func (r *fuzzReader) named() NamedDestination {
+	return NewNamedDestination(string(rune('a'+r.u8()%4)), r.xyz())
+}
+
+// destination reads a destination of either kind, or nil.
+func (r *fuzzReader) destination() Destination {
+	switch r.u8() % 5 {
+	case 0:
+		return nil
+	case 1, 2:
+		return r.xyz()
+	}
+	return r.named()
+}
+
+// target reads the target of a link: a destination, a link or a go-to
+// action, or nil.
+func (r *fuzzReader) target() Target {
+	switch r.u8() % 4 {
+	case 0:
+		return NewLinkAction(r.text())
+	case 1:
+		return NewGotoAction(r.destination())
+	case 2:
+		if d := r.destination(); d != nil {
+			return d
+		}
+	}
+	return nil
+}
+
+// annotation reads a link annotation, with a rectangle or with at most 3
+// quadrilaterals.
+func (r *fuzzReader) annotation() Annotation {
+	var l LinkAnnotation
+	if r.u8()%2 == 0 {
+		rect, ok := path.RectFromXYWH(r.f32(), r.f32(), r.f32(), r.f32())
+		if !ok {
+			rect, _ = path.RectFromXYWH(0, 0, 1, 1)
+		}
+		l = NewLinkAnnotation(rect, r.target())
+	} else {
+		quads := make([]Quadrilateral, r.u8()%4)
+		for i := range quads {
+			quads[i] = Quadrilateral{r.point(), r.point(), r.point(), r.point()}
+		}
+		l = NewLinkAnnotationWithQuadPoints(quads, r.target())
+	}
+	if r.u8()%2 == 0 {
+		l = l.WithBorder(NewLinkBorder(r.f32(), r.color()))
+	}
+	if r.u8()%2 == 0 {
+		alt := r.text()
+		return NewAnnotationLink(l, &alt).WithLocation(Location(r.u8()))
+	}
+	return AnnotationFromLink(l)
+}
+
+// outlineNodes reads at most 3 nodes of an outline, with children up to a
+// depth of 3.
+func (r *fuzzReader) outlineNodes(depth int) []OutlineNode {
+	var nodes []OutlineNode
+	for range r.u8() % 4 {
+		n := NewOutlineNode(r.text(), r.xyz()).WithOpen(r.u8()%2 == 0)
+		if depth < 3 {
+			for _, c := range r.outlineNodes(depth + 1) {
+				n.PushChild(c)
+			}
+		}
+		nodes = append(nodes, n)
+	}
+	return nodes
+}
+
+// metadata reads metadata with random fields.
+func (r *fuzzReader) metadata() Metadata {
+	flags := r.u32()
+	m := NewMetadata()
+	setters := []func(Metadata, string) Metadata{
+		Metadata.Title, Metadata.Description, Metadata.Creator, Metadata.Producer,
+		Metadata.DocumentID, Metadata.VersionID, Metadata.Language,
+	}
+	for i, set := range setters {
+		if flags&(1<<i) != 0 {
+			m = set(m, r.text())
+		}
+	}
+	if flags&(1<<7) != 0 {
+		m = m.Keywords([]string{r.text(), r.text()})
+	}
+	if flags&(1<<8) != 0 {
+		m = m.Authors([]string{r.text()})
+	}
+	if flags&(1<<9) != 0 {
+		m = m.CreationDate(NewDateTime(uint16(r.u32())).Month(r.u8()).Day(r.u8()).Hour(r.u8()).
+			Minute(r.u8()).Second(r.u8()).UTCOffsetHour(int8(r.u8())).UTCOffsetMinute(r.u8()))
+	}
+	if flags&(1<<10) != 0 {
+		m = m.TextDirection(TextDirectionMetadata(r.u8() % 3))
+	}
+	if flags&(1<<11) != 0 {
+		m = m.PageLayout(PageLayout(r.u8() % 7))
+	}
+	m = m.DisplayDocTitle(flags&(1<<12) != 0)
+	for range r.u8() % 4 {
+		m, _ = m.CustomField(r.text(), r.text())
+	}
+	return m
+}
+
 // FuzzDocument builds a document from random settings, page sizes, boxes and
 // labels, which a program can take from a hostile file. Finish must not
 // panic, and a file must start with the header of PDF. A page that is not
-// finished at once gets random calls of its surface, with every paint.
+// finished at once gets random calls of its surface, with every paint. A
+// page can get link annotations, and the document named destinations,
+// metadata and an outline, whose destinations can link to pages that do not
+// exist.
 func FuzzDocument(f *testing.F) {
 	f.Add([]byte{})
 	f.Add([]byte{0x1f, 2, 0, 0, 0x48, 0x43, 0, 0, 0x48, 0x43, 1, 1, 2, 0, 0, 0, 1, 0x80})
 	f.Add([]byte{0x07, 3, 1, 0, 0, 0x80, 0x7f, 0, 0, 0x80, 0x7f})
 	f.Add(bytes.Repeat([]byte{0xff}, 64))
+	// Two pages with links, then named destinations, metadata and an
+	// outline.
+	f.Add([]byte{0x07, 2, 0x20, 0, 0, 0, 0, 0, 2, 0, 0x40, 0x40, 0x40, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0x20, 0, 0, 0, 0, 0, 2, 1, 1, 2, 0, 1, 0, 1, 1, 0, 0x0e, 1, 0, 1, 0, 2, 0, 0xff, 0x1f, 0, 0,
+		2, 1, 'x', 0, 1, 'y', 0, 0, 2, 1, 'a', 1, 1, 0, 1, 0, 0, 0})
 	f.Add([]byte{0x04, 1, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0x10, 0, 1, 255, 0, 0, 200, 0, 2, 4, 0, 0, 0, 0, 1, 0, 0, 0x20, 0x41, 0, 0, 0x20, 0x41,
 		1, 0, 0, 0, 0, 0, 0, 0x20, 0x41, 7, 128, 8, 2, 4, 0, 0, 0, 0, 1, 0, 0, 0x20, 0x41, 0, 0, 0x20, 0x41, 11, 11})
@@ -265,10 +405,30 @@ func FuzzDocument(f *testing.F) {
 				ps = ps.WithPageLabel(NewPageLabel(style, prefix, r.u32()))
 			}
 			p := d.StartPage(ps)
+			if kind&0x20 != 0 {
+				for range r.u8() % 4 {
+					p.AddAnnotation(r.annotation())
+				}
+			}
 			if kind&0x80 != 0 {
 				p.Finish()
 			} else if kind&0x40 != 0 {
 				fuzzSurface(r, p.Surface(), 0)
+			}
+		}
+		if extra := r.u8(); extra != 0 {
+			for range extra % 4 {
+				d.RegisterNamedDestination(r.named())
+			}
+			if extra&4 != 0 {
+				d.SetMetadata(r.metadata())
+			}
+			if extra&8 != 0 {
+				outline := NewOutline()
+				for _, n := range r.outlineNodes(0) {
+					outline.PushChild(n)
+				}
+				d.SetOutline(outline)
 			}
 		}
 		var buf bytes.Buffer

@@ -20,12 +20,6 @@ import (
 //
 // The port leaves out these parts of upstream:
 //
-//   - The text: draw_glyphs, encode_consecutive_glyph_run,
-//     encode_single_glyph, encode_glyphs_with_individual_positioning,
-//     fill_stroke_glyph_run, fill_stroke_glyph_span, fill_stroke_glyph_group
-//     and get_glyphs_bbox, with the field scratch of ContentBuilder. Phase 16
-//     ports them into this file, as methods of contentBuilder.
-//   - The images: draw_image. Phase 15 ports it into this file.
 //   - The marked content of the tags and of the forms: the fields
 //     active_marked_content and xobject_identifier of ContentBuilder, and
 //     start_marked_content, start_marked_content_with_properties and
@@ -50,6 +44,8 @@ type contentBuilder struct {
 	// need it is if we are currently inside of an XObject, where we need to
 	// provide a bbox of all its contents.
 	bboxImportant bool
+	// scratch is a temporary buffer that's reused across the builder.
+	scratch []byte
 }
 
 // contentColorSpace is ContentColorSpace in krilla src/content.rs. It stores
@@ -385,6 +381,418 @@ func (b *contentBuilder) popClipPath() {
 	b.content.RestoreState()
 }
 
+// drawGlyphs is ContentBuilder::draw_glyphs in krilla src/content.rs. A nil
+// fill or stroke is None. The caller checks the ranges of the glyphs.
+func (b *contentBuilder) drawGlyphs(
+	start Point,
+	sc *serializeContext,
+	cc *chunkContainer,
+	fill *Fill,
+	stroke *Stroke,
+	contextColor ColorRGB,
+	glyphs []Glyph,
+	font *Font,
+	text string,
+	fontSize float32,
+) {
+	if fill == nil && stroke == nil {
+		return
+	}
+
+	x, y := start.X, start.Y
+	b.graphicsStates.saveState()
+
+	// Calculating the glyphs bbox is very expensive but not always
+	// necessary, so omit if not needed.
+	bboxImportant := b.bboxImportant
+	calculateBBox := func(isSolid bool) bool { return bboxImportant || !isSolid }
+
+	fillAction := func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer, fill *Fill) {
+		_, isSolid := fill.Paint.(Color)
+		bbox, _ := path.RectFromXYWH(0.0, 0.0, 1.0, 1.0)
+		if calculateBBox(isSolid) {
+			bbox = getGlyphsBBox(glyphs, x, y, fontSize, font)
+			sb.expandBBox(bbox)
+		}
+
+		sb.contentSetFillProperties(bbox, fill, sc, cc)
+	}
+
+	strokeAction := func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer, stroke *Stroke) {
+		_, isSolid := stroke.Paint.(Color)
+		bbox, _ := path.RectFromXYWH(0.0, 0.0, 1.0, 1.0)
+		if calculateBBox(isSolid) {
+			// TODO: Bbox should also account for stroke.
+			bbox = getGlyphsBBox(glyphs, x, y, fontSize, font)
+			sb.expandBBox(bbox)
+		}
+
+		sb.contentSetStrokeProperties(bbox, stroke, sc, cc)
+	}
+
+	setFillOpacity := func(sb *contentBuilder, fill *Fill) {
+		// PDF viewers don't show patterns with fill/stroke opacities
+		// consistently. Because of this, the opacity is accounted for in the
+		// pattern itself.
+		if _, ok := fill.Paint.(Pattern); !ok {
+			sb.setFillOpacity(fill.Opacity)
+		}
+	}
+
+	setStrokeOpacity := func(sb *contentBuilder, stroke *Stroke) {
+		// PDF viewers don't show patterns with fill/stroke opacities
+		// consistently. Because of this, the opacity is accounted for in the
+		// pattern itself.
+		if _, ok := stroke.Paint.(Pattern); !ok {
+			sb.setStrokeOpacity(stroke.Opacity)
+
+			// See the comment in `stroke-action` for why we also set the
+			// fill opacity.
+			sb.setFillOpacity(stroke.Opacity)
+		}
+	}
+
+	switch {
+	case fill != nil && stroke != nil:
+		setFillOpacity(b, fill)
+		setStrokeOpacity(b, stroke)
+
+		b.fillStrokeGlyphRun(x, y, sc, cc, pdfwriter.TextRenderingModeFillStroke,
+			func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+				fillAction(sb, sc, cc, fill)
+				strokeAction(sb, sc, cc, stroke)
+			},
+			glyphs, font, contextColor, text, fontSize)
+	case fill != nil:
+		setFillOpacity(b, fill)
+
+		b.fillStrokeGlyphRun(x, y, sc, cc, pdfwriter.TextRenderingModeFill,
+			func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+				fillAction(sb, sc, cc, fill)
+			},
+			glyphs, font, contextColor, text, fontSize)
+	default:
+		setStrokeOpacity(b, stroke)
+
+		b.fillStrokeGlyphRun(x, y, sc, cc, pdfwriter.TextRenderingModeStroke,
+			func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+				strokeAction(sb, sc, cc, stroke)
+			},
+			glyphs, font, contextColor, text, fontSize)
+	}
+
+	b.graphicsStates.restoreState()
+}
+
+// approxZero is approx_eq!(f32, v, 0.0, epsilon = 0.001) of the crate
+// float-cmp, which krilla calls: the difference is at most the epsilon, or
+// at most 4 units in the last place, which a number that close to 0 also
+// meets.
+func approxZero(v float32) bool {
+	return max(v, -v) <= 0.001
+}
+
+// encodeConsecutiveGlyphRun is ContentBuilder::encode_consecutive_glyph_run
+// in krilla src/content.rs.
+//
+// Encode a successive sequence of glyphs that share the same properties and
+// can be encoded with one text showing operator.
+func (b *contentBuilder) encodeConsecutiveGlyphRun(
+	sc *serializeContext,
+	curX *float32,
+	curY float32,
+	id fontIdentifier,
+	pdfFont pdfFont,
+	size float32,
+	contextColor ColorRGB,
+	glyphs []Glyph,
+	text string,
+) {
+	fontName := b.rdBuilder.registerResource(sc.registerFontIdentifier(id))
+	b.content.SetFont(pdfwriter.Name(fontName), size)
+	b.content.SetTextMatrix(transformToPDF(path.TransformFromRow(1.0, 0.0, 0.0, -1.0, *curX, curY)))
+
+	for i := range glyphs {
+		glyph := &glyphs[i]
+		name, _ := pdfFont.font().postscriptName()
+		if glyph.GlyphID == 0 || name == "LastResort" {
+			sc.registerValidationError(validationError{
+				kind:     validationContainsNotDefGlyph,
+				font:     pdfFont.font().hash,
+				location: glyph.Location,
+				text:     text[glyph.TextRange.Start:glyph.TextRange.End],
+			})
+		}
+	}
+
+	// If it's just a single glyph and without an x_offset, there is no need
+	// for individual positioning, so we can use `Tj` instead of `TJ`. The
+	// reason we're doing this is because Acrobat's copy-paste is a bit buggy
+	// if `/ActualText` is used at the end of a line, but only if `TJ` is
+	// used. With `Tj`, it's fine.
+	if len(glyphs) == 1 && approxZero(glyphs[0].xOffset(1.0)) {
+		b.encodeSingleGlyph(curX, pdfFont, size, contextColor, &glyphs[0])
+		return
+	}
+
+	b.encodeGlyphsWithIndividualPositioning(curX, pdfFont, size, contextColor, glyphs)
+}
+
+// encodeSingleGlyph is ContentBuilder::encode_single_glyph in krilla
+// src/content.rs.
+func (b *contentBuilder) encodeSingleGlyph(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyph *Glyph) {
+	g, _ := pdfFont.getGID(coloredGlyph{glyphID: glyph.GlyphID, contextColor: contextColor})
+	b.scratch = g.encodeInto(b.scratch[:0])
+	b.content.Show(pdfwriter.Str(b.scratch))
+	*curX += glyph.xAdvance(size)
+}
+
+// encodeGlyphsWithIndividualPositioning is
+// ContentBuilder::encode_glyphs_with_individual_positioning in krilla
+// src/content.rs.
+func (b *contentBuilder) encodeGlyphsWithIndividualPositioning(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyphs []Glyph) {
+	encoded := b.scratch[:0]
+
+	var adjustment float32
+	positioned := b.content.ShowPositioned()
+	items := positioned.Items()
+
+	scale := func(val float32) float32 { return val * pdfFont.unitsPerEm() }
+
+	for i := range glyphs {
+		glyph := &glyphs[i]
+		g, _ := pdfFont.getGID(coloredGlyph{glyphID: glyph.GlyphID, contextColor: contextColor})
+
+		xAdvance := scale(glyph.xAdvance(1.0))
+		fontAdvance, hasFontAdvance := pdfFont.font().advanceWidth(glyph.GlyphID)
+		if hasFontAdvance {
+			fontAdvance = scale(fontAdvance / pdfFont.font().UnitsPerEm())
+		}
+		xOffset := scale(glyph.xOffset(1.0))
+
+		adjustment += xOffset
+
+		// Make sure we don't write miniscule adjustments
+		if !approxZero(adjustment) {
+			if len(encoded) != 0 {
+				items.Show(pdfwriter.Str(encoded))
+				encoded = encoded[:0]
+			}
+
+			// Adjustment is always in 1000 units, even for Type3 fonts.
+			items.Adjust(-(adjustment / pdfFont.unitsPerEm() * pdfUnitsPerEm))
+			adjustment = 0.0
+		}
+
+		encoded = g.encodeInto(encoded)
+
+		if hasFontAdvance {
+			adjustment += xAdvance - fontAdvance
+		}
+
+		adjustment -= xOffset
+		// cur_x/cur_y and glyph metrics are in user space units.
+		*curX += glyph.xAdvance(size)
+	}
+
+	if len(encoded) != 0 {
+		items.Show(pdfwriter.Str(encoded))
+	}
+
+	items.Finish()
+	positioned.Finish()
+	b.scratch = encoded
+}
+
+// fillStrokeGlyphRun is ContentBuilder::fill_stroke_glyph_run in krilla
+// src/content.rs.
+func (b *contentBuilder) fillStrokeGlyphRun(
+	x, ys float32,
+	sc *serializeContext,
+	cc *chunkContainer,
+	fillRenderMode pdfwriter.TextRenderingMode,
+	action func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer),
+	glyphs []Glyph,
+	font *Font,
+	contextColor ColorRGB,
+	text string,
+	fontSize float32,
+) {
+	if len(glyphs) == 0 {
+		return
+	}
+
+	b.applyIsolatedOp(
+		func(*contentBuilder) {},
+		func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+			curX := x
+			curY := ys
+
+			// When the glyph ranges are monotonically decreasing, the glyphs
+			// are in reverse order and we should write `/ReversedChars`
+			// marked content.
+			reversed := len(glyphs) > 1
+			for i := 0; reversed && i+1 < len(glyphs); i++ {
+				reversed = glyphs[i].TextRange.Start >= glyphs[i+1].TextRange.End
+			}
+
+			action(sb, sc, cc)
+			sb.content.BeginText()
+
+			fc := sc.registerFontContainer(font)
+			doTextSpan := reversed || useTextSpanner(glyphs, text, contextColor, fc)
+
+			if doTextSpan {
+				// Separate into distinct glyph runs that either are encoded
+				// using actual text, or are not.
+				spanned := newGlyphSpanner(
+					glyphs,
+					text,
+					reversed,
+					sc.serializeSettings().validators().requiresCodepointMappings(),
+					contextColor,
+					fc,
+				)
+
+				for {
+					fragment, ok := spanned.next()
+					if !ok {
+						break
+					}
+					sb.fillStrokeGlyphSpan(&curX, &curY, fragment, sc, fillRenderMode, fc, contextColor, text, fontSize, reversed)
+				}
+			} else {
+				sb.fillStrokeGlyphSpan(&curX, &curY, glyphSpan{glyphs: glyphs}, sc, fillRenderMode, fc, contextColor, text, fontSize, reversed)
+			}
+
+			sb.content.EndText()
+		},
+		sc,
+		cc,
+	)
+}
+
+// fillStrokeGlyphSpan is ContentBuilder::fill_stroke_glyph_span in krilla
+// src/content.rs.
+func (b *contentBuilder) fillStrokeGlyphSpan(
+	curX, curY *float32,
+	fragment glyphSpan,
+	sc *serializeContext,
+	fillRenderMode pdfwriter.TextRenderingMode,
+	fc *fontContainer,
+	contextColor ColorRGB,
+	text string,
+	fontSize float32,
+	reversed bool,
+) {
+	if fragment.hasActualText {
+		actualText := b.content.BeginMarkedContentWithProperties(pdfwriter.Name("Span"))
+		actualText.Properties().ActualText(pdfwriter.TextStr(fragment.actualText))
+		actualText.Finish()
+	}
+
+	if reversed {
+		b.content.BeginMarkedContent(pdfwriter.Name("ReversedChars"))
+	}
+
+	// Segment into glyph runs that can be encoded in one go using a PDF text
+	// showing operator (i.e. no y shift, same Type3 font, etc.)
+	rest := fragment.glyphs
+	for len(rest) != 0 {
+		var group glyphGroup
+		group, rest = nextGlyphGroup(fc, contextColor, rest)
+		b.fillStrokeGlyphGroup(curX, curY, group, sc, fillRenderMode, fc, contextColor, text, fontSize)
+	}
+
+	if reversed {
+		b.content.EndMarkedContent()
+	}
+
+	if fragment.hasActualText {
+		b.content.EndMarkedContent()
+	}
+}
+
+// fillStrokeGlyphGroup is ContentBuilder::fill_stroke_glyph_group in krilla
+// src/content.rs.
+func (b *contentBuilder) fillStrokeGlyphGroup(
+	curX, curY *float32,
+	group glyphGroup,
+	sc *serializeContext,
+	fillRenderMode pdfwriter.TextRenderingMode,
+	fc *fontContainer,
+	contextColor ColorRGB,
+	text string,
+	fontSize float32,
+) {
+	pdfFont, ok := fc.getFromIdentifier(group.fontIdentifier)
+	if !ok {
+		return
+	}
+
+	switch {
+	case fillRenderMode == pdfwriter.TextRenderingModeFill || pdfFont.forceFill():
+		b.content.SetTextRenderingMode(pdfwriter.TextRenderingModeFill)
+	case fillRenderMode == pdfwriter.TextRenderingModeFillStroke:
+		b.content.SetTextRenderingMode(pdfwriter.TextRenderingModeFillStroke)
+	default:
+		b.content.SetTextRenderingMode(pdfwriter.TextRenderingModeStroke)
+	}
+
+	b.encodeConsecutiveGlyphRun(
+		sc,
+		curX,
+		*curY-float32(group.yOffset*fontSize),
+		group.fontIdentifier,
+		pdfFont,
+		fontSize,
+		contextColor,
+		group.glyphs,
+		text,
+	)
+
+	*curY -= float32(group.yAdvance * fontSize)
+}
+
+// getGlyphsBBox is get_glyphs_bbox in krilla src/content.rs. krilla unwraps
+// the rectangle, which a coordinate that is not finite makes invalid. The
+// port then takes the rectangle of the start with the size 1.
+//
+// Note that this isn't a 100% accurate calculation, it can overestimate (and
+// in a few cases even underestimate), but it should be good enough for the
+// majority of the cases.
+func getGlyphsBBox(glyphs []Glyph, x, y, size float32, font *Font) Rect {
+	fontBBox := font.bbox()
+	bl, bt, br, bb := x, y, x+1.0, y+1.0
+	if r, ok := fontBBox.Transform(path.TransformFromScale(size/font.UnitsPerEm(), -size/font.UnitsPerEm())); ok {
+		if r, ok := r.Transform(path.TransformFromTranslate(x, y)); ok {
+			bl, bt, br, bb = r.Left(), r.Top(), r.Right(), r.Bottom()
+		}
+	}
+
+	for i := range glyphs {
+		glyph := &glyphs[i]
+		xo := glyph.xOffset(size)
+		xa := glyph.xAdvance(size)
+		yo := glyph.yOffset(size)
+		ya := glyph.yAdvance(size)
+
+		x += xa
+		y -= ya
+
+		bl = min(bl, x+xo)
+		br = max(br, x+xo)
+		bt = min(bt, y-yo)
+		bb = max(bb, y-yo)
+	}
+
+	if r, ok := path.RectFromLTRB(bl, bt, br, bb); ok {
+		return r
+	}
+	r, _ := path.RectFromXYWH(0.0, 0.0, 1.0, 1.0)
+	return r
+}
+
 // drawXObject is ContentBuilder::draw_xobject in krilla src/content.rs.
 func (b *contentBuilder) drawXObject(sc *serializeContext, cc *chunkContainer, xObject xObject, state extGState) {
 	bbox := xObject.bbox()
@@ -424,6 +832,25 @@ func (b *contentBuilder) drawIsolated(sc *serializeContext, cc *chunkContainer, 
 	state := newExtGState()
 	xObject := newXObject(stream, true, false, nil)
 	b.drawXObject(sc, cc, xObject, state)
+}
+
+// drawImage is ContentBuilder::draw_image in krilla src/content.rs.
+func (b *contentBuilder) drawImage(img *Image, size Size, sc *serializeContext, cc *chunkContainer) {
+	b.applyIsolatedOp(
+		func(sb *contentBuilder) {
+			// Scale the image from 1x1 to the actual dimensions.
+			transform := path.TransformFromRow(size.Width(), 0, 0, -size.Height(), 0, size.Height())
+			sb.concatTransform(transform)
+			unit, _ := path.RectFromXYWH(0, 0, 1, 1)
+			sb.expandBBox(unit)
+		},
+		func(sb *contentBuilder, sc *serializeContext, cc *chunkContainer) {
+			imageName := sb.rdBuilder.registerResource(xObjectResource{sc.registerImage(cc, img)})
+			sb.content.XObject(pdfwriter.Name(imageName))
+		},
+		sc,
+		cc,
+	)
 }
 
 // drawShading is ContentBuilder::draw_shading in krilla src/content.rs.

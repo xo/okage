@@ -365,19 +365,35 @@ func (mp *MarkBasePos) Sanitize() error {
 	if err := mp.BaseArray.Anchors().sanitizeOffsets(); err != nil {
 		return err
 	}
+	if err := mp.MarkArray.sanitizeClasses(mp.markClassCount); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (mp *MarkLigPos) Sanitize() error {
 	if exp, got := mp.MarkCoverage.Len(), len(mp.MarkArray.MarkAnchors); exp != got {
-		return fmt.Errorf("GPOS: invalid MarkBasePos marks count (%d != %d)", exp, got)
+		return fmt.Errorf("GPOS: invalid MarkLigPos marks count (%d != %d)", exp, got)
 	}
 	if exp, got := mp.LigatureCoverage.Len(), len(mp.LigatureArray.LigatureAttachs); exp != got {
-		return fmt.Errorf("GPOS: invalid MarkBasePos marks count (%d != %d)", exp, got)
+		return fmt.Errorf("GPOS: invalid MarkLigPos ligatures count (%d != %d)", exp, got)
+	}
+	if err := mp.MarkArray.sanitizeClasses(mp.MarkClassCount); err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (mp *MarkMarkPos) Sanitize() error {
+	if exp, got := mp.Mark1Coverage.Len(), len(mp.Mark1Array.MarkRecords); exp != got {
+		return fmt.Errorf("GPOS: invalid MarkMarkPos marks count (%d != %d)", exp, got)
+	}
+	if exp, got := mp.Mark2Coverage.Len(), len(mp.Mark2Array.mark2Records); exp != got {
+		return fmt.Errorf("GPOS: invalid MarkMarkPos base marks count (%d != %d)", exp, got)
+	}
+	return mp.Mark1Array.sanitizeClasses(mp.MarkClassCount)
 }
 
 func (cs *ContextualPos) Sanitize(lookupCount uint16) error {
@@ -728,18 +744,18 @@ func (am AnchorMatrix) sanitizeOffsets() error {
 }
 
 func (am AnchorMatrix) Anchor(index, class int) Anchor {
-	if len(am.records) < index {
+	if index < 0 || len(am.records) <= index {
 		return nil
 	}
 	offsets := am.records[index].offsets
-	if len(offsets) < class {
+	if class < 0 || len(offsets) <= class {
 		return nil
 	}
 	offset := offsets[class]
-	if offset == 0 {
+	if offset == 0 || int(offset) > len(am.data) {
 		return nil
 	}
-	anchor, _, _ := ParseAnchor(am.data[offset:]) // offset is sanitized
+	anchor, _, _ := ParseAnchor(am.data[offset:])
 	return anchor
 }
 
@@ -758,6 +774,16 @@ func (ma *MarkArray) parseMarkAnchors(src []byte) error {
 		ma.MarkAnchors[i], _, err = ParseAnchor(src[rec.markAnchorOffset:])
 		if err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// sanitizeClasses checks that all mark classes are lower than [classCount]
+func (ma MarkArray) sanitizeClasses(classCount uint16) error {
+	for _, rec := range ma.MarkRecords {
+		if rec.MarkClass >= classCount {
+			return fmt.Errorf("GPOS: invalid mark class %d (>= %d)", rec.MarkClass, classCount)
 		}
 	}
 	return nil

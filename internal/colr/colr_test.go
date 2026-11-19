@@ -1,4 +1,4 @@
-package svg
+package colr
 
 import (
 	"encoding/binary"
@@ -7,20 +7,20 @@ import (
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 )
 
-// countFillPainter is a colorPainter that counts the fills.
+// countFillPainter is a Painter that counts the fills.
 type countFillPainter struct {
 	fills int
 }
 
-func (p *countFillPainter) pushTransform(colrTransform)                  {}
-func (p *countFillPainter) popTransform()                                {}
-func (p *countFillPainter) fillGlyph(GlyphID, *colrTransform, colrBrush) {}
-func (p *countFillPainter) pushClipGlyph(GlyphID)                        {}
-func (p *countFillPainter) pushClipBox(colrBoundingBox)                  {}
-func (p *countFillPainter) popClip()                                     {}
-func (p *countFillPainter) fill(colrBrush)                               { p.fills++ }
-func (p *countFillPainter) pushLayer(tables.CompositeMode)               {}
-func (p *countFillPainter) popLayer()                                    {}
+func (p *countFillPainter) PushTransform(Transform)              {}
+func (p *countFillPainter) PopTransform()                        {}
+func (p *countFillPainter) FillGlyph(GlyphID, *Transform, Brush) {}
+func (p *countFillPainter) PushClipGlyph(GlyphID)                {}
+func (p *countFillPainter) PushClipBox(BoundingBox)              {}
+func (p *countFillPainter) PopClip()                             {}
+func (p *countFillPainter) Fill(Brush)                           { p.fills++ }
+func (p *countFillPainter) PushLayer(tables.CompositeMode)       {}
+func (p *countFillPainter) PopLayer()                            {}
 
 // nestedLayersCOLR returns a COLRv1 table where the base glyph 5 is a
 // PaintColrLayers of the layer 0, and the layer 0 is a PaintColrLayers of the

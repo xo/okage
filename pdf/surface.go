@@ -17,12 +17,6 @@ import (
 //
 // The port leaves out these parts of upstream:
 //
-//   - The text: draw_glyphs, draw_text, outline_glyphs and context_color.
-//     Phase 16 ports them into this file, as the methods DrawGlyphs and
-//     DrawText of Surface, which call the methods of contentBuilder for the
-//     text in content.go.
-//   - The images: draw_image. Phase 15 ports it into this file, as the
-//     method DrawImage of Surface.
 //   - The tags and the forms: start_tagged, end_tagged, start_variable_text
 //     and end_variable_text, the field page_identifier of Surface, the
 //     number of marked content IDs that finish_fn takes, and
@@ -213,6 +207,139 @@ func (s *Surface) DrawPath(p *Path) {
 	}
 }
 
+// outlineGlyphs is Surface::outline_glyphs in krilla src/surface.rs.
+func (s *Surface) outlineGlyphs(glyphs []Glyph, contextColor ColorRGB, start Point, font *Font, fontSize float32) {
+	curX, curY := start.X, start.Y
+
+	for i := range glyphs {
+		glyph := &glyphs[i]
+		baseTransform := path.TransformFromTranslate(
+			curX+glyph.xOffset(fontSize),
+			curY-glyph.yOffset(fontSize),
+		)
+		baseTransform = baseTransform.PreConcat(path.TransformFromScale(
+			fontSize/font.UnitsPerEm(),
+			-fontSize/font.UnitsPerEm(),
+		))
+		drawGlyph(font, contextColor, glyph.GlyphID, baseTransform, s)
+
+		curX += glyph.xAdvance(fontSize)
+		curY -= glyph.yAdvance(fontSize)
+	}
+}
+
+// DrawGlyphs is Surface::draw_glyphs in krilla src/surface.rs. text holds
+// the characters of the clusters of the glyphs, which the TextRange of each
+// glyph gives. A font draws the text that a reader can copy or search, from
+// the text of each cluster (D62, question 27). When outlined is true, the
+// glyphs are drawn as paths.
+//
+// krilla panics for a glyph whose range is outside the text or does not
+// fall on the bounds of its characters, and for a glyph ID above 65535 in a
+// CID font. Unless outlined is true, the port then records
+// ErrPDFInvalidGlyph, which Document.Finish returns, and draws nothing.
+//
+// Draw a sequence of glyphs using the currently active fill and/or stroke.
+//
+// This is a very low-level method, which gives you full control over how to
+// place the glyphs that make up the text. This means that you must have
+// your own text processing logic for dealing with bidirectional text, font
+// fallback, text layouting, etc.
+func (s *Surface) DrawGlyphs(start Point, glyphs []Glyph, font *Font, text string, fontSize float32, outlined bool) {
+	contextColor := s.contextColor()
+	if outlined {
+		s.outlineGlyphs(glyphs, contextColor, start, font, fontSize)
+		return
+	}
+	if err := checkGlyphs(glyphs, text); err != nil {
+		s.sc.setError(err)
+		return
+	}
+	switch {
+	case s.fill != nil && s.stroke != nil:
+		if s.hasComplexFillOrStroke() {
+			// We need to draw fill and stroke separately. In order to avoid
+			// embedding text twice, we fill the text as normal text and then
+			// stroke it as a path.
+			s.bd.getMut().drawGlyphs(start, s.sc, s.cc, s.fill, nil, contextColor, glyphs, font, text, fontSize)
+			s.outlineGlyphs(glyphs, contextColor, start, font, fontSize)
+		} else {
+			s.bd.getMut().drawGlyphs(start, s.sc, s.cc, s.fill, s.stroke, contextColor, glyphs, font, text, fontSize)
+		}
+	case s.stroke != nil:
+		s.bd.getMut().drawGlyphs(start, s.sc, s.cc, nil, s.stroke, contextColor, glyphs, font, text, fontSize)
+	case s.fill != nil:
+		s.bd.getMut().drawGlyphs(start, s.sc, s.cc, s.fill, nil, contextColor, glyphs, font, text, fontSize)
+	default:
+		// Draw with black by default.
+		fill := DefaultFill()
+		s.bd.getMut().drawGlyphs(start, s.sc, s.cc, &fill, nil, contextColor, glyphs, font, text, fontSize)
+	}
+}
+
+// checkGlyphs checks the glyphs of DrawGlyphs where krilla panics. It is not
+// in krilla.
+func checkGlyphs(glyphs []Glyph, text string) error {
+	boundary := func(i int) bool {
+		return i == len(text) || (i < len(text) && !isUTF8Continuation(text[i]))
+	}
+	for i := range glyphs {
+		g := &glyphs[i]
+		r := g.TextRange
+		if r.Start < 0 || r.Start > r.End || r.End > len(text) || !boundary(r.Start) || !boundary(r.End) {
+			return fmt.Errorf("%w: the range %d to %d of the glyph %d is not a range of the text of %d bytes", okage.ErrPDFInvalidGlyph, r.Start, r.End, g.GlyphID, len(text))
+		}
+		if g.GlyphID > 0xFFFF {
+			return fmt.Errorf("%w: the glyph ID %d is above 65535", okage.ErrPDFInvalidGlyph, g.GlyphID)
+		}
+	}
+	return nil
+}
+
+// isUTF8Continuation reports whether b continues a character of UTF-8, as
+// str::is_char_boundary of Rust tests it.
+func isUTF8Continuation(b byte) bool {
+	return b&0xC0 == 0x80
+}
+
+// DrawText is Surface::draw_text in krilla src/surface.rs. typesetting
+// shapes the text (D52, D62).
+//
+// Draw some text using the currently active fill and/or stroke.
+//
+// This is a high-level method which allows you to just provide some text,
+// which will then be rendered into a single line. However, this approach
+// has restrictions:
+//
+//   - It will not perform BIDI resolution and only supports a single
+//     script, meaning that you must ensure that your text does not contain
+//     multiple scripts.
+//   - It will only use the single font you provided to draw the text, no
+//     font fallback will be performed.
+//
+// If you need more advanced control over how your text looks, you can use
+// the method DrawGlyphs.
+func (s *Surface) DrawText(start Point, font *Font, fontSize float32, text string, outlined bool, direction TextDirection) {
+	glyphs := naiveShape(text, font, direction)
+
+	s.DrawGlyphs(start, glyphs, font, text, fontSize, outlined)
+}
+
+// contextColor is Surface::context_color in krilla src/surface.rs.
+func (s *Surface) contextColor() ColorRGB {
+	if s.fill != nil {
+		if c, ok := paintAsRGB(s.fill.Paint); ok {
+			return c
+		}
+	}
+	if s.stroke != nil {
+		if c, ok := paintAsRGB(s.stroke.Paint); ok {
+			return c
+		}
+	}
+	return ColorRGB{}
+}
+
 // SetLocation is Surface::set_location in krilla src/surface.rs.
 //
 // Set the location that should be assumed for subsequent operations.
@@ -347,6 +474,20 @@ func (s *Surface) Pop() {
 		stream := s.popSubBuilder()
 		s.bd.getMut().drawIsolated(s.sc, s.cc, stream)
 	}
+}
+
+// DrawImage is Surface::draw_image in krilla src/surface.rs. It draws the
+// image into the rectangle from 0, 0 to the size. krilla cannot take a
+// missing image. The port records ErrPDFImage for a nil image, which
+// Document.Finish returns, and draws nothing.
+//
+// Draw a new bitmap image.
+func (s *Surface) DrawImage(img *Image, size Size) {
+	if img == nil {
+		s.sc.setError(fmt.Errorf("%w: the image is nil", okage.ErrPDFImage))
+		return
+	}
+	s.bd.getMut().drawImage(img, size, s.sc, s.cc)
 }
 
 // DrawGraphic is Surface::draw_graphic in krilla src/surface.rs.

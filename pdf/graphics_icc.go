@@ -79,8 +79,22 @@ func (p *ICCProfile) serialize(sc *serializeContext, cc *chunkContainer, rootRef
 	cc.streams.iccProfiles = append(cc.streams.iccProfiles, chunk)
 }
 
-// The enum GenericICCProfile of krilla src/graphics/icc.rs is for the
-// images, and the port of graphics/image adds it.
+// genericICCProfile is GenericICCProfile in krilla src/graphics/icc.rs, the
+// profile of an image. The cases Luma, Rgb and Cmyk of upstream are the
+// profiles of 1, 3 and 4 components, which the profile holds. A nil profile
+// is the None of an Option<GenericICCProfile>.
+//
+// upstream also implements Cacheable for GenericICCProfile, but no code of
+// krilla registers one. An image registers the ICCBasedColorSpace of its
+// profile. So the port leaves that impl out.
+type genericICCProfile struct {
+	profile *ICCProfile
+}
+
+// metadata is GenericICCProfile::metadata in krilla src/graphics/icc.rs.
+func (g genericICCProfile) metadata() iccMetadata {
+	return g.profile.metadata()
+}
 
 // iccBasedColorSpace is ICCBasedColorSpace<C> in krilla
 // src/graphics/icc.rs.

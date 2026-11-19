@@ -13,13 +13,17 @@
 //!    `writer` answers it.
 //! 3. "svg": the PDF file that krilla-svg writes for an SVG file.
 //! 4. "krilla": the PDF file that krilla writes for a scene of calls of its
-//!    surface. The module `scene` answers both 3 and 4.
+//!    surface. The module `scene` answers both 3 and 4. The module `image`
+//!    makes the images that `scene` does not make itself, and the module
+//!    `interchange` adds the metadata, the outline and the links of a scene.
 //! 5. "point_ts": the rotation of get_point_ts in krilla, which calls atan2,
 //!    sin and cos of the C library. The function `point_ts` answers it.
 //!
 //! The Go tests write each number of a float32 as the shortest decimal of a
 //! float64 that gives back the float32, as the oracle of test/oracle says.
 
+mod image;
+mod interchange;
 mod scene;
 mod subset;
 mod writer;

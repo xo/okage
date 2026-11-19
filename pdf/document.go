@@ -31,10 +31,9 @@ type Location uint64
 // finished before the next one starts. Go cannot, so StartPage and Finish
 // finish the page that is open.
 //
-// The methods set_outline and set_metadata of upstream come with the port of
-// interchange/, and register_named_destination with the port of
-// interactive/. The base port leaves out embed_pdf_pages, set_field_tree,
-// set_tag_tree and embed_file (D62).
+// The methods SetMetadata, SetOutline and RegisterNamedDestination are in
+// metadata.go, outline.go and destination.go. The base port leaves out
+// embed_pdf_pages, set_field_tree, set_tag_tree and embed_file (D62).
 type Document struct {
 	sc *serializeContext
 	cc *chunkContainer

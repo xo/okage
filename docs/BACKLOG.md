@@ -14,9 +14,10 @@ When the change is committed, delete the claim.
 
 From D52.
 
-1. Apply the 97 pending commits of `docs/upstream/typesetting.tsv` in
-   order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. Many of them
-   fix a panic on a malformed font, and ivy reads fonts from strangers.
+1. Apply the 74 pending commits of `docs/upstream/typesetting.tsv` in
+   order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. D67 applied
+   the commits that fix a panic, a loop or a missing bound on malformed
+   input. Many of the others fix a wrong result on a malformed font.
 2. 33 test files of go-text read the data of
    `github.com/go-text/typesetting-utils`, and the copy leaves them out.
    Copy the fonts and the files that they read, each with its license, and
@@ -116,8 +117,8 @@ differences stay:
 
 1. read-fonts keeps a metric with its MVAR delta as an F48Dot16. Go keeps it
    as a float32, so a rounded metric can differ at a location with a delta.
-2. The walk of the paint graph of COLRv1 in `svg/usvg_text_colr_paint.go`
-   ports skrifa 0.44 (D32). usvg now walks the graph with the model of read-fonts
+2. The walk of the paint graph of COLRv1 in `internal/colr` ports skrifa
+   0.44 (D32, D62). usvg now walks the graph with the model of read-fonts
    0.46. No test shows a difference.
 3. read-fonts reads the strikes of the table EBDT. usvg draws none of its
    glyphs, so Go leaves the strikes out. The result is the same.
@@ -149,3 +150,22 @@ From D62.
    strokes a path, and returns `ErrPDFInvalidPath` (D66). A program that
    renders such a path with okage still waits forever. Source: phase 14,
    the merge of units 5 and 6.
+4. `typesetting` drops the whole table GPOS of `NotoSans_variable.ttf` of
+   krilla, because it cannot read an anchor of a lookup MarkLigPos. The
+   text of that font then has no kerning in `pdf`, and the file differs
+   from the file of krilla. D67 applies the commit `31064bfc` of go-text,
+   which fixes the bounds of the anchors, but the parse still fails with
+   "unsupported Anchor format 281" in the MarkArray of the lookup. Find
+   the fault in the parse of MarkLigPos. `test/krilla` compares the
+   variable fonts with RobotoFlex until it is fixed. Source: phase 16.
+5. The snapshots `font_type3_color_glyphs`, `font_type3_pdf_14` and
+   `font_type3_with_not_def` draw the SVG glyphs of Twitter Color Emoji
+   with `render_svg_glyph` of krilla-svg. `TestFontType3` skips them until
+   `pdfsvg` gives `RenderGlyph` in phase 17. Source: phase 16, unit 4.
+6. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
+   copy of the code that draws an outline of typesetting in the order of
+   skrifa. The copy of `pdf` also drops the line back to the start of a
+   contour that skrifa starts at its last point, and follows the rules of
+   `NopFilterSink` of read-fonts for CFF. The tests of `svg` compare
+   images within a tolerance, so the copy of `svg` does not need them yet.
+   Move the code into one internal package for both. Source: phase 16.

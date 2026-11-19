@@ -514,6 +514,16 @@ const (
 	// than PDF 1.4 allows.
 	ErrPDFTooLongDictionary Error = "writing pdf: PDF version limit exceeded: a dictionary exceeded the maximum allowed number of entries"
 
+	// ErrPDFImage is KrillaError::Image of krilla, and the error of a
+	// function of pdf that makes an image from data that it cannot read. An
+	// image could not be read or decoded. The error that wraps it holds the
+	// message of the decoder.
+	ErrPDFImage Error = "writing pdf: failed to process image"
+
+	// ErrPDFSixteenBitImage is KrillaError::SixteenBitImage of krilla. A
+	// document of PDF 1.4 holds an image with 16 bits for each component.
+	ErrPDFSixteenBitImage Error = "writing pdf: sixteen bit images require PDF 1.5 or newer, but the selected PDF version does not support them"
+
 	// ErrPDFVersion is ConfigurationError::VersionDoesNotMatchValidatorsRange
 	// of krilla src/configure/mod.rs. The option WithPDFVersion gave a
 	// version that pdf does not know. Document.Finish returns it.
@@ -559,4 +569,36 @@ const (
 	// with no stop, or with a transform that cannot be inverted where the
 	// gradient needs the inverse. krilla panics in these cases.
 	ErrPDFInvalidGradient Error = "writing pdf: a gradient is not valid"
+
+	// ErrPDFDuplicateNamedDestination is
+	// KrillaError::DuplicateNamedDestination of krilla. The same name of a
+	// destination has two different destinations. The error names the
+	// destination.
+	ErrPDFDuplicateNamedDestination Error = "writing pdf: duplicate named destination"
+
+	// ErrPDFInvalidDestination is the error of Document.Finish for a
+	// destination that links to a page that does not exist. krilla panics in
+	// this case.
+	ErrPDFInvalidDestination Error = "writing pdf: a destination links to a page that does not exist"
+
+	// ErrPDFInvalidAnnotation is the error of Document.Finish for a link
+	// annotation with no target, with quadrilaterals that give no
+	// rectangle, or with a rectangle that is not valid in the coordinates of
+	// the page. krilla panics in these cases.
+	ErrPDFInvalidAnnotation Error = "writing pdf: a link annotation is not valid"
+
+	// ErrPDFFont is KrillaError::Font of krilla. Document.Finish cannot
+	// embed a font, for example because the subset of the font fails. The
+	// error names the font and gives the message of upstream.
+	ErrPDFFont Error = "writing pdf: failed to embed font"
+
+	// ErrPDFInvalidFont is the error of NewFont for data that is not a
+	// TrueType or OpenType font, or for an index that the data does not
+	// have. krilla returns None in these cases.
+	ErrPDFInvalidFont Error = "writing pdf: the font cannot be read"
+
+	// ErrPDFInvalidGlyph is the error of Document.Finish for a glyph of
+	// Surface.DrawGlyphs whose range is not a range of the text, or whose
+	// ID is above 65535. krilla panics in these cases.
+	ErrPDFInvalidGlyph Error = "writing pdf: a glyph is not valid"
 )

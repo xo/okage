@@ -186,10 +186,27 @@ okage differs from upstream only where a decision says so:
     2^60, where krilla can panic or not end. `Document.StartPage` and
     `Document.Finish` finish the page that is open, and `Page.Finish`
     finishes the surface of the page, which Rust does not let a program
-    leave open (D62, D66).
+    leave open (D62, D66). It also returns an error for a destination to a
+    page that does not exist, and for a link with no target, where krilla
+    panics.
 16. The stroker of `path` treats a quadratic curve as a line where the
     products of `findQuadMaxCurvature` overflow to NaN. tiny-skia panics
     there (D66).
+17. The images of `pdf` decode with `image/png`, `image/jpeg`, `image/gif`
+    and `golang.org/x/image/webp`, where krilla uses the crates png,
+    zune-jpeg, gif and image-webp. `pdf` reads the headers of the files as
+    those crates do, so it writes the same objects. The decoded samples of
+    an image hold at most 256 MiB, and above that a function that makes an
+    image returns an error. krilla has no such limit. `ImageFromImage`
+    takes an `image.Image` of Go in place of the trait `CustomImage` of
+    krilla (D62).
+18. The text of `pdf` reads the fonts with `typesetting`, by the rules of
+    skrifa, and shapes a text with `typesetting/harfbuzz` in place of
+    harfrust. It shapes a text with no language, as harfrust does, where
+    `typesetting` takes the language of the locale. It returns an error for
+    a glyph whose range is not a range of its text, where krilla panics.
+    The package comment of `pdf` lists the other differences of the text
+    (D62, D65).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -268,9 +285,12 @@ okage also adds APIs that upstream does not have:
     let t go below 0 or above 1, as the key `Extend` of PDF does (D64).
 16. `typesetting` applies five commits of go-text out of order, for the
     variable fonts of `internal/subsetter`. It maps a coordinate with the
-    table avar as skrifa does, with a rounded division. `WriteTTF` writes
-    nothing into the slices of its caller. A malformed font gives an empty
-    glyph, an advance of 0 or an error where go-text panics (D65).
+    table avar as skrifa does, with a rounded division. A malformed font
+    gives an empty glyph, an advance of 0 or an error where go-text panics
+    (D65). It also applies the 23 commits of go-text that fix a panic, a
+    loop or a missing bound on malformed input, out of order, and fixes two
+    more panics of the feature indexes of GSUB and GPOS and of the table
+    cmap (D67).
     `internal/subsetter` makes the instances of variable fonts with
     `typesetting`, and an instance can differ from the instance of
     subsetter by 1 unit in a point (D62, D65).
