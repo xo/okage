@@ -39,6 +39,54 @@ From D52.
    the 2,550 runes of `benchParagraphLatin`, at the size 16, the width 100
    and the packed configuration byte 0x55. A pending commit of go-text can
    fix them. Source: D70, 2026-11-19.
+5. Make the text code faster for a long text. A profile of ivy on 2026-11-20,
+   after D70, puts 23% of the CPU time of the layout of
+   `gutenberg/html/pg1342-images.html` and 26% of `gutenberg/txt/pg24264.txt`
+   in `typesetting`. No function takes more than 2%. The time is spread over
+   the lookups of Unicode properties, the line breaker, the bidi algorithm and
+   the shaper. Try these, in this order, and keep the output of each test and
+   the hashes of ivy the same:
+   - Skip the bidi algorithm for a paragraph that has no character of a
+     right-to-left class and no bidi control. `bidi.(*Paragraph).segment`
+     takes 5.5% of the time of `pg24264.txt`, which has no such character. A
+     check of the text before the paragraph is built is enough.
+   - Give the lookups of Unicode properties a fast path for the runes below
+     U+0100, or for a run of ASCII. `unicodedata.gcLookup`,
+     `unicodedata.bidiLookup`, `unicodedata.gbLookup` and
+     `language.LookupScript` each look up every rune in a general table, about
+     4% to 5% of the time.
+   - Decode the UTF-8 of a text once. The segmenter, the split by script and
+     the bidi algorithm each decode the same text again, and
+     `runtime.decoderune` takes 3% of the time of `pg24264.txt`.
+   - Keep the break attributes of a paragraph for all its lines.
+     `segmenter.computeBreakAttributes` and `applyLineBoundaryRules` take 6.6%
+     of the time of `pg24264.txt`, and a program that breaks a paragraph into
+     lines asks for the attributes of the same text again for each line.
+   - Measure `splitByScript`, `splitByFace` and the cache of shape plans
+     (`newShapePlanCached`), which take 2% to 4% together.
+   A change to the copy of go-text needs a decision first, as D65, D67 and
+   D70 had. A change at the calls in `shaping` keeps the copy closer to
+   go-text.
+6. Use SIMD in `typesetting` where the work is a scan or a loop over an array
+   (D17, D28). Most of the text code is a table lookup or a state machine for
+   each rune, and SIMD does not help there. These places can use it:
+   - A scan of the bytes of a text for any byte that can start a right-to-left
+     character or a bidi control, for the skip of item 5.
+   - A scan for a run of ASCII, for the fast paths of item 5.
+   - The scale and the rounding of the advances and the offsets of the glyphs
+     in `harfbuzz` (`emScalef`, `roundf`), about 2% to 3% of the time. The
+     rounding must give the same numbers, and D16 and D71 still apply.
+7. Give `shaping` a way to shape a paragraph once and to give the glyphs of a
+   line from it, as HarfBuzz suggests with the flag unsafe-to-break. Only the
+   glyphs next to a cut that is not safe to break need a new shaping. ivy does
+   this itself since D70, but it still shapes about 1.3 characters for each
+   character of the lines of `pg1342-images.html`, and about 1.6 for
+   `pg24264.txt`, because a text that starts or ends inside an earlier text
+   shapes again. Source: ivy, item 9 of "Left by the speed of 2026-11-18",
+   2026-11-20.
+8. Give the flag unsafe-to-concat of HarfBuzz when a program needs it. D70
+   gives only the flag unsafe-to-break, and the shaper never sets
+   `ProduceUnsafeToConcat`. Source: D70.
 
 ## lottie
 
@@ -103,6 +151,13 @@ test:
    Source: the measurement of ivy, 2026-11-18.
 7. `blitAntiH` and `blitMask` can skip the rows where the mask is 0, as
    `blitRect` does (D60).
+8. Make a clip cheaper. A clip of ivy makes a `Mask` of the size of the band
+   that it draws, and a clip inside a clip clones the mask. On some pages of
+   spreadsheets in ivy, the clips take about a quarter of the time, and
+   `NewMask` and `Mask.Clone` make about 80% of the bytes that the pages
+   allocate. A mask that covers only the bounds of its path, or a clip of a
+   rectangle without a turn that needs no mask, removes most of this cost.
+   Source: ivy, item 5 of "Left by the speed of 2026-11-18", 2026-11-19.
 
 ### Measure the cost of GOEXPERIMENT=simd in each release of Go
 
@@ -137,6 +192,15 @@ differences stay:
    0.46. No test shows a difference.
 3. read-fonts reads the strikes of the table EBDT. usvg draws none of its
    glyphs, so Go leaves the strikes out. The result is the same.
+
+## Filters
+
+1. Give the blur and the color matrix of the filters of `svg` an API on a
+   `Mask` and on a `Pixmap`. ivy blurs the masks of the shadows, the glows and
+   the soft edges of DrawingML with box blurs of its own, and changes the
+   colors of pictures for the picture effects of Word itself. Both are in
+   `internal/drawingml` of ivy, in `blur.go` and `recolor.go`. Source: ivy,
+   2026-11-19.
 
 ## The PDF writer
 
@@ -180,12 +244,12 @@ From D62.
    `NopFilterSink` of read-fonts for CFF. The tests of `svg` compare
    images within a tolerance, so the copy of `svg` does not need them yet.
    Move the code into one internal package for both. Source: phase 16.
-7. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
+6. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
    krilla-svg (phase 17), and `Surface.DrawRaster` follows the same code
    (D68). D62 item 10 says that the writer uses one code for both. Make
    `pdfsvg` call `Surface.DrawRaster` when both phases are merged. Source:
    phase 18.
-8. `deflateEncode` makes a new zlib writer for each stream, as krilla makes
+7. `deflateEncode` makes a new zlib writer for each stream, as krilla makes
    a new encoder. Each writer allocates about 700 KB. A document of 8,192
    compressed pages allocated 5.8 GB in total, and on wasip1 one cycle of
    the garbage collector did not end while the program allocated 3.5 GB of
@@ -193,3 +257,20 @@ From D62.
    now writes those pages without compression. A writer that is reset and
    used again gives the same bytes and removes the allocations. Source: the
    nightly run of 2026-11-19.
+8. When the subset of a font fails in `Document.Finish`, draw the glyphs of
+   that font as paths and write the file, or give a method that makes the
+   subset of a font before `Finish`. Today one font that the subsetter refuses
+   makes the whole file fail. ivy then makes the subset of each font in a file
+   of its own, and draws every page again without the font that fails. Source:
+   ivy, `pdf/pdfenc`, 2026-11-19.
+9. Export the test of the ranges of `DrawGlyphs`, so that a caller knows that
+   the ranges of its glyphs are valid before the call. Today a range that is
+   not valid makes `Document.Finish` fail, and ivy tests the ranges itself.
+   Source: ivy, `pdf/pdfenc`, 2026-11-19.
+10. Make a Type 3 font from images that the caller gives, each with its text.
+    The writer makes a Type 3 font only from the glyphs of a font file. ivy
+    then writes the glyphs of a Type 3 font of bitmaps in a PDF file as image
+    masks of the page, which each viewer scales down in another way, and it
+    writes a color glyph or a bitmap glyph, such as an emoji, as an image
+    without its text. Source: ivy, "Left by phase 7a" item 3 and "Left by
+    phase 7b" item 2, 2026-11-19.
