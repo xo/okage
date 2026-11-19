@@ -146,33 +146,6 @@ func TestFontWrongMetrics(t *testing.T) {
 	}
 }
 
-// TestFontType3 is the snapshot tests font_type3_color_glyphs,
-// font_type3_pdf_14 and font_type3_with_not_def of krilla
-// tests/src/font.rs. krilla draws the SVG glyphs of Twitter Color Emoji with
-// render_svg_glyph of krilla-svg, which pdfsvg ports in phase 17. Until
-// then the tests skip, and the oracle of test/krilla compares the Type 3
-// fonts of these scenes without the SVG glyphs.
-func TestFontType3(t *testing.T) {
-	for _, c := range []struct {
-		name string
-		opts []Option
-		y    float32
-		size float32
-		text string
-	}{
-		{"font_type3_color_glyphs", nil, 25, 25, "😀😃"},
-		{"font_type3_pdf_14", []Option{WithPDFVersion(PDF14)}, 25, 25, "😀"},
-		{"font_type3_with_not_def", nil, 100, 32, "H😄"},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			t.Skip("the SVG glyphs need pdfsvg, which phase 17 ports")
-			d, s := textSnapshotPage(t, c.opts...)
-			s.DrawText(path.PointFromXY(0, c.y), testFont(t, "TwitterColorEmoji.subset.ttf"), c.size, c.text, false, TextDirectionAuto)
-			checkSnapshotDecoded(t, c.name, d)
-		})
-	}
-}
-
 // TestType3MoreThan256Glyphs is the test type3_more_than_256_glyphs of
 // krilla src/text/type3.rs.
 func TestType3MoreThan256Glyphs(t *testing.T) {

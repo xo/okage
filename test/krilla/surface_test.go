@@ -47,6 +47,12 @@ type opSpec struct {
 	Image     *int        `json:"image"`
 	Width     float32     `json:"width"`
 	Height    float32     `json:"height"`
+
+	// The fields of the call draw_svg, with Width and Height.
+	File        string     `json:"file"`
+	EmbedText   *bool      `json:"embed_text"`
+	FilterScale *float32   `json:"filter_scale"`
+	Fonts       *fontsSpec `json:"fonts"`
 }
 
 type fillSpec struct {
@@ -288,6 +294,8 @@ func goStep(s *pdf.Surface, o opSpec, depth *int, res *sceneResources) error {
 		s.DrawImage(res.images[*o.Image], size)
 	case "draw_glyphs", "draw_text":
 		return goDrawText(s, o, res)
+	case "draw_svg":
+		return goDrawSVG(s, o)
 	default:
 		return fmt.Errorf("the call %q is not ported", o.Op)
 	}

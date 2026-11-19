@@ -39,6 +39,9 @@ type radialAxialGradient struct {
 	shadingType pdfwriter.FunctionShadingType
 	stops       []Stop
 	antiAlias   bool
+	// extend is the Extend of the shading. It is not in krilla, which
+	// extends both ends (D68).
+	extend ExtendMode
 }
 
 // hash is the derived Hash of GradientProperties::RadialAxialGradient in
@@ -53,6 +56,7 @@ func (g radialAxialGradient) hash(h *hasher) {
 	h.usize(int(g.shadingType))
 	hashStops(h, g.stops)
 	h.bool(g.antiAlias)
+	g.extend.hash(h)
 }
 
 // singleStopColor is the case RadialAxialGradient of
@@ -180,6 +184,7 @@ func (g LinearGradient) gradientProperties(bbox Rect) (gradientProperties, Trans
 			shadingType: pdfwriter.FunctionShadingTypeAxial,
 			stops:       slices.Clone(g.Stops),
 			antiAlias:   g.AntiAlias,
+			extend:      g.Extend,
 		}, g.Transform, true
 	}
 
@@ -239,6 +244,7 @@ func (g RadialGradient) gradientProperties(Rect) (gradientProperties, Transform,
 		shadingType: pdfwriter.FunctionShadingTypeRadial,
 		stops:       slices.Clone(g.Stops),
 		antiAlias:   g.AntiAlias,
+		extend:      g.Extend,
 	}, g.Transform, true
 }
 
@@ -372,7 +378,8 @@ func serializeAxialRadialShading(sc *serializeContext, chunk *pdfwriter.Chunk, r
 	shading.AntiAlias(radialAxialGradient.antiAlias)
 	shading.Function(functionRef)
 	shading.Coords(radialAxialGradient.coords...)
-	shading.Extend([2]bool{true, true})
+	// okage: krilla writes true for both ends (D68).
+	shading.Extend(radialAxialGradient.extend.flags())
 	shading.Finish()
 }
 

@@ -25,6 +25,13 @@ type Mask struct {
 	// to manually set the bbox of the underlying XObject to match the shape
 	// that the gradient is being applied to.
 	customBBox *Rect
+
+	// backdrop is the backdrop color BC of a luminosity mask, or nil. It is
+	// not in krilla (D68).
+	backdrop *ColorRGB
+	// transfer is the transfer function TR of the mask, or nil. It is not
+	// in krilla (D68).
+	transfer *[256]uint8
 }
 
 // NewMask is Mask::new in krilla src/graphics/mask.rs.
@@ -110,6 +117,10 @@ func (m *Mask) hash(h *hasher) {
 		h.usize(1)
 		h.rect(*m.customBBox)
 	}
+	// okage: the backdrop and the transfer function add to the hash only
+	// when they are set, so that the hash of every other mask stays the hash
+	// of upstream (D68).
+	m.hashBackdropTransfer(h)
 }
 
 // serialize is Cacheable::serialize for Mask in krilla
@@ -123,6 +134,8 @@ func (m *Mask) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdfwr
 	dict.Pair(pdfwriter.Name("Type"), pdfwriter.Name("Mask"))
 	dict.Pair(pdfwriter.Name("S"), m.maskType.toName())
 	dict.Pair(pdfwriter.Name("G"), xObject)
+	// okage: the backdrop BC and the transfer function TR (D68).
+	m.writeBackdropTransfer(sc, cc, dict)
 
 	dict.Finish()
 }

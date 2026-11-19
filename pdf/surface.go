@@ -24,8 +24,8 @@ import (
 //     forms (D62).
 //   - draw_pdf_page, for an embedded PDF file (D62).
 //
-// pdfsvg adds the drawing of an SVG tree in phase 17. It calls the methods
-// of Surface, as krilla-svg calls the trait SurfaceExt.
+// pdfsvg.Draw draws an SVG tree. It calls the methods of Surface, as
+// krilla-svg implements the trait SurfaceExt.
 
 // Surface is Surface in krilla src/surface.rs.
 //
@@ -193,6 +193,11 @@ func (s *Surface) GetStroke() *Stroke {
 //
 // Draw a path using the currently active fill and/or stroke.
 func (s *Surface) DrawPath(p *Path) {
+	// okage: a mesh with opacities fills through a soft mask of its own
+	// (D68).
+	if s.drawMeshFill(p) {
+		return
+	}
 	if s.fill != nil || s.stroke != nil {
 		if s.hasComplexFillOrStroke() {
 			s.bd.getMut().drawPath(p, s.fill, nil, s.sc, s.cc)
@@ -473,6 +478,9 @@ func (s *Surface) Pop() {
 	case pushInstructionIsolated:
 		stream := s.popSubBuilder()
 		s.bd.getMut().drawIsolated(s.sc, s.cc, stream)
+	case okagePushInstruction:
+		// okage: the pushes that are not in krilla pop themselves (D68).
+		instruction.pop(s)
 	}
 }
 
@@ -589,6 +597,9 @@ func (s *Surface) hasComplexFillOrStroke() bool {
 			return anyStopOpacity(p.Stops)
 		case SweepGradient:
 			return anyStopOpacity(p.Stops)
+		case MeshGradient:
+			// okage: a mesh with opacities needs a soft mask too (D68).
+			return p.hasOpacity()
 		default:
 			// A color or a pattern.
 			return false

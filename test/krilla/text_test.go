@@ -22,9 +22,9 @@ import (
 // PDF writer in docs/PLAN.md): the CID fonts with their subsets, the tags of
 // their names, their widths and their ToUnicode maps, the ActualText spans,
 // the Type 3 fonts of the COLR glyphs and of the bitmap glyphs of sbix and
-// CBDT, and the shaping of draw_text. The scenes leave the SVG glyphs out,
-// which pdfsvg draws in phase 17. The objects of the two files must be the same after the reader
-// decodes the streams, so the subsets of the fonts are the bytes of krilla.
+// CBDT, the SVG glyphs that pdfsvg draws, and the shaping of draw_text. The
+// objects of the two files must be the same after the reader decodes the
+// streams, so the subsets of the fonts are the bytes of krilla.
 
 // textSpec holds the fields of the calls draw_glyphs and draw_text of the
 // oracle, in opSpec.
@@ -144,7 +144,7 @@ func svgFont(t *testing.T, name string, coords ...coord) fontSpec {
 }
 
 // textSettings are the settings of the snapshots of krilla without the SVG
-// glyphs.
+// glyphs. A scene with the SVG glyphs sets svg_glyphs in extra.
 func textSettings(extra map[string]any) map[string]any {
 	s := map[string]any{"xmp_metadata": false, "pretty": true, "ascii_compatible": true, "compress_content_streams": false, "svg_glyphs": false}
 	maps.Copy(s, extra)
@@ -202,6 +202,13 @@ func textCases(t *testing.T) []documentCase {
 	add("font_type3_color_glyphs", nil, twitter, drawText(0, 25, 0, 25, "😀😃"))
 	add("font_type3_pdf_14", map[string]any{"version": "1.4"}, twitter, drawText(0, 25, 0, 25, "😀"))
 	add("font_type3_with_not_def", nil, twitter, drawText(0, 100, 0, 32, "H😄"))
+
+	// The same snapshots with the SVG glyphs, which krilla-svg and pdfsvg
+	// draw, as the tests of krilla draw them.
+	svgGlyphs := map[string]any{"svg_glyphs": true}
+	add("font_type3_color_glyphs with SVG glyphs", svgGlyphs, twitter, drawText(0, 25, 0, 25, "😀😃"))
+	add("font_type3_pdf_14 with SVG glyphs", map[string]any{"svg_glyphs": true, "version": "1.4"}, twitter, drawText(0, 25, 0, 25, "😀"))
+	add("font_type3_with_not_def with SVG glyphs", svgGlyphs, twitter, drawText(0, 100, 0, 32, "H😄"))
 
 	// The directions of tests/src/text.rs.
 	cjk := one(krillaFont(t, "NotoSansCJKsc-Regular.otf"))

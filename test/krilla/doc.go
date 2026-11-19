@@ -159,7 +159,19 @@
 // or "2.0". Each field is optional. A missing field takes the value of
 // SerializeSettings::default. The settings draw the glyphs of SVG fonts with
 // render_svg_glyph of krilla-svg, as the tests of krilla do, unless
-// "svg_glyphs" is false.
+// "svg_glyphs" is false. The Go side draws them with pdfsvg.RenderGlyph.
+//
+// The test TestSVGFiles of svg_test.go asks this question for each SVG file
+// of the tests of resvg in svg/testdata/tests, with the fonts of
+// svg/testdata/fonts and the filter scale 2, as the test svg_impl of krilla
+// does. goSVG draws the same file with svg and pdfsvg. When the objects of
+// the two files are the same, the file passes. Otherwise MuPDF and Poppler
+// render both files at 72 dots for each inch, and the metric of D31
+// compares the pixels with the gate of item 4 of "Testing" in docs/PLAN.md.
+// A file that differs because svg follows a later usvg than krilla-svg is
+// in the map svgDifferences, with the reason. The test logs the number of
+// files of each outcome. With -short, it compares one file in 20. goRun
+// makes the call draw_svg of a scene with pdfsvg, in goDrawSVG.
 //
 // # The question "krilla"
 //
@@ -308,7 +320,8 @@
 // PNG files with faults in their image data, and from the images of Go with
 // ImageFromImage, and compare them with the files of krilla in the same way.
 // The tests of text_test.go draw the glyphs and the texts of the fonts of
-// pdf/testdata/fonts and of the checkout of krilla, without the SVG glyphs:
+// pdf/testdata/fonts and of the checkout of krilla, with and without the SVG
+// glyphs:
 // the snapshots of text and fonts of krilla, the COLR glyphs of Noto Color
 // Emoji, the bitmap glyphs of the tables sbix and CBDT, and random runs of
 // glyphs. The font files of their subsets must be the bytes of krilla,

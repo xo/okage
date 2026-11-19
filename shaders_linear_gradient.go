@@ -140,7 +140,11 @@ func averageGradientColor(points []GradientStop) Color {
 	storeColor := func(c wide.F32x4) Color {
 		color, ok := ColorFromRGBA(c[0], c[1], c[2], c[3])
 		if !ok {
-			panic("called `Option::unwrap()` on a `None` value")
+			// okage: tiny-skia panics here. A sum that rounding takes a
+			// little out of 0..=1 is clamped (D68).
+			return ColorFromRGBAUnchecked(
+				path.Bound(c[0], 0, 1), path.Bound(c[1], 0, 1),
+				path.Bound(c[2], 0, 1), path.Bound(c[3], 0, 1))
 		}
 		return color
 	}
@@ -148,6 +152,12 @@ func averageGradientColor(points []GradientStop) Color {
 	if len(points) == 0 {
 		panic("assertion failed: !points.is_empty()")
 	}
+
+	// okage: tiny-skia panics in storeColor when the stops are not in
+	// order, because an interval then has a negative width. The stops take
+	// the positions that newGradient gives them, in the order of the list
+	// (D68). Stops in order keep their positions and the bytes of tiny-skia.
+	points = orderedStops(points)
 
 	// The gradient is a piecewise linear interpolation between colors. For a given interval,
 	// the integral between the two endpoints is 0.5 * (ci + cj) * (pj - pi), which provides that
@@ -185,6 +195,31 @@ func averageGradientColor(points []GradientStop) Color {
 	}
 
 	return storeColor(blend)
+}
+
+// orderedStops returns the stops, with positions that do not go down. A
+// position below the position before it takes that position, as newGradient
+// does. It returns the stops of the caller when they are in order. It ports
+// no upstream function (D68).
+func orderedStops(points []GradientStop) []GradientStop {
+	inOrder := true
+	for i := 1; i < len(points); i++ {
+		if points[i].position.Get() < points[i-1].position.Get() {
+			inOrder = false
+			break
+		}
+	}
+	if inOrder {
+		return points
+	}
+	out := make([]GradientStop, len(points))
+	var prev float32
+	for i, p := range points {
+		curr := path.Bound(p.position.Get(), prev, 1)
+		out[i] = GradientStop{position: path.NormalizedF32Clamped(curr), color: p.color}
+		prev = curr
+	}
+	return out
 }
 
 // tsFromSinCosAt is ts_from_sin_cos_at in tiny-skia

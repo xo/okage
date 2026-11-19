@@ -118,6 +118,10 @@ type gradientType struct {
 
 	// extend is the data of gradientTypeExtend (D64).
 	extend radialExtendCtx
+
+	// circles holds the two circles that the constructor took, for
+	// RadialGradient.Parameters. It is not in tiny-skia (D68).
+	circles radialCircles
 }
 
 // RadialGradient is RadialGradient in tiny-skia
@@ -259,6 +263,8 @@ func newRadialGradientUnchecked(
 			kind:    gradientTypeRadial,
 			radius1: 0.0,
 			radius2: radius,
+			// okage: the circles for Parameters (D68).
+			circles: radialCircles{start: center, end: center, endRadius: radius},
 		},
 	}, true
 }
@@ -408,6 +414,8 @@ func createRadialGradient(
 			gt = gradientType{kind: gradientTypeFocal}
 		}
 	}
+	// okage: the circles for Parameters (D68).
+	gt.circles = radialCircles{start: c0, startRadius: r0, end: c1, endRadius: r1}
 	if gt.kind == gradientTypeFocal {
 		dCenter := c0.Sub(c1).Length()
 		if !gt.focal.set(r0/dCenter, r1/dCenter, &gradientMatrix) {

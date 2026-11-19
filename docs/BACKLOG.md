@@ -158,14 +158,15 @@ From D62.
    "unsupported Anchor format 281" in the MarkArray of the lookup. Find
    the fault in the parse of MarkLigPos. `test/krilla` compares the
    variable fonts with RobotoFlex until it is fixed. Source: phase 16.
-5. The snapshots `font_type3_color_glyphs`, `font_type3_pdf_14` and
-   `font_type3_with_not_def` draw the SVG glyphs of Twitter Color Emoji
-   with `render_svg_glyph` of krilla-svg. `TestFontType3` skips them until
-   `pdfsvg` gives `RenderGlyph` in phase 17. Source: phase 16, unit 4.
-6. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
+5. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
    copy of the code that draws an outline of typesetting in the order of
    skrifa. The copy of `pdf` also drops the line back to the start of a
    contour that skrifa starts at its last point, and follows the rules of
    `NopFilterSink` of read-fonts for CFF. The tests of `svg` compare
    images within a tolerance, so the copy of `svg` does not need them yet.
    Move the code into one internal package for both. Source: phase 16.
+7. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
+   krilla-svg (phase 17), and `Surface.DrawRaster` follows the same code
+   (D68). D62 item 10 says that the writer uses one code for both. Make
+   `pdfsvg` call `Surface.DrawRaster` when both phases are merged. Source:
+   phase 18.

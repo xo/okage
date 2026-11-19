@@ -12,6 +12,7 @@ import (
 	"github.com/xo/okage"
 	"github.com/xo/okage/path"
 	"github.com/xo/okage/pdf"
+	"github.com/xo/okage/pdfsvg"
 )
 
 // The tests of this file compare the documents and the pages of the package
@@ -28,6 +29,9 @@ import (
 // surface of each page with goRun.
 func goScene(s scene) ([]byte, error) {
 	var opts []pdf.Option
+	// The oracle draws the SVG glyphs of fonts with render_svg_glyph of
+	// krilla-svg, unless the setting svg_glyphs is false.
+	svgGlyphs := true
 	for k, v := range s.Settings {
 		flag, _ := v.(bool)
 		switch k {
@@ -44,9 +48,7 @@ func goScene(s scene) ([]byte, error) {
 				return nil, errors.New("pdf has no XMP metadata")
 			}
 		case "svg_glyphs":
-			if flag {
-				return nil, errors.New("the SVG glyphs of pdfsvg come with phase 17")
-			}
+			svgGlyphs = flag
 		case "version":
 			versions := map[any]pdf.PDFVersion{
 				"1.4": pdf.PDF14, "1.5": pdf.PDF15, "1.6": pdf.PDF16, "1.7": pdf.PDF17, "2.0": pdf.PDF20,
@@ -59,6 +61,9 @@ func goScene(s scene) ([]byte, error) {
 		default:
 			return nil, fmt.Errorf("the setting %q is not ported", k)
 		}
+	}
+	if svgGlyphs {
+		opts = append(opts, pdf.WithSVGGlyphs(pdfsvg.RenderGlyph))
 	}
 	d := pdf.NewDocument(opts...)
 	goNamedDestinations(d, s.interchangeSpec)

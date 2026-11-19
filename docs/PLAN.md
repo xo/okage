@@ -1102,7 +1102,7 @@ An open question stays here until the maintainers answer it. Then it becomes a
 decision in [`decisions/`](decisions/README.md), and it is deleted from this
 list. The numbers do not repeat. The maintainers answered question 19 with
 D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
-The next question is question 28.
+D68 answers question 28, on 2026-11-19. The next question is question 29.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared

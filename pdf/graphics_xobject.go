@@ -14,6 +14,9 @@ type xObjectRepr struct {
 	isolated                    bool
 	transparencyGroupColorSpace bool
 	customBBox                  *Rect
+	// knockout is the flag K of the group. It is not in krilla, and only
+	// Surface.PushGroup sets it (D68).
+	knockout bool
 }
 
 // typeID names the type for sipHash.
@@ -29,6 +32,11 @@ func (r xObjectRepr) hash(h *hasher) {
 	} else {
 		h.usize(1)
 		h.rect(*r.customBBox)
+	}
+	// okage: a knockout group adds its flag, so that the hash of every
+	// other XObject stays the hash of upstream (D68).
+	if r.knockout {
+		h.bool(true)
 	}
 }
 
@@ -133,6 +141,11 @@ func (x xObject) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdf
 
 		if r.isolated {
 			transparency.Isolated(r.isolated)
+		}
+
+		// okage: the flag K of a knockout group (D68).
+		if r.knockout {
+			transparency.Knockout(true)
 		}
 
 		if transparencyGroupCS != nil {

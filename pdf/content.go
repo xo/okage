@@ -812,6 +812,9 @@ func (b *contentBuilder) drawXObject(sc *serializeContext, cc *chunkContainer, x
 
 // drawMasked is ContentBuilder::draw_masked in krilla src/content.rs.
 func (b *contentBuilder) drawMasked(sc *serializeContext, cc *chunkContainer, mask *Mask, stream *Stream) {
+	// okage: a mask with a backdrop or a transfer function covers the
+	// content that it masks (D68).
+	mask = mask.coverContent(stream)
 	state := newExtGState().mask(mask, sc, cc)
 	b.usesMask = true
 	xObject := newXObject(stream, false, true, nil)
@@ -1008,6 +1011,9 @@ func (b *contentBuilder) contentSetFillStrokeProperties(
 
 		colorSpace := b.rdBuilder.registerResource(registerResourceable(sc, cc, tilingPattern))
 		setPatternFn(b.content, colorSpace)
+	case MeshGradient:
+		// okage: a mesh is a shading of type 4 (D68).
+		b.writeMesh(p, bounds, sc, cc, setPatternFn)
 	}
 }
 

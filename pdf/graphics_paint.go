@@ -56,6 +56,10 @@ type LinearGradient struct {
 	Stops []Stop
 	// AntiAlias is whether the gradient should be anti-aliased.
 	AntiAlias bool
+	// Extend says which ends extend past the stops, for the spread method
+	// pad. It is not in krilla (D68). The zero value extends both ends, as
+	// krilla does.
+	Extend ExtendMode
 }
 
 // hash is the impl Hash for LinearGradient in krilla
@@ -69,6 +73,7 @@ func (g LinearGradient) hash(h *hasher) {
 	h.usize(int(g.SpreadMethod))
 	hashStops(h, g.Stops)
 	h.bool(g.AntiAlias)
+	g.Extend.hash(h)
 }
 
 // hashPaint is the derived Hash of Paint for a linear gradient.
@@ -108,6 +113,9 @@ type RadialGradient struct {
 	Stops []Stop
 	// AntiAlias is whether the gradient should be anti-aliased.
 	AntiAlias bool
+	// Extend says which circles extend past the stops. It is not in krilla
+	// (D68). The zero value extends both circles, as krilla does.
+	Extend ExtendMode
 }
 
 // hash is the impl Hash for RadialGradient in krilla
@@ -123,6 +131,7 @@ func (g RadialGradient) hash(h *hasher) {
 	h.usize(int(g.SpreadMethod))
 	hashStops(h, g.Stops)
 	h.bool(g.AntiAlias)
+	g.Extend.hash(h)
 }
 
 // hashPaint is the derived Hash of Paint for a radial gradient.

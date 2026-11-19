@@ -207,6 +207,17 @@ okage differs from upstream only where a decision says so:
     a glyph whose range is not a range of its text, where krilla panics.
     The package comment of `pdf` lists the other differences of the text
     (D62, D65).
+19. `NewLinearGradient` takes the stops of a degenerate gradient with the
+    spread mode repeat or reflect in the order of `newGradient`, and clamps
+    the average color to 0..=1. tiny-skia panics there for stops that are
+    not in order. Stops in order give the bytes of tiny-skia (D68).
+20. `pdfsvg` draws the tree of `svg`, which follows a later usvg than
+    krilla-svg. A group without a layer bounding box draws no filter. A
+    group with the blend mode `PlusLighter`, which PDF does not have, is
+    drawn into an image with `svg`, with the groups that it blends with.
+    `svg` draws the filters into images, where krilla-svg uses resvg.
+    `Draw` and `RenderGlyph` return false where krilla-svg panics. The
+    package comment of `pdfsvg` lists the changes (D62).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -294,6 +305,17 @@ okage also adds APIs that upstream does not have:
     `internal/subsetter` makes the instances of variable fonts with
     `typesetting`, and an instance can differ from the instance of
     subsetter by 1 unit in a point (D62, D65).
+17. `pdf` adds what the PDF device of ivy needs and krilla does not have:
+    `Surface.PushGroup` for the transparency groups with the flags `I` and
+    `K`, `Mask.WithBackdrop` and `Mask.WithTransfer` for the entries `BC`
+    and `TR` of a soft mask, the field `Extend` of a linear and a radial
+    gradient, the paint `MeshGradient` as a shading of type 4,
+    `Surface.FillStencil` for a stencil of 8 bits,
+    `Surface.PushStrokeAdjustment` for the entry `SA`,
+    `Surface.PaintFromShader`, which converts a shader of okage, and
+    `Surface.DrawRaster`, which draws a part of a page with okage as an
+    image. The shaders of okage give their parameters with the method
+    `Parameters` for that conversion (D68).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

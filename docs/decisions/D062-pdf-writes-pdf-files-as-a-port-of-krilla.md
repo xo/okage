@@ -1,6 +1,6 @@
 # D62. `pdf` writes PDF files, as a port of krilla
 
-Status: Decided, amends D5, D7, D9 and D32, amended by D66.
+Status: Decided, amends D5, D7, D9 and D32, amended by D66 and D68.
 
 On 2026-11-18 a maintainer asked okage to write PDF output. The survey of
 [`../FORMATS.md`](../FORMATS.md) rates a PDF writer as the easiest item of
@@ -192,7 +192,8 @@ now under Apache-2.0 or MIT, and okage already ports it.
     - a conversion from an `okage.Shader` to a paint of `pdf`,
     - the fallback of item 10, for a caller that is not `pdfsvg`.
 
-    Question 23 asks for this split.
+    Question 23 asks for this split. D68 holds the section of each
+    addition, with its API and the results of its gate.
 12. The test module holds the comparison (D22). The Rust oracle links krilla,
     krilla-svg and subsetter at their matched commits. The tests use MuPDF
     `mutool`, Poppler `pdftoppm` and `qpdf`, which run as outside programs,

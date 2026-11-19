@@ -191,5 +191,29 @@
 //     them, and the base port has no forms (D62).
 //  7. WithSVGGlyphs is the field render_svg_glyph_fn of SerializeSettings.
 //     Its default is nil, which draws no SVG glyph, as the default function
-//     of upstream does. pdfsvg gives RenderGlyph in phase 17.
+//     of upstream does. pdfsvg.RenderGlyph draws the SVG glyphs, as
+//     render_svg_glyph of krilla-svg does.
+//
+// # The additions for ivy
+//
+// Phase 18 adds what the PDF device of ivy needs and krilla does not have
+// (D62 item 11, D68). The files pdf/ivy_*.go hold them:
+//
+//   - Surface.PushGroup draws a transparency group with the flags I and K,
+//     and an opacity, a blend mode and a soft mask in one graphics state.
+//   - Mask.WithBackdrop and Mask.WithTransfer write the entries BC and TR
+//     of a soft mask.
+//   - The field Extend of LinearGradient and RadialGradient writes the
+//     entry Extend of the shading, for the decal spread mode of okage and
+//     the gradients of okage.NewRadialGradientExtend.
+//   - The paint MeshGradient is a shading of type 4.
+//   - Surface.FillStencil fills through a stencil of 8 bits.
+//   - Surface.PushStrokeAdjustment writes the entry SA.
+//   - Surface.PaintFromShader converts a shader of okage into a paint.
+//   - Surface.DrawRaster draws a part of a page with okage, and draws the
+//     pixmap as an image (D62 item 10).
+//
+// A change to a file of the port for them has a comment that starts with
+// okage: and names D68. Each one keeps the bytes and the hashes of every
+// input of krilla.
 package pdf

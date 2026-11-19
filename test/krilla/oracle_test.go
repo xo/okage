@@ -146,23 +146,36 @@ type answer struct {
 }
 
 // ask sends each question to the oracle as one line of JSON and returns the
-// answers in the same order. doc.go describes the questions.
+// answers in the same order. doc.go describes the questions. The test fails
+// when the oracle does not answer.
 func ask(t *testing.T, questions ...any) []answer {
 	t.Helper()
+	answers, err := tryAsk(t.Context(), t, questions...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return answers
+}
+
+// tryAsk is ask, but it returns an error when the oracle does not answer,
+// such as when a crate overflows its stack, which is not a panic, or when
+// ctx ends first, which kills the oracle.
+func tryAsk(ctx context.Context, t *testing.T, questions ...any) ([]answer, error) {
+	t.Helper()
 	needOracle(t)
-	cmd := exec.CommandContext(t.Context(), oraclePath)
+	cmd := exec.CommandContext(ctx, oraclePath)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	errc := make(chan error, 1)
 	go func() {
@@ -185,11 +198,13 @@ func ask(t *testing.T, questions ...any) []answer {
 	for i := range questions {
 		var n uint32
 		if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
-			t.Fatalf("reading answer %d of the oracle: %v\n%s", i, err, stderr.Bytes())
+			_ = cmd.Wait()
+			return nil, fmt.Errorf("reading answer %d of the oracle: %w\n%s", i, err, stderr.Bytes())
 		}
 		b := make([]byte, n)
 		if _, err := io.ReadFull(r, b); err != nil {
-			t.Fatalf("reading answer %d of the oracle: %v\n%s", i, err, stderr.Bytes())
+			_ = cmd.Wait()
+			return nil, fmt.Errorf("reading answer %d of the oracle: %w\n%s", i, err, stderr.Bytes())
 		}
 		switch {
 		case n > 0 && b[0] == 0:
@@ -197,16 +212,17 @@ func ask(t *testing.T, questions ...any) []answer {
 		case n > 0 && b[0] == 1:
 			answers[i].Err = string(b[1:])
 		default:
-			t.Fatalf("answer %d of the oracle has no status byte", i)
+			_ = cmd.Wait()
+			return nil, fmt.Errorf("answer %d of the oracle has no status byte", i)
 		}
 	}
 	if err := <-errc; err != nil {
-		t.Fatalf("writing to the oracle: %v", err)
+		return nil, fmt.Errorf("writing to the oracle: %w", err)
 	}
 	if err := cmd.Wait(); err != nil {
-		t.Fatalf("the oracle failed: %v\n%s", err, stderr.Bytes())
+		return nil, fmt.Errorf("the oracle failed: %w\n%s", err, stderr.Bytes())
 	}
-	return answers
+	return answers, nil
 }
 
 // askPDF asks the oracle one question whose answer is a PDF file, and fails

@@ -8,9 +8,11 @@ package pdf
 import (
 	"bytes"
 	"encoding/binary"
+	"image"
 	"math"
 	"testing"
 
+	"github.com/xo/okage"
 	"github.com/xo/okage/path"
 )
 
@@ -91,11 +93,13 @@ func (r *fuzzReader) paint(s *Surface, depth int) Paint {
 		return LinearGradient{
 			X1: r.f32(), Y1: r.f32(), X2: r.f32(), Y2: r.f32(), Transform: r.transform(),
 			SpreadMethod: SpreadMethod(r.u8() % 3), Stops: r.stops(), AntiAlias: r.u8()%2 == 0,
+			Extend: ExtendMode(r.u8() % 4),
 		}
 	case 1:
 		return RadialGradient{
 			Fx: r.f32(), Fy: r.f32(), Fr: r.f32(), Cx: r.f32(), Cy: r.f32(), Cr: r.f32(), Transform: r.transform(),
 			SpreadMethod: SpreadMethod(r.u8() % 3), Stops: r.stops(), AntiAlias: r.u8()%2 == 0,
+			Extend: ExtendMode(r.u8() % 4),
 		}
 	case 2:
 		return SweepGradient{
@@ -108,8 +112,99 @@ func (r *fuzzReader) paint(s *Surface, depth int) Paint {
 			fuzzSurface(r, b.Surface(), depth+1)
 			return Pattern{Stream: b.Finish(), Transform: r.transform(), Width: r.f32(), Height: r.f32()}
 		}
+	case 4:
+		return r.mesh()
 	}
 	return r.color()
+}
+
+// mesh reads a mesh of at most 3 triangles, whose vertices can have no
+// color, colors in different color spaces, or points that are not finite.
+func (r *fuzzReader) mesh() MeshGradient {
+	m := MeshGradient{Triangles: make([]MeshTriangle, r.u8()%4), Transform: r.transform(), AntiAlias: r.u8()%2 == 0}
+	for i := range m.Triangles {
+		for k := range 3 {
+			v := MeshVertex{Point: path.PointFromXY(r.coord(), r.coord()), Opacity: r.opacity()}
+			if r.u8()%16 != 0 {
+				v.Color = r.color()
+			}
+			m.Triangles[i][k] = v
+		}
+	}
+	return m
+}
+
+// okageColor reads a color of okage.
+func (r *fuzzReader) okageColor() okage.Color {
+	return okage.ColorFromRGBA8(r.u8(), r.u8(), r.u8(), r.u8())
+}
+
+// shader reads a shader of okage for Surface.PaintFromShader, or nil.
+func (r *fuzzReader) shader() okage.Shader {
+	// The positions can be in any order, and NaN (D68).
+	var stops []okage.GradientStop
+	for range r.u8() % 4 {
+		stops = append(stops, okage.NewGradientStop(r.f32(), r.okageColor()))
+	}
+	pt := func() okage.Point { return path.PointFromXY(r.coord(), r.coord()) }
+	mode := okage.SpreadMode(r.u8() % 4)
+	var s okage.Shader
+	switch r.u8() % 7 {
+	case 0:
+		return okage.SolidColor(r.okageColor())
+	case 1:
+		s, _ = okage.NewLinearGradient(pt(), pt(), stops, mode, r.transform())
+	case 2:
+		s, _ = okage.NewRadialGradient(pt(), r.coord(), pt(), r.coord(), stops, mode, r.transform())
+	case 3:
+		s, _ = okage.NewRadialGradientExtend(pt(), r.coord(), pt(), r.coord(), stops, r.u8()%2 == 0, r.u8()%2 == 0, r.transform())
+	case 4:
+		s, _ = okage.NewSweepGradient(pt(), r.coord(), r.coord(), stops, mode, r.transform())
+	case 5:
+		tris := make([]okage.MeshTriangle, r.u8()%4)
+		for i := range tris {
+			for k := range 3 {
+				tris[i][k] = okage.MeshVertex{Point: pt(), Color: r.okageColor()}
+			}
+		}
+		s, _ = okage.NewMeshGradient(tris, r.transform())
+	default:
+		pm, ok := okage.NewPixmap(uint32(r.u8()%4), uint32(r.u8()%4))
+		if !ok {
+			return nil
+		}
+		s = okage.NewPattern(pm.AsRef(), mode, okage.FilterQuality(r.u8()%3), r.f32(), r.transform())
+	}
+	return s
+}
+
+// stencil reads a stencil of at most 3 by 3 pixels.
+func (r *fuzzReader) stencil() *image.Alpha {
+	m := image.NewAlpha(image.Rect(0, 0, int(r.u8()%4), int(r.u8()%4)))
+	for i := range m.Pix {
+		m.Pix[i] = r.u8()
+	}
+	return m
+}
+
+// mask reads a mask whose stream draws its own calls, with a backdrop and a
+// transfer function or not.
+func (r *fuzzReader) mask(s *Surface, depth int) *Mask {
+	b := s.StreamBuilder()
+	fuzzSurface(r, b.Surface(), depth+1)
+	m := NewMask(b.Finish(), MaskType(r.u8()%2))
+	flags := r.u8()
+	if flags&1 != 0 {
+		m = m.WithBackdrop(NewColorRGB(r.u8(), r.u8(), r.u8()))
+	}
+	if flags&2 != 0 {
+		var table [256]uint8
+		for i := range table {
+			table[i] = uint8(i) ^ flags
+		}
+		m = m.WithTransfer(&table)
+	}
+	return m
 }
 
 // opacity reads a NormalizedF32.
@@ -150,10 +245,13 @@ func (r *fuzzReader) path() *Path {
 
 // fuzzSurface makes random calls of a surface, with pushes and pops that do
 // not have to match, and finishes it. A mask draws its own calls, up to a
-// depth of 3.
+// depth of 3. The calls include the additions for ivy of D68: the groups,
+// the stroke adjustment, the stencils, the raster fallback, the masks with a
+// backdrop and a transfer function, the meshes, the Extend of a gradient and
+// the conversion of a shader of okage.
 func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 	for range r.u8() % 32 {
-		switch r.u8() % 12 {
+		switch r.u8() % 18 {
 		case 0:
 			if r.u8()%4 == 0 {
 				s.SetFill(nil)
@@ -194,9 +292,7 @@ func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 			s.PushIsolated()
 		case 9:
 			if depth < 3 {
-				b := s.StreamBuilder()
-				fuzzSurface(r, b.Surface(), depth+1)
-				s.PushMask(NewMask(b.Finish(), MaskType(r.u8()%2)))
+				s.PushMask(r.mask(s, depth))
 			}
 		case 10:
 			if depth < 3 {
@@ -204,11 +300,44 @@ func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 				fuzzSurface(r, b.Surface(), depth+1)
 				s.DrawGraphic(NewGraphic(b.Finish(), r.u8()%2 == 0))
 			}
+		case 11:
+			g := Group{Opacity: r.opacity(), BlendMode: BlendMode(r.u8() % 16), Isolated: r.u8()%2 == 0, Knockout: r.u8()%2 == 0}
+			if depth < 3 && r.u8()%2 == 0 {
+				g.Mask = r.mask(s, depth)
+			}
+			s.PushGroup(g)
+		case 12:
+			s.PushStrokeAdjustment(r.u8()%2 == 0)
+		case 13:
+			if size, ok := path.SizeFromWH(r.coord(), r.coord()); ok {
+				s.FillStencil(r.stencil(), size, r.u8()%2 == 0)
+			}
+		case 14:
+			// The pixmap stays small: the transform of the surface scales
+			// by at most 4, and the rectangle is at most 255 units wide.
+			ctm := s.CTM()
+			if rect, ok := path.RectFromXYWH(r.coord(), r.coord(), r.coord(), r.coord()); ok &&
+				max(abs32(ctm.SX), abs32(ctm.KX), abs32(ctm.KY), abs32(ctm.SY)) <= 4 {
+				c := r.okageColor()
+				s.DrawRaster(rect, float32(r.u8()%4)/2, func(pm *okage.Pixmap, _ Transform) { pm.Fill(c) })
+			}
+		case 15:
+			if p, o, ok := s.PaintFromShader(r.shader()); ok {
+				s.SetFill(&Fill{Paint: p, Opacity: o, Rule: FillRule(r.u8() % 2)})
+			}
 		default:
 			s.Pop()
 		}
 	}
 	s.Finish()
+}
+
+// abs32 returns the magnitude of v, and NaN for NaN.
+func abs32(v float32) float32 {
+	if v < 0 {
+		return -v
+	}
+	return v
 }
 
 // point reads a point of a destination or of a quadrilateral.

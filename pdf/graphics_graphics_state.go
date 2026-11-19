@@ -26,6 +26,10 @@ type extGStateRepr struct {
 	// mask is the reference of an active mask.
 	mask    pdfwriter.Ref
 	hasMask bool
+	// strokeAdjust is the flag SA of automatic stroke adjustment. It is not
+	// in krilla (D68).
+	strokeAdjust    bool
+	hasStrokeAdjust bool
 }
 
 // extGState is ExtGState in krilla src/graphics/graphics_state.rs. Upstream
@@ -95,7 +99,8 @@ func (g extGState) empty() bool {
 	return !g.r.hasMask &&
 		!g.r.hasStrokingAlpha &&
 		!g.r.hasNonStrokingAlpha &&
-		!g.r.hasBlendMode
+		!g.r.hasBlendMode &&
+		!g.r.hasStrokeAdjust
 }
 
 // combine is ExtGState::combine in krilla src/graphics/graphics_state.rs.
@@ -122,6 +127,12 @@ func (g *extGState) combine(other extGState) {
 	if other.r.hasMask {
 		g.r.mask = other.r.mask
 		g.r.hasMask = true
+	}
+
+	// okage: the flag SA (D68).
+	if other.r.hasStrokeAdjust {
+		g.r.strokeAdjust = other.r.strokeAdjust
+		g.r.hasStrokeAdjust = true
 	}
 }
 
@@ -154,6 +165,12 @@ func (g extGState) hash(h *hasher) {
 		h.i32(g.r.mask.Get())
 	} else {
 		h.usize(0)
+	}
+	// okage: the flag SA adds to the hash only when it is set, so that the
+	// hash of every other state stays the hash of upstream (D68).
+	if g.r.hasStrokeAdjust {
+		h.usize(1)
+		h.bool(g.r.strokeAdjust)
 	}
 }
 
@@ -195,6 +212,11 @@ func (g extGState) serialize(sc *serializeContext, cc *chunkContainer, rootRef p
 		sc.registerValidationError(validationError{kind: validationTransparency, location: sc.location})
 
 		extSt.Pair(pdfwriter.Name("SMask"), g.r.mask)
+	}
+
+	// okage: the flag SA (D68).
+	if g.r.hasStrokeAdjust {
+		extSt.StrokeAdjustment(g.r.strokeAdjust)
 	}
 
 	extSt.Finish()

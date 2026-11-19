@@ -104,6 +104,7 @@ func NewRadialGradientExtend(
 				extendStart: extendStart,
 				extendEnd:   extendEnd,
 			},
+			circles: radialCircles{start: startPoint, startRadius: startRadius, end: endPoint, endRadius: endRadius},
 		},
 	}, true
 }

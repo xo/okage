@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `5bdbae64` of resvg. The maintainers accepted the decisions D1
-to D67. The package `html` parses and lays out the HTML-like labels of
+to D68. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -76,7 +76,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
 | working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65 and D67, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65 and D66, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66 and D68, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
@@ -104,7 +104,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. No question is open, and the next question is question 28.
+not repeat. No question is open, and the next question is question 29.
 
 ## Hard rules
 
@@ -234,6 +234,7 @@ When code exists, the code goes here:
 | `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5. A file of the port starts with `tinyhtml5_` and the name of its Python module, such as `tinyhtml5_tokenizer.go` (D49) |
 | `lottie/` | the package `lottie`, the port of the crate `velato`. A file starts with the name of its folder in `src`, such as `runtime_evaluate.go` (D41) |
 | `pdf/` | the package `pdf`, the port of the crate `krilla`, which writes PDF files. A file of a folder of `src` starts with the name of the folder, such as `configure_version.go` (D62) |
+| `pdfsvg/` | the package `pdfsvg`, the port of the crate `krilla-svg`, which draws a tree of `svg` onto a surface of `pdf`. A file has the name of its file in `src`, such as `clip_path.go` (D62) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
@@ -275,7 +276,7 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./pdf ./internal/... \
+tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./pdf ./pdfsvg ./internal/... \
   ./typesetting/bidi ./typesetting/di ./typesetting/font/... ./typesetting/harfbuzz \
   ./typesetting/language ./typesetting/segmenter ./typesetting/internal/...
 golangci-lint run ./...

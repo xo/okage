@@ -210,6 +210,9 @@ type meshData struct {
 	// vertexColors holds the 3 colors of each triangle, as the caller gave
 	// them.
 	vertexColors []Color
+	// points holds the 3 points of each triangle, as the caller gave them,
+	// for MeshGradient.Parameters (D68).
+	points []Point
 	// colors holds 3 values for each triangle: the color of the corner 0, and
 	// the colors of the corners 1 and 2 minus it. It is for ColorSpaceLinear.
 	colors          []gradientColor
@@ -252,6 +255,7 @@ func newMeshData(triangles []MeshTriangle) (*meshData, bool) {
 		}
 		m.triangles = append(m.triangles, mt)
 		for _, v := range t {
+			m.points = append(m.points, v.Point)
 			m.vertexColors = append(m.vertexColors, v.Color)
 			m.colorsAreOpaque = m.colorsAreOpaque && v.Color.IsOpaque()
 		}
