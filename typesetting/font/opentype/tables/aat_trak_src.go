@@ -61,7 +61,8 @@ func (td TrackData) GetTracking(ptem float32, track float32) float32 {
 
 	a := td.TrackTable[i].value(ptem, td.SizeTable)
 	b := td.TrackTable[j].value(ptem, td.SizeTable)
-	return a + t*(b-a)
+	// okage: the conversion stops a fused multiply and add (D16, D71).
+	return a + float32(t*(b-a))
 }
 
 type TrackTableEntry struct {
@@ -133,5 +134,6 @@ func (td *TrackTableEntry) interpolateAt(idx int, ptem float32, sizeTable []Floa
 	}
 
 	t := (ptem - s0) / (s1 - s0)
-	return v0 + t*(v1-v0)
+	// okage: the conversion stops a fused multiply and add (D16, D71).
+	return v0 + float32(t*(v1-v0))
 }

@@ -574,7 +574,9 @@ func (inst *glyphInstance) glyfPointsOnce(gid tables.GlyphID, depth int) ([]flat
 			tx, ty := float64(argX), float64(argY)
 			m := item.Scale
 			if item.IsScaledOffsets() {
-				tx, ty = tx*float64(m[0])+ty*float64(m[2]), tx*float64(m[1])+ty*float64(m[3])
+				// Each product is converted, so that Go does not fuse it
+				// with the sum, which Rust does not do (D16).
+				tx, ty = float64(tx*float64(m[0]))+float64(ty*float64(m[2])), float64(tx*float64(m[1]))+float64(ty*float64(m[3]))
 			}
 			if haveXform && item.Flags&(flagScaledComponentOffset|flagUnscaledComponentOffset) == flagScaledComponentOffset {
 				// According to FreeType, this algorithm is a "guess" and
@@ -595,8 +597,8 @@ func (inst *glyphInstance) glyfPointsOnce(gid tables.GlyphID, depth int) ([]flat
 			// composite glyph and of the component. skrifa rounds off the
 			// fractional parts of the delta, as FreeType does.
 			fx, fy := float64(child[0].fx), float64(child[0].fy)
-			ox := float64(out[at].fx) - (fx*float64(m[0]) + fy*float64(m[2]))
-			oy := float64(out[at].fy) - (fx*float64(m[1]) + fy*float64(m[3]))
+			ox := float64(out[at].fx) - (float64(fx*float64(m[0])) + float64(fy*float64(m[2])))
+			oy := float64(out[at].fy) - (float64(fx*float64(m[1])) + float64(fy*float64(m[3])))
 			offX = x<<6 + round26Dot6(ox-tx)
 			offY = y<<6 + round26Dot6(oy-ty)
 		}

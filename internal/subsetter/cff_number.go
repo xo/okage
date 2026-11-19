@@ -49,9 +49,11 @@ func (n fixedNumber) String() string {
 	return strconv.FormatInt(int64(n), 10)
 }
 
-// asF32 is FixedNumber::as_f32 in subsetter src/cff/number.rs.
+// asF32 is FixedNumber::as_f32 in subsetter src/cff/number.rs. The compiler
+// turns the division into a multiply, and the conversion stops it from fusing
+// that multiply with an add of the caller (D16).
 func (n fixedNumber) asF32() float32 {
-	return float32(n) / 65536.0
+	return float32(float32(n) / 65536.0)
 }
 
 // parseFixedNumber is FixedNumber::parse in subsetter src/cff/number.rs.

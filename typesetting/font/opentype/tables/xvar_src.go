@@ -103,7 +103,8 @@ func (store ItemVarStore) GetDelta(index VariationStoreIndex, coords []Coord) fl
 			return 0
 		}
 		v := regions[regionIndex].Evaluate(coords)
-		delta += float32(deltaSet[i]) * v
+		// okage: the conversion stops a fused multiply and add (D16, D71).
+		delta += float32(float32(deltaSet[i]) * v)
 	}
 	return delta
 }

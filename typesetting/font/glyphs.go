@@ -29,8 +29,9 @@ func (c *contourPoint) translate(x, y float32) {
 }
 
 func (c *contourPoint) transform(matrix [4]float32) {
-	px := c.X*matrix[0] + c.Y*matrix[2]
-	c.Y = c.X*matrix[1] + c.Y*matrix[3]
+	// okage: the conversions stop a fused multiply and add (D16, D71).
+	px := float32(c.X*matrix[0]) + float32(c.Y*matrix[2])
+	c.Y = float32(c.X*matrix[1]) + float32(c.Y*matrix[3])
 	c.X = px
 }
 

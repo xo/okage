@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"math/rand/v2"
 	"os"
 	"reflect"
 	"sort"
 	"testing"
-	"testing/quick"
 
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
@@ -1608,7 +1608,10 @@ func checkOptions(t *testing.T, runes []rune, options []breakOption) bool {
 }
 
 func TestRawBreakOptions(t *testing.T) {
-	if err := quick.Check(func(runes []rune) bool {
+	// okage: quick.Check calls (reflect.Type).NumOut, which TinyGo does not
+	// have. The loop below makes the inputs that quick.Check makes: 100
+	// slices of fewer than 50 runes, and each rune is any int32 (D25).
+	check := func(runes []rune) bool {
 		breaker := newBreaker(&segmenter.Segmenter{}, runes)
 		var wordOptions []breakOption
 		for b, ok := breaker.nextWordRaw(); ok; b, ok = breaker.nextWordRaw() {
@@ -1619,8 +1622,15 @@ func TestRawBreakOptions(t *testing.T) {
 			graphemeOptions = append(graphemeOptions, b)
 		}
 		return checkOptions(t, runes, wordOptions) && checkOptions(t, runes, graphemeOptions)
-	}, nil); err != nil {
-		t.Errorf("generated invalid break options: %v", err)
+	}
+	for range 100 {
+		runes := make([]rune, rand.IntN(50))
+		for i := range runes {
+			runes[i] = rune(rand.Uint32())
+		}
+		if !check(runes) {
+			t.Fatalf("generated invalid break options for %#v", runes)
+		}
 	}
 }
 

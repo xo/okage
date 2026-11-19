@@ -81,7 +81,7 @@ func (m fontMatrix) valid() bool {
 			return false
 		}
 	}
-	return m[0]*m[3]-m[1]*m[2] != 0
+	return float64(m[0]*m[3])-float64(m[1]*m[2]) != 0
 }
 
 // scale returns the scale that FreeType uses to normalize the matrix: the
@@ -96,14 +96,18 @@ func (m fontMatrix) scale() float64 {
 // concat returns the matrix of a font dictionary, sub, followed by the
 // linear part of the matrix of the Top DICT, m. The translation of m does
 // not apply, as in FreeType and skrifa.
+//
+// okage: the methods of fontMatrix convert each product, so that the Go
+// compiler cannot fuse it with an add, and every platform gives the same
+// result (D16).
 func (m fontMatrix) concat(sub fontMatrix) fontMatrix {
 	return fontMatrix{
-		m[0]*sub[0] + m[2]*sub[1],
-		m[1]*sub[0] + m[3]*sub[1],
-		m[0]*sub[2] + m[2]*sub[3],
-		m[1]*sub[2] + m[3]*sub[3],
-		m[0]*sub[4] + m[2]*sub[5],
-		m[1]*sub[4] + m[3]*sub[5],
+		float64(m[0]*sub[0]) + float64(m[2]*sub[1]),
+		float64(m[1]*sub[0]) + float64(m[3]*sub[1]),
+		float64(m[0]*sub[2]) + float64(m[2]*sub[3]),
+		float64(m[1]*sub[2]) + float64(m[3]*sub[3]),
+		float64(m[0]*sub[4]) + float64(m[2]*sub[5]),
+		float64(m[1]*sub[4]) + float64(m[3]*sub[5]),
 	}
 }
 
@@ -116,8 +120,8 @@ func (m fontMatrix) isIdentity() bool {
 func (m fontMatrix) apply(p ot.SegmentPoint) ot.SegmentPoint {
 	x, y := float64(p.X), float64(p.Y)
 	return ot.SegmentPoint{
-		X: float32(m[0]*x + m[2]*y + m[4]),
-		Y: float32(m[1]*x + m[3]*y + m[5]),
+		X: float32(float64(m[0]*x) + float64(m[2]*y) + m[4]),
+		Y: float32(float64(m[1]*x) + float64(m[3]*y) + m[5]),
 	}
 }
 

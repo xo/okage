@@ -24,9 +24,7 @@ From D52.
    `github.com/go-text/typesetting-utils`, and the copy leaves them out.
    Copy the fonts and the files that they read, each with its license, and
    put the tests back in their packages, as D63 decides.
-3. A test of `shaping` calls a method of `reflect` that TinyGo does not have,
-   so the TinyGo command of `AGENTS.md` leaves `typesetting/shaping` out.
-4. In Amiri, `harfbuzz` places a mark on some ligatures of a short text in
+3. In Amiri, `harfbuzz` places a mark on some ligatures of a short text in
    another place than HarfBuzz 15.1.0. In `لًكنننننن`, U+064B is at the
    x offset -10,560, and HarfBuzz puts it at -2,176, at a scale of 64 for
    each unit of the font. U+064E in `هلَكو` has the same fault. In a longer
@@ -34,7 +32,7 @@ From D52.
    `v0.3.5` and its commit `bafa8730` have the fault. `FuzzUnsafeToBreak`
    found it, and its Arabic alphabet leaves out the marks until a fix
    (D70). Source: D70, 2026-11-19.
-5. Two fuzz targets of go-text fail at the commit `113f0ea` of okage, before
+4. Two fuzz targets of go-text fail at the commit `113f0ea` of okage, before
    D70. `FuzzBreakOptions` finds that the line breaker of `shaping` gives 2
    graphemes for `"0! ̽"`, and the segmenter gives 3.
    `FuzzE2EVariableSize` finds that `WrapParagraph` gives 4,787 runes for
@@ -187,3 +185,11 @@ From D62.
    (D68). D62 item 10 says that the writer uses one code for both. Make
    `pdfsvg` call `Surface.DrawRaster` when both phases are merged. Source:
    phase 18.
+8. `deflateEncode` makes a new zlib writer for each stream, as krilla makes
+   a new encoder. Each writer allocates about 700 KB. A document of 8,192
+   compressed pages allocated 5.8 GB in total, and on wasip1 one cycle of
+   the garbage collector did not end while the program allocated 3.5 GB of
+   them. The program then ran out of its memory of 4 GB. `TestDocumentErrors`
+   now writes those pages without compression. A writer that is reset and
+   used again gives the same bytes and removes the allocations. Source: the
+   nightly run of 2026-11-19.

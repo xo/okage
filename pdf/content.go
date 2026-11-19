@@ -557,7 +557,9 @@ func (b *contentBuilder) encodeGlyphsWithIndividualPositioning(curX *float32, pd
 	positioned := b.content.ShowPositioned()
 	items := positioned.Items()
 
-	scale := func(val float32) float32 { return val * pdfFont.unitsPerEm() }
+	// The conversion rounds the product, so that the Go compiler cannot fuse
+	// it with the sums of the adjustment (D16).
+	scale := func(val float32) float32 { return float32(val * pdfFont.unitsPerEm()) }
 
 	for i := range glyphs {
 		glyph := &glyphs[i]

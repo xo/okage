@@ -184,9 +184,11 @@ func newMeshEdge(a, b, c Point) (meshEdge, bool) {
 	return e, true
 }
 
-// eval returns the value of the function of the edge at x and y.
+// eval returns the value of the function of the edge at x and y. The outer
+// conversion stops the Go compiler from fusing the product with an add of the
+// caller (D16).
 func (e *meshEdge) eval(x, y float32) float32 {
-	return e.sign * (float32(e.dx*(y-e.y0)) - float32(e.dy*(x-e.x0)))
+	return float32(e.sign * (float32(e.dx*(y-e.y0)) - float32(e.dy*(x-e.x0))))
 }
 
 // reach returns how far the function of the edge changes from the center of

@@ -80,9 +80,11 @@ func NewRadialGradientExtend(
 	scale := 1 / max(length, startRadius, endRadius)
 	pointsToUnit := path.TransformFromTranslate(-startPoint.X, -startPoint.Y).PostScale(scale, scale)
 
-	cx := (endPoint.X - startPoint.X) * scale
-	cy := (endPoint.Y - startPoint.Y) * scale
-	r0 := startRadius * scale
+	// The conversions round each product, so that the Go compiler cannot
+	// fuse it with an add (D16).
+	cx := float32((endPoint.X - startPoint.X) * scale)
+	cy := float32((endPoint.Y - startPoint.Y) * scale)
+	r0 := float32(startRadius * scale)
 	dr := float32(endRadius*scale) - r0
 	a := float32(cx*cx) + float32(cy*cy) - float32(dr*dr)
 	if path.IsNearlyZero(a) {

@@ -307,8 +307,10 @@ func (f *Font) advanceWidth(glyph GlyphID) (float32, bool) {
 		f.mu.Unlock()
 		// skrifa computes the delta as a Fixed of 16.16 bits. The port
 		// rounds the delta of typesetting to the nearest such value first,
-		// so that a delta that is an integer in skrifa is one here too.
-		delta := math.Round((float64(varied)-float64(advance))*65536) / 65536
+		// so that a delta that is an integer in skrifa is one here too. The
+		// compiler turns the division into a multiply, and the conversion
+		// stops it from fusing that multiply with the add below (D16).
+		delta := float64(math.Round((float64(varied)-float64(advance))*65536) / 65536)
 		if f.ld.HasTable(ot.MustNewTag("HVAR")) {
 			advance += int32(delta)
 		} else {

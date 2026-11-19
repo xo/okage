@@ -67,7 +67,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the radial gradients of `NewRadialGradientExtend`, for the radial shadings of PDF | D64, then D55 |
 | working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |
 | writing or changing the vector types, or anything with a build tag | [docs/SIMD.md](docs/SIMD.md), then D15 and D16 |
-| writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 |
+| writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 and D71 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
 | working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45, D46, D57 and D61 |
@@ -75,7 +75,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67 and D70, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70 and D71, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
 | working on the PDF writer, or comparing it with krilla | D62, D65, D66 and D68, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
@@ -104,7 +104,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. No question is open, and the next question is question 31.
+not repeat. No question is open, and the next question is question 32.
 
 ## Hard rules
 
@@ -276,9 +276,7 @@ test -z "$(gofmt -l $(git ls-files -co --exclude-standard '*.go'))"
 go vet ./... && GOEXPERIMENT=simd go vet ./...
 go test -race -count=1 ./...
 GOEXPERIMENT=simd go test -race -count=1 ./...
-tinygo test . ./path ./roxmltree ./kurbo ./html ./tinycss2 ./cssselect2 ./webfont ./pdf ./pdfsvg ./internal/... \
-  ./typesetting/bidi ./typesetting/di ./typesetting/font/... ./typesetting/harfbuzz \
-  ./typesetting/language ./typesetting/segmenter ./typesetting/internal/...
+tinygo test ./...
 golangci-lint run ./...
 (cd test && go vet ./... && go test -count=1 ./... && golangci-lint run ./...)
 (cd test && GOEXPERIMENT=simd go test -count=1 ./oracle/ -args -oracle.n=10000)

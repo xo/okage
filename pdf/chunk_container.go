@@ -127,7 +127,7 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 	// The 200 is additional padding for the document catalog. This
 	// hopefully allows us to avoid re-allocations in the general case, and
 	// thus give us better performance.
-	capacity := int(float32(chunksByteLen)*1.1 + 200.0)
+	capacity := int(float32(float32(chunksByteLen)*1.1) + 200.0)
 	pdf := sc.newPDFWithCapacity(capacity)
 	sc.serializeSettings().pdfVersion().setVersion(pdf)
 
