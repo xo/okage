@@ -247,7 +247,7 @@ func textCases(t *testing.T) []documentCase {
 	// glyphs, inside a group whose bbox matters.
 	emojis, err := os.ReadFile(abs(t, "upstream", "krilla", "assets", "emojis.txt"))
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("the checkout of krilla is missing: %v", err)
 	}
 	add("colr emojis", nil, one(textFont(t, "NotoColorEmoji.COLR.subset.ttf")),
 		pushIsolated(), drawText(0, 30, 0, 16, strings.TrimSpace(string(emojis))), pop())
