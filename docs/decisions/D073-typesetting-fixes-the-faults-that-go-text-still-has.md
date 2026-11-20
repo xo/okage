@@ -281,6 +281,75 @@ does not, which item 4 of "typesetting" in `docs/BACKLOG.md` records. No
 workload of `test/textbench` uses a table kern, kerx or morx, so their
 times do not change.
 
+On 2026-11-21 okage made `harfbuzz` and `font` follow HarfBuzz 15.1.0 at
+the first four places of item 4 of "typesetting" in `docs/BACKLOG.md`:
+
+16. A subtable with a state machine in morx, and a subtable of format 1
+    or 4 in kerx or kern, applies only when the buffer holds a glyph whose
+    class can start an action from the start state, as
+    `collect_initial_glyphs` of HarfBuzz. A class can start an action when
+    its entry from the start state goes to another state, has the flag
+    0x8000, or has an action. A glyph outside the class table is never one
+    of these glyphs. The deleted glyph is one when its class can start an
+    action. As in HarfBuzz, the filter of the classes reads a class modulo
+    512, and a machine with more than 512 classes takes each glyph of its
+    class table. go-text took each glyph of the class table, so a subtable
+    that HarfBuzz skips can apply. `TestAATInitialGlyphs` tests it.
+17. A mark of a subtable of format 4 of kerx takes the offset of its base
+    across the line, plus the offsets of the glyphs that the base is
+    attached to by a cursive attachment. This is `resolve_cross_offset`,
+    which HarfBuzz added in its merge 436f067b20. When the subtable
+    reverses the buffer, the attachments are in the order of the buffer
+    before the reverse. The offsets are clamped to the range of a
+    position. `resolveCrossOffsetKerx` has the limit of HarfBuzz 15.1.0 on
+    the number of attachments, and its clamp. `resolveCrossOffset` of GPOS
+    does not change. `TestKerxFormat4CrossOffset` and
+    `TestKerxFormat4Clamp` test it. At the scale of the font units, two
+    anchors are at most 65,535 apart, so no test reaches the clamp of
+    their difference.
+18. In a subtable of format 1 of kern, a list whose offset is not 0 and
+    comes before the value table has the index `tables.Kern1OutOfRange`.
+    As in HarfBuzz, it empties the stack. go-text gave such an entry no
+    list. The values go up to the end of the subtable, and up to the end
+    of the table for the last subtable. HarfBuzz requires the values for
+    the whole stack there, and an odd value does not cut them. go-text
+    kept the values up to the first odd value after the largest index of
+    an entry, also after the end of the subtable. It also refused the
+    table when the table was too short for that index.
+    `TestKernFormat1ValueTable` tests it.
+19. `font` refuses a whole table kerx or morx when a subtable or a chain
+    has an error, as HarfBuzz does. go-text kept the subtables or the
+    chains before the error. So that `font` refuses a table where
+    HarfBuzz refuses it, these places follow HarfBuzz too:
+    - A subtable of kern, kerx or morx of an unknown format or type does
+      not apply, and the subtables after it apply. go-text refused it.
+    - A subtable shorter than its header is an error, and so is a chain
+      of morx shorter than its header.
+    - The next chain of morx starts at the length of the chain, after the
+      glyph coverage of version 3. go-text read it after the subtables.
+    - In morx of version 3, and in kerx of version 3 or more, a glyph
+      coverage that is not in the table is an error.
+    - In kern and kerx, the data of each subtable except the last must be
+      in the length of the subtable. HarfBuzz ignores the length of the
+      last subtable, for fonts such as some versions of Calibri. go-text
+      read the data of each subtable up to the end of the table.
+
+    Item 4 said that `typesetting` refuses a table kern whose last
+    subtable is longer than the table, and that HarfBuzz does not.
+    HarfBuzz refuses such a table too. Both read the data of the last
+    subtable past its length. `TestAATTableErrors` tests it.
+
+Each test of fixes 16 to 19 is in `harfbuzz` and in `test/harfbuzz`, and
+fails before its fix. A comparison shaped 24,000 random texts of a, b, c
+and x in 2,000 random state machines: subtables of format 1 of kerx,
+also cross-stream, subtables of format 4 of kerx with anchor coordinates,
+also backwards, and insertion and rearrangement subtables of morx. Their
+class tables sometimes gave a glyph a class from 0 to 8. `harfbuzz` and
+HarfBuzz gave the same glyphs, clusters, advances, offsets and flags
+unsafe-to-break for each text. Each of the 413,399 lines of
+`perf_reference` still gives the same output as HarfBuzz. Item 4 of
+"typesetting" in `docs/BACKLOG.md` lists the differences that remain.
+
 ## When upstream changes
 
 If go-text fixes one of these faults, follow these steps:

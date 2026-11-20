@@ -101,42 +101,39 @@ From D52.
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
 4. Make `harfbuzz` follow HarfBuzz 15.1.0 in the tables kern, kerx and
-   morx at the places that the work on fixes 13 to 15 of D73 found. No
+   morx at the places that the work on fixes 13 to 19 of D73 found. No
    text of `perf_reference` and no workload of `test/textbench` uses these
    tables:
-   - For a subtable with a state machine in morx, and of format 1 or 4 in
-     kerx, HarfBuzz collects only the glyphs whose class can start an
-     action from the start state (`collect_initial_glyphs`), and skips the
-     subtable when the buffer holds none of them. A glyph outside the
-     class table is never collected. go-text collects each glyph of the
-     class table. So a subtable that HarfBuzz skips can apply in
-     `harfbuzz`, with an action at the end of the text in the start
-     state, or with a glyph outside the class table that starts an
-     action. A random comparison of kerx found both. HarfBuzz had this
-     code before 873dbc1e, the commit that go-text follows.
-   - In a subtable of format 4 of kerx, HarfBuzz 15.1.0 adds the offset of
-     the mark across the direction of the text, `resolve_cross_offset`,
-     from its merge 436f067b20, and clamps the offsets to the range of a
-     position. `harfbuzz` does neither.
-   - A subtable of format 1 of kern: when the offset of a list is not 0
-     and comes before the value table, HarfBuzz applies the list with an
-     index out of range, and empties the stack. go-text makes the entry
-     not actionable. go-text also keeps the values only up to the first
-     odd value after the largest index of an entry, and HarfBuzz makes
-     sure that the values for the whole stack are in the subtable.
-   - When a subtable of kerx or a chain of morx has an error, the parse
-     of `typesetting` keeps the subtables before it, and HarfBuzz refuses
-     the whole table. `typesetting` also refuses a table kern whose last
-     subtable is longer than the table, and HarfBuzz ignores the length
-     of the last subtable, for fonts such as some versions of Calibri.
-     These come from the code, and no test shows them yet.
+   - The parse of `typesetting` refuses some data of a subtable that
+     HarfBuzz reads only when it applies the subtable. Since fix 19 of D73,
+     such an error refuses the whole table kerx or morx, where HarfBuzz
+     applies the table. For example, `typesetting` requires the anchor of
+     each entry of a subtable of format 4 of kerx, an action type from 0
+     to 2, and the whole kerning array of a subtable of format 6. When an
+     anchor is not in the subtable, HarfBuzz skips the transition, and
+     does not take the flag Mark.
+   - In a ligature subtable of morx, an entry has an action when a bit of
+     the mask 0x3FFF of its flags is set. In HarfBuzz, it has an action
+     only when its flag PerformAction, 0x2000, is set.
+   - A subtable of format 4 of kerx does not apply when the feature kern
+     is off and the subtable is not cross-stream. HarfBuzz applies it.
+   - A lookup of format 4 in the class table of a state machine drops its
+     last segment, also when that segment is not the segment 0xFFFF that
+     ends the search. HarfBuzz drops only that segment.
+   - Outside these tables, `resolveCrossOffset` of GPOS has neither the
+     limit of HarfBuzz on the number of attachments that it follows, from
+     703509a9d9, nor its clamp, from bcce9d4f55.
+     `propagateAttachmentOffsets` also adds the offsets without the clamp
+     of HarfBuzz. If cursive attachments form a cycle, which HarfBuzz says
+     lookups with other flags can do, the loop of `resolveCrossOffset`
+     does not end.
    - Other commits of HarfBuzz after 873dbc1e change the AAT code, and no
      one compared them with `harfbuzz` yet: 5a1c0c4660, 88e5077a80,
      a763a612d1, ec4a38c4ab, 77be62a733, cd570b6f54 and 370a0da5a1. For
      example, 88e5077a80 reads the class values of a subtable of format 2
      of kerx as byte offsets from the kerning array, and `typesetting`
      reads them in another way.
-   Source: D73, 2026-11-20.
+   Source: D73, 2026-11-20 and 2026-11-21.
 5. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
    mark that cluster as unsafe to break. uharfbuzz 0.57.0 gives the same
