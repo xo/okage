@@ -1,6 +1,6 @@
 # D63. The tests of go-text read copies of their fonts
 
-Status: Decided, amends D52.
+Status: Decided, amends D52, amended by D76.
 
 D52 copies the packages of go-text into `typesetting`. 33 of the 54 test
 files of these packages read the fonts and the test data of the module
