@@ -599,7 +599,10 @@ On 2026-11-18 eighteen ledgers exist:
    and for the variable fonts of `internal/subsetter` (D65). On 2026-11-19,
    okage applied the 23 pending commits that fix a panic, a loop that does
    not end or a missing bound on malformed input (D67). 36 commits are
-   `ported` and 74 are `pending`.
+   `ported` and 74 are `pending`. D70 applied five more out of order. On
+   2026-11-20, okage applied the other 69 pending commits in order. 100
+   commits are `ported` and 26 are `not-applicable`, and the column
+   `matched` is `bafa8730`.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
    On 2026-11-20 okage starts to port the commits of krilla after the base
