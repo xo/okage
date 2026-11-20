@@ -41,7 +41,7 @@ fff775676a5ef8d55388e1e8803a04b15c287aed	2026-09-30	not-applicable		[fontscan] v
 4fd1e2b6038b173a7f304f11af4dd1ae7679d408	2026-09-30	not-applicable		[fontscan] substitutions: noGenericFamily.test returns -1 on empty list. It changes only fontscan, which okage does not copy
 5fc0ed6f22c48b7116c3b5067a268456236336df	2026-09-30	not-applicable		[fontscan] lru: length-prefix key families and drop replaced nodes. It changes only fontscan, which okage does not copy
 a23921809ca142514320ea47c514afcdf8b86b18	2026-09-30	not-applicable		[fontscan] retain the result of system font initialization. It changes only fontscan, which okage does not copy
-20db93748d369a4f15308898645266f9ef371e10	2026-09-30	pending		[font] tests: build faces with NewFace instead of Face{}. It changes font
+20db93748d369a4f15308898645266f9ef371e10	2026-09-30	not-applicable		[font] tests: build faces with NewFace instead of Face{}. It changes font. It changes only tests that read typesetting-utils, which the copy leaves out (D52). The copy keeps only the test of the view box of font/svg_test.go
 c1bea1e691d153422d41a99cf1fbc52080d2ed7a	2026-09-30	pending		[font] cache advances of variable fonts without HVAR/VVAR. It changes font
 f82a8f71c14c006b652c218ad38219d2abfb633c	2026-09-30	pending		[font] gvar: only copy the original points when needed. It changes font
 55f71f97b917a16d8d71853b72e17dfb94356571	2026-09-30	pending		[font] cff: reuse the charstring interpreter machine. It changes font, font/cff
