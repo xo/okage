@@ -30,7 +30,7 @@ af1525c14f3f34aab63a22a275abdd4786bffa46	2026-09-29	ported		[bidi] W2/W7: carry 
 578ac9d0bd504dfc7d60c729abd24d2375a838e5	2026-09-29	ported		[bidi] BD9: match isolates in a single stack pass. It changes bidi
 55732d3715988db2b58b12262e263d63f49b6acf	2026-09-29	ported		[bidi] unicodedata: default Bidi_Class of unassigned code points. It changes bidi, internal/unicodedata
 352ddeaf93ade1de1f7f51fb2664a77247e4f9bd	2026-09-29	ported		[bidi] clean up stale comments and dead code. It changes bidi
-2df4ee58894f11a4c14ac7a470d84884d3508613	2026-09-30	pending		[font] preserve unsigned horizontal and vertical advances. It changes font, font/opentype
+2df4ee58894f11a4c14ac7a470d84884d3508613	2026-09-30	ported		[font] preserve unsigned horizontal and vertical advances. It changes font, font/opentype
 5dea04be2df249f965ec054a1f5cba9775a58577	2026-09-30	not-applicable		[fontscan] use the OS/2 font page when parsing succeeds, not fails. It changes only fontscan, which okage does not copy
 3e4254950e31f2be12db823957110787af3600b8	2026-09-30	not-applicable		[fontscan] read FONTCONFIG_PATH, the env var name had a stray $. It changes only fontscan, which okage does not copy
 193e11e413d3da94f70f0c49d9ad395fc0076f63	2026-09-30	not-applicable		[fontscan] UseSystemFonts: append system fonts only once per font map. It changes only fontscan, which okage does not copy
