@@ -50,11 +50,14 @@ type fontCache struct {
 // Port: the parsed face of go-text takes the place of skrifa::Font. A nil
 // value of svg or raster is None. skrifa reads the table SVG and the bitmap
 // strikes on demand, and Go does the same with svgChecked and strikesLoaded.
+// instanceKey holds the text of the key that instance makes, not the
+// variations, since the text is the key of instances.
 type loadedFont struct {
-	pf        *parsedFace
-	instances map[string]*fontInstance
-	svg       map[GlyphID]Node
-	raster    map[GlyphID]*bitmapImage
+	pf          *parsedFace
+	instances   map[string]*fontInstance
+	instanceKey []byte
+	svg         map[GlyphID]Node
+	raster      map[GlyphID]*bitmapImage
 
 	svgChecked    bool
 	hasSVG        bool
@@ -215,25 +218,28 @@ func newLoadedFont(id FontID, fontdb *FontDatabase) (*loadedFont, bool) {
 	}
 
 	return &loadedFont{
-		pf:        pf,
-		instances: map[string]*fontInstance{},
-		svg:       map[GlyphID]Node{},
-		raster:    map[GlyphID]*bitmapImage{},
+		pf:          pf,
+		instances:   map[string]*fontInstance{},
+		instanceKey: nil,
+		svg:         map[GlyphID]Node{},
+		raster:      map[GlyphID]*bitmapImage{},
 	}, true
 }
 
 // instance is LoadedFont::instance in usvg src/text/cache.rs.
 //
 // Port: the key is the text of the filtered variations, because a Go map
-// cannot have a slice as its key.
+// cannot have a slice as its key. The buffer instanceKey holds that text
+// between the calls.
 func (l *loadedFont) instance(variations []FontVariation) *fontInstance {
 	key := filterVariations(l.pf, variations)
 
-	keyText := make([]byte, 0, len(key)*8)
+	keyText := l.instanceKey[:0]
 	for _, v := range key {
 		keyText = append(keyText, v.Tag[:]...)
 		keyText = binary.BigEndian.AppendUint32(keyText, math.Float32bits(v.Value))
 	}
+	l.instanceKey = keyText
 	if instance, ok := l.instances[string(keyText)]; ok {
 		return instance
 	}
