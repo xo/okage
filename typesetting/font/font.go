@@ -189,6 +189,10 @@ type Font struct {
 	GSUB GSUB // An absent table has a nil slice of lookups
 	GPOS GPOS // An absent table has a nil slice of lookups
 
+	// okage: the table MATH, for the layout of math (D78). It is nil when
+	// the font has no MATH table, or one that does not parse.
+	MATH *tables.MATH
+
 	upem    uint16 // cached value
 	nGlyphs int
 }
@@ -361,6 +365,9 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 	}
 
 	out.GDEF, _ = loadGDEF(ld, len(out.fvar), gsubRaw, gposRaw)
+
+	// okage: the table MATH is optional, as GDEF is (D78).
+	out.MATH = loadMATH(ld)
 
 	raw, _ = ld.RawTable(ot.MustNewTag("morx"))
 	morx, _, _ := tables.ParseMorx(raw, out.nGlyphs)
