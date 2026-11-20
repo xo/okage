@@ -402,10 +402,13 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 }
 
 // fontError is KrillaError::Font of krilla src/error.rs. It wraps
-// ErrPDFFont with the PostScript name of the font and the message.
+// ErrPDFFont with the PostScript name of the font, when the font has one,
+// and the message, as the impl Display for KrillaError writes them.
 func fontError(font *Font, message string) error {
-	name, _ := font.postscriptName()
-	return fmt.Errorf("%w %q: %s", okage.ErrPDFFont, name, message)
+	if name, ok := font.postscriptName(); ok {
+		return fmt.Errorf("%w %s: %s", okage.ErrPDFFont, name, message)
+	}
+	return fmt.Errorf("%w: %s", okage.ErrPDFFont, message)
 }
 
 // containsSerif is the test of the flag SERIF of krilla: whether the

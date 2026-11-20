@@ -589,7 +589,8 @@ const (
 
 	// ErrPDFFont is KrillaError::Font of krilla. Document.Finish cannot
 	// embed a font, for example because the subset of the font fails. The
-	// error names the font and gives the message of upstream.
+	// error names the font, when the font has a PostScript name, and gives
+	// the message of upstream.
 	ErrPDFFont Error = "writing pdf: failed to embed font"
 
 	// ErrPDFInvalidFont is the error of NewFont for data that is not a

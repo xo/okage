@@ -56,6 +56,40 @@ func TestValidationFailed(t *testing.T) {
 	}
 }
 
+// TestFontError checks the text of KrillaError::Font, which names the font
+// when it has a PostScript name, and the impl Debug for Font of krilla
+// src/text/font.rs, which String ports.
+func TestFontError(t *testing.T) {
+	named := &Font{info: &fontInfo{postscriptName: "NotoSans-Regular", hasPostscriptName: true, index: 2}}
+	unnamed := &Font{info: &fontInfo{}}
+	for _, c := range []struct {
+		font        *Font
+		err, string string
+	}{
+		{
+			named,
+			"writing pdf: failed to embed font NotoSans-Regular: failed to subset font",
+			`Font { postscript_name: Some("NotoSans-Regular"), index: 2, .. }`,
+		},
+		{
+			unnamed,
+			"writing pdf: failed to embed font: failed to subset font",
+			"Font { postscript_name: None, index: 0, .. }",
+		},
+	} {
+		err := fontError(c.font, "failed to subset font")
+		if err.Error() != c.err {
+			t.Errorf("got %q, want %q", err, c.err)
+		}
+		if !errors.Is(err, okage.ErrPDFFont) {
+			t.Errorf("%v is not ErrPDFFont", err)
+		}
+		if got := c.font.String(); got != c.string {
+			t.Errorf("String gives %q, want %q", got, c.string)
+		}
+	}
+}
+
 // TestLocationText checks write_location of krilla src/error.rs.
 func TestLocationText(t *testing.T) {
 	if got := locationText(0); got != "" {

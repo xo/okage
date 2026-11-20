@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"strconv"
 	"sync"
 	"unicode"
 	"unicode/utf16"
@@ -318,6 +319,18 @@ func (f *Font) advanceWidth(glyph GlyphID) (float32, bool) {
 		}
 	}
 	return float32(advance), true
+}
+
+// String is the impl Debug for Font in krilla src/text/font.rs. It
+// satisfies the fmt.Stringer interface. It gives the PostScript name and the
+// index of the font, as the Debug format of Rust writes them, such as
+// Font { postscript_name: Some("NotoSans-Regular"), index: 0, .. }.
+func (f *Font) String() string {
+	name := "None"
+	if ps, ok := f.postscriptName(); ok {
+		name = "Some(" + strconv.Quote(ps) + ")"
+	}
+	return "Font { postscript_name: " + name + ", index: " + strconv.FormatUint(uint64(f.index()), 10) + ", .. }"
 }
 
 // fontInfo is FontInfo in krilla src/text/font.rs.

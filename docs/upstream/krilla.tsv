@@ -4,3 +4,4 @@ cc194f14613ab5535bcb7919378f9fe524235cd0	2026-11-18	ported		Prefer device color 
 c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883	2026-11-19	ported		Ignore empty document languages (#481). Port: interchange/metadata.rs
 daaac940f69ad55599c38c7fcf7a68a8d4576083	2026-11-19	ported		Paint nothing for gradients without stops (#483). Port: content.rs, graphics/paint.rs, tests. pdf no longer records ErrPDFInvalidGradient for a gradient with no stop (D66)
 fa072a19f8e8d0fa9cbe9356012135baf09b6d20	2026-11-19	ported		Add the Trapped key to metadata (#478). Port: interchange/metadata.rs, tests, the snapshots metadata_full and metadata_custom_fields. The XMP metadata is not ported (D62), so neither are the key pdf:Trapped and the snapshots with XMP or with the validators of PDF/A
+7d36506c9d566ffe265fe898dc4f64d4b150bdb0	2026-11-19	ported		Show the font name in Font's Debug output and font errors (#482). Port: error.rs, text/font.rs. The impl Debug for Font becomes Font.String
