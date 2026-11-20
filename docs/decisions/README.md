@@ -105,3 +105,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D83 | [typesetting reads the Unicode tables and the layout tables faster](D083-typesetting-reads-the-unicode-tables-and-the-layout-tables-faster.md) | Decided, amends D81 |
 | D84 | [typesetting computes the deltas of variable fonts in fixed point](D084-typesetting-computes-the-deltas-of-variable-fonts-in-fixed-point.md) | Decided, amends D65 |
 | D85 | [lottie draws text animators, capitals and text on a path](D085-lottie-draws-text-animators-capitals-and-text-on-a-path.md) | Decided, amends D79 |
+| D86 | [A mask can hold a rectangle and no pixels](D086-a-mask-can-hold-a-rectangle-and-no-pixels.md) | Decided, amends D60 |
