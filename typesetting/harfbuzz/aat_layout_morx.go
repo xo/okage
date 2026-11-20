@@ -70,6 +70,13 @@ func (c *aatApplyContext) applyMorx(chain font.MorxChain, accelerators []morxSub
 			reverse = coverage&Backwards != 0 != c.buffer.Props.Direction.isBackward()
 		}
 
+		// okage: a subtable takes the length of the buffer in operations,
+		// and the chain stops when the buffer is in error, as in HarfBuzz
+		// 15.1.0 (D73).
+		if !c.chargeBufferPass() {
+			break
+		}
+
 		if debugMode {
 			fmt.Printf("MORX - start chainsubtable %d\n", i)
 		}
@@ -83,6 +90,10 @@ func (c *aatApplyContext) applyMorx(chain font.MorxChain, accelerators []morxSub
 		if debugMode {
 			fmt.Printf("MORX - end chainsubtable %d\n", i)
 			fmt.Println(c.buffer.Info)
+		}
+
+		if c.buffer.inError {
+			break
 		}
 	}
 
@@ -355,7 +366,11 @@ func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDri
 			}
 
 			cursor--
-			buffer.moveTo(dc.matchPositions[cursor%len(dc.matchPositions)])
+			// okage: the transition returns when the buffer fails, as in
+			// HarfBuzz 15.1.0 (D73).
+			if !buffer.moveTo(dc.matchPositions[cursor%len(dc.matchPositions)]) {
+				return
+			}
 
 			if len(actionData) == 0 {
 				break
@@ -388,7 +403,9 @@ func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDri
 					fmt.Printf("\tLigature - Produced ligature %d\n", lig)
 				}
 
-				dc.c.replaceGlyph(lig)
+				if !dc.c.replaceGlyph(lig) {
+					return
+				}
 
 				ligEnd := dc.matchPositions[(dc.matchLength-1)%len(dc.matchPositions)] + 1
 				/* Now go and delete all subsequent components. */
@@ -399,11 +416,17 @@ func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDri
 					}
 
 					dc.matchLength--
-					buffer.moveTo(dc.matchPositions[dc.matchLength%len(dc.matchPositions)])
-					dc.c.deleteGlyph()
+					if !buffer.moveTo(dc.matchPositions[dc.matchLength%len(dc.matchPositions)]) {
+						return
+					}
+					if !dc.c.deleteGlyph() {
+						return
+					}
 				}
 
-				buffer.moveTo(ligEnd)
+				if !buffer.moveTo(ligEnd) {
+					return
+				}
 				buffer.mergeOutClusters(dc.matchPositions[cursor%len(dc.matchPositions)], len(buffer.outInfo))
 			}
 
@@ -499,20 +522,28 @@ func (dc *driverContextInsertion) transition(buffer *Buffer, driver stateTableDr
 		before := flags&miMarkedInsertBefore != 0
 
 		end := len(buffer.outInfo)
-		buffer.moveTo(dc.mark)
+		// okage: the transition returns when the buffer fails, as in
+		// HarfBuzz 15.1.0 (D73).
+		if !buffer.moveTo(dc.mark) {
+			return
+		}
 
-		if buffer.idx < len(buffer.Info) && !before {
-			buffer.copyGlyph()
+		if buffer.idx < len(buffer.Info) && !before && !buffer.copyGlyph() {
+			return
 		}
 
 		/* TODO We ignore KashidaLike setting. */
-		dc.c.outputGlyphs(glyphs[:count])
+		if !dc.c.outputGlyphs(glyphs[:count]) {
+			return
+		}
 
 		if buffer.idx < len(buffer.Info) && !before {
 			buffer.skipGlyph()
 		}
 
-		buffer.moveTo(end + count)
+		if !buffer.moveTo(end + count) {
+			return
+		}
 
 		buffer.unsafeToBreakFromOutbuffer(dc.mark, min(buffer.idx+1, len(buffer.Info)))
 	}
@@ -523,11 +554,12 @@ func (dc *driverContextInsertion) transition(buffer *Buffer, driver stateTableDr
 
 	if currentInsertIndex != 0xFFFF {
 		count := int(flags&miCurrentInsertCount) >> 5
+		// okage: HarfBuzz 15.1.0 takes the operations first, and then
+		// compares. go-text compared first (D73).
+		buffer.maxOps -= count
 		if buffer.maxOps <= 0 {
-			buffer.maxOps -= count
 			return
 		}
-		buffer.maxOps -= count
 		start := currentInsertIndex
 		glyphs := dc.insertionAction[start:]
 
@@ -535,12 +567,14 @@ func (dc *driverContextInsertion) transition(buffer *Buffer, driver stateTableDr
 
 		end := len(buffer.outInfo)
 
-		if buffer.idx < len(buffer.Info) && !before {
-			buffer.copyGlyph()
+		if buffer.idx < len(buffer.Info) && !before && !buffer.copyGlyph() {
+			return
 		}
 
 		/* TODO We ignore KashidaLike setting. */
-		dc.c.outputGlyphs(glyphs[:count])
+		if !dc.c.outputGlyphs(glyphs[:count]) {
+			return
+		}
 
 		if buffer.idx < len(buffer.Info) && !before {
 			buffer.skipGlyph()

@@ -248,7 +248,9 @@ func syllabicInsertDottedCircles(font *Font, buffer *Buffer, brokenSyllableType,
 
 	buffer.idx = 0
 	var lastSyllable uint8
-	for buffer.idx < len(buffer.Info) {
+	// okage: the loops stop when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for buffer.idx < len(buffer.Info) && !buffer.inError {
 		syllable := buffer.cur(0).syllable
 		if lastSyllable != syllable && (syllable&0x0F) == brokenSyllableType {
 			lastSyllable = syllable
@@ -260,13 +262,13 @@ func syllabicInsertDottedCircles(font *Font, buffer *Buffer, brokenSyllableType,
 
 			/* Insert dottedcircle after possible Repha. */
 			if rephaCategory != -1 {
-				for buffer.idx < len(buffer.Info) &&
+				for buffer.idx < len(buffer.Info) && !buffer.inError &&
 					lastSyllable == buffer.cur(0).syllable &&
 					buffer.cur(0).complexCategory == uint8(rephaCategory) {
 					buffer.nextGlyph()
 				}
 			}
-			buffer.outInfo = append(buffer.outInfo, ginfo)
+			buffer.outputInfo(ginfo)
 		} else {
 			buffer.nextGlyph()
 		}

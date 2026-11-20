@@ -379,14 +379,11 @@ func (c *otApplyContext) applyGPOSPair2(inner tables.PairPosData2) bool {
 	buffer := c.buffer
 	skippyIter := &c.iterInput
 
-	glyphID := buffer.cur(0).Glyph
-	class2, ok2 := inner.ClassDef2.Class(gID(buffer.Info[skippyIter.idx].Glyph))
-	if !ok2 {
-		buffer.unsafeToConcat(buffer.idx, skippyIter.idx+1)
-		return false
-	}
-
-	class1, _ := inner.ClassDef1.Class(gID(glyphID))
+	// okage: a glyph that ClassDef2 does not hold has the class 0, and the
+	// subtable applies, as in HarfBuzz 15.1.0. go-text did not apply the
+	// subtable, and the lookup tried its next subtable (D73).
+	class1, _ := inner.ClassDef1.Class(gID(buffer.cur(0).Glyph))
+	class2, _ := inner.ClassDef2.Class(gID(buffer.Info[skippyIter.idx].Glyph))
 	// okage: a class outside the class counts does not apply, as in
 	// HarfBuzz. The sanitizer no longer refuses such a class (D73).
 	if class1 >= inner.Class1Count() || class2 >= inner.Class2Count() {

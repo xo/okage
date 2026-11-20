@@ -38,6 +38,13 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 
 		reverse = st.IsBackwards() != c.buffer.Props.Direction.isBackward()
 
+		// okage: a subtable takes the length of the buffer in operations,
+		// and the table stops when the buffer is in error, as in HarfBuzz
+		// 15.1.0 (D73).
+		if !c.chargeBufferPass() {
+			break
+		}
+
 		if debugMode {
 			fmt.Printf("AAT kerx : start subtable %d\n", i)
 		}
@@ -69,6 +76,10 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 		if debugMode {
 			fmt.Printf("AAT kerx : end subtable %d\n", i)
 			fmt.Println(c.buffer.Pos)
+		}
+
+		if c.buffer.inError {
+			break
 		}
 	}
 
@@ -287,6 +298,12 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 		case 0: /* Control Point Actions.*/
 			/* Indexed into glyph outline. */
 			action := dc.table.Anchors.(tables.KerxAnchorControls).Anchors[ankrActionIndex]
+			// okage: the two lookups of contour points take 2 × 256
+			// operations, as in HarfBuzz 15.1.0 (D73).
+			buffer.maxOps -= 2 * 256
+			if buffer.maxOps <= 0 {
+				return
+			}
 
 			markX, markY, okMark := dc.c.font.getGlyphContourPointForOrigin(dc.c.buffer.Info[dc.mark].Glyph,
 				action.Mark, LeftToRight)

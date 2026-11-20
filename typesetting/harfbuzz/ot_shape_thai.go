@@ -304,15 +304,21 @@ func (complexShaperThai) preprocessText(plan *otShapePlan, buffer *Buffer, font 
 	count := len(buffer.Info)
 	for buffer.idx = 0; buffer.idx < count; {
 		u := buffer.cur(0).codepoint
+		// okage: the loop stops when the arrays cannot grow, as in
+		// HarfBuzz 15.1.0 (D73).
 		if !isSaraAm(u) {
-			buffer.nextGlyph()
+			if !buffer.nextGlyph() {
+				break
+			}
 			continue
 		}
 
 		/* Is SARA AM. Decompose and reorder. */
 		buffer.outputRune(nikhahitFromSaraAm(u))
 		buffer.prev().setContinuation(buffer)
-		buffer.replaceGlyph(saraAaFromSaraAm(u))
+		if !buffer.replaceGlyph(saraAaFromSaraAm(u)) {
+			break
+		}
 
 		/* Make Nikhahit be recognized as a ccc=0 mark when zeroing widths. */
 		end := len(buffer.outInfo)

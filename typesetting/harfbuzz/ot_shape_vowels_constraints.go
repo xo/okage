@@ -27,12 +27,14 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 	*
 	* https://github.com/harfbuzz/harfbuzz/issues/1019
 	 */
+	// okage: each loop stops when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
 	buffer.clearOutput()
 	count := len(buffer.Info)
 	switch buffer.Props.Script {
 
 	case language.Devanagari:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0905:
@@ -67,7 +69,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Bengali:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0985:
@@ -84,7 +86,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Gurmukhi:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0A05:
@@ -110,7 +112,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Gujarati:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0A85:
@@ -128,7 +130,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Oriya:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0B05:
@@ -143,7 +145,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Tamil:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			if 0x0B85 == buffer.cur(0).codepoint &&
 				0x0BC2 == buffer.cur(1).codepoint {
@@ -156,7 +158,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Telugu:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0C12:
@@ -174,7 +176,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Kannada:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0C89, 0x0C8B:
@@ -189,7 +191,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Malayalam:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0D07, 0x0D09:
@@ -209,7 +211,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Sinhala:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x0D85:
@@ -234,7 +236,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Brahmi:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x11005:
@@ -251,7 +253,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Khojki:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x11200:
@@ -276,7 +278,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Khudawadi:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x112B0:
@@ -292,7 +294,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Tirhuta:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x11481:
@@ -312,7 +314,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Modi:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x11600, 0x11601:
@@ -328,7 +330,7 @@ func preprocessTextVowelConstraints(buffer *Buffer) {
 			}
 		}
 	case language.Takri:
-		for buffer.idx = 0; buffer.idx+1 < count; {
+		for buffer.idx = 0; buffer.idx+1 < count && !buffer.inError; {
 			matched := false
 			switch buffer.cur(0).codepoint {
 			case 0x11680:

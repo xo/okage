@@ -150,7 +150,9 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 	var start, end int
 	count := len(buffer.Info)
 
-	for buffer.idx = 0; buffer.idx < count; {
+	// okage: the loop stops when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for buffer.idx = 0; buffer.idx < count && !buffer.inError; {
 		u := buffer.cur(0).codepoint
 
 		if 0x302E <= u && u <= 0x302F { // isHangulTone
@@ -162,7 +164,9 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 			if start < end && end == len(buffer.outInfo) {
 				/* Tone mark follows a valid syllable; move it in front, unless it's zero width. */
 				buffer.unsafeToBreakFromOutbuffer(start, buffer.idx)
-				buffer.nextGlyph()
+				if !buffer.nextGlyph() {
+					break
+				}
 				if !isZeroWidthChar(font, u) {
 					buffer.mergeOutClusters(start, end+1)
 					info := buffer.outInfo
@@ -243,6 +247,9 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 				} else {
 					end = start + 2
 				}
+				if buffer.inError {
+					break
+				}
 				buffer.mergeOutGraphemeClusters(start, end)
 				continue
 			}
@@ -291,6 +298,9 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 					if HasGlyph && tindex == 0 {
 						buffer.nextGlyph()
 						sLen++
+					}
+					if buffer.inError {
+						break
 					}
 
 					/* We decomposed S: apply jamo features to the individual glyphs

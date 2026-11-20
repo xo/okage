@@ -302,8 +302,12 @@ func TestWouldApplyContextRequiresFirstGlyphCoverage(t *testing.T) {
 				t.Fatal("covered sequence should match")
 			}
 			// 4097 collides with 1 in the lookup digest, but is not covered.
-			if otLayoutLookupWouldSubstitute(fnt, 0, []GID{4097, 2}, true) {
-				t.Fatal("sequence with an uncovered first glyph should not match")
+			// okage: HarfBuzz 15.1.0 does not test the coverage of the first
+			// glyph for a context of format 3, so the sequence matches. The
+			// maintainers decided on 2026-11-20 that okage follows HarfBuzz.
+			// go-text asked for no match (D73).
+			if !otLayoutLookupWouldSubstitute(fnt, 0, []GID{4097, 2}, true) {
+				t.Fatal("sequence with an uncovered first glyph should match, as in HarfBuzz")
 			}
 		})
 	}

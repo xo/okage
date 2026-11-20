@@ -1,6 +1,9 @@
 package harfbuzz
 
 import (
+	"math"
+	"slices"
+
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 	"github.com/xo/okage/typesetting/language"
 )
@@ -100,6 +103,24 @@ type Buffer struct {
 	maxOps int // maximum operations allowed
 	maxLen int // maximum length allowed
 
+	// okage: the state of the buffer of HarfBuzz 15.1.0 that decides when
+	// the shaping stops, and what a lookup that stops keeps (D73):
+	//   - inError is true when buffer->successful of HarfBuzz is false: the
+	//     buffer has no operations left, or it cannot grow. The shaping then
+	//     stops, and the output of the lookup that stopped is dropped.
+	//   - allocated is the length of the arrays of HarfBuzz. HarfBuzz
+	//     compares a length with maxLen only when the arrays must grow.
+	//   - separateOutput is false while outInfo shares the array of Info,
+	//     as out_info shares info in HarfBuzz until the output is longer
+	//     than the input that it consumed. A lookup then writes its output
+	//     into Info, and a lookup that stops keeps what it wrote there.
+	//   - spareInfo is the array that outInfo takes when it separates, as
+	//     out_info takes the array of pos in HarfBuzz.
+	inError        bool
+	allocated      int
+	separateOutput bool
+	spareInfo      []GlyphInfo
+
 	serial       uint
 	idx          int                // Cursor into `info` and `pos` arrays
 	scratchFlags bufferScratchFlags // Have space-fallback, etc.
@@ -121,6 +142,7 @@ func NewBuffer() *Buffer {
 	return &Buffer{
 		ClusterLevel:              MonotoneGraphemes,
 		maxOps:                    maxOpsDefault,
+		maxLen:                    maxLenDefault,
 		planCache:                 map[Face][]*shapePlan{},
 		notFoundVariationSelector: 0xFFFFFFFF,
 	}
@@ -138,6 +160,11 @@ func (b *Buffer) AddRune(codepoint rune, cluster int) {
 }
 
 func (b *Buffer) append(codepoint rune, cluster int) {
+	// okage: the arrays grow as in hb_buffer_t::add of HarfBuzz 15.1.0
+	// (D73).
+	if !b.ensure(len(b.Info) + 1) {
+		return
+	}
 	b.Info = append(b.Info, GlyphInfo{codepoint: codepoint, Cluster: cluster})
 	b.Pos = append(b.Pos, GlyphPosition{})
 }
@@ -154,6 +181,15 @@ func (b *Buffer) append(codepoint rune, cluster int) {
 // marks at start of run.
 // The cluster value attributed to each rune is the index in the `text` slice.
 func (b *Buffer) AddRunes(text []rune, itemOffset, itemLength int) {
+	if itemLength < 0 {
+		itemLength = len(text) - itemOffset
+	}
+	// okage: the arrays grow as in hb_buffer_add_codepoints of HarfBuzz
+	// 15.1.0, which takes the room for the whole item first (D73).
+	if itemLength > math.MaxInt32/8 || !b.ensure(len(b.Info)+itemLength) {
+		return
+	}
+
 	/* If buffer is empty and pre-context provided, install it.
 	* This check is written this way, to make sure people can
 	* provide pre-context in one add_utf() call, then provide
@@ -166,10 +202,6 @@ func (b *Buffer) AddRunes(text []rune, itemOffset, itemLength int) {
 		for prev := itemOffset - 1; prev >= 0 && len(b.context[0]) < contextLength; prev-- {
 			b.context[0] = append(b.context[0], text[prev])
 		}
-	}
-
-	if itemLength < 0 {
-		itemLength = len(text) - itemOffset
 	}
 
 	for i, u := range text[itemOffset : itemOffset+itemLength] {
@@ -234,15 +266,70 @@ func (b *Buffer) Clear() {
 	b.scratchFlags = 0
 
 	b.haveOutput = false
+	b.inError = false
 
 	b.idx = 0
 	b.Info = b.Info[:0]
-	b.outInfo = b.outInfo[:0]
+	b.outInfo = b.Info
+	b.separateOutput = false
 	b.Pos = b.Pos[:0]
 	b.clearContext(0)
 	b.clearContext(1)
 
 	b.serial = 0
+}
+
+// okage: ensure, enlarge and makeRoomFor follow hb_buffer_t of HarfBuzz
+// 15.1.0, with a count of the length of its arrays in place of the arrays
+// (D73). The slices of Go grow by themselves.
+
+// ensure makes sure that the arrays of HarfBuzz have room for size glyphs.
+func (b *Buffer) ensure(size int) bool {
+	return size == 0 || size < b.allocated || b.enlarge(size)
+}
+
+// enlarge grows the arrays as HarfBuzz does. A buffer that must grow past
+// maxLen is in error, and an error stops the growth.
+func (b *Buffer) enlarge(size int) bool {
+	// HarfBuzz computes the size of the arrays in bytes as an unsigned
+	// integer of 32 bits, and a glyph takes 20 bytes.
+	const maxGlyphs = (1<<32 - 1) / 20
+	if size > b.maxLen {
+		b.inError = true
+		return false
+	}
+	if b.inError {
+		return false
+	}
+	if size > maxGlyphs {
+		b.inError = true
+		return false
+	}
+	n := b.allocated
+	for size >= n {
+		n += n>>1 + 32
+	}
+	if n > maxGlyphs {
+		b.inError = true
+		return false
+	}
+	b.allocated = n
+	return true
+}
+
+// makeRoomFor makes room for numOut glyphs in the output, for numIn glyphs
+// of the input. The output then takes an array of its own if it would
+// write over input that it did not consume.
+func (b *Buffer) makeRoomFor(numIn, numOut int) bool {
+	if !b.ensure(len(b.outInfo) + numOut) {
+		return false
+	}
+	if !b.separateOutput && len(b.outInfo)+numOut > b.idx+numIn {
+		b.spareInfo = append(b.spareInfo[:0], b.outInfo...)
+		b.outInfo = b.spareInfo
+		b.separateOutput = true
+	}
+	return true
 }
 
 // cur returns the glyph at the cursor, optionaly shifted by `i`.
@@ -253,9 +340,13 @@ func (b *Buffer) cur(i int) *GlyphInfo { return &b.Info[b.idx+i] }
 // Its simply a syntactic sugar for `&b.Pos[b.idx+i]
 func (b *Buffer) curPos(i int) *GlyphPosition { return &b.Pos[b.idx+i] }
 
-// returns the last glyph of `outInfo`
+// returns the last glyph of `outInfo`, or its first slot when it is empty,
+// as HarfBuzz does
 func (b *Buffer) prev() *GlyphInfo {
-	return &b.outInfo[len(b.outInfo)-1]
+	if n := len(b.outInfo); n != 0 {
+		return &b.outInfo[n-1]
+	}
+	return &b.outInfo[:1][0]
 }
 
 func (b *Buffer) updateDigest() {
@@ -284,82 +375,117 @@ func (b *Buffer) lookaheadLen() int { return len(b.Info) - b.idx }
 
 // Copies glyph at `idx` to `outInfo` before replacing its codepoint by `u`
 // Advances `idx`
-func (b *Buffer) replaceGlyph(u rune) {
-	b.replaceGlyphs(1, []rune{u}, nil)
+//
+// okage: the methods that write the output return false, and write
+// nothing, when the arrays cannot grow, as in HarfBuzz 15.1.0 (D73).
+func (b *Buffer) replaceGlyph(u rune) bool {
+	return b.replaceGlyphs(1, []rune{u}, nil)
 }
 
-// Copies glyph at `idx` to `outInfo` before replacing its codepoint by `u`
+// Copies glyph at `idx` to `outInfo` before replacing its glyph by `g`
 // Advances `idx`
-func (b *Buffer) replaceGlyphIndex(g GID) {
-	b.outInfo = append(b.outInfo, b.Info[b.idx])
-	b.outInfo[len(b.outInfo)-1].Glyph = g
+func (b *Buffer) replaceGlyphIndex(g GID) bool {
+	if !b.makeRoomFor(1, 1) {
+		return false
+	}
+	info := b.Info[b.idx]
+	info.Glyph = g
+	b.outInfo = append(b.outInfo, info)
 	b.idx++
+	return true
 }
 
 // Merges clusters in [idx:idx+numIn], then duplicate `Info[idx]` len(codepoints) times to `outInfo`.
 // Advances `idx` by `numIn`. Assume that idx + numIn <= len(Info)
 // Also replaces their codepoint by `codepoints` and their glyph by `glyphs` if non nil
-func (b *Buffer) replaceGlyphs(numIn int, codepoints []rune, glyphs []GID) {
+func (b *Buffer) replaceGlyphs(numIn int, codepoints []rune, glyphs []GID) bool {
+	numOut := max(len(codepoints), len(glyphs))
+	if !b.makeRoomFor(numIn, numOut) {
+		return false
+	}
+
 	b.mergeClusters(b.idx, b.idx+numIn)
 
-	var origInfo *GlyphInfo
+	var origInfo GlyphInfo
 	if b.idx < len(b.Info) {
-		origInfo = b.cur(0)
+		origInfo = *b.cur(0)
 	} else {
-		origInfo = b.prev()
+		origInfo = *b.prev()
 	}
-	replaceCodepoints := codepoints != nil
-	replaceGlyphs := glyphs != nil
-	L := len(b.outInfo)
-
-	Lplus := max(len(codepoints), len(glyphs))
-	b.outInfo = append(b.outInfo, make([]GlyphInfo, Lplus)...)
-	for i := 0; i < Lplus; i++ {
-		b.outInfo[L+i] = *origInfo
-		if replaceCodepoints {
-			b.outInfo[L+i].codepoint = codepoints[i]
+	for i := 0; i < numOut; i++ {
+		info := origInfo
+		if codepoints != nil {
+			info.codepoint = codepoints[i]
 		}
-		if replaceGlyphs {
-			b.outInfo[L+i].Glyph = glyphs[i]
+		if glyphs != nil {
+			info.Glyph = glyphs[i]
 		}
+		b.outInfo = append(b.outInfo, info)
 	}
 
 	b.idx += numIn
+	return true
 }
 
 // makes a copy of the glyph at idx to output and replace in output `codepoint`
 // by `r`. Does NOT adavance `idx`
-func (b *Buffer) outputRune(r rune) {
-	b.replaceGlyphs(0, []rune{r}, nil)
+func (b *Buffer) outputRune(r rune) bool {
+	return b.replaceGlyphs(0, []rune{r}, nil)
 }
 
 // same as outputRune
-func (b *Buffer) outputGlyphIndex(g GID) {
-	b.replaceGlyphs(0, nil, []GID{g})
+func (b *Buffer) outputGlyphIndex(g GID) bool {
+	return b.replaceGlyphs(0, nil, []GID{g})
+}
+
+// outputInfo appends info to the output, without a move of idx.
+func (b *Buffer) outputInfo(info GlyphInfo) bool {
+	if !b.makeRoomFor(0, 1) {
+		return false
+	}
+	b.outInfo = append(b.outInfo, info)
+	return true
 }
 
 // Copies glyph at idx to output but doesn't advance idx
-func (b *Buffer) copyGlyph() {
-	b.outInfo = append(b.outInfo, b.Info[b.idx])
+func (b *Buffer) copyGlyph() bool {
+	return b.outputInfo(b.Info[b.idx])
 }
 
 // Copies glyph at `idx` to `outInfo` and advance `idx`.
 // If there's no output, just advance `idx`.
-func (b *Buffer) nextGlyph() {
+func (b *Buffer) nextGlyph() bool {
 	if b.haveOutput {
-		b.outInfo = append(b.outInfo, b.Info[b.idx])
+		return b.outputNext(1)
 	}
-
 	b.idx++
+	return true
 }
 
 // Copies `n` glyphs from `idx` to `outInfo` and advances `idx`.
 // If there's no output, just advance idx.
-func (b *Buffer) nextGlyphs(n int) {
+func (b *Buffer) nextGlyphs(n int) bool {
 	if b.haveOutput {
+		return b.outputNext(n)
+	}
+	b.idx += n
+	return true
+}
+
+// outputNext copies n glyphs from idx to the output, and advances idx.
+// While the output is the input up to idx, in the same array, it only
+// grows the output.
+func (b *Buffer) outputNext(n int) bool {
+	if !b.separateOutput && len(b.outInfo) == b.idx {
+		b.outInfo = b.outInfo[:b.idx+n]
+	} else {
+		if !b.ensure(len(b.outInfo) + n) {
+			return false
+		}
 		b.outInfo = append(b.outInfo, b.Info[b.idx:b.idx+n]...)
 	}
 	b.idx += n
+	return true
 }
 
 // skipGlyph advances idx without copying to output
@@ -414,6 +540,17 @@ func (b *Buffer) setGlyphFlags(mask GlyphMask, start, end int, interior, fromOut
 	}
 }
 
+// spendOps takes n operations, and puts the buffer in error when it has no
+// operations left, as HarfBuzz 15.1.0 does (D73).
+func (b *Buffer) spendOps(n int) bool {
+	b.maxOps -= n
+	if b.maxOps < 0 {
+		b.inError = true
+		return false
+	}
+	return true
+}
+
 func (b *Buffer) setMasks(value, mask GlyphMask, clusterStart, clusterEnd int) {
 	if mask == 0 {
 		return
@@ -421,7 +558,7 @@ func (b *Buffer) setMasks(value, mask GlyphMask, clusterStart, clusterEnd int) {
 	notMask := ^mask
 	value &= mask
 
-	b.maxOps -= len(b.Info)
+	b.spendOps(len(b.Info))
 
 	for i, info := range b.Info {
 		if clusterStart <= info.Cluster && info.Cluster < clusterEnd {
@@ -439,9 +576,9 @@ func (b *Buffer) mergeClustersImpl(start, end int) {
 	}
 
 	// okage: the operations include the glyphs of the extension, and the
-	// extension stops when the buffer has no operations left, as in
-	// HarfBuzz 15.1.0. go-text took only end - start (D73).
-	if b.maxOps >= 0 {
+	// extension stops when the buffer is in error, as in HarfBuzz 15.1.0.
+	// go-text took only end - start (D73).
+	if !b.inError {
 		// Extend end
 		if cluster != b.Info[end-1].Cluster {
 			for end < len(b.Info) && b.Info[end-1].Cluster == b.Info[end].Cluster {
@@ -467,7 +604,7 @@ func (b *Buffer) mergeClustersImpl(start, end int) {
 		}
 	}
 
-	b.maxOps -= end - start
+	b.spendOps(end - start)
 
 	for i := start; i < end; i++ {
 		b.Info[i].setCluster(cluster, 0)
@@ -509,16 +646,16 @@ func (b *Buffer) deleteGlyph() {
 
 	if L := len(b.outInfo); L != 0 {
 		/* Merge cluster backward. */
-		// okage: the merge takes operations, and stops when the buffer
-		// has no operations left, as in HarfBuzz 15.1.0 (D73).
-		if cluster < b.outInfo[L-1].Cluster && b.maxOps >= 0 {
+		// okage: the merge takes operations, and does not happen when the
+		// buffer is in error, as in HarfBuzz 15.1.0 (D73).
+		if cluster < b.outInfo[L-1].Cluster && !b.inError {
 			mask := b.Info[b.idx].Mask
 			oldCluster := b.outInfo[L-1].Cluster
 			i := L
 			for ; i != 0 && b.outInfo[i-1].Cluster == oldCluster; i-- {
 				b.outInfo[i-1].setCluster(cluster, mask)
 			}
-			b.maxOps -= L - i
+			b.spendOps(L - i)
 		}
 		goto done
 	}
@@ -556,14 +693,14 @@ func (b *Buffer) deleteGlyphsInplace(filter func(*GlyphInfo) bool) {
 				// Merge cluster backward.
 				// okage: the merge takes operations, as in HarfBuzz
 				// 15.1.0 (D73).
-				if cluster < info[j-1].Cluster && b.maxOps >= 0 {
+				if cluster < info[j-1].Cluster && !b.inError {
 					mask := info[i].Mask
 					oldCluster := info[j-1].Cluster
 					k := j
 					for ; k != 0 && info[k-1].Cluster == oldCluster; k-- {
 						info[k-1].setCluster(cluster, mask)
 					}
-					b.maxOps -= j - k
+					b.spendOps(j - k)
 				}
 				continue
 			}
@@ -638,7 +775,7 @@ func (b *Buffer) infosSetGlyphFlags(infos []GlyphInfo, start, end, cluster int, 
 		return
 	}
 
-	b.maxOps -= end - start
+	b.spendOps(end - start)
 
 	clusterFirst := infos[start].Cluster
 	clusterLast := infos[end-1].Cluster
@@ -671,7 +808,8 @@ func (b *Buffer) clearPositions() {
 	b.haveOutput = false
 	// b.have_positions = true
 
-	b.outInfo = b.outInfo[:0]
+	b.outInfo = b.Info[:0]
+	b.separateOutput = false
 
 	L := len(b.Info)
 	if cap(b.Pos) >= L {
@@ -681,17 +819,14 @@ func (b *Buffer) clearPositions() {
 	}
 }
 
-// truncate `outInfo` and set `haveOutput`
-func (b *Buffer) removeOutput(setOutput bool) {
-	b.haveOutput = setOutput
+// truncate `outInfo` and set `haveOutput` to true. The output shares the
+// array of Info until it separates.
+func (b *Buffer) clearOutput() {
+	b.haveOutput = true
 	// b.have_positions = false
 
-	b.outInfo = b.outInfo[:0]
-}
-
-// truncate `outInfo` and set `haveOutput` to true
-func (b *Buffer) clearOutput() {
-	b.removeOutput(true)
+	b.outInfo = b.Info[:0]
+	b.separateOutput = false
 	b.idx = 0
 }
 
@@ -752,11 +887,25 @@ func (b *Buffer) reverseGroups(groupFunc func(*GlyphInfo, *GlyphInfo) bool, merg
 // swap back the temporary outInfo buffer to `Info`
 // and resets the cursor `idx`.
 // Assume that haveOutput is true, and toogle it.
-func (b *Buffer) swapBuffers() {
-	b.nextGlyphs(len(b.Info) - b.idx)
+//
+// okage: this is hb_buffer_t::sync of HarfBuzz 15.1.0. When the buffer is
+// in error, it drops the output and keeps Info, with the output that was
+// written into its array before the output separated (D73).
+func (b *Buffer) swapBuffers() bool {
+	ret := false
+	if !b.inError && b.nextGlyphs(len(b.Info)-b.idx) {
+		if b.separateOutput {
+			b.Info, b.spareInfo = b.outInfo, b.Info
+		} else {
+			b.Info = b.Info[:len(b.outInfo)]
+		}
+		ret = true
+	}
 	b.haveOutput = false
-	b.Info, b.outInfo = b.outInfo, b.Info
+	b.outInfo = b.Info[:0]
+	b.separateOutput = false
 	b.idx = 0
+	return ret
 }
 
 // returns an unique id
@@ -770,34 +919,50 @@ func (b *Buffer) allocateLigID() uint8 {
 }
 
 // return false if maximum ops limit is reached
+//
+// okage: the checks follow hb_buffer_t::shift_forward of HarfBuzz 15.1.0,
+// and the glyphs that the shift exposes after the end are zero (D73).
 func (b *Buffer) shiftForward(count int) bool {
 	//   assert (have_output);
 	L := len(b.Info)
-	b.maxOps -= L - b.idx
-	if b.maxOps < 0 {
+	if !b.ensure(L + count) {
 		return false
 	}
-	b.Info = append(b.Info, make([]GlyphInfo, count)...)
+	if !b.spendOps(L - b.idx) {
+		return false
+	}
+	b.Info = slices.Grow(b.Info, count)[:L+count]
+	if !b.separateOutput {
+		b.outInfo = b.Info[:len(b.outInfo)]
+	}
 	copy(b.Info[b.idx+count:], b.Info[b.idx:L])
+	if b.idx+count > L {
+		clear(b.Info[L : b.idx+count])
+	}
 	b.idx += count
 	return true
 }
 
-func (b *Buffer) moveTo(i int) {
+// okage: the checks follow hb_buffer_t::move_to of HarfBuzz 15.1.0 (D73).
+func (b *Buffer) moveTo(i int) bool {
 	if !b.haveOutput {
 		// assert(i <= len)
 		b.idx = i
-		return
+		return true
+	}
+	if b.inError {
+		return false
 	}
 
 	// assert(i <= out_len+(len-idx))
 	outL := len(b.outInfo)
 	if outL < i {
 		count := i - outL
-
-		b.maxOps -= count
-		if b.maxOps < 0 {
-			return
+		if !b.makeRoomFor(count, count) {
+			return false
+		}
+		if !b.spendOps(count) {
+			return false
 		}
 
 		b.outInfo = append(b.outInfo, b.Info[b.idx:count+b.idx]...)
@@ -806,24 +971,21 @@ func (b *Buffer) moveTo(i int) {
 		/* Tricky part: rewinding... */
 		count := outL - i
 
-		if b.idx < count {
-			ok := b.shiftForward(count - b.idx)
-			if !ok {
-				return
-			}
+		if b.idx < count && !b.shiftForward(count-b.idx) {
+			return false
 		}
 
 		// assert(idx >= count)
 
-		b.maxOps -= count
-		if b.maxOps < 0 {
-			return
+		if !b.spendOps(count) {
+			return false
 		}
 
 		b.idx -= count
 		copy(b.Info[b.idx:], b.outInfo[outL-count:outL])
 		b.outInfo = b.outInfo[:outL-count]
 	}
+	return true
 }
 
 func (b *Buffer) collectGlyphs(out *intSet) {
@@ -937,10 +1099,10 @@ func (b *Buffer) mergeOutClustersImpl(start, end int) {
 	}
 
 	// okage: the merge takes operations, and the extension stops when the
-	// buffer has no operations left, as in HarfBuzz 15.1.0. HarfBuzz also
+	// buffer is in error, as in HarfBuzz 15.1.0. HarfBuzz also
 	// extends only when the cluster changes, which gives the same clusters
 	// (D73).
-	if b.maxOps >= 0 {
+	if !b.inError {
 		/* Extend start */
 		if cluster != b.outInfo[start].Cluster {
 			for start != 0 && b.outInfo[start-1].Cluster == b.outInfo[start].Cluster {
@@ -966,7 +1128,7 @@ func (b *Buffer) mergeOutClustersImpl(start, end int) {
 		}
 	}
 
-	b.maxOps -= end - start
+	b.spendOps(end - start)
 
 	for i := start; i < end; i++ {
 		b.outInfo[i].setCluster(cluster, 0)

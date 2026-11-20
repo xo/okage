@@ -3,14 +3,20 @@
 package harfbuzz
 
 import (
+	"bytes"
+	"cmp"
+	"encoding/binary"
 	"fmt"
 	"hash/fnv"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/xo/okage/typesetting/font"
+	ot "github.com/xo/okage/typesetting/font/opentype"
+	td "github.com/xo/okage/typesetting/internal/testfonts/harfbuzz"
 )
 
 // okage: the tests of D73.
@@ -161,7 +167,13 @@ type shapedHash struct {
 // of the glyphs with HarfBuzz.
 func testShapedHashes(t *testing.T, path string, tests []shapedHash) {
 	t.Helper()
-	face := openFontFile(t, path)
+	testFontHashes(t, openFontFile(t, path), tests)
+}
+
+// testFontHashes shapes each text in the font, and compares the glyph
+// count and the hash of the glyphs with HarfBuzz.
+func testFontHashes(t *testing.T, face *font.Font, tests []shapedHash) {
+	t.Helper()
 	for _, test := range tests {
 		buf := shapeWithin(t, face, test.text)
 		h := fnv.New64a()
@@ -223,7 +235,7 @@ func TestSetGlyphFlagsBeforeStart(t *testing.T) {
 
 // TestRecurseOperations checks that each nested lookup costs one operation,
 // and that a nesting deeper than HB_MAX_NESTING_LEVEL, 64 in HarfBuzz
-// 15.1.0, stops the shaping.
+// 15.1.0, puts the buffer in error, which stops the shaping.
 func TestRecurseOperations(t *testing.T) {
 	var c otApplyContext
 	c.buffer = NewBuffer()
@@ -237,14 +249,14 @@ func TestRecurseOperations(t *testing.T) {
 	if c.recurse(0) {
 		t.Error("the nested lookup applied without operations")
 	}
-	if depth != 10 || c.buffer.maxOps != -1 {
-		t.Errorf("got %d nested lookups and %d operations left, want 10 and -1", depth, c.buffer.maxOps)
+	if depth != 10 || c.buffer.maxOps != -1 || !c.buffer.inError {
+		t.Errorf("got %d nested lookups, %d operations left and the error %v, want 10, -1 and true", depth, c.buffer.maxOps, c.buffer.inError)
 	}
 
-	c.buffer.maxOps, depth = 1000, 0
+	c.buffer.maxOps, c.buffer.inError, depth = 1000, false, 0
 	c.recurse(0)
-	if depth != 64 || c.buffer.maxOps >= 0 {
-		t.Errorf("got %d nested lookups and %d operations left, want 64 and less than 0", depth, c.buffer.maxOps)
+	if depth != 64 || c.buffer.maxOps != 936 || !c.buffer.inError {
+		t.Errorf("got %d nested lookups, %d operations left and the error %v, want 64, 936 and true", depth, c.buffer.maxOps, c.buffer.inError)
 	}
 }
 
@@ -283,9 +295,10 @@ func TestMergeClustersOperations(t *testing.T) {
 		t.Errorf("mergeClusters: got the clusters %v and %d operations left, want [0 0 0 0 2] and 96", got, b.maxOps)
 	}
 
-	// Without operations left, the merge does not extend.
+	// Without operations left, the buffer is in error, and the merge does
+	// not extend.
 	b = newBuffer([]int{0, 1, 1, 1, 2}, nil)
-	b.maxOps = -1
+	b.maxOps, b.inError = -1, true
 	b.mergeClusters(0, 2)
 	if got := clustersOf(b.Info); !slices.Equal(got, []int{0, 0, 1, 1, 2}) || b.maxOps != -3 {
 		t.Errorf("mergeClusters without operations: got the clusters %v and %d operations left, want [0 0 1 1 2] and -3", got, b.maxOps)
@@ -336,4 +349,466 @@ func TestAttachmentNesting(t *testing.T) {
 	if pos[0].YOffset != 65 || pos[63].YOffset != 2 || pos[64].YOffset != 1 || pos[65].YOffset != 5 {
 		t.Errorf("got the offsets %d, %d, %d and %d, want 65, 2, 1 and 5", pos[0].YOffset, pos[63].YOffset, pos[64].YOffset, pos[65].YOffset)
 	}
+}
+
+// The glyphs of Roboto-Regular.ttf of font/testdata, for the fonts that
+// fontWithLayout builds.
+const (
+	robotoA GID = 69
+	robotoB GID = 70
+	robotoC GID = 71
+	robotoX GID = 92
+	robotoY GID = 93
+	robotoZ GID = 94
+)
+
+// u16s gives the values as 16-bit integers in big-endian order.
+func u16s(values ...int) []byte {
+	out := make([]byte, 0, 2*len(values))
+	for _, v := range values {
+		out = binary.BigEndian.AppendUint16(out, uint16(v))
+	}
+	return out
+}
+
+// offsetTo gives a 16-bit offset, and fails the test when it does not fit.
+func offsetTo(t testing.TB, offset int) int {
+	t.Helper()
+	if offset > 0xFFFF {
+		t.Fatalf("the offset %d does not fit in 16 bits", offset)
+	}
+	return offset
+}
+
+// layoutFeature is a feature of a table GSUB or GPOS of fontWithLayout.
+type layoutFeature struct {
+	tag     string
+	lookups []int
+}
+
+// layoutTable builds a table GSUB or GPOS. Each script has one default
+// LangSys with all the features. A lookup is the bytes of a whole Lookup
+// table. The offsets have 16 bits, so only the last lookup can be larger
+// than 64 KiB.
+func layoutTable(t testing.TB, scripts []string, features []layoutFeature, lookups [][]byte) []byte {
+	t.Helper()
+	// All the scripts share one Script table, with one default LangSys.
+	scriptList := u16s(len(scripts))
+	for _, tag := range scripts {
+		scriptList = append(scriptList, tag...)
+		scriptList = append(scriptList, u16s(2+6*len(scripts))...)
+	}
+	scriptList = append(scriptList, u16s(4, 0)...)
+	scriptList = append(scriptList, u16s(0, 0xFFFF, len(features))...)
+	for i := range features {
+		scriptList = append(scriptList, u16s(i)...)
+	}
+
+	featureList := u16s(len(features))
+	var featureTables []byte
+	for _, f := range features {
+		featureList = append(featureList, f.tag...)
+		featureList = append(featureList, u16s(offsetTo(t, 2+6*len(features)+len(featureTables)))...)
+		featureTables = append(featureTables, u16s(0, len(f.lookups))...)
+		featureTables = append(featureTables, u16s(f.lookups...)...)
+	}
+	featureList = append(featureList, featureTables...)
+
+	lookupList := u16s(len(lookups))
+	var lookupTables []byte
+	for _, lookup := range lookups {
+		lookupList = append(lookupList, u16s(offsetTo(t, 2+2*len(lookups)+len(lookupTables)))...)
+		lookupTables = append(lookupTables, lookup...)
+	}
+	lookupList = append(lookupList, lookupTables...)
+
+	out := []byte{0, 1, 0, 0}
+	out = append(out, u16s(10, offsetTo(t, 10+len(scriptList)), offsetTo(t, 10+len(scriptList)+len(featureList)))...)
+	out = append(out, scriptList...)
+	out = append(out, featureList...)
+	return append(out, lookupList...)
+}
+
+// lookupTable builds a Lookup table with its subtables. Only the last
+// subtable can be larger than 64 KiB.
+func lookupTable(t testing.TB, lookupType, flag int, subtables ...[]byte) []byte {
+	t.Helper()
+	out := u16s(lookupType, flag, len(subtables))
+	var data []byte
+	for _, subtable := range subtables {
+		out = append(out, u16s(offsetTo(t, 6+2*len(subtables)+len(data)))...)
+		data = append(data, subtable...)
+	}
+	return append(out, data...)
+}
+
+// coverage1 builds a Coverage table of format 1. The glyphs must be sorted.
+func coverage1(glyphs ...GID) []byte {
+	out := u16s(1, len(glyphs))
+	for _, g := range glyphs {
+		out = append(out, u16s(int(g))...)
+	}
+	return out
+}
+
+// fontWithLayout gives Roboto-Regular.ttf of font/testdata with the tables
+// of layout in place of its tables GDEF, GSUB and GPOS.
+func fontWithLayout(t testing.TB, layout map[string][]byte) *font.Face {
+	t.Helper()
+	ld, err := ot.NewLoader(bytes.NewReader(fontDataWithLayout(t, layout)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := font.NewFont(ld)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return font.NewFace(f)
+}
+
+// fontDataWithLayout gives the bytes of the font of fontWithLayout.
+func fontDataWithLayout(t testing.TB, layout map[string][]byte) []byte {
+	t.Helper()
+	data, err := os.ReadFile("../font/testdata/Roboto-Regular.ttf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return replaceLayout(t, data, layout)
+}
+
+// replaceLayout gives the bytes of the font data with the tables of layout
+// in place of its tables GDEF, GSUB and GPOS.
+func replaceLayout(t testing.TB, data []byte, layout map[string][]byte) []byte {
+	t.Helper()
+	ld, err := ot.NewLoader(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var tabs []ot.Table
+	for _, tag := range ld.Tables() {
+		switch tag.String() {
+		case "GDEF", "GSUB", "GPOS":
+			continue
+		}
+		raw, err := ld.RawTable(tag)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tabs = append(tabs, ot.Table{Tag: tag, Content: raw})
+	}
+	for tag, content := range layout {
+		tabs = append(tabs, ot.Table{Tag: ot.MustNewTag(tag), Content: content})
+	}
+	slices.SortFunc(tabs, func(a, b ot.Table) int { return cmp.Compare(a.Tag, b.Tag) })
+	return ot.WriteOpentype(tabs, ot.TrueType)
+}
+
+// gposPairClassZero builds a table GPOS whose feature kern has one lookup
+// of two subtables. The first is a PairPos of format 2 for a, whose
+// ClassDef2 holds only c. It gives the advance -100 to the class 0 and -200
+// to the class 1. The second is a PairPos of format 1 for the pair a, b,
+// with -300.
+func gposPairClassZero(t testing.TB) []byte {
+	pair2 := u16s(2, 20, 4, 0, 26, 30, 1, 2, -100, -200)
+	pair2 = append(pair2, coverage1(robotoA)...)
+	pair2 = append(pair2, u16s(2, 0)...)                  // ClassDef1: no range, so a has the class 0
+	pair2 = append(pair2, u16s(1, int(robotoC), 1, 1)...) // ClassDef2: c has the class 1
+	pair1 := u16s(1, 18, 4, 0, 1, 12, 1, int(robotoB), -300)
+	pair1 = append(pair1, coverage1(robotoA)...)
+	return layoutTable(t, []string{"DFLT"}, []layoutFeature{{"kern", []int{0}}},
+		[][]byte{lookupTable(t, 2, 0, pair2, pair1)})
+}
+
+// TestPairPosClassZero shapes two texts with gposPairClassZero. In
+// HarfBuzz 15.1.0, b has the class 0 in the first subtable, which applies
+// with the advance -100. go-text did not apply it, and the second subtable
+// applied -300.
+func TestPairPosClassZero(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"GPOS": gposPairClassZero(t)})
+	if got := len(face.GPOS.Lookups); got != 1 {
+		t.Fatalf("got %d lookups of GPOS, want 1", got)
+	}
+	testShapedFace(t, face, []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1014, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
+		{"ac", []shapedGlyph{{robotoA, 0, 914, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+	})
+}
+
+// gsubNestedRecords builds a table GSUB with two lookups. The feature ccmp
+// has lookup 1, a context of one glyph. For x, it calls lookup 0 once, and
+// for a, it calls lookup 0 the given number of times. Lookup 0, a
+// MultipleSubst, replaces a with b, b with a, and x with z, y. So each call
+// for a replaces the glyph, and the next call moves back to it first. Each
+// call then takes two operations.
+func gsubNestedRecords(t testing.TB, records int) []byte {
+	multiple := u16s(1, 26, 3, 12, 16, 20, 1, int(robotoB), 1, int(robotoA), 2, int(robotoZ), int(robotoY))
+	multiple = append(multiple, coverage1(robotoA, robotoB, robotoX)...)
+	// The rule set of a has one rule with the records, and the rule set of
+	// x has one rule with one record.
+	context := u16s(1, 10, 2, 30, 18)
+	context = append(context, coverage1(robotoA, robotoX)...)
+	context = append(context, u16s(1, 4, 1, 1, 0, 0)...)
+	context = append(context, u16s(1, 4, 1, records)...)
+	for range records {
+		context = append(context, u16s(0, 0)...)
+	}
+	return layoutTable(t, []string{"DFLT"}, []layoutFeature{{"ccmp", []int{1}}},
+		[][]byte{lookupTable(t, 2, 0, multiple), lookupTable(t, 5, 0, context)})
+}
+
+// gsubMultiple builds a table GSUB whose feature ccmp replaces x with count
+// glyphs y.
+func gsubMultiple(t testing.TB, count int) []byte {
+	multiple := u16s(1, 8, 1, 14)
+	multiple = append(multiple, coverage1(robotoX)...)
+	multiple = append(multiple, u16s(count)...)
+	for range count {
+		multiple = append(multiple, u16s(int(robotoY))...)
+	}
+	return layoutTable(t, []string{"DFLT"}, []layoutFeature{{"ccmp", []int{0}}},
+		[][]byte{lookupTable(t, 2, 0, multiple)})
+}
+
+// TestDropOutputWithoutOperations shapes xaaa with gsubNestedRecords and
+// 20,000 records. Each a takes about 40,000 operations, so the buffer has
+// no operations left in the middle of the lookup, at the second a. The
+// output of the lookup has its own array from x on, because z, y is longer
+// than x. HarfBuzz 15.1.0 then drops the output, and keeps the array of the
+// input, where each move back of the lookup wrote a glyph: x, b, a, a.
+// go-text kept the output, z, y, a, a, a.
+func TestDropOutputWithoutOperations(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"GSUB": gsubNestedRecords(t, 20000)})
+	if got := len(face.GSUB.Lookups); got != 2 {
+		t.Fatalf("got %d lookups of GSUB, want 2", got)
+	}
+	testShapedFace(t, face, []shapedText{
+		{"xaaa", []shapedGlyph{
+			{robotoX, 0, 1015, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoA, 2, 1114, 0, 0}, {robotoA, 3, 1114, 0, 0},
+		}},
+	})
+}
+
+// TestBufferLengthLimit shapes xx with gsubMultiple. The limit of the
+// length of the buffer is 65,536 glyphs for a text of two characters. As in
+// HarfBuzz 15.1.0, harfbuzz compares a length with the limit only when the
+// arrays of HarfBuzz must grow, and they grow from 62,922 to 94,415 glyphs.
+// So two times 40,000 glyphs do not reach the limit. Two times 50,000
+// glyphs do, the buffer is in error, and it keeps xx. go-text compared the
+// length with the limit only before each lookup, and kept the 100,000
+// glyphs.
+func TestBufferLengthLimit(t *testing.T) {
+	for _, test := range []struct {
+		count, glyphs int
+		hash          uint64
+	}{
+		{40000, 80000, 0xfe5097d9d51cb0e5},
+		{50000, 2, 0xbe00a6b1239c748e},
+	} {
+		face := fontWithLayout(t, map[string][]byte{"GSUB": gsubMultiple(t, test.count)})
+		buf := NewBuffer()
+		buf.AddRunes([]rune("xx"), 0, -1)
+		buf.GuessSegmentProperties()
+		buf.Shape(NewFont(face), nil)
+		h := fnv.New64a()
+		for i, info := range buf.Info {
+			pos := buf.Pos[i]
+			fmt.Fprintf(h, "%d %d %d %d %d %d\n", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset)
+		}
+		if len(buf.Info) != test.glyphs || h.Sum64() != test.hash {
+			t.Errorf("%d glyphs for x: got %d glyphs with the hash %#x, want %d with %#x", test.count, len(buf.Info), h.Sum64(), test.glyphs, test.hash)
+		}
+	}
+}
+
+// TestSwapBuffersInError ends a lookup with and without an error. As
+// hb_buffer_t::sync of HarfBuzz 15.1.0, swapBuffers keeps the output when
+// the buffer is not in error. In error, it drops the output and keeps Info,
+// with the glyph that the lookup wrote into the array of Info before the
+// output took an array of its own.
+func TestSwapBuffersInError(t *testing.T) {
+	for _, inError := range []bool{false, true} {
+		b := NewBuffer()
+		b.AddRunes([]rune("abc"), 0, -1)
+		b.clearOutput()
+		b.replaceGlyphIndex(7) // in the array of Info
+		b.outputGlyphIndex(8)  // longer than the input, so in an array of its own
+		b.nextGlyph()
+		b.inError = inError
+		ok := b.swapBuffers()
+		var got []GID
+		for _, info := range b.Info {
+			got = append(got, info.Glyph)
+		}
+		want := []GID{7, 8, 0, 0}
+		if inError {
+			want = []GID{7, 0, 0}
+		}
+		if ok == inError || !slices.Equal(got, want) {
+			t.Errorf("in error %v: got %v and %v, want %v and %v", inError, ok, got, !inError, want)
+		}
+	}
+}
+
+// TestBufferReuse shapes a short text, then puts a text of 70,000
+// characters in the same buffer. The limit of the length for the short
+// text is 65,536 glyphs. As in HarfBuzz 15.1.0, the limit goes back to its
+// default after the shaping, so the buffer takes each character.
+func TestBufferReuse(t *testing.T) {
+	face := fontWithLayout(t, nil)
+	b := NewBuffer()
+	b.AddRunes([]rune("ab"), 0, -1)
+	b.GuessSegmentProperties()
+	b.Shape(NewFont(face), nil)
+	b.Clear()
+	b.AddRunes([]rune(strings.Repeat("a", 70000)), 0, -1)
+	if len(b.Info) != 70000 || b.inError {
+		t.Errorf("got %d glyphs and the error %v, want 70000 and false", len(b.Info), b.inError)
+	}
+}
+
+// u32s gives the values as 32-bit integers in big-endian order.
+func u32s(values ...uint32) []byte {
+	out := make([]byte, 0, 4*len(values))
+	for _, v := range values {
+		out = binary.BigEndian.AppendUint32(out, v)
+	}
+	return out
+}
+
+// morxInsertions builds a table morx with one chain of count insertion
+// subtables, then a noncontextual subtable. Each insertion subtable inserts
+// 31 times a after each a, and the noncontextual subtable replaces a with b.
+func morxInsertions(count int) []byte {
+	// The state table: the class 4 for a, two states that give the entry
+	// 1 for a, and the entry 1 inserts 31 glyphs after the current glyph.
+	insertion := u32s(5, 20, 28, 48, 64)
+	insertion = append(insertion, u16s(8, int(robotoA), 1, 4)...)
+	insertion = append(insertion, u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 1)...)
+	insertion = append(insertion, u16s(0, 0, 0xFFFF, 0xFFFF, 0, 31<<5, 0, 0xFFFF)...)
+	for range 31 {
+		insertion = append(insertion, u16s(int(robotoA))...)
+	}
+	noncontextual := u16s(8, int(robotoA), 1, int(robotoB)) // a lookup of format 8
+
+	length := 16 + count*(12+len(insertion)) + 12 + len(noncontextual)
+	out := u16s(2, 0)
+	out = append(out, u32s(1, 1, uint32(length), 0, uint32(count+1))...) // one chain
+	for range count {
+		// The length, the coverage for all the directions and the type,
+		// and the flags.
+		out = append(out, u32s(uint32(12+len(insertion)), 0x20000005, 1)...)
+		out = append(out, insertion...)
+	}
+	out = append(out, u32s(uint32(12+len(noncontextual)), 0x20000004, 1)...)
+	return append(out, noncontextual...)
+}
+
+// TestMorxSubtableOperations shapes a with morxInsertions and three
+// insertion subtables, which make 32, 1,024, then 32,768 glyphs a. The
+// buffer has 65,536 operations, and the insertions take 33,792. As in
+// HarfBuzz 15.1.0, each subtable also takes the length of the buffer in
+// operations, so the noncontextual subtable takes 32,768. The buffer is
+// then in error, and the subtable does not apply. go-text took no
+// operation for a subtable, and gave 32,768 glyphs b.
+func TestMorxSubtableOperations(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"morx": morxInsertions(3)})
+	if got := len(face.Morx); got != 1 || len(face.Morx[0].Subtables) != 4 {
+		t.Fatalf("got %d chains of morx, want 1 with 4 subtables", got)
+	}
+	testFontHashes(t, face.Font, []shapedHash{{"a", 32768, 0x9458d2032c2f2325}})
+}
+
+// gsubIndicRules builds a table GSUB for the script dev2 of
+// NotoSansDevanagari-Regular.ttf, from the glyphs of ka, kha and the virama.
+// The feature pres replaces ka with kha. The feature blwf has a context of
+// format 1 for the virama, with 32,000 rules that match no text. The rules
+// share their bytes.
+func gsubIndicRules(t testing.TB, ka, kha, virama GID) []byte {
+	const rules = 32000
+	single := u16s(1, 6, int(kha-ka))
+	single = append(single, coverage1(ka)...)
+	context := u16s(1, 8, 1, 14)
+	context = append(context, coverage1(virama)...)
+	context = append(context, u16s(rules)...)
+	for range rules {
+		context = append(context, u16s(2+2*rules)...)
+	}
+	context = append(context, u16s(2, 0, 1)...) // the rule: the virama, then the glyph 1
+	return layoutTable(t, []string{"DFLT", "dev2"}, []layoutFeature{{"blwf", []int{1}}, {"pres", []int{0}}},
+		[][]byte{lookupTable(t, 1, 0, single), lookupTable(t, 5, 0, context)})
+}
+
+// TestIndicWouldSubstituteOperations shapes four times ka with
+// gsubIndicRules. To find the position of each consonant, the Indic shaper
+// asks whether blwf substitutes the virama and the consonant. As in
+// HarfBuzz 15.1.0, the question takes an operation for each rule of the
+// rule set of the virama. At the third consonant, the buffer has no
+// operations left, and it is in error, so pres does not apply. go-text took
+// no operation, and pres replaced each ka with kha.
+func TestIndicWouldSubstituteOperations(t *testing.T) {
+	data, err := td.Files.ReadFile("perf_reference/fonts/NotoSansDevanagari-Regular.ttf")
+	if err != nil {
+		t.Skip(err)
+	}
+	const ka, kha, virama = 25, 26, 81
+	gsub := gsubIndicRules(t, ka, kha, virama)
+	ld, err := ot.NewLoader(bytes.NewReader(replaceLayout(t, data, map[string][]byte{"GSUB": gsub})))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := font.NewFont(ld)
+	if err != nil {
+		t.Fatal(err)
+	}
+	face := font.NewFace(f)
+	if got := len(face.GSUB.Lookups); got != 2 {
+		t.Fatalf("got %d lookups of GSUB, want 2", got)
+	}
+	testShapedFace(t, face, []shapedText{{"कककक", []shapedGlyph{
+		{ka, 0, 762, 0, 0}, {ka, 1, 762, 0, 0}, {ka, 2, 762, 0, 0}, {ka, 3, 762, 0, 0},
+	}}})
+}
+
+// gsubIndicFirstCoverage builds a table GSUB for the script dev2 of
+// NotoSansDevanagari-Regular.ttf, from the glyphs of ka, kha and the
+// virama. The feature blwf has one lookup of two chained contexts. The
+// first, of format 1, covers ka, and its one rule matches no text, so ka
+// is in the digest of the lookup. The second, of format 3, matches kha and
+// the virama, with no nested lookup.
+func gsubIndicFirstCoverage(t testing.TB, ka, kha, virama GID) []byte {
+	format1 := u16s(1, 8, 1, 14)
+	format1 = append(format1, coverage1(ka)...)
+	format1 = append(format1, u16s(1, 4, 0, 2, 1, 0, 0)...) // one rule: ka, then the glyph 1
+	format3 := u16s(3, 0, 2, 14, 20, 0, 0)
+	format3 = append(format3, coverage1(kha)...)
+	format3 = append(format3, coverage1(virama)...)
+	return layoutTable(t, []string{"DFLT", "dev2"}, []layoutFeature{{"blwf", []int{0}}},
+		[][]byte{lookupTable(t, 6, 0, format1, format3)})
+}
+
+// TestIndicFirstGlyphCoverage shapes ka, virama, ka, i with
+// gsubIndicFirstCoverage. To find the position of the second ka, the Indic
+// shaper asks whether blwf substitutes ka and the virama. In HarfBuzz
+// 15.1.0, the context of format 3 does not test the coverage of ka, so the
+// answer is yes. The second ka is then below the base, and the matra i
+// moves before the first ka. go-text tested the coverage, so the second ka
+// was the base, and i moved before it.
+func TestIndicFirstGlyphCoverage(t *testing.T) {
+	data, err := td.Files.ReadFile("perf_reference/fonts/NotoSansDevanagari-Regular.ttf")
+	if err != nil {
+		t.Skip(err)
+	}
+	const ka, kha, virama, i = 25, 26, 81, 67
+	gsub := gsubIndicFirstCoverage(t, ka, kha, virama)
+	ld, err := ot.NewLoader(bytes.NewReader(replaceLayout(t, data, map[string][]byte{"GSUB": gsub})))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := font.NewFont(ld)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testShapedFace(t, font.NewFace(f), []shapedText{{"क्कि", []shapedGlyph{
+		{i, 0, 259, 0, 0}, {ka, 0, 762, 0, 0}, {virama, 0, 0, 0, 0}, {ka, 0, 762, 0, 0},
+	}}})
 }

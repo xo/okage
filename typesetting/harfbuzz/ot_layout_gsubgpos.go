@@ -102,6 +102,27 @@ type wouldApplyContext struct {
 	glyphs      []GID
 	indices     []uint16 // see get1N
 	zeroContext bool
+
+	// okage: buffer takes the operations of the test when the test runs
+	// as part of the shaping. It is nil otherwise (D73).
+	buffer *Buffer
+}
+
+// chargeOps takes count operations of the buffer, as charge_ops of
+// hb_would_apply_context_t of HarfBuzz 15.1.0. The subtables, the rules
+// and the ligatures of a font can share their bytes, so a font can declare
+// far more of them than it has bytes (D73).
+func (c *wouldApplyContext) chargeOps(count int) bool {
+	if c.buffer == nil {
+		return true
+	}
+	if c.buffer.maxOps < count {
+		c.buffer.maxOps = -1
+		c.buffer.inError = true
+		return false
+	}
+	c.buffer.maxOps -= count
+	return true
 }
 
 // matcherFunc matches the `value` of a context rule against a glyph.
@@ -624,6 +645,9 @@ func (c *wouldApplyContext) wouldApplyLookupContext3(data tables.SequenceContext
 }
 
 func (c *wouldApplyContext) wouldApplyRuleSet(ruleSet tables.SequenceRuleSet, match matcherFunc) bool {
+	if !c.chargeOps(len(ruleSet.SeqRule)) {
+		return false
+	}
 	for _, rule := range ruleSet.SeqRule {
 		if c.wouldMatchInput(rule.InputSequence, match) {
 			return true
@@ -633,6 +657,9 @@ func (c *wouldApplyContext) wouldApplyRuleSet(ruleSet tables.SequenceRuleSet, ma
 }
 
 func (c *wouldApplyContext) wouldApplyChainRuleSet(ruleSet tables.ChainedSequenceRuleSet, inputMatch matcherFunc) bool {
+	if !c.chargeOps(len(ruleSet.ChainedSeqRules)) {
+		return false
+	}
 	for _, rule := range ruleSet.ChainedSeqRules {
 		if c.wouldApplyChainLookup(rule.BacktrackSequence, rule.InputSequence, rule.LookaheadSequence, inputMatch) {
 			return true
@@ -870,7 +897,9 @@ func (c *otApplyContext) ligateInput(count, matchEnd int, ligGlyph gID, totalCom
 	buffer.replaceGlyphIndex(GID(ligGlyph))
 
 	for i := 1; i < count; i++ {
-		for buffer.idx < c.matchPositions[i] {
+		// okage: the loop stops when the buffer is in error, as in
+		// HarfBuzz 15.1.0 (D73).
+		for buffer.idx < c.matchPositions[i] && !buffer.inError {
 			if isLigature {
 				thisComp := buffer.cur(0).getLigComp()
 				if thisComp == 0 {
@@ -913,17 +942,16 @@ func (c *otApplyContext) ligateInput(count, matchEnd int, ligGlyph gID, totalCom
 func (c *otApplyContext) recurse(subLookupIndex uint16) bool {
 	// okage: each nested lookup costs one operation, as in HarfBuzz 15.1.0.
 	// go-text took the operation only when the lookup did not apply. When
-	// the nesting is too deep, HarfBuzz stops the shaping, as when the
-	// buffer has no operations left (D73).
+	// the nesting is too deep, HarfBuzz puts the buffer in error, and the
+	// shaping stops (D73).
 	if c.recurseFunc == nil {
 		return false
 	}
 	if c.nestingLevelLeft == 0 {
-		c.buffer.maxOps = min(c.buffer.maxOps, -1)
+		c.buffer.inError = true
 		return false
 	}
-	c.buffer.maxOps--
-	if c.buffer.maxOps < 0 {
+	if !c.buffer.spendOps(1) {
 		return false
 	}
 
@@ -990,7 +1018,12 @@ func (c *otApplyContext) applyLookup(count int,
 		}
 	}
 
+	// okage: the loop stops when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
 	for _, lk := range lookupRecord {
+		if buffer.inError {
+			break
+		}
 		idx := int(lk.SequenceIndex)
 		if idx >= count { // invalid, ignored
 			continue
@@ -1003,7 +1036,9 @@ func (c *otApplyContext) applyLookup(count int,
 			continue
 		}
 
-		buffer.moveTo(c.matchPositions[idx])
+		if !buffer.moveTo(c.matchPositions[idx]) {
+			break
+		}
 
 		if buffer.maxOps <= 0 {
 			break

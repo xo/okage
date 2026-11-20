@@ -481,6 +481,13 @@ func newAatApplyContext(plan *otShapePlan, font *Font, buffer *Buffer) *aatApply
 	return &out
 }
 
+// chargeBufferPass takes the length of the buffer in operations for a pass
+// of a subtable over the buffer, as charge_buffer_pass of HarfBuzz 15.1.0.
+// The font gives the number of subtables (D73).
+func (c *aatApplyContext) chargeBufferPass() bool {
+	return c.buffer.spendOps(len(c.buffer.Info))
+}
+
 func (c *aatApplyContext) reverseBuffer() {
 	c.buffer.Reverse()
 	c.bufferIsReversed = !c.bufferIsReversed
@@ -508,14 +515,16 @@ func (c *aatApplyContext) bufferIntersectsMachine() bool {
 	return false
 }
 
+// okage: outputGlyphs, replaceGlyph and deleteGlyph return false when the
+// arrays of the buffer cannot grow, as in HarfBuzz 15.1.0 (D73).
 func (c *aatApplyContext) outputGlyphs(glyphs []GID) bool {
 	if c.usingBufferGlyphSet {
 		c.bufferGlyphSet.addGlyphs(glyphs)
 	}
 	for _, glyph := range glyphs {
 		atEndOfText := c.buffer.idx == len(c.buffer.Info)
-		if atEndOfText {
-			c.buffer.outputGlyphIndex(glyph)
+		if atEndOfText && !c.buffer.outputGlyphIndex(glyph) {
+			return false
 		}
 		var info *GlyphInfo
 		if atEndOfText {
@@ -531,14 +540,14 @@ func (c *aatApplyContext) outputGlyphs(glyphs []GID) bool {
 				info.glyphProps = c.gdef.GlyphProps(gID(glyph))
 			}
 		}
-		if !atEndOfText {
-			c.buffer.outputGlyphIndex(glyph)
+		if !atEndOfText && !c.buffer.outputGlyphIndex(glyph) {
+			return false
 		}
 	}
 	return true
 }
 
-func (c *aatApplyContext) replaceGlyph(glyph GID) {
+func (c *aatApplyContext) replaceGlyph(glyph GID) bool {
 	if glyph == deletedGlyph {
 		c.buffer.scratchFlags |= bsfAatHasDeleted
 		c.buffer.cur(0).setAatDeleted()
@@ -550,13 +559,13 @@ func (c *aatApplyContext) replaceGlyph(glyph GID) {
 	if c.gdef.GlyphClassDef != nil {
 		c.buffer.cur(0).glyphProps = c.gdef.GlyphProps(gID(glyph))
 	}
-	c.buffer.replaceGlyphIndex(glyph)
+	return c.buffer.replaceGlyphIndex(glyph)
 }
 
-func (c *aatApplyContext) deleteGlyph() {
+func (c *aatApplyContext) deleteGlyph() bool {
 	c.buffer.scratchFlags |= bsfAatHasDeleted
 	c.buffer.cur(0).setAatDeleted()
-	c.buffer.replaceGlyphIndex(deletedGlyph)
+	return c.buffer.replaceGlyphIndex(deletedGlyph)
 }
 
 func (c *aatApplyContext) replaceGlyphInplace(i int, glyph gID) {
@@ -627,7 +636,9 @@ func (s stateTableDriver) drive(c driverContext, ac *aatApplyContext) {
 	}
 	startStateSafeToBreakEot := !c.isActionable(s.machine.GetEntry(stateStartOfText, classEndOfText))
 
-	for buffer.idx = 0; ; {
+	// okage: the loops stop when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for buffer.idx = 0; !buffer.inError; {
 		class := classEndOfText
 		if buffer.idx < len(buffer.Info) {
 			class = s.getClass(buffer.Info[buffer.idx].Glyph, &ac.machineClassCache)
@@ -681,7 +692,7 @@ func (s stateTableDriver) drive(c driverContext, ac *aatApplyContext) {
 				for class == oldKlass {
 					c.transition(buffer, s, entry)
 
-					if buffer.idx == len(buffer.Info) {
+					if buffer.idx == len(buffer.Info) || buffer.inError {
 						break
 					}
 
@@ -693,7 +704,7 @@ func (s stateTableDriver) drive(c driverContext, ac *aatApplyContext) {
 					}
 				}
 
-				if buffer.idx == len(buffer.Info) {
+				if buffer.idx == len(buffer.Info) || buffer.inError {
 					break
 				}
 
@@ -822,12 +833,20 @@ func (sp *otShapePlan) aatLayoutSubstitute(font *Font, buffer *Buffer, features 
 
 	morx := font.face.Morx
 	c := newAatApplyContext(sp, font, buffer)
+	// okage: morx does nothing when the buffer is in error, and stops after
+	// a chain that puts it in error, as in HarfBuzz 15.1.0 (D73).
+	if c.buffer.inError {
+		return
+	}
 	c.buffer.unsafeToConcat(0, maxInt)
 	c.setupBufferGlyphSet()
 	for i, chain := range morx {
 		accel := font.morxAccels[i]
 		c.rangeFlags = map_.chainFlags[i]
 		c.applyMorx(chain, accel)
+		if c.buffer.inError {
+			return
+		}
 	}
 	// NOTE: we dont support obsolete 'mort' table
 }

@@ -427,7 +427,7 @@ func (b *Buffer) insertDottedCircle(font *Font) {
 	b.idx = 0
 	dottedcircle.Cluster = b.cur(0).Cluster
 	dottedcircle.Mask = b.cur(0).Mask
-	b.outInfo = append(b.outInfo, dottedcircle)
+	b.outputInfo(dottedcircle)
 	b.swapBuffers()
 }
 

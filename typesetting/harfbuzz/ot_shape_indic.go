@@ -98,9 +98,13 @@ func newIndicWouldSubstituteFeature(map_ *otMap, featureTag tables.Tag, zeroCont
 	return out
 }
 
-func (ws indicWouldSubstituteFeature) wouldSubstitute(glyphs []GID, font *Font) bool {
+// okage: the test takes operations of the buffer, and is false when the
+// buffer is in error, as in HarfBuzz 15.1.0. go-text took no operation
+// (D73). otLayoutLookupWouldSubstituteWithBuffer tests the error, so that
+// this function stays small enough to inline.
+func (ws indicWouldSubstituteFeature) wouldSubstitute(glyphs []GID, font *Font, buffer *Buffer) bool {
 	for _, lk := range ws.lookups {
-		if otLayoutLookupWouldSubstitute(font, lk.index, glyphs, ws.zeroContext) {
+		if otLayoutLookupWouldSubstituteWithBuffer(font, lk.index, glyphs, ws.zeroContext, buffer) {
 			return true
 		}
 	}
@@ -318,7 +322,7 @@ func (cs *complexShaperIndic) dataCreate(plan *otShapePlan) {
 	cs.plan = indicPlan
 }
 
-func (indicPlan *indicShapePlan) consonantPositionFromFace(consonant, virama GID, font *Font) uint8 {
+func (indicPlan *indicShapePlan) consonantPositionFromFace(consonant, virama GID, font *Font, buffer *Buffer) uint8 {
 	/* For old-spec, the order of glyphs is Consonant,Virama,
 	* whereas for new-spec, it's Virama,Consonant.  However,
 	* some broken fonts (like Free Sans) simply copied lookups
@@ -334,18 +338,18 @@ func (indicPlan *indicShapePlan) consonantPositionFromFace(consonant, virama GID
 	* https://github.com/harfbuzz/harfbuzz/issues/1587
 	 */
 	glyphs := [3]GID{virama, consonant, virama}
-	if indicPlan.blwf.wouldSubstitute(glyphs[0:2], font) ||
-		indicPlan.blwf.wouldSubstitute(glyphs[1:3], font) ||
-		indicPlan.vatu.wouldSubstitute(glyphs[0:2], font) ||
-		indicPlan.vatu.wouldSubstitute(glyphs[1:3], font) {
+	if indicPlan.blwf.wouldSubstitute(glyphs[0:2], font, buffer) ||
+		indicPlan.blwf.wouldSubstitute(glyphs[1:3], font, buffer) ||
+		indicPlan.vatu.wouldSubstitute(glyphs[0:2], font, buffer) ||
+		indicPlan.vatu.wouldSubstitute(glyphs[1:3], font, buffer) {
 		return posBelowC
 	}
-	if indicPlan.pstf.wouldSubstitute(glyphs[0:2], font) ||
-		indicPlan.pstf.wouldSubstitute(glyphs[1:3], font) {
+	if indicPlan.pstf.wouldSubstitute(glyphs[0:2], font, buffer) ||
+		indicPlan.pstf.wouldSubstitute(glyphs[1:3], font, buffer) {
 		return posPostC
 	}
-	if indicPlan.pref.wouldSubstitute(glyphs[0:2], font) ||
-		indicPlan.pref.wouldSubstitute(glyphs[1:3], font) {
+	if indicPlan.pref.wouldSubstitute(glyphs[0:2], font, buffer) ||
+		indicPlan.pref.wouldSubstitute(glyphs[1:3], font, buffer) {
 		return posPostC
 	}
 	return posBaseC
@@ -387,7 +391,7 @@ func (indicPlan *indicShapePlan) updateConsonantPositionsIndic(font *Font, buffe
 		for i := range info {
 			if info[i].complexAux == posBaseC {
 				consonant := info[i].Glyph
-				info[i].complexAux = indicPlan.consonantPositionFromFace(consonant, virama, font)
+				info[i].complexAux = indicPlan.consonantPositionFromFace(consonant, virama, font, buffer)
 			}
 		}
 	}
@@ -440,9 +444,9 @@ func (indicPlan *indicShapePlan) initialReorderingConsonantSyllable(font *Font, 
 			if indicPlan.config.rephMode == rephModeExplicit {
 				glyphs[2] = info[start+2].Glyph
 			}
-			if indicPlan.rphf.wouldSubstitute(glyphs[:2], font) ||
+			if indicPlan.rphf.wouldSubstitute(glyphs[:2], font, buffer) ||
 				(indicPlan.config.rephMode == rephModeExplicit &&
-					indicPlan.rphf.wouldSubstitute(glyphs[:3], font)) {
+					indicPlan.rphf.wouldSubstitute(glyphs[:3], font, buffer)) {
 				limit += 2
 				for limit < end && isJoiner(&info[limit]) {
 					limit++
@@ -836,7 +840,7 @@ func (indicPlan *indicShapePlan) initialReorderingConsonantSyllable(font *Font, 
 			for j := 0; j < prefLen; j++ {
 				glyphs[j] = info[i+j].Glyph
 			}
-			if indicPlan.pref.wouldSubstitute(glyphs[:prefLen], font) {
+			if indicPlan.pref.wouldSubstitute(glyphs[:prefLen], font, buffer) {
 				for j := 0; j < prefLen; j++ {
 					info[i].Mask |= indicPlan.maskArray[indicPref]
 					i++

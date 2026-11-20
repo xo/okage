@@ -879,5 +879,8 @@ func (sp *shaperOpentype) shape(font *Font, buffer *Buffer, features []Feature) 
 
 	c.buffer.Props.Direction = c.targetDirection
 
-	c.buffer.maxOps = maxOpsDefault
+	// okage: as hb_buffer_t::leave of HarfBuzz 15.1.0, the limits go back
+	// to their defaults, so that a buffer that shaped a short text can
+	// take a long one (D73).
+	c.buffer.maxOps, c.buffer.maxLen = maxOpsDefault, maxLenDefault
 }

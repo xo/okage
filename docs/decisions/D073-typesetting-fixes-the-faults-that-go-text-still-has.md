@@ -181,6 +181,63 @@ On 2026-11-20 okage fixed faults 7 and 8:
    the flags of HarfBuzz, `FuzzParagraphLine` of `shaping` finds a
    difference in the flag unsafe-to-break, which item 5 records.
 
+On 2026-11-20 okage made `harfbuzz` follow HarfBuzz 15.1.0 at the five
+places that the fix of faults 7 and 8 found different:
+
+8. In a PairPos of format 2, a second glyph that ClassDef2 does not hold
+   has the class 0, and the subtable applies. go-text did not apply the
+   subtable, and tried the next one. `TestPairPosClassZero` tests it. The
+   record of the class 0 then takes time, and a fast path of
+   `PairPosData2.Record` for a record of the advance alone keeps the time
+   of the shaping.
+9. The buffer has the state `inError`, which is true when the buffer of
+   HarfBuzz is not `successful`. The buffer is in error when it has no
+   operations left, or when a nesting is too deep. The loops of the
+   lookups, of the normalizer and of the shapers stop on an error where
+   HarfBuzz stops. At the end of a lookup in error, `swapBuffers` drops
+   the output of the lookup, as `sync` of HarfBuzz does. As in HarfBuzz,
+   the output shares the array of the input until the output is longer
+   than the input that it consumed. So the buffer keeps the glyphs that
+   the lookup wrote into that array. go-text kept the output.
+   `TestDropOutputWithoutOperations` and `TestSwapBuffersInError` test it.
+10. The buffer is in error when its arrays must grow past the limit of
+    the length. HarfBuzz compares the length with the limit only when its
+    arrays grow, by half their length and 32 glyphs, so a buffer can hold
+    more glyphs than the limit. `harfbuzz` keeps the length of the arrays
+    of HarfBuzz, and no longer compares the length before each lookup.
+    `TestBufferLengthLimit` tests it.
+11. Each subtable of morx, kerx and kern takes the length of the buffer in
+    operations, and the table stops when the buffer is in error. An
+    insertion of morx takes its operations before it compares the count,
+    and a control point action of kerx takes 512 operations.
+    `TestMorxSubtableOperations` tests the operations of the subtables.
+12. When the Indic shaper asks whether a lookup substitutes glyphs, the
+    question takes one operation for the lookup and one for each of its
+    subtables, one for each rule of a rule set, and one for each ligature
+    of a ligature set. The answer is false when the buffer is in error.
+    go-text took no operation. `TestIndicWouldSubstituteOperations` tests
+    it.
+
+On 2026-11-20 `test/textbench` compared the shaping before and after
+these fixes, with 8 runs of each benchmark in turn. Most workloads are 1%
+to 5% faster. Devanagari is 2% to 4% slower, because of the operations of
+the questions of the Indic shaper, and the variable font is about 3%
+slower, because of the records of the class 0.
+
+The test module compares the font of each of these tests with
+uharfbuzz 15.1.0, in `test/harfbuzz`. Each of the 413,399 lines of
+`perf_reference` still gives the same glyphs, clusters, advances and
+offsets as HarfBuzz. The work found three more differences, which
+item 4 of "typesetting" in `docs/BACKLOG.md` records.
+
+On 2026-11-20 the maintainers decided one of the three: when the Indic
+shaper asks whether a context or a chained context of format 2 or 3
+substitutes glyphs, `harfbuzz` does not test the coverage of the first
+glyph, as in HarfBuzz 15.1.0. go-text tested it, and its test
+`TestWouldApplyContextRequiresFirstGlyphCoverage` now asks for the answer
+of HarfBuzz. `TestIndicFirstGlyphCoverage` tests it, in `harfbuzz` and in
+`test/harfbuzz`.
+
 ## When upstream changes
 
 If go-text fixes one of these faults, follow these steps:

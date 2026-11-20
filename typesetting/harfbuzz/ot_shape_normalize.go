@@ -183,7 +183,9 @@ func (c *otNormalizeContext) handleVariationSelectorCluster(end int) {
 		fmt.Printf("NORMALIZE - variation selector cluster at index %d\n", buffer.idx)
 	}
 	font := c.font
-	for buffer.idx < end-1 {
+	// okage: the loops stop when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for buffer.idx < end-1 && !buffer.inError {
 		if uniIsVariationSelector(buffer.cur(+1).codepoint) {
 			var ok bool
 			buffer.cur(0).Glyph, ok = font.face.VariationGlyph(buffer.cur(0).codepoint, buffer.cur(+1).codepoint)
@@ -205,7 +207,7 @@ func (c *otNormalizeContext) handleVariationSelectorCluster(end int) {
 				buffer.nextGlyph()
 			}
 			// skip any further variation selectors.
-			for buffer.idx < end && uniIsVariationSelector(buffer.cur(0).codepoint) {
+			for buffer.idx < end && !buffer.inError && uniIsVariationSelector(buffer.cur(0).codepoint) {
 				setGlyph(buffer.cur(0), font)
 				buffer.nextGlyph()
 			}
@@ -226,13 +228,15 @@ func (c *otNormalizeContext) decomposeMultiCharCluster(end int, shortCircuit boo
 		fmt.Printf("NORMALIZE - decompose multi char cluster at index %d\n", buffer.idx)
 	}
 
-	for i := buffer.idx; i < end; i++ {
+	// okage: the loops stop when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for i := buffer.idx; i < end && !buffer.inError; i++ {
 		if uniIsVariationSelector(buffer.Info[i].codepoint) {
 			c.handleVariationSelectorCluster(end)
 			return
 		}
 	}
-	for buffer.idx < end {
+	for buffer.idx < end && !buffer.inError {
 		c.decomposeCurrentCharacter(shortCircuit)
 	}
 }
@@ -290,7 +294,9 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 	count := len(buffer.Info)
 	buffer.idx = 0
 	var end int
-	for do := true; do; do = buffer.idx < count {
+	// okage: the loops stop when the buffer is in error, as in HarfBuzz
+	// 15.1.0 (D73).
+	for do := true; do; do = buffer.idx < count && !buffer.inError {
 		for end = buffer.idx + 1; end < count; end++ {
 			if buffer.Info[end].isUnicodeMark() {
 				break
@@ -312,13 +318,15 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 					break
 				}
 			}
-			buffer.nextGlyphs(i - buffer.idx)
+			if !buffer.nextGlyphs(i - buffer.idx) {
+				break
+			}
 		}
-		for buffer.idx < end {
+		for buffer.idx < end && !buffer.inError {
 			c.decomposeCurrentCharacter(mightShortCircuit)
 		}
 
-		if buffer.idx == count {
+		if buffer.idx == count || buffer.inError {
 			break
 		}
 
@@ -386,7 +394,7 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 
 	/* Third round, recompose */
 
-	if !allSimple &&
+	if !allSimple && !buffer.inError &&
 		(mode == nmComposedDiacritics ||
 			mode == nmComposedDiacriticsNoShortCircuit) {
 
@@ -416,7 +424,9 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 					if ok { // And the font has glyph for the composite.
 						glyph, ok := font.face.NominalGlyph(composed) /* Composes. */
 						if ok {
-							buffer.nextGlyph() /* Copy to out-buffer. */
+							if !buffer.nextGlyph() { /* Copy to out-buffer. */
+								break
+							}
 							buffer.mergeOutClusters(starter, len(buffer.outInfo))
 							buffer.outInfo = buffer.outInfo[:len(buffer.outInfo)-1] // remove the second composable.
 							/* Modify starter and carry on. */
@@ -430,7 +440,9 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 			}
 
 			/* Blocked, or doesn't compose. */
-			buffer.nextGlyph()
+			if !buffer.nextGlyph() {
+				break
+			}
 
 			if buffer.prev().getModifiedCombiningClass() == 0 {
 				starter = len(buffer.outInfo) - 1

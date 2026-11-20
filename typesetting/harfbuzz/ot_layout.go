@@ -69,10 +69,10 @@ func (c *otApplyContext) applyString(proxy otProxyMeta, accel *otLayoutLookupAcc
 func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 	buffer := c.buffer
 	ret := false
-	// okage: stop when the buffer has no operations left, as HarfBuzz stops
-	// when buffer->successful is false. A context lookup can then apply
-	// without a move of buffer.idx, and the loop did not end (D73).
-	for buffer.maxOps >= 0 {
+	// okage: stop when the buffer is in error, as HarfBuzz stops when
+	// buffer->successful is false. A context lookup can then apply without
+	// a move of buffer.idx, and the loop did not end (D73).
+	for !buffer.inError {
 		// nested lookups may reallocate buffer.Info, so read it again on every pass
 		info := buffer.Info
 		j := buffer.idx
@@ -82,8 +82,8 @@ func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 				c.checkGlyphProperty(&info[j], c.lookupProps)) {
 			j++
 		}
-		if j > buffer.idx {
-			buffer.nextGlyphs(j - buffer.idx)
+		if j > buffer.idx && !buffer.nextGlyphs(j-buffer.idx) {
+			break
 		}
 		if buffer.idx >= len(info) {
 			break
@@ -154,10 +154,9 @@ func (m *otMap) apply(proxy otProxy, plan *otShapePlan, font *Font, buffer *Buff
 				c.random = lookup.random
 				c.perSyllable = lookup.perSyllable
 
-				// pathological cases
-				if len(c.buffer.Info) > c.buffer.maxLen {
-					return
-				}
+				// okage: HarfBuzz 15.1.0 does not compare the length with
+				// maxLen here. The buffer is in error when it must grow past
+				// maxLen, and the lookups then stop (D73).
 				c.applyString(proxy.otProxyMeta, accel)
 			}
 
@@ -351,11 +350,24 @@ func getFeatureLookupsWithVar(table *font.Layout, featureIndex uint16, variation
 // trigger a substitution on the given glyph sequence.
 // zeroContext indicating whether substitutions should be context-free.
 func otLayoutLookupWouldSubstitute(font *Font, lookupIndex uint16, glyphs []GID, zeroContext bool) bool {
+	return otLayoutLookupWouldSubstituteWithBuffer(font, lookupIndex, glyphs, zeroContext, nil)
+}
+
+// otLayoutLookupWouldSubstituteWithBuffer is otLayoutLookupWouldSubstitute
+// that takes the operations of the test from buffer, when buffer is not
+// nil. It is false when the buffer is in error.
+//
+// okage: hb_ot_layout_lookup_would_substitute_with_buffer of HarfBuzz
+// 15.1.0 (D73).
+func otLayoutLookupWouldSubstituteWithBuffer(font *Font, lookupIndex uint16, glyphs []GID, zeroContext bool, buffer *Buffer) bool {
+	if buffer != nil && buffer.inError {
+		return false
+	}
 	gsub := font.face.GSUB
 	if int(lookupIndex) >= len(gsub.Lookups) {
 		return false
 	}
-	c := wouldApplyContext{glyphs, nil, zeroContext}
+	c := wouldApplyContext{glyphs: glyphs, zeroContext: zeroContext, buffer: buffer}
 
 	l := lookupGSUB(gsub.Lookups[lookupIndex])
 	return l.wouldApply(&c, &font.gsubAccels[lookupIndex])

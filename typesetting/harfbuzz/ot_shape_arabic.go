@@ -578,6 +578,11 @@ func (cs *complexShaperArabic) postprocessGlyphs(plan *otShapePlan, buffer *Buff
 		}
 
 		if step == MEASURE { // enlarge
+			// okage: the stretch stops when the arrays cannot grow, as in
+			// HarfBuzz 15.1.0 (D73).
+			if !buffer.ensure(originCount + extraGlyphsNeeded) {
+				break
+			}
 			buffer.Info = append(buffer.Info, make([]GlyphInfo, extraGlyphsNeeded)...)
 			buffer.Pos = append(buffer.Pos, make([]GlyphPosition, extraGlyphsNeeded)...)
 		}

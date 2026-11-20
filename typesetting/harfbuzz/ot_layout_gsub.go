@@ -45,6 +45,11 @@ func (l lookupGSUB) wouldApply(ctx *wouldApplyContext, accel *otLayoutLookupAcce
 	if !accel.digest.mayHave(gID(ctx.glyphs[0])) {
 		return false
 	}
+	// okage: the lookup takes one operation, and one for each subtable, as
+	// in HarfBuzz 15.1.0 (D73).
+	if !ctx.chargeOps(1 + len(l.Subtables)) {
+		return false
+	}
 	// dispatch on subtables
 	for _, table := range l.Subtables {
 		if ctx.wouldApplyGSUB(table) {
@@ -84,17 +89,28 @@ func matchesLigature(l tables.Ligature, glyphsFromSecond []GID) bool {
 
 // return `true` is we should apply this lookup to the glyphs in `c`,
 // which are assumed to be non empty
+//
+// okage: as in HarfBuzz 15.1.0, a context or a chained context of format 2
+// or 3 does not test the coverage of the first glyph. Format 2 takes the
+// rule set of the class of the first glyph, and format 3 matches from the
+// second glyph on. go-text required the coverage for each format. The
+// maintainers decided on 2026-11-20 that okage follows HarfBuzz (D73).
 func (c *wouldApplyContext) wouldApplyGSUB(table tables.GSUBLookup) bool {
-	index, ok := table.Cov().Index(gID(c.glyphs[0]))
-	if !ok {
-		return false
-	}
+	index, covered := table.Cov().Index(gID(c.glyphs[0]))
 	switch data := table.(type) {
 	case tables.SingleSubs, tables.MultipleSubs, tables.AlternateSubs, tables.ReverseChainSingleSubs:
-		return len(c.glyphs) == 1
+		return covered && len(c.glyphs) == 1
 
 	case tables.LigatureSubs:
+		if !covered {
+			return false
+		}
 		ligatureSet := data.LigatureSets[index].Ligatures
+		// okage: a ligature set takes one operation for each ligature, as
+		// in HarfBuzz 15.1.0 (D73).
+		if !c.chargeOps(len(ligatureSet)) {
+			return false
+		}
 		glyphsFromSecond := c.glyphs[1:]
 		for _, ligature := range ligatureSet {
 			if matchesLigature(ligature, glyphsFromSecond) {
@@ -106,7 +122,7 @@ func (c *wouldApplyContext) wouldApplyGSUB(table tables.GSUBLookup) bool {
 	case tables.ContextualSubs:
 		switch inner := data.Data.(type) {
 		case tables.ContextualSubs1:
-			return c.wouldApplyLookupContext1(tables.SequenceContextFormat1(inner), index)
+			return covered && c.wouldApplyLookupContext1(tables.SequenceContextFormat1(inner), index)
 		case tables.ContextualSubs2:
 			return c.wouldApplyLookupContext2(tables.SequenceContextFormat2(inner), index, c.glyphs[0])
 		case tables.ContextualSubs3:
@@ -116,7 +132,7 @@ func (c *wouldApplyContext) wouldApplyGSUB(table tables.GSUBLookup) bool {
 	case tables.ChainedContextualSubs:
 		switch inner := data.Data.(type) {
 		case tables.ChainedContextualSubs1:
-			return c.wouldApplyLookupChainedContext1(tables.ChainedSequenceContextFormat1(inner), index)
+			return covered && c.wouldApplyLookupChainedContext1(tables.ChainedSequenceContextFormat1(inner), index)
 		case tables.ChainedContextualSubs2:
 			return c.wouldApplyLookupChainedContext2(tables.ChainedSequenceContextFormat2(inner), index, c.glyphs[0])
 		case tables.ChainedContextualSubs3:
