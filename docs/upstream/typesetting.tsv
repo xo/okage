@@ -92,7 +92,7 @@ b62a7ae27ed91bb5a690134bdddaae92a1fc53e9	2026-10-26	not-applicable		(perf) updat
 c7c9aace196f657a9cf232e5e8416217dfacb39d	2026-10-26	ported		[GPOS] Apply mark-attachment cross-direction offsets immediately. It changes harfbuzz
 29578868ce4b6c2f6b20657ed9c7b4382be41da3	2026-10-26	ported		[GPOS] Attach mark to first component of MultipleSubst in MarkLigPos. It changes harfbuzz
 a4154543cbbd95694f12ba39bf15aaadda5746f6	2026-10-26	ported		[ot] Preserve pair-positioning and ligature concat hazards. It changes harfbuzz
-116817b1dfc042e3b02df30c8ef59b0c595892e7	2026-10-26	pending		[arabic-pua] Fix mapping for isolated lam alef maksura ligature. It changes font, harfbuzz
+116817b1dfc042e3b02df30c8ef59b0c595892e7	2026-10-26	ported		[arabic-pua] Fix mapping for isolated lam alef maksura ligature. It changes font, harfbuzz
 a2c0a64fb31522646bdb556a37158e733453b14b	2026-10-26	ported		[aat] Fix insertion at end of text. It changes harfbuzz. Applied out of order for the panics, loops and missing bounds of malformed input (D67).
 62eeae029b85febee7c7942ad6a4a65dcf01a339	2026-10-26	pending		[aat] Mark in-place deleted glyph replacements Contextual and non-contextual AAT subtables replace glyphs in place. When such a replacement produced the AAT deleted glyph, we changed only the glyph ID and did not set the AAT-deleted metadata that later cleanup uses to remove deleted glyphs from the buffer.. It changes harfbuzz
 23bac226327ffccee183c3f36d3dee3c1e245aba	2026-10-26	pending		[aat] remove redundant comparison. It changes harfbuzz
