@@ -555,20 +555,21 @@ func (p *highpPipeline) clear() {
 	p.nextStage()
 }
 
-// blendFn applies f to each channel, as the macro blend_fn! of tiny-skia
-// src/pipeline/highp.rs does, and calls the next stage.
-func (p *highpPipeline) blendFn(f func(s, d, sa, da wide.F32x8) wide.F32x8) {
-	p.r = f(p.r, p.dr, p.a, p.da)
-	p.g = f(p.g, p.dg, p.a, p.da)
-	p.b = f(p.b, p.db, p.a, p.da)
-	p.a = f(p.a, p.da, p.a, p.da)
-
-	p.nextStage()
-}
+// blendFn is the macro blend_fn! of tiny-skia src/pipeline/highp.rs. A
+// stage of the macro applies its function to each channel, with the alpha
+// of the source and of the destination, and calls the next stage.
+//
+// Port (D35): each stage of the macro calls its function itself, and does
+// not pass it to a helper as a function value. The Go compiler then inlines
+// most of the functions, and the stage copies no channel for a call. The
+// operations are the same, so the bits are the same.
 
 // sourceAtop is the stage source_atop of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) sourceAtop() { p.blendFn(sourceAtopHighp) }
+func (p *highpPipeline) sourceAtop() {
+	p.r, p.g, p.b, p.a = sourceAtopHighp(p.r, p.dr, p.a, p.da), sourceAtopHighp(p.g, p.dg, p.a, p.da), sourceAtopHighp(p.b, p.db, p.a, p.da), sourceAtopHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // sourceAtopHighp is the function of the stage source_atop in tiny-skia
 // src/pipeline/highp.rs.
@@ -583,7 +584,10 @@ func sourceAtopHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // destinationAtop is the stage destination_atop of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) destinationAtop() { p.blendFn(destinationAtopHighp) }
+func (p *highpPipeline) destinationAtop() {
+	p.r, p.g, p.b, p.a = destinationAtopHighp(p.r, p.dr, p.a, p.da), destinationAtopHighp(p.g, p.dg, p.a, p.da), destinationAtopHighp(p.b, p.db, p.a, p.da), destinationAtopHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // destinationAtopHighp is the function of the stage destination_atop in
 // tiny-skia src/pipeline/highp.rs.
@@ -598,7 +602,10 @@ func destinationAtopHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // sourceIn is the stage source_in of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) sourceIn() { p.blendFn(sourceInHighp) }
+func (p *highpPipeline) sourceIn() {
+	p.r, p.g, p.b, p.a = sourceInHighp(p.r, p.dr, p.a, p.da), sourceInHighp(p.g, p.dg, p.a, p.da), sourceInHighp(p.b, p.db, p.a, p.da), sourceInHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // sourceInHighp is the function of the stage source_in in tiny-skia
 // src/pipeline/highp.rs.
@@ -613,7 +620,10 @@ func sourceInHighp(s, _, _, da wide.F32x8) wide.F32x8 {
 
 // destinationIn is the stage destination_in of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) destinationIn() { p.blendFn(destinationInHighp) }
+func (p *highpPipeline) destinationIn() {
+	p.r, p.g, p.b, p.a = destinationInHighp(p.r, p.dr, p.a, p.da), destinationInHighp(p.g, p.dg, p.a, p.da), destinationInHighp(p.b, p.db, p.a, p.da), destinationInHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // destinationInHighp is the function of the stage destination_in in
 // tiny-skia src/pipeline/highp.rs.
@@ -628,7 +638,10 @@ func destinationInHighp(_, d, sa, _ wide.F32x8) wide.F32x8 {
 
 // sourceOut is the stage source_out of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) sourceOut() { p.blendFn(sourceOutHighp) }
+func (p *highpPipeline) sourceOut() {
+	p.r, p.g, p.b, p.a = sourceOutHighp(p.r, p.dr, p.a, p.da), sourceOutHighp(p.g, p.dg, p.a, p.da), sourceOutHighp(p.b, p.db, p.a, p.da), sourceOutHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // sourceOutHighp is the function of the stage source_out in tiny-skia
 // src/pipeline/highp.rs.
@@ -643,7 +656,10 @@ func sourceOutHighp(s, _, _, da wide.F32x8) wide.F32x8 {
 
 // destinationOut is the stage destination_out of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) destinationOut() { p.blendFn(destinationOutHighp) }
+func (p *highpPipeline) destinationOut() {
+	p.r, p.g, p.b, p.a = destinationOutHighp(p.r, p.dr, p.a, p.da), destinationOutHighp(p.g, p.dg, p.a, p.da), destinationOutHighp(p.b, p.db, p.a, p.da), destinationOutHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // destinationOutHighp is the function of the stage destination_out in
 // tiny-skia src/pipeline/highp.rs.
@@ -658,7 +674,10 @@ func destinationOutHighp(_, d, sa, _ wide.F32x8) wide.F32x8 {
 
 // sourceOver is the stage source_over of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) sourceOver() { p.blendFn(sourceOverHighp) }
+func (p *highpPipeline) sourceOver() {
+	p.r, p.g, p.b, p.a = sourceOverHighp(p.r, p.dr, p.a, p.da), sourceOverHighp(p.g, p.dg, p.a, p.da), sourceOverHighp(p.b, p.db, p.a, p.da), sourceOverHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // sourceOverHighp is the function of the stage source_over in tiny-skia
 // src/pipeline/highp.rs.
@@ -673,7 +692,10 @@ func sourceOverHighp(s, d, sa, _ wide.F32x8) wide.F32x8 {
 
 // destinationOver is the stage destination_over of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) destinationOver() { p.blendFn(destinationOverHighp) }
+func (p *highpPipeline) destinationOver() {
+	p.r, p.g, p.b, p.a = destinationOverHighp(p.r, p.dr, p.a, p.da), destinationOverHighp(p.g, p.dg, p.a, p.da), destinationOverHighp(p.b, p.db, p.a, p.da), destinationOverHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // destinationOverHighp is the function of the stage destination_over in
 // tiny-skia src/pipeline/highp.rs.
@@ -688,7 +710,10 @@ func destinationOverHighp(s, d, _, da wide.F32x8) wide.F32x8 {
 
 // modulate is the stage modulate of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) modulate() { p.blendFn(modulateHighp) }
+func (p *highpPipeline) modulate() {
+	p.r, p.g, p.b, p.a = modulateHighp(p.r, p.dr, p.a, p.da), modulateHighp(p.g, p.dg, p.a, p.da), modulateHighp(p.b, p.db, p.a, p.da), modulateHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // modulateHighp is the function of the stage modulate in tiny-skia
 // src/pipeline/highp.rs.
@@ -703,7 +728,10 @@ func modulateHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
 
 // multiply is the stage multiply of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) multiply() { p.blendFn(multiplyHighp) }
+func (p *highpPipeline) multiply() {
+	p.r, p.g, p.b, p.a = multiplyHighp(p.r, p.dr, p.a, p.da), multiplyHighp(p.g, p.dg, p.a, p.da), multiplyHighp(p.b, p.db, p.a, p.da), multiplyHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // multiplyHighp is the function of the stage multiply in tiny-skia
 // src/pipeline/highp.rs.
@@ -718,7 +746,10 @@ func multiplyHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // screen is the stage screen of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) screen() { p.blendFn(screenHighp) }
+func (p *highpPipeline) screen() {
+	p.r, p.g, p.b, p.a = screenHighp(p.r, p.dr, p.a, p.da), screenHighp(p.g, p.dg, p.a, p.da), screenHighp(p.b, p.db, p.a, p.da), screenHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // screenHighp is the function of the stage screen in tiny-skia
 // src/pipeline/highp.rs.
@@ -732,7 +763,10 @@ func screenHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
 }
 
 // xor is the stage xor of blend_fn! in tiny-skia src/pipeline/highp.rs.
-func (p *highpPipeline) xor() { p.blendFn(xorHighp) }
+func (p *highpPipeline) xor() {
+	p.r, p.g, p.b, p.a = xorHighp(p.r, p.dr, p.a, p.da), xorHighp(p.g, p.dg, p.a, p.da), xorHighp(p.b, p.db, p.a, p.da), xorHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // xorHighp is the function of the stage xor in tiny-skia
 // src/pipeline/highp.rs.
@@ -746,7 +780,10 @@ func xorHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 }
 
 // plus is the stage plus of blend_fn! in tiny-skia src/pipeline/highp.rs.
-func (p *highpPipeline) plus() { p.blendFn(plusHighp) }
+func (p *highpPipeline) plus() {
+	p.r, p.g, p.b, p.a = plusHighp(p.r, p.dr, p.a, p.da), plusHighp(p.g, p.dg, p.a, p.da), plusHighp(p.b, p.db, p.a, p.da), plusHighp(p.a, p.da, p.a, p.da)
+	p.nextStage()
+}
 
 // plusHighp is the function of the stage plus in tiny-skia
 // src/pipeline/highp.rs.
@@ -759,25 +796,29 @@ func plusHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
 	return r
 }
 
-// blendFn2 applies f to each color channel and source_over to the alpha, as
-// the macro blend_fn2! of tiny-skia src/pipeline/highp.rs does, and calls the
-// next stage.
-func (p *highpPipeline) blendFn2(f func(s, d, sa, da wide.F32x8) wide.F32x8) {
-	// The same logic applied to color, and source_over for alpha.
-	p.r = f(p.r, p.dr, p.a, p.da)
-	p.g = f(p.g, p.dg, p.a, p.da)
-	p.b = f(p.b, p.db, p.a, p.da)
+// blendFn2 is the macro blend_fn2! of tiny-skia src/pipeline/highp.rs. A
+// stage of the macro applies its function to each color channel, and
+// source_over to the alpha, and calls the next stage.
+//
+// Port (D35): each stage calls its function itself, as the stages of
+// blend_fn! do.
+
+// sourceOverAlpha is the alpha of blend_fn2! in tiny-skia
+// src/pipeline/highp.rs: source_over on the alpha.
+func (p *highpPipeline) sourceOverAlpha() {
 	// Port (D33): one loop on the lanes.
 	for i := range p.a {
 		p.a[i] = madHighp(p.da[i], invHighp(p.a[i]), p.a[i])
 	}
-
-	p.nextStage()
 }
 
 // darken is the stage darken of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) darken() { p.blendFn2(darkenHighp) }
+func (p *highpPipeline) darken() {
+	p.r, p.g, p.b = darkenHighp(p.r, p.dr, p.a, p.da), darkenHighp(p.g, p.dg, p.a, p.da), darkenHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // darkenHighp is the function of the stage darken in tiny-skia
 // src/pipeline/highp.rs.
@@ -792,7 +833,11 @@ func darkenHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // lighten is the stage lighten of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) lighten() { p.blendFn2(lightenHighp) }
+func (p *highpPipeline) lighten() {
+	p.r, p.g, p.b = lightenHighp(p.r, p.dr, p.a, p.da), lightenHighp(p.g, p.dg, p.a, p.da), lightenHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // lightenHighp is the function of the stage lighten in tiny-skia
 // src/pipeline/highp.rs.
@@ -807,7 +852,11 @@ func lightenHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // difference is the stage difference of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) difference() { p.blendFn2(differenceHighp) }
+func (p *highpPipeline) difference() {
+	p.r, p.g, p.b = differenceHighp(p.r, p.dr, p.a, p.da), differenceHighp(p.g, p.dg, p.a, p.da), differenceHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // differenceHighp is the function of the stage difference in tiny-skia
 // src/pipeline/highp.rs.
@@ -822,7 +871,11 @@ func differenceHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // exclusion is the stage exclusion of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) exclusion() { p.blendFn2(exclusionHighp) }
+func (p *highpPipeline) exclusion() {
+	p.r, p.g, p.b = exclusionHighp(p.r, p.dr, p.a, p.da), exclusionHighp(p.g, p.dg, p.a, p.da), exclusionHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // exclusionHighp is the function of the stage exclusion in tiny-skia
 // src/pipeline/highp.rs.
@@ -837,7 +890,11 @@ func exclusionHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
 
 // colorBurn is the stage color_burn of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) colorBurn() { p.blendFn2(colorBurnHighp) }
+func (p *highpPipeline) colorBurn() {
+	p.r, p.g, p.b = colorBurnHighp(p.r, p.dr, p.a, p.da), colorBurnHighp(p.g, p.dg, p.a, p.da), colorBurnHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // colorBurnHighp is the function of the stage color_burn in tiny-skia
 // src/pipeline/highp.rs.
@@ -873,7 +930,11 @@ func colorBurnHighpLane(s, d, sa, da float32) float32 {
 
 // colorDodge is the stage color_dodge of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) colorDodge() { p.blendFn2(colorDodgeHighp) }
+func (p *highpPipeline) colorDodge() {
+	p.r, p.g, p.b = colorDodgeHighp(p.r, p.dr, p.a, p.da), colorDodgeHighp(p.g, p.dg, p.a, p.da), colorDodgeHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // colorDodgeHighp is the function of the stage color_dodge in tiny-skia
 // src/pipeline/highp.rs.
@@ -909,7 +970,11 @@ func colorDodgeHighpLane(s, d, sa, da float32) float32 {
 
 // hardLight is the stage hard_light of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) hardLight() { p.blendFn2(hardLightHighp) }
+func (p *highpPipeline) hardLight() {
+	p.r, p.g, p.b = hardLightHighp(p.r, p.dr, p.a, p.da), hardLightHighp(p.g, p.dg, p.a, p.da), hardLightHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // hardLightHighp is the function of the stage hard_light in tiny-skia
 // src/pipeline/highp.rs.
@@ -936,7 +1001,11 @@ func hardLightHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // overlay is the stage overlay of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) overlay() { p.blendFn2(overlayHighp) }
+func (p *highpPipeline) overlay() {
+	p.r, p.g, p.b = overlayHighp(p.r, p.dr, p.a, p.da), overlayHighp(p.g, p.dg, p.a, p.da), overlayHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // overlayHighp is the function of the stage overlay in tiny-skia
 // src/pipeline/highp.rs.
@@ -963,7 +1032,11 @@ func overlayHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 
 // softLight is the stage soft_light of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) softLight() { p.blendFn2(softLightHighp) }
+func (p *highpPipeline) softLight() {
+	p.r, p.g, p.b = softLightHighp(p.r, p.dr, p.a, p.da), softLightHighp(p.g, p.dg, p.a, p.da), softLightHighp(p.b, p.db, p.a, p.da)
+	p.sourceOverAlpha()
+	p.nextStage()
+}
 
 // softLightHighp is the function of the stage soft_light in tiny-skia
 // src/pipeline/highp.rs.
@@ -1420,6 +1493,13 @@ func bicubicFar(t float32) float32 {
 }
 
 // sampler2x2 is sampler_2x2 in tiny-skia src/pipeline/highp.rs.
+//
+// Port (D33): one loop on the lanes. Upstream samples the four pixels with
+// sample, at x = cx - 0.5 and x + 1.0, and y = cy - 0.5 and y + 1.0, and
+// adds each one with w = wx[i] * wy[j], as r = mad(w, rr, r), the same for g,
+// b and a. Port (D35): sampleCtx tiles and clamps each coordinate once for
+// its column or its row of pixels, not once for each pixel. Each pixel gets
+// the same operations in the same order, so the bits are the same.
 func sampler2x2(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
@@ -1427,37 +1507,31 @@ func sampler2x2(
 	wx, wy *[2]wide.F32x8,
 	r, g, b, a *wide.F32x8,
 ) {
-	*r = wide.F32x8{}
-	*g = wide.F32x8{}
-	*b = wide.F32x8{}
-	*a = wide.F32x8{}
-
-	one := wide.SplatF32x8(1.0)
+	s := newSampleCtx(pixmap, ctx)
 	const start = -0.5
-	y := cy.Add(wide.SplatF32x8(start))
-	for j := range 2 {
-		x := cx.Add(wide.SplatF32x8(start))
+	for l := range highpStageWidth {
+		var xs, ys [2]int32
+		x, y := cx[l]+start, cy[l]+start
 		for i := range 2 {
-			var rr, gg, bb, aa wide.F32x8
-			sample(pixmap, ctx, x, y, &rr, &gg, &bb, &aa)
-
-			// Port (D33): one loop on the lanes. Upstream: w = wx[i] * wy[j],
-			// then r = mad(w, rr, r), the same for g, b and a, and x + 1.0.
-			for l := range highpStageWidth {
+			xs[i], ys[i] = s.column(x), s.row(y)
+			x += 1.0
+			y += 1.0
+		}
+		var rl, gl, bl, al float32
+		for j := range 2 {
+			for i := range 2 {
 				w := float32(wx[i][l] * wy[j][l])
-				r[l] = madHighp(w, rr[l], r[l])
-				g[l] = madHighp(w, gg[l], g[l])
-				b[l] = madHighp(w, bb[l], b[l])
-				a[l] = madHighp(w, aa[l], a[l])
-				x[l] += 1.0
+				rl, gl, bl, al = s.add(xs[i], ys[j], w, rl, gl, bl, al)
 			}
 		}
-
-		y = y.Add(one)
+		r[l], g[l], b[l], a[l] = rl, gl, bl, al
 	}
 }
 
 // sampler4x4 is sampler_4x4 in tiny-skia src/pipeline/highp.rs.
+//
+// Port (D33, D35): one loop on the lanes, as sampler2x2 does, with the
+// sixteen pixels from cx - 1.5 and cy - 1.5.
 func sampler4x4(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
@@ -1465,67 +1539,90 @@ func sampler4x4(
 	wx, wy *[4]wide.F32x8,
 	r, g, b, a *wide.F32x8,
 ) {
-	*r = wide.F32x8{}
-	*g = wide.F32x8{}
-	*b = wide.F32x8{}
-	*a = wide.F32x8{}
-
-	one := wide.SplatF32x8(1.0)
+	s := newSampleCtx(pixmap, ctx)
 	const start = -1.5
-	y := cy.Add(wide.SplatF32x8(start))
-	for j := range 4 {
-		x := cx.Add(wide.SplatF32x8(start))
+	for l := range highpStageWidth {
+		var xs, ys [4]int32
+		x, y := cx[l]+start, cy[l]+start
 		for i := range 4 {
-			var rr, gg, bb, aa wide.F32x8
-			sample(pixmap, ctx, x, y, &rr, &gg, &bb, &aa)
-
-			// Port (D33): one loop on the lanes. Upstream: w = wx[i] * wy[j],
-			// then r = mad(w, rr, r), the same for g, b and a, and x + 1.0.
-			for l := range highpStageWidth {
+			xs[i], ys[i] = s.column(x), s.row(y)
+			x += 1.0
+			y += 1.0
+		}
+		var rl, gl, bl, al float32
+		for j := range 4 {
+			for i := range 4 {
 				w := float32(wx[i][l] * wy[j][l])
-				r[l] = madHighp(w, rr[l], r[l])
-				g[l] = madHighp(w, gg[l], g[l])
-				b[l] = madHighp(w, bb[l], b[l])
-				a[l] = madHighp(w, aa[l], a[l])
-				x[l] += 1.0
+				rl, gl, bl, al = s.add(xs[i], ys[j], w, rl, gl, bl, al)
 			}
 		}
-
-		y = y.Add(one)
+		r[l], g[l], b[l], a[l] = rl, gl, bl, al
 	}
 }
 
-// sample is sample in tiny-skia src/pipeline/highp.rs.
-func sample(
-	pixmap PixmapRef, ctx *samplerCtx, x, y wide.F32x8,
-	r, g, b, a *wide.F32x8,
-) {
-	// Port (D33): one loop on the lanes. For each lane, it tiles x and y,
-	// computes the index as gather_ix does, and loads the pixel as gather
-	// and load_8888 do.
+// sampleCtx holds what sample of tiny-skia src/pipeline/highp.rs reads for
+// each lane: the pixels, the sizes and the spread mode. It ports no upstream
+// type (D35).
+type sampleCtx struct {
+	pixels        []byte
+	width, height float32
+	w, h          float32
+	invW, invH    float32
+	stride        int32
+	mode          SpreadMode
+}
+
+// newSampleCtx returns the sampleCtx of pixmap and ctx.
+func newSampleCtx(pixmap PixmapRef, ctx *samplerCtx) sampleCtx {
 	width := float32(pixmap.Width())
 	height := float32(pixmap.Height())
-	// Exclusive -> inclusive.
-	w := ulpSub(width)
-	h := ulpSub(height)
-	stride := int32(pixmap.Width())
-	pixels := pixmap.Data()
-	const factor float32 = 1.0 / 255.0
-	for i := range highpStageWidth {
-		xi := tile(x[i], ctx.spreadMode, width, ctx.invWidth)
-		yi := tile(y[i], ctx.spreadMode, height, ctx.invHeight)
-		j := int(gatherIxLane(xi, yi, w, h, stride)) * BytesPerPixel
-		px := (*[BytesPerPixel]byte)(pixels[j : j+BytesPerPixel])
-		r[i] = float32(float32(px[0]) * factor)
-		g[i] = float32(float32(px[1]) * factor)
-		b[i] = float32(float32(px[2]) * factor)
-		a[i] = float32(float32(px[3]) * factor)
+	return sampleCtx{
+		pixels: pixmap.Data(),
+		width:  width,
+		height: height,
+		// Exclusive -> inclusive.
+		w:      ulpSub(width),
+		h:      ulpSub(height),
+		invW:   ctx.invWidth,
+		invH:   ctx.invHeight,
+		stride: int32(pixmap.Width()),
+		mode:   ctx.spreadMode,
 	}
+}
+
+// column returns the column of the pixel at x, as sample tiles x and
+// gather_ix clamps and truncates it.
+func (s *sampleCtx) column(x float32) int32 {
+	if s.mode != SpreadModePad {
+		x = tile(x, s.mode, s.width, s.invW)
+	}
+	return wide.TruncI32(wide.LaneMin(wide.LaneMax(x, 0), s.w))
+}
+
+// row returns the row of the pixel at y, as column does for x.
+func (s *sampleCtx) row(y float32) int32 {
+	if s.mode != SpreadModePad {
+		y = tile(y, s.mode, s.height, s.invH)
+	}
+	return wide.TruncI32(wide.LaneMin(wide.LaneMax(y, 0), s.h))
+}
+
+// add loads the pixel at column x and row y, as gather and load_8888 do, and
+// adds it with the weight w to r, g, b and a, as mad(w, rr, r) does.
+func (s *sampleCtx) add(x, y int32, w, r, g, b, a float32) (float32, float32, float32, float32) {
+	const factor float32 = 1.0 / 255.0
+	j := int(uint32(y*s.stride+x)) * BytesPerPixel
+	px := (*[BytesPerPixel]byte)(s.pixels[j : j+BytesPerPixel])
+	r = madHighp(w, float32(float32(px[0])*factor), r)
+	g = madHighp(w, float32(float32(px[1])*factor), g)
+	b = madHighp(w, float32(float32(px[2])*factor), b)
+	a = madHighp(w, float32(float32(px[3])*factor), a)
+	return r, g, b, a
 }
 
 // tile is tile in tiny-skia src/pipeline/highp.rs.
 //
-// Port (D33): it works on one lane, because only the loop of sample calls it.
+// Port (D33): it works on one lane, because only sampleCtx calls it.
 func tile(v float32, mode SpreadMode, limit, invLimit float32) float32 {
 	switch mode {
 	case SpreadModeRepeat:
@@ -2127,8 +2224,11 @@ func unnorm(v *wide.F32x8) wide.I32x8 {
 
 // unnormLane is unnorm on one lane (D33). Upstream:
 // (v.max(0).min(1.0) * 255.0).round_int().
+//
+// Port (D35): the value to round is NaN or from -0 to 255, so
+// LaneRoundIntByte rounds it, with the result of LaneRoundInt.
 func unnormLane(v float32) int32 {
-	return wide.LaneRoundInt(float32(wide.LaneMin(wide.LaneMax(v, 0), 1.0) * 255.0))
+	return wide.LaneRoundIntByte(float32(wide.LaneMin(wide.LaneMax(v, 0), 1.0) * 255.0))
 }
 
 // invHighp is inv in tiny-skia src/pipeline/highp.rs.

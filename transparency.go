@@ -59,6 +59,10 @@ func MaskFromLuminance(pixmap PixmapRef, backdrop Color, opts ...Option) *Mask {
 // with the function sampled at the 256 values of a byte. table[i] is the
 // value of the function at i/255, times 255.
 func (m *Mask) ApplyTransfer(table *[256]uint8) {
+	// The rows that data does not hold are 0, and table[0] can be another
+	// value, so data first holds every row (D35).
+	m.dense()
+	m.own()
 	for i, v := range m.data {
 		m.data[i] = table[v]
 	}
@@ -159,6 +163,10 @@ func (m *PixmapMut) Knockout(element, backdrop PixmapRef, shape *Mask) {
 		(shape != nil && shape.Size() != size) {
 		warn(m.logger, "Knockout: the pixmaps and the mask must have the same size")
 		return
+	}
+	if shape != nil {
+		// The loop reads each row of the shape (D35).
+		shape.dense()
 	}
 	dst := m.data
 	ed := element.data

@@ -174,8 +174,10 @@ func (r PixmapRef) gather(index wide.U32x8) [highpStageWidth * BytesPerPixel]byt
 }
 
 // offset is SubPixmapMut::offset in tiny-skia src/pipeline/mod.rs.
+//
+// Port: data starts at the row top (D35).
 func (s *subPixmapMut) offset(dx, dy int) int {
-	return s.realWidth*dy + dx
+	return s.realWidth*(dy-s.top) + dx
 }
 
 // sliceAtXY is SubPixmapMut::slice_at_xy in tiny-skia src/pipeline/mod.rs.
@@ -239,14 +241,19 @@ func (c *aaMaskCtx) copyAtXY(dx, dy, tail int) [2]uint8 {
 }
 
 // maskCtx is MaskCtx in tiny-skia src/pipeline/mod.rs.
+//
+// Port: data starts at the row top (D35). top is an int32, so that the
+// type keeps its size and the channels of a pipeline keep their places in
+// memory.
 type maskCtx struct {
 	data      []byte
 	realWidth uint32
+	top       int32
 }
 
 // offset is MaskCtx::offset in tiny-skia src/pipeline/mod.rs.
 func (c *maskCtx) offset(dx, dy int) int {
-	return int(c.realWidth)*dy + dx
+	return int(c.realWidth)*(dy-int(c.top)) + dx
 }
 
 // context is Context in tiny-skia src/pipeline/mod.rs. It is the global

@@ -84,8 +84,12 @@ func (m *PixmapMut) drawPixmapAligned(
 	if o := path.NormalizedF32Clamped(paint.Opacity); o != path.NormalizedF32One {
 		opacity, scaled = o.Get(), true
 	}
+	// Port: the rows that the mask does not hold are 0, so their pixels
+	// keep the destination (D35).
 	var maskData []byte
 	if mask != nil {
+		mt, mb := mask.rows()
+		top, bottom = max(top, mt), min(bottom, mb)
 		maskData = mask.data
 	}
 
@@ -96,8 +100,8 @@ func (m *PixmapMut) drawPixmapAligned(
 		sy := min(max(row-oy, 0), sh-1)
 		srcRow := pixmap.data[sy*sw*BytesPerPixel : (sy+1)*sw*BytesPerPixel]
 		var maskRow []byte
-		if maskData != nil {
-			maskRow = maskData[row*dw : (row+1)*dw]
+		if mask != nil {
+			maskRow = maskData[(row-mask.top)*dw : (row-mask.top+1)*dw]
 		}
 		for start := left; start < right; start += highpStageWidth {
 			end := min(start+highpStageWidth, right)

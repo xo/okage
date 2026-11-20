@@ -35,5 +35,6 @@ A fill through a small clip of a large mask takes a time that depends on
 the clip, not on the page. In ivy the image of the spreadsheet went from
 1.3 s to 0.1 s for each page, and the form of PDF from 7.3 s to 3.1 s. The
 Rust oracle and the reference images of tiny-skia give the same bytes.
-`blitAntiH` and `blitMask` can skip the rows of 0 in the same way. The
-backlog keeps that item.
+`blitAntiH` and `blitMask` skip the rows of 0 in the same way since
+2026-11-20, under D35, with the same bytes. A `Mask` also holds only the
+rows that its paths cover, so a clip allocates less.

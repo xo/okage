@@ -161,3 +161,32 @@ func exhaustiveLanes(t *testing.T, name string, f func(x float32) (got, want uin
 	}
 	wg.Wait()
 }
+
+// TestRoundIntByteExhaustive checks that LaneRoundIntByte gives the result of
+// LaneRoundInt for each value from 0 to 255, for -0 and for NaN (D35).
+func TestRoundIntByteExhaustive(t *testing.T) {
+	for _, bits := range []uint32{0x80000000, 0x7fc00000, 0xffc00000, 0x7f800001, 0xff800001} {
+		x := math.Float32frombits(bits)
+		if got, want := LaneRoundIntByte(x), LaneRoundInt(x); got != want {
+			t.Errorf("LaneRoundIntByte of the bits %08x gives %d, want %d", bits, got, want)
+		}
+	}
+	last := uint64(math.Float32bits(255)) + 1
+	var bad atomic.Int64
+	var wg sync.WaitGroup
+	n := runtime.NumCPU()
+	step := last/uint64(n) + 1
+	for w := range n {
+		wg.Add(1)
+		go func(lo, hi uint64) {
+			defer wg.Done()
+			for i := lo; i < hi; i++ {
+				x := math.Float32frombits(uint32(i))
+				if got, want := LaneRoundIntByte(x), LaneRoundInt(x); got != want && bad.Add(1) < 5 {
+					t.Errorf("LaneRoundIntByte of the bits %08x gives %d, want %d", uint32(i), got, want)
+				}
+			}
+		}(uint64(w)*step, min(uint64(w+1)*step, last))
+	}
+	wg.Wait()
+}

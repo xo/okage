@@ -265,6 +265,19 @@ func LaneRoundInt(x float32) int32 {
 	return laneRoundIntSlow(x)
 }
 
+// LaneRoundIntByte is LaneRoundInt for a lane that is NaN or from -0 to
+// 255, as a channel of a pixel before a store is. It ports no upstream
+// function (D35). Such a value plus 2^23 rounds half to even to a whole
+// number, because the step between two floats from 2^23 to 2^24 is 1, and
+// the low bits of the sum are that number. NaN gives 0, as in LaneRoundInt.
+// TestRoundIntByteExhaustive checks each such value.
+func LaneRoundIntByte(x float32) int32 {
+	if x != x {
+		return 0
+	}
+	return int32(math.Float32bits(x+0x1p23) - 0x4b000000)
+}
+
 // laneRoundIntSlow is the path of LaneRoundInt for NaN and for a value out of
 // the range of i32. It is a function of its own, so that the Go compiler can
 // inline LaneRoundInt.

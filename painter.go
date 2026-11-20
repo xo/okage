@@ -787,6 +787,10 @@ func (m *PixmapMut) ApplyMask(mask *Mask) {
 		return
 	}
 
+	// Port: the mask first holds every row, so that each row of the pixmap
+	// reads it (D35).
+	mask.dense()
+
 	// Just a dummy.
 	pixmapSrc := dummyPixmapSrc()
 

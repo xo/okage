@@ -786,11 +786,18 @@ func i32ToAlpha(a int32) uint8 {
 }
 
 // rectClipBlitter is RectClipBlitter in tiny-skia src/scan/hairline_aa.rs.
+//
+// Port: aa and runs hold the runs of blitAntiH2 and blitAntiV2, which
+// upstream makes on the stack. A slice that goes to the blitter through an
+// interface escapes to the heap in Go, so it lives in the blitter, which
+// makes no allocation for each pixel (D35).
 type rectClipBlitter struct {
 	unreachableBlitter
 
 	blitter blitter
 	clip    screenIntRect
+	aa      [2]alphaU8
+	runs    [3]alphaRun
 }
 
 // yInRect is y_in_rect, an inner function of RectClipBlitter::blit_anti_h in
@@ -864,20 +871,24 @@ func (rc *rectClipBlitter) blitV(x, y uint32, height lengthU32, alpha alphaU8) {
 // blitAntiH2 is the Blitter impl of RectClipBlitter in tiny-skia
 // src/scan/hairline_aa.rs.
 func (rc *rectClipBlitter) blitAntiH2(x, y uint32, alpha0, alpha1 alphaU8) {
+	rc.aa = [2]alphaU8{alpha0, alpha1}
+	rc.runs = [3]alphaRun{1, 1, 0}
 	rc.blitAntiH(
 		x,
 		y,
-		[]alphaU8{alpha0, alpha1},
-		[]alphaRun{1, 1, 0},
+		rc.aa[:],
+		rc.runs[:],
 	)
 }
 
 // blitAntiV2 is the Blitter impl of RectClipBlitter in tiny-skia
 // src/scan/hairline_aa.rs.
 func (rc *rectClipBlitter) blitAntiV2(x, y uint32, alpha0, alpha1 alphaU8) {
-	rc.blitAntiH(x, y, []alphaU8{alpha0}, []alphaRun{1, 0})
+	rc.aa[0], rc.runs[0], rc.runs[1] = alpha0, 1, 0
+	rc.blitAntiH(x, y, rc.aa[:1], rc.runs[:2])
 
-	rc.blitAntiH(x, y+1, []alphaU8{alpha1}, []alphaRun{1, 0})
+	rc.aa[0], rc.runs[0], rc.runs[1] = alpha1, 1, 0
+	rc.blitAntiH(x, y+1, rc.aa[:1], rc.runs[:2])
 }
 
 // computeAntiWidth is compute_anti_width in tiny-skia src/scan/hairline_aa.rs.

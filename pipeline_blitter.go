@@ -12,8 +12,13 @@ import "encoding/binary"
 // src/pipeline/blitter.rs.
 //
 // Port: mask is nil for the Rust None. memset2dColor is valid only when
-// hasMemset2dColor is true.
+// hasMemset2dColor is true. The blitter draws only on the rows from rowTop
+// to rowBottom, without rowBottom: the rows that the pixmap and the mask
+// hold. The other rows of a mask are 0, and the stage mask_u8 stores
+// nothing there, so the bytes are the same as upstream (D35).
 type rasterPipelineBlitter struct {
+	rowTop, rowBottom uint32
+
 	mask             *subMaskRef
 	pixmapSrc        PixmapRef
 	pixmap           *subPixmapMut
@@ -223,7 +228,14 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		pixmapSrc = dummyPixmapSrc()
 	}
 
+	rowTop, rowBottom := pixmap.top, pixmap.bottom
+	if mask != nil {
+		rowTop, rowBottom = max(rowTop, mask.top), min(rowBottom, mask.bottom)
+	}
+
 	return &rasterPipelineBlitter{
+		rowTop:           uint32(max(rowTop, 0)),
+		rowBottom:        uint32(max(rowBottom, 0)),
 		mask:             mask,
 		pixmapSrc:        pixmapSrc,
 		pixmap:           pixmap,
@@ -272,6 +284,8 @@ func newRasterPipelineBlitterMask(pixmap *subPixmapMut) (*rasterPipelineBlitter,
 	}
 
 	return &rasterPipelineBlitter{
+		rowTop:           uint32(max(pixmap.top, 0)),
+		rowBottom:        uint32(max(pixmap.bottom, 0)),
 		mask:             nil,
 		pixmapSrc:        dummyPixmapSrc(),
 		pixmap:           pixmap,
@@ -303,6 +317,9 @@ func (b *rasterPipelineBlitter) blitH(x, y uint32, width lengthU32) {
 // blitAntiH is Blitter::blit_anti_h of RasterPipelineBlitter in tiny-skia
 // src/pipeline/blitter.rs.
 func (b *rasterPipelineBlitter) blitAntiH(x, y uint32, aa []alphaU8, runs []alphaRun) {
+	if y < b.rowTop || y >= b.rowBottom {
+		return
+	}
 	maskCtx := b.maskCtx()
 
 	aaOffset := 0
@@ -316,9 +333,18 @@ func (b *rasterPipelineBlitter) blitAntiH(x, y uint32, aa []alphaU8, runs []alph
 		case AlphaU8Opaque:
 			b.blitH(x, y, width)
 		default:
+			rect := screenIntRectFromXYWHSafe(x, y, width, lengthU32One)
+			// Port: the run leaves out the chunks where the mask is 0, as
+			// blitRect does (D60).
+			if b.mask != nil {
+				var ok bool
+				if rect, ok = maskBounds(&rect, maskCtx); !ok {
+					break
+				}
+			}
+
 			b.blitAntiHRp.ctx.currentCoverage = float32(alpha) * (1.0 / 255.0)
 
-			rect := screenIntRectFromXYWHSafe(x, y, width, lengthU32One)
 			b.blitAntiHRp.run(
 				&rect,
 				aaMaskCtx{},
@@ -386,6 +412,14 @@ func (b *rasterPipelineBlitter) blitAntiV2(x, y uint32, alpha0, alpha1 alphaU8) 
 // blitRect is Blitter::blit_rect of RasterPipelineBlitter in tiny-skia
 // src/pipeline/blitter.rs.
 func (b *rasterPipelineBlitter) blitRect(rect *screenIntRect) {
+	if rect.Y() < b.rowTop || rect.Bottom() > b.rowBottom {
+		r, ok := b.clipRows(rect)
+		if !ok {
+			return
+		}
+		rect = &r
+	}
+
 	if b.hasMemset2dColor {
 		c := b.memset2dColor
 		if b.isMask {
@@ -428,6 +462,17 @@ func (b *rasterPipelineBlitter) blitRect(rect *screenIntRect) {
 		b.pixmapSrc,
 		b.pixmap,
 	)
+}
+
+// clipRows returns the part of rect on the rows from rowTop to rowBottom.
+// It returns false when no row of rect is there. It ports no upstream
+// function (D35).
+func (b *rasterPipelineBlitter) clipRows(rect *screenIntRect) (screenIntRect, bool) {
+	top, bottom := max(rect.Y(), b.rowTop), min(rect.Bottom(), b.rowBottom)
+	if top >= bottom {
+		return screenIntRect{}, false
+	}
+	return screenIntRectFromXYWHSafe(rect.X(), top, rect.Width(), lengthU32(bottom-top)), true
 }
 
 // maskChunk is the number of pixels that maskBounds keeps together: a
@@ -502,6 +547,14 @@ func allZero(b []byte) bool {
 // blitMask is Blitter::blit_mask of RasterPipelineBlitter in tiny-skia
 // src/pipeline/blitter.rs.
 func (b *rasterPipelineBlitter) blitMask(mask *maskBlitter, clip *screenIntRect) {
+	if clip.Y() < b.rowTop || clip.Bottom() > b.rowBottom {
+		r, ok := b.clipRows(clip)
+		if !ok {
+			return
+		}
+		clip = &r
+	}
+
 	aaMaskCtx := aaMaskCtx{
 		pixels: mask.image,
 		stride: mask.rowBytes,
@@ -509,6 +562,16 @@ func (b *rasterPipelineBlitter) blitMask(mask *maskBlitter, clip *screenIntRect)
 	}
 
 	maskCtx := b.maskCtx()
+
+	// Port: the rect leaves out the rows where the mask is 0, as blitRect
+	// does (D60).
+	if b.mask != nil {
+		r, ok := maskBounds(clip, maskCtx)
+		if !ok {
+			return
+		}
+		clip = &r
+	}
 
 	b.blitMaskRp.run(clip, aaMaskCtx, maskCtx, b.pixmapSrc, b.pixmap)
 }
