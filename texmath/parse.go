@@ -2726,6 +2726,7 @@ var symbols = map[string]sym{
 	// unicode-math-table.tex: U+03D5 "/straightphi - small phi" is \phi, U+03C6
 	// "curly or open small phi" is \varphi (fontmath.ltx:194 and :203).
 	"phi": {'ϕ', Ord}, "varphi": {'φ', Ord}, "chi": {'χ', Ord}, "psi": {'ψ', Ord}, "omega": {'ω', Ord},
+	"omicron": {'ο', Ord}, // KaTeX: U+03BF, a request of zuzu on 2026-11-20
 	// greek upper
 	"Gamma": {'Γ', Ord}, "Delta": {'Δ', Ord}, "Theta": {'Θ', Ord}, "Lambda": {'Λ', Ord},
 	"Xi": {'Ξ', Ord}, "Pi": {'Π', Ord}, "Sigma": {'Σ', Ord}, "Upsilon": {'Υ', Ord},
@@ -2754,7 +2755,7 @@ var symbols = map[string]sym{
 	"neq": {'≠', Rel}, "ne": {'≠', Rel}, "equiv": {'≡', Rel}, "approx": {'≈', Rel},
 	"cong": {'≅', Rel}, "simeq": {'≃', Rel}, "sim": {'∼', Rel}, "propto": {'∝', Rel},
 	"ll": {'≪', Rel}, "gg": {'≫', Rel}, "doteq": {'≐', Rel}, "asymp": {'≍', Rel},
-	"in": {'∈', Rel}, "notin": {'∉', Rel}, "ni": {'∋', Rel}, "subset": {'⊂', Rel},
+	"in": {'∈', Rel}, "notin": {'∉', Rel}, "ni": {'∋', Rel}, "notni": {'∌', Rel}, "subset": {'⊂', Rel},
 	"supset": {'⊃', Rel}, "subseteq": {'⊆', Rel}, "supseteq": {'⊇', Rel},
 	"sqsubseteq": {'⊑', Rel}, "sqsupseteq": {'⊒', Rel}, "prec": {'≺', Rel}, "succ": {'≻', Rel},
 	"preceq": {'⪯', Rel}, "succeq": {'⪰', Rel}, "models": {'⊨', Rel}, "vdash": {'⊢', Rel},
@@ -2784,7 +2785,7 @@ var symbols = map[string]sym{
 	"leftarrow": {'←', Rel}, "gets": {'←', Rel}, "rightarrow": {'→', Rel}, "to": {'→', Rel},
 	"leftrightarrow": {'↔', Rel}, "Leftarrow": {'⇐', Rel}, "Rightarrow": {'⇒', Rel},
 	"Leftrightarrow": {'⇔', Rel}, "iff": {'⇔', Rel}, "mapsto": {'↦', Rel},
-	"longrightarrow": {'⟶', Rel}, "longleftarrow": {'⟵', Rel}, "implies": {'⟹', Rel},
+	"longrightarrow": {'⟶', Rel}, "longleftarrow": {'⟵', Rel}, "implies": {'⟹', Rel}, "impliedby": {'⟸', Rel},
 	"Longrightarrow": {'⟹', Rel}, "Longleftarrow": {'⟸', Rel}, "Longleftrightarrow": {'⟺', Rel},
 	"longmapsto": {'⟼', Rel},
 	"uparrow":    {'↑', Rel}, "downarrow": {'↓', Rel}, "updownarrow": {'↕', Rel},
@@ -3012,6 +3013,9 @@ var symbols = map[string]sym{
 	"backsim":            {'∽', Rel},        // U+223D reverse similar — amssymb.sty:163 [18 eq]
 	"bigsqcap":           {'⨅', Op},         // U+2A05 n-ary square intersection operator — stmaryrd.sty:196 [17 eq]
 	"mho":                {'℧', Ord},        // U+2127 conductance — amssymb.sty:239 [14 eq]
+	"eth":                {'ð', Ord},        // U+00F0 eth — amssymb.sty, KaTeX, a request of zuzu on 2026-11-20
+	"Finv":               {'Ⅎ', Ord},        // U+2132 turned capital F — amssymb.sty, KaTeX, a request of zuzu on 2026-11-20
+	"Game":               {'⅁', Ord},        // U+2141 turned sans-serif capital G — amssymb.sty, KaTeX, a request of zuzu on 2026-11-20
 	"rightleftarrows":    {'⇄', Rel},        // U+21C4 right arrow over left arrow — amssymb.sty:75 [12 eq]
 	"ulcorner":           {'⌜', Open},       // U+231C upper left corner — amsfonts.sty:74 [11 eq]
 	"succsim":            {'≿', Rel},        // U+227F succeeds, similar — amssymb.sty:83 [8 eq]

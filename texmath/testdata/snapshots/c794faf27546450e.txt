@@ -1,7 +1,9 @@
 tex "\\Finv"
 
 style display
-error "parsing tex math: unknown command \\Finv"
+box 5.88 6.57 0 0
+glyph 250 10 0 0 text "Ⅎ" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Finv"
+box 5.88 6.57 0 0
+glyph 250 10 0 0 text "Ⅎ" color 0 0 0 1

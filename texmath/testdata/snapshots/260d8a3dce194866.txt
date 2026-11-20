@@ -1,7 +1,9 @@
 tex "\\eth"
 
 style display
-error "parsing tex math: unknown command \\eth"
+box 5.32 7.13 0.1 0
+glyph 620 10 0 0 text "ð" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\eth"
+box 5.32 7.13 0.1 0
+glyph 620 10 0 0 text "ð" color 0 0 0 1

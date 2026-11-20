@@ -1,7 +1,9 @@
 tex "\\omicron"
 
 style display
-error "parsing tex math: unknown command \\omicron"
+box 4.75 4.8100000000000005 0.13 0
+glyph 899 10 0 0 text "ο" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\omicron"
+box 4.75 4.8100000000000005 0.13 0
+glyph 899 10 0 0 text "ο" color 0 0 0 1

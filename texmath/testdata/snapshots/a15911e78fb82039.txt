@@ -1,7 +1,9 @@
 tex "\\Game"
 
 style display
-error "parsing tex math: unknown command \\Game"
+box 7.11 6.92 0.15 0
+glyph 1261 10 0 0 text "⅁" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Game"
+box 7.11 6.92 0.15 0
+glyph 1261 10 0 0 text "⅁" color 0 0 0 1

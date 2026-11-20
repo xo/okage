@@ -628,7 +628,10 @@ The root package declares these sentinel errors (D21):
    `errors.As` instead.
 2. The limits are additions, each a deliberate difference:
    - The depth of nesting of groups, arguments and environments is at most
-     100. The stack of a program on WebAssembly is small (D25).
+     100. The stack of a program on WebAssembly is small (D25). The parser
+     counts each step of its recursion as a level, so a plain run of nested
+     groups stops at about 50. On 2026-11-20 the maintainers accepted that
+     limit as enough for `texmath`.
    - A tree has at most 100,000 nodes, and a box at most 1,000,000 items.
    - The parser keeps the budget of 100,000 macro expansions of the source,
      and the expanded input has at most 1,048,576 tokens.
