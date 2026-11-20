@@ -121,6 +121,74 @@ func BenchmarkClipSpreadsheetPath(b *testing.B) {
 	clipSpreadsheet(b, true)
 }
 
+// The grid of cells of BenchmarkClipGrid, in pixels. Each cell is on the
+// pixel grid.
+const (
+	benchGridColumns = 16
+	benchGridRows    = 31
+	benchGridWidth   = 100
+	benchGridHeight  = 28
+)
+
+// clipGrid draws a page of a spreadsheet whose cells are on the pixel grid.
+// Each cell makes a mask of its rectangle with cellMask, and fills its
+// background and its text through that mask. The background and the text
+// go past the cell, so that the mask cuts them.
+func clipGrid(b *testing.B, cellMask func(x, y int) *okage.Mask) {
+	b.Helper()
+	type cell struct {
+		x, y             int
+		background, text *okage.Path
+	}
+	var cells []cell
+	for j := range benchGridRows {
+		for i := range benchGridColumns {
+			x, y := i*benchGridWidth, j*benchGridHeight
+			background := okage.PathFromRect(must(okage.RectFromXYWH(float32(x)-1.5, float32(y)-1.5, benchGridWidth+3, benchGridHeight+3)))
+			pb := okage.NewPathBuilder()
+			for k := range 16 {
+				gx := float32(x) + 2.25 + float32(k*7)
+				gy := float32(y) + 7.5
+				pb.MoveTo(gx, gy+12)
+				pb.LineTo(gx+2.5, gy)
+				pb.LineTo(gx+5.5, gy+12)
+				pb.LineTo(gx+4, gy+12)
+				pb.LineTo(gx+2.5, gy+5)
+				pb.LineTo(gx+1.5, gy+12)
+				pb.Close()
+			}
+			cells = append(cells, cell{x, y, background, must(pb.Finish())})
+		}
+	}
+	background := okage.DefaultPaint()
+	background.AntiAlias = true
+	text := okage.DefaultPaint()
+	text.AntiAlias = true
+	text.SetColorRGBA8(20, 20, 20, 255)
+	pixmap := must(okage.NewPixmap(benchPageWidth, benchPageHeight))
+	b.ReportAllocs()
+	for b.Loop() {
+		pixmap.Fill(okage.ColorWhite)
+		for k, c := range cells {
+			clip := cellMask(c.x, c.y)
+			background.SetColorRGBA8(uint8(200+k%50), 230, uint8(240-k%40), 255)
+			pixmap.FillPath(c.background, &background, okage.FillRuleWinding, okage.IdentityTransform(), clip)
+			pixmap.FillPath(c.text, &text, okage.FillRuleWinding, okage.IdentityTransform(), clip)
+		}
+	}
+}
+
+// BenchmarkClipGrid draws a page of a spreadsheet whose cells clip to
+// rectangles on the pixel grid, with a mask of pixels for each cell.
+func BenchmarkClipGrid(b *testing.B) {
+	clipGrid(b, func(x, y int) *okage.Mask {
+		mask := must(okage.NewMask(benchPageWidth, benchPageHeight))
+		r := must(okage.RectFromXYWH(float32(x), float32(y), benchGridWidth, benchGridHeight))
+		mask.FillPath(okage.PathFromRect(r), okage.FillRuleWinding, false, okage.IdentityTransform())
+		return mask
+	})
+}
+
 // BenchmarkDrawPixmapUpscale draws a small image onto a page, scaled up by
 // 8, as ivy draws a raster page, with each filter that samples more than one
 // pixel.
