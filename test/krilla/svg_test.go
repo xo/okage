@@ -68,6 +68,14 @@ var svgFontDB = sync.OnceValue(func() *svg.FontDatabase {
 // svgOracleTimeout is the time that the oracle has for one SVG file.
 const svgOracleTimeout = time.Minute
 
+// svgSlowFiles holds the SVG files for which the oracle can take about as
+// long as svgOracleTimeout, so that it answers on a fast machine and does not
+// answer on a slow one. The test passes when the oracle gives the same
+// objects, and when it does not answer in time.
+var svgSlowFiles = map[string]string{
+	"filters/feMorphology/huge-radius": "feMorphology of resvg 0.47 is slow with a huge radius, and the oracle takes about 40 seconds on a fast machine. The tests of resvg skip the file",
+}
+
 // svgFilterScale is the filter scale of the test svg_impl of krilla.
 const svgFilterScale = 2
 
@@ -139,7 +147,6 @@ var svgDifferences = map[string]string{
 	"filters/feImage/with-subregion-5":                                        "resvg 978775b5 (#1155): Fix rendering of filters with skews and rotations",
 	"filters/feMerge/complex-transform":                                       "resvg 978775b5 (#1155): Fix rendering of filters with skews and rotations",
 	"filters/feMorphology/empty-radius":                                       "resvg fa9ff329 (#1120): Fix feMorphology kernel size and radius rounding",
-	"filters/feMorphology/huge-radius":                                        "the oracle does not answer in a minute, because feMorphology of resvg 0.47 is slow with a huge radius. The tests of resvg skip the file",
 	"filters/feMorphology/negative-radius":                                    "resvg fa9ff329 (#1120): Fix feMorphology kernel size and radius rounding",
 	"filters/feMorphology/no-radius":                                          "resvg fa9ff329 (#1120): Fix feMorphology kernel size and radius rounding",
 	"filters/feMorphology/operator=dilate":                                    "resvg fa9ff329 (#1120): Fix feMorphology kernel size and radius rounding",
@@ -304,6 +311,11 @@ func TestSVGFiles(t *testing.T) {
 				t.Errorf("the list of later usvg holds %s, which is not a test", name)
 			}
 		}
+		for name := range svgSlowFiles {
+			if !seen[name] {
+				t.Errorf("the list of slow files holds %s, which is not a test", name)
+			}
+		}
 	}
 }
 
@@ -329,6 +341,10 @@ func compareSVGFile(t *testing.T, name, file string) string {
 		if goErr != nil {
 			t.Errorf("pdfsvg gives an error, and the oracle does not answer: %v", goErr)
 			return outcomeFail
+		}
+		if why, slow := svgSlowFiles[name]; slow {
+			t.Logf("the oracle does not answer in time (%s): %v", why, err)
+			return outcomeListed
 		}
 		return fail("the oracle does not answer: %v", err)
 	}
