@@ -1,0 +1,7 @@
+tex "\\left(x\\middle\\right)"
+
+style display
+error "parsing tex math: bad delimiter \"\\\\right\""
+
+style text
+error "parsing tex math: bad delimiter \"\\\\right\""

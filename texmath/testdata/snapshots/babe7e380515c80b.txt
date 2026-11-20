@@ -1,0 +1,15 @@
+tex "\\abs{-y}"
+
+style display
+box 17.79 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1197 10 2.67 0 text "−" color 0 0 0 1
+glyph 3355 10 9.870000000000001 0 text "𝑦" color 0 0 0 1
+glyph 1062 10 15.120000000000001 0 text "|" color 0 0 0 1
+
+style text
+box 17.79 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1197 10 2.67 0 text "−" color 0 0 0 1
+glyph 3355 10 9.870000000000001 0 text "𝑦" color 0 0 0 1
+glyph 1062 10 15.120000000000001 0 text "|" color 0 0 0 1

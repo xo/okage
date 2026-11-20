@@ -1,0 +1,7 @@
+tex "\\buildrel"
+
+style display
+error "parsing tex math: \\buildrel without \\over"
+
+style text
+error "parsing tex math: \\buildrel without \\over"

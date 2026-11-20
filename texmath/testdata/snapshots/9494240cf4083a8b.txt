@@ -1,0 +1,7 @@
+tex "\\operatorname{argmax"
+
+style display
+error "parsing tex math: \\operatorname unterminated {name}"
+
+style text
+error "parsing tex math: \\operatorname unterminated {name}"

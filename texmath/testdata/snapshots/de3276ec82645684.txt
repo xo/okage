@@ -1,0 +1,7 @@
+tex "\\ntrianglelefteq"
+
+style display
+error "parsing tex math: unknown command \\ntrianglelefteq"
+
+style text
+error "parsing tex math: unknown command \\ntrianglelefteq"

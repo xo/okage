@@ -1,0 +1,17 @@
+tex "{0.0pt}"
+
+style display
+box 21.86 6.42 2.2 0.15
+glyph 1137 10 0 0 text "0" color 0 0 0 1
+glyph 1052 10 4.95 0 text "." color 0 0 0 1
+glyph 1137 10 7.4 0 text "0" color 0 0 0 1
+glyph 3343 10 12.350000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 18.330000000000002 0 text "𝑡" color 0 0 0 1
+
+style text
+box 21.86 6.42 2.2 0.15
+glyph 1137 10 0 0 text "0" color 0 0 0 1
+glyph 1052 10 4.95 0 text "." color 0 0 0 1
+glyph 1137 10 7.4 0 text "0" color 0 0 0 1
+glyph 3343 10 12.350000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 18.330000000000002 0 text "𝑡" color 0 0 0 1

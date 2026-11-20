@@ -1,0 +1,25 @@
+tex "\\begin{cases} 1 & x>0 \\\\ 0 & x\\leq 0 \\end{cases}"
+
+style display
+box 39.145555555555546 16.98 11.82 0
+glyph 1355 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 1138 10 4.8 -6.9 text "1" color 0 0 0 1
+glyph 3354 10 15.75 -6.9 text "𝑥" color 0 0 0 1
+glyph 1204 10 24.217777777777776 -6.9 text ">" color 0 0 0 1
+glyph 1137 10 34.19555555555555 -6.9 text "0" color 0 0 0 1
+glyph 1137 10 4.8 7.5 text "0" color 0 0 0 1
+glyph 3354 10 15.75 7.5 text "𝑥" color 0 0 0 1
+glyph 1811 10 24.217777777777776 7.5 text "≤" color 0 0 0 1
+glyph 1137 10 34.19555555555555 7.5 text "0" color 0 0 0 1
+
+style text
+box 39.145555555555546 16.98 11.82 0
+glyph 1355 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 1138 10 4.8 -6.9 text "1" color 0 0 0 1
+glyph 3354 10 15.75 -6.9 text "𝑥" color 0 0 0 1
+glyph 1204 10 24.217777777777776 -6.9 text ">" color 0 0 0 1
+glyph 1137 10 34.19555555555555 -6.9 text "0" color 0 0 0 1
+glyph 1137 10 4.8 7.5 text "0" color 0 0 0 1
+glyph 3354 10 15.75 7.5 text "𝑥" color 0 0 0 1
+glyph 1811 10 24.217777777777776 7.5 text "≤" color 0 0 0 1
+glyph 1137 10 34.19555555555555 7.5 text "0" color 0 0 0 1

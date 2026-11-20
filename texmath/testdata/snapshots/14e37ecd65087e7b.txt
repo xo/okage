@@ -1,0 +1,9 @@
+tex "\\pitchfork"
+
+style display
+box 6.3500000000000005 6.46 0.32 0
+glyph 1953 10 0 0 text "⋔" color 0 0 0 1
+
+style text
+box 6.3500000000000005 6.46 0.32 0
+glyph 1953 10 0 0 text "⋔" color 0 0 0 1

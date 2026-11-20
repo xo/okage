@@ -1,0 +1,23 @@
+tex "gathered"
+
+style display
+box 38.260000000000005 7.0600000000000005 2.25 0.2
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 5.03 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 10.58 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 14.110000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 19.900000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 24.14 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 28.26 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 32.5 0 text "𝑑" color 0 0 0 1
+
+style text
+box 38.260000000000005 7.0600000000000005 2.25 0.2
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 5.03 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 10.58 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 14.110000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 19.900000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 24.14 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 28.26 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 32.5 0 text "𝑑" color 0 0 0 1

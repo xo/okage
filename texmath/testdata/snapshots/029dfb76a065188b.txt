@@ -1,0 +1,7 @@
+tex "\\backprime"
+
+style display
+error "parsing tex math: unknown command \\backprime"
+
+style text
+error "parsing tex math: unknown command \\backprime"

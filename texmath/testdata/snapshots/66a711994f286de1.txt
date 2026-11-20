@@ -1,0 +1,25 @@
+tex "@@affmark"
+
+style display
+box 58.93999999999999 7.11 2.25 0.05
+glyph 1116 10 0 0 text "@" color 0 0 0 1
+glyph 1116 10 9.05 0 text "@" color 0 0 0 1
+glyph 3326 10 18.1 0 text "𝑎" color 0 0 0 1
+glyph 3331 10 23.650000000000002 0 text "𝑓" color 0 0 0 1
+glyph 3331 10 29.62 0 text "𝑓" color 0 0 0 1
+glyph 3340 10 35.59 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 43.89 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 49.44 0 text "𝑟" color 0 0 0 1
+glyph 3338 10 53.559999999999995 0 text "𝑘" color 0 0 0 1
+
+style text
+box 58.93999999999999 7.11 2.25 0.05
+glyph 1116 10 0 0 text "@" color 0 0 0 1
+glyph 1116 10 9.05 0 text "@" color 0 0 0 1
+glyph 3326 10 18.1 0 text "𝑎" color 0 0 0 1
+glyph 3331 10 23.650000000000002 0 text "𝑓" color 0 0 0 1
+glyph 3331 10 29.62 0 text "𝑓" color 0 0 0 1
+glyph 3340 10 35.59 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 43.89 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 49.44 0 text "𝑟" color 0 0 0 1
+glyph 3338 10 53.559999999999995 0 text "𝑘" color 0 0 0 1

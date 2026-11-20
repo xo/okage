@@ -1,0 +1,39 @@
+tex "∫ ∬ ∭ ∮ ∏ ∐ ∑ ⋀ ⋁ ⋂ ⋃ ⨀ ⨁ ⨂ ⨄ ⨆"
+
+style display
+box 169.93000000000004 7.96 2.71 0
+glyph 1698 10 0 0 text "∫" color 0 0 0 1
+glyph 1704 10 9.14 0 text "∬" color 0 0 0 1
+glyph 1710 10 21.6 0 text "∭" color 0 0 0 1
+glyph 1716 10 37.379999999999995 0 text "∮" color 0 0 0 1
+glyph 1640 10 46.519999999999996 0 text "∏" color 0 0 0 1
+glyph 1643 10 57.87 0 text "∐" color 0 0 0 1
+glyph 1646 10 69.22 0 text "∑" color 0 0 0 1
+glyph 1929 10 78.58 0 text "⋀" color 0 0 0 1
+glyph 1931 10 88.03999999999999 0 text "⋁" color 0 0 0 1
+glyph 1933 10 97.5 0 text "⋂" color 0 0 0 1
+glyph 1935 10 106.96000000000001 0 text "⋃" color 0 0 0 1
+glyph 2808 10 116.42000000000002 0 text "⨀" color 0 0 0 1
+glyph 2810 10 127.95000000000002 0 text "⨁" color 0 0 0 1
+glyph 2812 10 139.48000000000002 0 text "⨂" color 0 0 0 1
+glyph 2816 10 151.01000000000002 0 text "⨄" color 0 0 0 1
+glyph 2820 10 160.47000000000003 0 text "⨆" color 0 0 0 1
+
+style text
+box 169.93000000000004 7.96 2.71 0
+glyph 1698 10 0 0 text "∫" color 0 0 0 1
+glyph 1704 10 9.14 0 text "∬" color 0 0 0 1
+glyph 1710 10 21.6 0 text "∭" color 0 0 0 1
+glyph 1716 10 37.379999999999995 0 text "∮" color 0 0 0 1
+glyph 1640 10 46.519999999999996 0 text "∏" color 0 0 0 1
+glyph 1643 10 57.87 0 text "∐" color 0 0 0 1
+glyph 1646 10 69.22 0 text "∑" color 0 0 0 1
+glyph 1929 10 78.58 0 text "⋀" color 0 0 0 1
+glyph 1931 10 88.03999999999999 0 text "⋁" color 0 0 0 1
+glyph 1933 10 97.5 0 text "⋂" color 0 0 0 1
+glyph 1935 10 106.96000000000001 0 text "⋃" color 0 0 0 1
+glyph 2808 10 116.42000000000002 0 text "⨀" color 0 0 0 1
+glyph 2810 10 127.95000000000002 0 text "⨁" color 0 0 0 1
+glyph 2812 10 139.48000000000002 0 text "⨂" color 0 0 0 1
+glyph 2816 10 151.01000000000002 0 text "⨄" color 0 0 0 1
+glyph 2820 10 160.47000000000003 0 text "⨆" color 0 0 0 1

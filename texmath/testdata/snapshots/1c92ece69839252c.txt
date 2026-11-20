@@ -1,0 +1,13 @@
+tex "\\def\\abs#1{\\lvert #1 \\rvert}\\abs x"
+
+style display
+box 11.03 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3354 10 2.67 0 text "𝑥" color 0 0 0 1
+glyph 1062 10 8.36 0 text "|" color 0 0 0 1
+
+style text
+box 11.03 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3354 10 2.67 0 text "𝑥" color 0 0 0 1
+glyph 1062 10 8.36 0 text "|" color 0 0 0 1

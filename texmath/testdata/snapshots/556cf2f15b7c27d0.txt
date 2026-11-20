@@ -1,0 +1,11 @@
+tex "\\tiny AB"
+
+style display
+box 6.5200000000000005 3.305 0 0.15
+glyph 3300 5 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 5 3.4050000000000002 0 text "𝐵" color 0 0 0 1
+
+style text
+box 6.5200000000000005 3.305 0 0.15
+glyph 3300 5 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 5 3.4050000000000002 0 text "𝐵" color 0 0 0 1

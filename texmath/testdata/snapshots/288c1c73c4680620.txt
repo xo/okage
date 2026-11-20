@@ -1,0 +1,25 @@
+tex "gtrapprox"
+
+style display
+box 44.86000000000001 5.93 2.25 0.1
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 5.03 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 8.56 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 12.68 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 18.23 0 text "𝑝" color 0 0 0 1
+glyph 3343 10 24.21 0 text "𝑝" color 0 0 0 1
+glyph 3345 10 30.19 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 34.31 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 39.17 0 text "𝑥" color 0 0 0 1
+
+style text
+box 44.86000000000001 5.93 2.25 0.1
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 5.03 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 8.56 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 12.68 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 18.23 0 text "𝑝" color 0 0 0 1
+glyph 3343 10 24.21 0 text "𝑝" color 0 0 0 1
+glyph 3345 10 30.19 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 34.31 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 39.17 0 text "𝑥" color 0 0 0 1

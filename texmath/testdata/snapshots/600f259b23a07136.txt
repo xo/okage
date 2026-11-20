@@ -1,0 +1,7 @@
+tex "\\text{\\textcircled a}"
+
+style display
+error "parsing tex math: unknown command \\textcircled"
+
+style text
+error "parsing tex math: unknown command \\textcircled"

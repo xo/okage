@@ -1,0 +1,7 @@
+tex "\\ddag"
+
+style display
+error "parsing tex math: unknown command \\ddag"
+
+style text
+error "parsing tex math: unknown command \\ddag"

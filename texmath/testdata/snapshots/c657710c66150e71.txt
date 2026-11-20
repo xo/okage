@@ -1,0 +1,9 @@
+tex "\\amalg"
+
+style display
+box 7.1000000000000005 6.78 0 0
+glyph 2974 10 0 0 text "⨿" color 0 0 0 1
+
+style text
+box 7.1000000000000005 6.78 0 0
+glyph 2974 10 0 0 text "⨿" color 0 0 0 1

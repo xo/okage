@@ -1,0 +1,13 @@
+tex "\\begin{gathered}x\\\\x\\\\x\\end{gathered}"
+
+style display
+box 5.6899999999999995 23.58 18.419999999999995 0
+glyph 3354 10 0 -15.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 0 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 0 14.819999999999997 text "𝑥" color 0 0 0 1
+
+style text
+box 5.6899999999999995 23.58 18.419999999999995 0
+glyph 3354 10 0 -15.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 0 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 0 14.819999999999997 text "𝑥" color 0 0 0 1

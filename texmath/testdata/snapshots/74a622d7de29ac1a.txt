@@ -1,0 +1,15 @@
+tex "a\\kern1em b \\kern-2pt c \\kern 3mu d"
+
+style display
+box 30.346666666666668 7.05 0.12 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 15.55 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 18.78 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 24.58666666666667 0 text "𝑑" color 0 0 0 1
+
+style text
+box 30.346666666666668 7.05 0.12 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 15.55 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 18.78 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 24.58666666666667 0 text "𝑑" color 0 0 0 1

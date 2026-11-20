@@ -1,0 +1,9 @@
+tex "\\varphi"
+
+style display
+box 6.03 4.87 2.17 0
+glyph 906 10 0 0 text "φ" color 0 0 0 1
+
+style text
+box 6.03 4.87 2.17 0
+glyph 906 10 0 0 text "φ" color 0 0 0 1

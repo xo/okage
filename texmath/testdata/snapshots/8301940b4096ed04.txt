@@ -1,0 +1,7 @@
+tex "\\medsquareminus"
+
+style display
+error "parsing tex math: unknown command \\medsquareminus"
+
+style text
+error "parsing tex math: unknown command \\medsquareminus"

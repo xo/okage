@@ -1,0 +1,13 @@
+tex "\\bigl( x \\bigr)"
+
+style display
+box 13.77 9.71 4.55 0
+glyph 1302 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3354 10 4.04 0 text "𝑥" color 0 0 0 1
+glyph 1314 10 9.729999999999999 0.1200000000000001 text ")" color 0 0 0 1
+
+style text
+box 13.77 9.71 4.55 0
+glyph 1302 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3354 10 4.04 0 text "𝑥" color 0 0 0 1
+glyph 1314 10 9.729999999999999 0.1200000000000001 text ")" color 0 0 0 1

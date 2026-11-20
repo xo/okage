@@ -1,0 +1,9 @@
+tex "\\raisebox{2pt}{\\raisebox{2pt}{a}}"
+
+style display
+box 5.55 8.79 0 0
+glyph 3326 10 0 -4 text "𝑎" color 0 0 0 1
+
+style text
+box 5.55 8.79 0 0
+glyph 3326 10 0 -4 text "𝑎" color 0 0 0 1

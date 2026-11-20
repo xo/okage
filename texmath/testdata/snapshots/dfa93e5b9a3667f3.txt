@@ -1,0 +1,11 @@
+tex "x^\\intercal"
+
+style display
+box 9.527 6.827 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1923 7 5.6899999999999995 -3.6 text "⊺" color 0 0 0 1
+
+style text
+box 9.527 6.827 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1923 7 5.6899999999999995 -3.6 text "⊺" color 0 0 0 1

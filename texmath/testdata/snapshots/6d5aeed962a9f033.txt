@@ -1,0 +1,13 @@
+tex "\\bigg\\{ z \\bigg\\}"
+
+style display
+box 14.629999999999999 15.705 10.545 0
+glyph 1355 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3356 10 4.8 0 text "𝑧" color 0 0 0 1
+glyph 1367 10 9.83 0.11500000000000021 text "}" color 0 0 0 1
+
+style text
+box 14.629999999999999 15.705 10.545 0
+glyph 1355 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3356 10 4.8 0 text "𝑧" color 0 0 0 1
+glyph 1367 10 9.83 0.11500000000000021 text "}" color 0 0 0 1

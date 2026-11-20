@@ -1,0 +1,9 @@
+tex "\\{"
+
+style display
+box 3.27 7.36 1.97 0
+glyph 1068 10 0 0 text "{" color 0 0 0 1
+
+style text
+box 3.27 7.36 1.97 0
+glyph 1068 10 0 0 text "{" color 0 0 0 1

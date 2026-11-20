@@ -1,0 +1,7 @@
+tex "\\bigl\\zz"
+
+style display
+error "parsing tex math: bad delimiter \"\\\\zz\""
+
+style text
+error "parsing tex math: bad delimiter \"\\\\zz\""

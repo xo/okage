@@ -1,0 +1,9 @@
+tex "\\Iota"
+
+style display
+box 3.5700000000000003 6.57 0 0
+glyph 11 10 0 0 text "I" color 0 0 0 1
+
+style text
+box 3.5700000000000003 6.57 0 0
+glyph 11 10 0 0 text "I" color 0 0 0 1

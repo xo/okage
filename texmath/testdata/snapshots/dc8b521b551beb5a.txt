@@ -1,0 +1,7 @@
+tex "\\overbracket{a+b+c}^{\\text{note}}"
+
+style display
+error "parsing tex math: unknown command \\overbracket"
+
+style text
+error "parsing tex math: unknown command \\overbracket"

@@ -1,0 +1,47 @@
+tex "mirrored box carries no %q: the content draws to the LEFT of the origin, "
+
+style display
+box 93.72 7.05 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 8.3 0 text "𝑖" color 0 0 0 1
+glyph 3345 10 11.24 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 15.36 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 19.48 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 24.34 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 28.46 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 32.7 0 text "𝑑" color 0 0 0 1
+glyph 3327 10 38.46000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 43.690000000000005 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 48.550000000000004 0 text "𝑥" color 0 0 0 1
+glyph 3328 10 54.24 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 58.38 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 63.93 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 68.05 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 72.17 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 75.11 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 79.35 0 text "𝑠" color 0 0 0 1
+glyph 3341 10 83.21 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 88.86 0 text "𝑜" color 0 0 0 1
+
+style text
+box 93.72 7.05 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 8.3 0 text "𝑖" color 0 0 0 1
+glyph 3345 10 11.24 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 15.36 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 19.48 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 24.34 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 28.46 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 32.7 0 text "𝑑" color 0 0 0 1
+glyph 3327 10 38.46000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 43.690000000000005 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 48.550000000000004 0 text "𝑥" color 0 0 0 1
+glyph 3328 10 54.24 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 58.38 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 63.93 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 68.05 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 72.17 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 75.11 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 79.35 0 text "𝑠" color 0 0 0 1
+glyph 3341 10 83.21 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 88.86 0 text "𝑜" color 0 0 0 1

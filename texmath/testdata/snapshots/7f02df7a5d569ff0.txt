@@ -1,0 +1,23 @@
+tex "llcorner"
+
+style display
+box 33.09 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 2.9800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3328 10 5.960000000000001 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 10.100000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 14.96 0 text "𝑟" color 0 0 0 1
+glyph 3341 10 19.080000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 24.730000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 28.970000000000006 0 text "𝑟" color 0 0 0 1
+
+style text
+box 33.09 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 2.9800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3328 10 5.960000000000001 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 10.100000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 14.96 0 text "𝑟" color 0 0 0 1
+glyph 3341 10 19.080000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 24.730000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 28.970000000000006 0 text "𝑟" color 0 0 0 1

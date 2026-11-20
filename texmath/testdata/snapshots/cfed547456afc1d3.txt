@@ -1,0 +1,11 @@
+tex "y\\else z"
+
+style display
+box 10.28 4.82 2.2 0.1
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 3356 10 5.250000000000001 0 text "𝑧" color 0 0 0 1
+
+style text
+box 10.28 4.82 2.2 0.1
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 3356 10 5.250000000000001 0 text "𝑧" color 0 0 0 1

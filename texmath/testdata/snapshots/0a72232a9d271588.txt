@@ -1,0 +1,7 @@
+tex "\\ooalign{a\\cr\\nosuchmaththing}"
+
+style display
+error "parsing tex math: unknown command \\nosuchmaththing"
+
+style text
+error "parsing tex math: unknown command \\nosuchmaththing"

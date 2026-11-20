@@ -1,0 +1,17 @@
+tex "array"
+
+style display
+box 24.59 4.82 2.2 0.15
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 5.55 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 9.67 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 13.79 0 text "𝑎" color 0 0 0 1
+glyph 3355 10 19.34 0 text "𝑦" color 0 0 0 1
+
+style text
+box 24.59 4.82 2.2 0.15
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 5.55 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 9.67 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 13.79 0 text "𝑎" color 0 0 0 1
+glyph 3355 10 19.34 0 text "𝑦" color 0 0 0 1

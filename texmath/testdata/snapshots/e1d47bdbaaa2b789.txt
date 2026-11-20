@@ -1,0 +1,13 @@
+tex "\\bmod"
+
+style display
+box 19.05 7.0600000000000005 0.1 0
+glyph 268 10 0 0 text "m" color 0 0 0 1
+glyph 270 10 8.52 0 text "o" color 0 0 0 1
+glyph 258 10 13.66 0 text "d" color 0 0 0 1
+
+style text
+box 19.05 7.0600000000000005 0.1 0
+glyph 268 10 0 0 text "m" color 0 0 0 1
+glyph 270 10 8.52 0 text "o" color 0 0 0 1
+glyph 258 10 13.66 0 text "d" color 0 0 0 1

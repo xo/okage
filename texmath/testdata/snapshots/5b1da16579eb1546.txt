@@ -1,0 +1,7 @@
+tex "\\nonesuch"
+
+style display
+error "parsing tex math: unknown command \\nonesuch"
+
+style text
+error "parsing tex math: unknown command \\nonesuch"

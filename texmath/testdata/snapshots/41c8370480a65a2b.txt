@@ -1,0 +1,13 @@
+tex "\\def\\a{\\b}\\def\\b{x+y}\\a"
+
+style display
+box 22.584444444444443 5.58 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 7.912222222222222 0 text "+" color 0 0 0 1
+glyph 3355 10 17.334444444444443 0 text "𝑦" color 0 0 0 1
+
+style text
+box 22.584444444444443 5.58 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 7.912222222222222 0 text "+" color 0 0 0 1
+glyph 3355 10 17.334444444444443 0 text "𝑦" color 0 0 0 1

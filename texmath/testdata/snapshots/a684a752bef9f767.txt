@@ -1,0 +1,9 @@
+tex "\\real"
+
+style display
+box 7.78 6.8 0.22 0
+glyph 1235 10 0 0 text "ℜ" color 0 0 0 1
+
+style text
+box 7.78 6.8 0.22 0
+glyph 1235 10 0 0 text "ℜ" color 0 0 0 1

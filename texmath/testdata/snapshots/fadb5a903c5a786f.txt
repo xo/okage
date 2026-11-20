@@ -1,0 +1,9 @@
+tex "\\nexists"
+
+style display
+box 5.73 7.930000000000001 1.25 0
+glyph 1624 10 0 0 text "∄" color 0 0 0 1
+
+style text
+box 5.73 7.930000000000001 1.25 0
+glyph 1624 10 0 0 text "∄" color 0 0 0 1

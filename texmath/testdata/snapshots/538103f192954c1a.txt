@@ -1,0 +1,7 @@
+tex "\\Colonapprox"
+
+style display
+error "parsing tex math: unknown command \\Colonapprox"
+
+style text
+error "parsing tex math: unknown command \\Colonapprox"

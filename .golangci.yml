@@ -165,6 +165,11 @@ linters:
       - path: html/
         linters:
           - goconst
+      # The parser of TeX math of D78 matches the names of the commands in
+      # switches, as go-tex/math does, and each name is its own constant.
+      - path: texmath/
+        linters:
+          - goconst
       # The lowp and highp stages of upstream have the same shapes on
       # purpose, and the port keeps both (D10).
       - path: pipeline_(lowp|highp)\.go

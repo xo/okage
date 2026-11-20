@@ -1,0 +1,7 @@
+tex "\\smash[t"
+
+style display
+error "parsing tex math: missing ] after ["
+
+style text
+error "parsing tex math: missing ] after ["

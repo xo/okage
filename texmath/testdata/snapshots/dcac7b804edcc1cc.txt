@@ -1,0 +1,7 @@
+tex "\\genfrac{("
+
+style display
+error "parsing tex math: \\genfrac delimiter is not one token"
+
+style text
+error "parsing tex math: \\genfrac delimiter is not one token"

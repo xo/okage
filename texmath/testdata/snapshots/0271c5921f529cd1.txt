@@ -1,0 +1,23 @@
+tex "mdseries"
+
+style display
+box 37.32 7.05 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3329 10 8.3 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 14.06 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 17.92 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 22.160000000000004 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 26.280000000000005 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 29.220000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 33.46 0 text "𝑠" color 0 0 0 1
+
+style text
+box 37.32 7.05 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3329 10 8.3 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 14.06 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 17.92 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 22.160000000000004 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 26.280000000000005 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 29.220000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 33.46 0 text "𝑠" color 0 0 0 1

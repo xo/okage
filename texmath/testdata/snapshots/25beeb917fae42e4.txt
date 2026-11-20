@@ -1,0 +1,7 @@
+tex "\\begin{array}{cc} a & b"
+
+style display
+error "parsing tex math: \\begin{array} without \\end"
+
+style text
+error "parsing tex math: \\begin{array} without \\end"

@@ -1,0 +1,17 @@
+tex "kappa"
+
+style display
+box 28.44 7.05 2.2 0
+glyph 3338 10 0 0 text "𝑘" color 0 0 0 1
+glyph 3326 10 5.38 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 10.93 0 text "𝑝" color 0 0 0 1
+glyph 3343 10 16.91 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 22.89 0 text "𝑎" color 0 0 0 1
+
+style text
+box 28.44 7.05 2.2 0
+glyph 3338 10 0 0 text "𝑘" color 0 0 0 1
+glyph 3326 10 5.38 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 10.93 0 text "𝑝" color 0 0 0 1
+glyph 3343 10 16.91 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 22.89 0 text "𝑎" color 0 0 0 1

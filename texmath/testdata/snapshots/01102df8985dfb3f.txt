@@ -1,0 +1,37 @@
+tex "xhookrightarrow"
+
+style display
+box 74.06 7.0600000000000005 2.25 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1224 10 5.6899999999999995 0 text "ℎ" color 0 0 0 1
+glyph 3342 10 11.479999999999999 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 16.34 0 text "𝑜" color 0 0 0 1
+glyph 3338 10 21.2 0 text "𝑘" color 0 0 0 1
+glyph 3345 10 26.580000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 30.700000000000003 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 33.64000000000001 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 38.67000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 44.46000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 47.99000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 53.540000000000006 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 57.660000000000004 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 61.78 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 66.64 0 text "𝑤" color 0 0 0 1
+
+style text
+box 74.06 7.0600000000000005 2.25 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1224 10 5.6899999999999995 0 text "ℎ" color 0 0 0 1
+glyph 3342 10 11.479999999999999 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 16.34 0 text "𝑜" color 0 0 0 1
+glyph 3338 10 21.2 0 text "𝑘" color 0 0 0 1
+glyph 3345 10 26.580000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 30.700000000000003 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 33.64000000000001 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 38.67000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 44.46000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 47.99000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 53.540000000000006 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 57.660000000000004 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 61.78 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 66.64 0 text "𝑤" color 0 0 0 1

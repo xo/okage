@@ -1,0 +1,7 @@
+tex "\\htmlId{bar}{x}"
+
+style display
+error "parsing tex math: unknown command \\htmlId"
+
+style text
+error "parsing tex math: unknown command \\htmlId"

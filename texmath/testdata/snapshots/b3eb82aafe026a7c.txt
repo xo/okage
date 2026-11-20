@@ -1,0 +1,7 @@
+tex "\\diagdown"
+
+style display
+error "parsing tex math: unknown command \\diagdown"
+
+style text
+error "parsing tex math: unknown command \\diagdown"

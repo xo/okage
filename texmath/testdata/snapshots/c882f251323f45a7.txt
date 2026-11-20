@@ -1,0 +1,7 @@
+tex "\\npreceq"
+
+style display
+error "parsing tex math: unknown command \\npreceq"
+
+style text
+error "parsing tex math: unknown command \\npreceq"

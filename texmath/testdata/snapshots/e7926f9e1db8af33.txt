@@ -1,0 +1,7 @@
+tex "\\text{\\textregistered}"
+
+style display
+error "parsing tex math: unknown command \\textregistered"
+
+style text
+error "parsing tex math: unknown command \\textregistered"

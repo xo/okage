@@ -1,0 +1,9 @@
+tex "\\Omega"
+
+style display
+box 7.7700000000000005 6.69 0 0
+glyph 868 10 0 0 text "Ω" color 0 0 0 1
+
+style text
+box 7.7700000000000005 6.69 0 0
+glyph 868 10 0 0 text "Ω" color 0 0 0 1

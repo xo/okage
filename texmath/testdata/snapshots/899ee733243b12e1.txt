@@ -1,0 +1,7 @@
+tex "\\nleqslant"
+
+style display
+error "parsing tex math: unknown command \\nleqslant"
+
+style text
+error "parsing tex math: unknown command \\nleqslant"

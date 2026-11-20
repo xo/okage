@@ -1,0 +1,9 @@
+tex "\\dotsi"
+
+style display
+box 9.53 3.18 0 0
+glyph 1986 10 0 0 text "⋯" color 0 0 0 1
+
+style text
+box 9.53 3.18 0 0
+glyph 1986 10 0 0 text "⋯" color 0 0 0 1

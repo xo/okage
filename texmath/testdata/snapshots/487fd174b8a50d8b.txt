@@ -1,0 +1,9 @@
+tex "\\Upsilon"
+
+style display
+box 6.47 6.57 0 0
+glyph 864 10 0 0 text "Υ" color 0 0 0 1
+
+style text
+box 6.47 6.57 0 0
+glyph 864 10 0 0 text "Υ" color 0 0 0 1

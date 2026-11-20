@@ -1,0 +1,23 @@
+tex "Uplambda"
+
+style display
+box 47.41 7.05 2.2 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3339 10 14.040000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 17.02 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 22.57 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 30.87 0 text "𝑏" color 0 0 0 1
+glyph 3329 10 36.099999999999994 0 text "𝑑" color 0 0 0 1
+glyph 3326 10 41.86 0 text "𝑎" color 0 0 0 1
+
+style text
+box 47.41 7.05 2.2 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3339 10 14.040000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 17.02 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 22.57 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 30.87 0 text "𝑏" color 0 0 0 1
+glyph 3329 10 36.099999999999994 0 text "𝑑" color 0 0 0 1
+glyph 3326 10 41.86 0 text "𝑎" color 0 0 0 1

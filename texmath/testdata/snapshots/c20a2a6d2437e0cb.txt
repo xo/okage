@@ -1,0 +1,9 @@
+tex "{\\it a}"
+
+style display
+box 5.55 4.79 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+
+style text
+box 5.55 4.79 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1

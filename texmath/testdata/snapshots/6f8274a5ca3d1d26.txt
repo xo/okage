@@ -1,0 +1,21 @@
+tex "Updelta"
+
+style display
+box 36.099999999999994 7.05 2.2 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3329 10 14.040000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 19.8 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 24.04 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 27.02 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 30.549999999999997 0 text "𝑎" color 0 0 0 1
+
+style text
+box 36.099999999999994 7.05 2.2 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3329 10 14.040000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 19.8 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 24.04 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 27.02 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 30.549999999999997 0 text "𝑎" color 0 0 0 1

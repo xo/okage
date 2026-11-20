@@ -1,0 +1,7 @@
+tex "\\lnapprox"
+
+style display
+error "parsing tex math: unknown command \\lnapprox"
+
+style text
+error "parsing tex math: unknown command \\lnapprox"

@@ -1,0 +1,7 @@
+tex "\\leftarrowtail"
+
+style display
+error "parsing tex math: unknown command \\leftarrowtail"
+
+style text
+error "parsing tex math: unknown command \\leftarrowtail"

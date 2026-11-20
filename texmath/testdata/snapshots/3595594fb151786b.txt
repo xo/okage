@@ -1,0 +1,9 @@
+tex "\\varpi"
+
+style display
+box 8.21 4.71 0.11 0
+glyph 920 10 0 0 text "ϖ" color 0 0 0 1
+
+style text
+box 8.21 4.71 0.11 0
+glyph 920 10 0 0 text "ϖ" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\rightthreetimes"
+
+style display
+error "parsing tex math: unknown command \\rightthreetimes"
+
+style text
+error "parsing tex math: unknown command \\rightthreetimes"

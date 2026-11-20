@@ -1,0 +1,7 @@
+tex "\\llcorner"
+
+style display
+error "parsing tex math: unknown command \\llcorner"
+
+style text
+error "parsing tex math: unknown command \\llcorner"

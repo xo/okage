@@ -1,0 +1,9 @@
+tex "\\scriptstyle y"
+
+style display
+box 3.6750000000000003 3.374 1.54 0.105
+glyph 3355 7 0 0 text "𝑦" color 0 0 0 1
+
+style text
+box 3.6750000000000003 3.374 1.54 0.105
+glyph 3355 7 0 0 text "𝑦" color 0 0 0 1

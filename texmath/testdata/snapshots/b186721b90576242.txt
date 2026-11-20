@@ -1,0 +1,7 @@
+tex "\\the@inst"
+
+style display
+error "parsing tex math: unknown command \\the@inst"
+
+style text
+error "parsing tex math: unknown command \\the@inst"

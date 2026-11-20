@@ -1,0 +1,7 @@
+tex "\\barwedge"
+
+style display
+error "parsing tex math: unknown command \\barwedge"
+
+style text
+error "parsing tex math: unknown command \\barwedge"

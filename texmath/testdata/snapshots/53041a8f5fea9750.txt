@@ -1,0 +1,21 @@
+tex "a \\, b \\: c \\; d \\! e \\quad f \\qquad g"
+
+style display
+box 70.92000000000002 7.11 2.25 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 7.216666666666667 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 14.66888888888889 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 21.58666666666667 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 25.68 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 39.92 0 text "𝑓" color 0 0 0 1
+glyph 3332 10 65.89000000000001 0 text "𝑔" color 0 0 0 1
+
+style text
+box 70.92000000000002 7.11 2.25 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 7.216666666666667 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 14.66888888888889 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 21.58666666666667 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 25.68 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 39.92 0 text "𝑓" color 0 0 0 1
+glyph 3332 10 65.89000000000001 0 text "𝑔" color 0 0 0 1

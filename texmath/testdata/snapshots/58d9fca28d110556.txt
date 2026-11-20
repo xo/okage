@@ -1,0 +1,13 @@
+tex "\\widetilde{CM}"
+
+style display
+box 16.2 8.8 0.11 0
+glyph 3302 10 0 0 text "𝐶" color 0 0 0 1
+glyph 3312 10 7.0600000000000005 0 text "𝑀" color 0 0 0 1
+glyph 1407 10 0.6249999999999991 -1.1900000000000004 text "̃" color 0 0 0 1
+
+style text
+box 16.2 8.8 0.11 0
+glyph 3302 10 0 0 text "𝐶" color 0 0 0 1
+glyph 3312 10 7.0600000000000005 0 text "𝑀" color 0 0 0 1
+glyph 1407 10 0.6249999999999991 -1.1900000000000004 text "̃" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\weierp"
+
+style display
+box 8.46 5.6000000000000005 2.22 0
+glyph 1231 10 0 0 text "℘" color 0 0 0 1
+
+style text
+box 8.46 5.6000000000000005 2.22 0
+glyph 1231 10 0 0 text "℘" color 0 0 0 1

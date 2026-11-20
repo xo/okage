@@ -1,0 +1,11 @@
+tex "CM"
+
+style display
+box 16.2 6.7 0.11 0.45
+glyph 3302 10 0 0 text "𝐶" color 0 0 0 1
+glyph 3312 10 7.0600000000000005 0 text "𝑀" color 0 0 0 1
+
+style text
+box 16.2 6.7 0.11 0.45
+glyph 3302 10 0 0 text "𝐶" color 0 0 0 1
+glyph 3312 10 7.0600000000000005 0 text "𝑀" color 0 0 0 1

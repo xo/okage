@@ -1,0 +1,21 @@
+tex "\\fbox{box}"
+
+style display
+box 18.15 8.56 1.6 0
+glyph 256 10 1.5 0 text "b" color 0 0 0 1
+glyph 270 10 6.72 0 text "o" color 0 0 0 1
+glyph 279 10 11.86 0 text "x" color 0 0 0 1
+rule 0 -8.56 18.15 0.68 color 0 0 0 1
+rule 0 0.92 18.15 0.68 color 0 0 0 1
+rule 0 -8.56 0.68 10.16 color 0 0 0 1
+rule 17.47 -8.56 0.68 10.16 color 0 0 0 1
+
+style text
+box 18.15 8.56 1.6 0
+glyph 256 10 1.5 0 text "b" color 0 0 0 1
+glyph 270 10 6.72 0 text "o" color 0 0 0 1
+glyph 279 10 11.86 0 text "x" color 0 0 0 1
+rule 0 -8.56 18.15 0.68 color 0 0 0 1
+rule 0 0.92 18.15 0.68 color 0 0 0 1
+rule 0 -8.56 0.68 10.16 color 0 0 0 1
+rule 17.47 -8.56 0.68 10.16 color 0 0 0 1

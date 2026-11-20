@@ -1,0 +1,9 @@
+tex "\\gimel"
+
+style display
+box 5.17 6.93 0.2 0
+glyph 1254 10 0 0 text "ℷ" color 0 0 0 1
+
+style text
+box 5.17 6.93 0.2 0
+glyph 1254 10 0 0 text "ℷ" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\medsquare"
+
+style display
+box 7.640000000000001 5.94 0.78 0
+glyph 2349 10 0 0 text "◻" color 0 0 0 1
+
+style text
+box 7.640000000000001 5.94 0.78 0
+glyph 2349 10 0 0 text "◻" color 0 0 0 1

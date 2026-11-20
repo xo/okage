@@ -1,0 +1,9 @@
+tex "\\ell"
+
+style display
+box 5.54 6.7 0.1 0.25
+glyph 1229 10 0 0 text "ℓ" color 0 0 0 1
+
+style text
+box 5.54 6.7 0.1 0.25
+glyph 1229 10 0 0 text "ℓ" color 0 0 0 1

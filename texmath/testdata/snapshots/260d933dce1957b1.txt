@@ -1,0 +1,9 @@
+tex "\\eta"
+
+style display
+box 5.1000000000000005 4.8 2.19 0
+glyph 891 10 0 0 text "η" color 0 0 0 1
+
+style text
+box 5.1000000000000005 4.8 2.19 0
+glyph 891 10 0 0 text "η" color 0 0 0 1

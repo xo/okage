@@ -1,0 +1,9 @@
+tex "\\digamma"
+
+style display
+box 3.86 4.71 2.38 0
+glyph 910 10 0 0 text "ϝ" color 0 0 0 1
+
+style text
+box 3.86 4.71 2.38 0
+glyph 910 10 0 0 text "ϝ" color 0 0 0 1

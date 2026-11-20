@@ -1,0 +1,31 @@
+tex "@ifundefined"
+
+style display
+box 63.82000000000002 7.11 2.25 0.2
+glyph 1116 10 0 0 text "@" color 0 0 0 1
+glyph 3334 10 9.05 0 text "𝑖" color 0 0 0 1
+glyph 3331 10 11.99 0 text "𝑓" color 0 0 0 1
+glyph 3348 10 17.96 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 23.61 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 29.259999999999998 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 35.02 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 39.260000000000005 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 45.23000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 48.170000000000016 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 53.820000000000014 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 58.06000000000002 0 text "𝑑" color 0 0 0 1
+
+style text
+box 63.82000000000002 7.11 2.25 0.2
+glyph 1116 10 0 0 text "@" color 0 0 0 1
+glyph 3334 10 9.05 0 text "𝑖" color 0 0 0 1
+glyph 3331 10 11.99 0 text "𝑓" color 0 0 0 1
+glyph 3348 10 17.96 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 23.61 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 29.259999999999998 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 35.02 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 39.260000000000005 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 45.23000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 48.170000000000016 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 53.820000000000014 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 58.06000000000002 0 text "𝑑" color 0 0 0 1

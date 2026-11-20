@@ -1,0 +1,9 @@
+tex "\\bigsqcap"
+
+style display
+box 11.8 10.26 5.1 0
+glyph 2819 10 0 5.1 text "⨅" color 0 0 0 1
+
+style text
+box 9.46 7.8100000000000005 2.65 0
+glyph 2818 10 0 0 text "⨅" color 0 0 0 1

@@ -1,0 +1,33 @@
+tex "smallsetminus"
+
+style display
+box 61.70000000000001 7.05 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 23.67 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 27.53 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 31.770000000000003 0 text "𝑡" color 0 0 0 1
+glyph 3340 10 35.300000000000004 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 43.60000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 46.54000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 52.19000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 57.84000000000001 0 text "𝑠" color 0 0 0 1
+
+style text
+box 61.70000000000001 7.05 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 23.67 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 27.53 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 31.770000000000003 0 text "𝑡" color 0 0 0 1
+glyph 3340 10 35.300000000000004 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 43.60000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 46.54000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 52.19000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 57.84000000000001 0 text "𝑠" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\Lsh"
+
+style display
+error "parsing tex math: unknown command \\Lsh"
+
+style text
+error "parsing tex math: unknown command \\Lsh"

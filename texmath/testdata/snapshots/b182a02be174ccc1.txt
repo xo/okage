@@ -1,0 +1,15 @@
+tex "Rbag"
+
+style display
+box 22.160000000000004 7.05 2.25 0
+glyph 3317 10 0 0 text "𝑅" color 0 0 0 1
+glyph 3327 10 6.3500000000000005 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 11.580000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 17.130000000000003 0 text "𝑔" color 0 0 0 1
+
+style text
+box 22.160000000000004 7.05 2.25 0
+glyph 3317 10 0 0 text "𝑅" color 0 0 0 1
+glyph 3327 10 6.3500000000000005 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 11.580000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 17.130000000000003 0 text "𝑔" color 0 0 0 1

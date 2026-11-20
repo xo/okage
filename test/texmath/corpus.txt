@@ -1,0 +1,1731 @@
+# The corpus of texmath (D78): one formula of TeX math on each line.
+# A line that starts with # is a comment, and a blank line is left out.
+# test/texmath/katex/katex.mjs reads it, and the tests of texmath read it.
+
+# From the gate of phase 20 of D78: 1 formula.
+\frac{x^2+1}{\alpha-\beta}
+
+# From the inputs of the tests of go-tex/math at 6a6d2729: 784 formulas.
+\
+{Axz}
+\the@inst
+\@ifundefined
+\@@affmark
+\@ x
+\alpha
+\{
+{
+x^{\the@inst }
+\buildrel \rm def \over =
+\stackrel{\rm def}{=}
+a \buildrel x \over \to b
+a \stackrel{x}{\to} b
+a \buildrel \sim \over = b
+a \stackrel{\sim}{=} b
+\frac{a}{b} \buildrel p \over \to c
+\frac{a}{b} \stackrel{p}{\to} c
+\buildrel {a \over b} \over =
+\stackrel{a \over b}{=}
+\buildrel x
+\buildrel
+a \buildrel b c
+\over
+\buildrel x \over
+\lefteqn
+\buildrel \unknowncmd \over =
+unknown command \unknowncmd
+\buildrel \frac{a \over =
+missing }
+\lefteqn{\sqrt[}
+unexpected "}"
+\lefteqn{abc}
+\displaystyle\frac{a}{b}
+\lefteqn{\frac{a}{b}}
+\frac{a}{b}
+a\blacktriangleleft b
+a\blacktriangle b
+a\lhd b
+a\vartriangleleft b
+a\blacklozenge b
+a\bigcirc b
+a\lightning b
+a\rightarrow b
+\lightning (Ord) spaces like \rightarrow (Rel)
+\intop x
+\int x
+a\intop b
+\intop (Op) spaces like \blacklozenge (Ord)
+\amsmathbb{
+}
+\mathbb{
+\amsmathbb{P}
+\char`\^
+a + \char`\^ + b
+x = \char`A
+y = \char"ff
+z = \char98 + 1
+\char
+\char x
+\char`
+\char`^
+\char`\
+\char"200000
+\char"FFFFFFFF
+a\%b
+a\ b
+a\sim b
+\raisebox{1pt}{a~b}
+\text{a~b}
+x^{a~b}
+\int
+\sum
+\prod
+\oint
+\bigcup
++
+\leq
+translate\(([-0-9.]+),
+\begin{array}{cc} a & b \\ c & d \end{array}
+\begin{array}{|c|c|} a & b \\ c & d \end{array}
+\begin{array}{lcr} a & bb & ccc \\ d & e & f \end{array}
+\begin{array}{|l|c|r|} 1 & 2 & 3 \end{array}
+\begin{array}{c|c} a & b \end{array}
+\begin{array}{p{2cm}c} a & b \end{array}
+\left(\begin{array}{cc} a & b \\ c & d \end{array}\right)
+\begin{aligned} x &= y + z \\ &= w \end{aligned}
+\begin{split} f(x) &= a + b \\ &= c \end{split}
+\begin{aligned} a \\ b \end{aligned}
+\begin{aligned} a &= b & c &= d \end{aligned}
+\begin{gathered} a + b \\ c \\ d + e + f \end{gathered}
+\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}
+\left(\begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix}\right)
+\begin{aligned} A &= \frac{1}{2} \\ B &= \begin{smallmatrix} a \\ b \end{smallmatrix} \end{aligned}
+\begin{array}{l} i \\ W \end{array}
+\begin{array}{c} i \\ W \end{array}
+\begin{array}{r} i \\ W \end{array}
+\begin{matrix} a & b \\ c & d \end{matrix}
+\begin{aligned} x &= y \\ zz &= w \end{aligned}
+\begin{split} x &= y \end{split}
+\begin{array} a & b \end{array}
+\begin{array}{z} a \end{array}
+\begin{array}{@c} a & b \end{array}
+\begin{array}{} a \end{array}
+\begin{array}{cc} a & b
+\begin{array}{cc a \end{array}
+\begin{aligned} x &= y
+\begin{gathered} a
+\begin{smallmatrix} a
+\begin{array}{c}\nope\end{array}
+{|c|c|}a
+{lcr}
+{c|c}
+{p{2cm}r}x
+{z}
+{\rm th}
+\mathrm{th}
+{\bf v}\cdot w
+\mathbf{v}\cdot w
+{\it a}
+\mathit{a}
+{\sf y}
+\mathsf{y}
+{\tt z}
+\mathtt{z}
+{\cal A}
+\mathcal{A}
+{\sl a}
+{\rm ab}
+{\bf v}
+{\rm v}
+{\rm a}b
+\mathrm{a}b
+x^{\rm th}
+x^{th}
+\rm
+\bf
+\it
+\sf
+\tt
+\cal
+\sl
+xyz}
+\log
+\ln
+\lg
+\exp
+\sin
+\cos
+\tan
+\cot
+\sec
+\csc
+\sinh
+\cosh
+\tanh
+\coth
+\arcsin
+\arccos
+\arctan
+\min
+\max
+\inf
+\sup
+\lim
+\limsup
+\liminf
+\det
+\dim
+\ker
+\deg
+\gcd
+\hom
+\arg
+\Pr
+\lim_{x} a
+\log_{x} a
+\operatorname{argmax}
+\operatorname{sin}
+\operatorname{sin} should equal \sin
+\operatorname{a{b}c}
+\operatorname{a\,b}
+\operatorname{a\nope b}
+\operatorname*{argmax}_i f
+\operatorname{argmax}_i f
+\operatorname
+\operatorname*
+\operatorname x
+\operatorname{argmax
+\operatorname*{argmax
+\bmod
+a \bmod b
+\pmod n
+\mod n
+\pod n
+x \pmod n
+\pmod
+\mod
+\pod
+\Longrightarrow
+\Longleftarrow
+\Longleftrightarrow
+\longmapsto
+A \Longrightarrow B
+\longrightarrow
+\frac{a+b}{c+d}
+\frac{x}{yyyyy}
+\tfrac{a}{b}
+\frac{abcdefgh}{ijklmnop}
+x \triangleright y
+x \triangleleft y
+\genfrac[]{0pt}{}{n}{k}
+\genfrac{\{}{\}}{0pt}{}{n}{k}
+\genfrac{}{}{}{}{a}{b}
+\genfrac{}{}{}0{a}{b}
+\genfrac()\z@{2}{a}{b}
+\genfrac{}{}{}{}{n}{k}
+\genfrac{}{}{0pt}{}{n}{k}
+\genfrac
+\genfrac{\foo}{}{}{}{a}{b}
+\genfrac{}{\foo}{}{}{a}{b}
+\genfrac{(
+\genfrac(
+\genfrac{}{}{}{}
+\genfrac{}{}{}{}{a}
+\genfrac{}{}{}
+{n}{k}
+{0pt}
+{0}
+{0.0pt}
+\z@
+\genfrac{}{}
+{}{n}{k}
+{{0pt}}
+{0pt
+x^{ab}
+x^\bgroup ab\egroup
+\frac\bgroup a\egroup\bgroup b\egroup
+\sqrt{1+x}
+\sqrt\bgroup 1+x\egroup
+{\bf ab}c
+\bgroup\bf ab\egroup c
+\mathrm{d}x
+\mathrm\bgroup d\egroup x
+\bgroup\bf ab c\egroup
+\bgroup\bf abc
+{\bf abc
+\bgroup a+b\egroup
+x_\bgroup i,j\egroup
+\left(\bgroup a\egroup\right)
+\bgroup\bgroup a\egroup\egroup
+\def\R{\mathbb{R}}\R
+\def\R{\mathbb{R}}x \in \R^n
+\def\abs#1{\lvert #1 \rvert}\abs{x}
+\def\abs#1{\lvert #1 \rvert}\abs x
+\def\pair#1#2{(#1, #2)}\pair{a}{b}
+\def\a{\b}\def\b{x+y}\a
+\def\sq#1{#1^2}\frac{\sq{x}}{\sq{y}}
+\def\R{\mathbb{R}}\def\C{\mathbb{C}}\R\to\C
+\def\g#1{#1_{ij}}\g{A} + \g{B}
+\def\x#1{#1#2}\x{a}
+\def{x}{y} z
+\def\x a#1{#1} \x b
+\def\x
+\def\x{a+b
+\def\p#1#2{#1#2}\p{a}
+\def\x#1{#1}\x{a+b
+\def\x{\x}\x
+\frac{a}{b} + x^2
+a + b = c
+x^2 - 2x + 1 \leq 0
+a_i + b^j - c_k^l
+\dfrac{a}{b}
+\sqrt{x}
+\sqrt[3]{x+y}
+\left( a \right)
+\left[ \frac{a}{b} \right]
+\left\{ x \right\}
+\left. a \right|
+\left\langle x \right\rangle
+\hat{x} \bar{y} \vec{v} \tilde{n} \dot{a} \ddot{b} \check{c} \breve{d} \acute{e} \grave{f}
+\overline{a+b}
+\underline{xyz}
+\mathbb{RCHNPQZ} \mathbb{R}
+\mathcal{ABEFHILMR}
+\mathfrak{CHIRZg}
+\mathbf{x} \mathsf{y} \mathtt{z} \mathit{w} \mathrm{d} \text{if}
+\sum_{i=1}^{n} i
+\prod_k a_k
+\int_0^1 f
+\lim_{x\to 0} f
+\begin{pmatrix} a & b \\ c & d \end{pmatrix}
+\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}
+\begin{vmatrix} a & b \\ c & d \end{vmatrix}
+\begin{Vmatrix} a \end{Vmatrix}
+\begin{Bmatrix} a \end{Bmatrix}
+\begin{cases} 1 & x>0 \\ 0 & x\leq 0 \end{cases}
+a \, b \: c \; d \! e \quad f \qquad g
+\alpha\beta\gamma\Delta\Omega \infty \partial \nabla \forall \exists
+x \in A \cup B, \ y \notin C \cap D
+{a}
+{}
+\displaystyle \frac{a}{b}
+\textstyle x
+\scriptstyle y
+\mathbb{R}^n \to \mathbb{R}^m
+\lvert x \rvert
+\lVert v \rVert
+\left\lvert a \right\rvert
+f \colon A \to B
+x \coloneqq y
+a \eqqcolon b
+p \nmid q
+A \subsetneq B
+x \leqslant y \geqslant z
+u \lesssim v \gtrsim w
+\Diamond \square \blacksquare
+50\%
+a\#b
+x\_y
+p\&q
+\$5
+a \vcentcolon= b
+x \dblcolon y
+\imath + \jmath
+\measuredangle ABC
+\varnothing \sphericalangle
+\varkappa
+\kappa \ne \varkappa
+\digamma
+\varkappa_{ij} + \digamma
+\aleph \beth \gimel \daleth
+\normalfont x = y
+{\bfseries a} + b
+\small z^2
+a \par b
+\smash{\frac{1}{2}}
+\smash[t]{x^2} + 1
+\relax A \ignorespaces B
+{a \over b}
+x={n+1 \over 2}+y
+{a \atop b}
+{n \choose k}
+\mathds{R}
+\mathds{1}
+\mathds{Z}_{\geq 0}
+\mathbb{1}
+\mathbb{0}
+x^\intercal
+A^\intercal B
+a \dotplus b
+a \Coloneqq b
+a \Coloneq b
+\mathbbm{1}
+\mathbbm{R}
+\mathbbm{1}_{\{x>0\}}
+\mathbbmss{X}
+\mathbbb{Z}
+\smash[t
+\smash{a \over \sqrt}
+\overrightarrow{AB}
+\overleftarrow{v}
+\overleftrightarrow{PQ}
+\vv{F} = m\vv{a}
+\overrightarrow{OM} \cdot \overrightarrow{ON}
+\overrightarrow{a \over \sqrt}
+{a \over \sqrt}
+\left\{ x \middle| P(x) \right\}
+\left( a \middle/ b \right)
+\left. \frac{a}{b} \middle| c \right.
+\left(x\middle\right)
+\binom{n}{k}
+\dbinom{n}{2}
+\tbinom{a}{b}
+\bigl( x \bigr)
+\Big[ y \Big]
+\bigg\{ z \bigg\}
+\Bigg| w \Bigg|
+\big| a \big|
+\bigm| b
+\overset{a}{b}
+\underset{c}{d}
+x \stackrel{f}{=} y
+\bigl(
+a \not= b
+A \not\subset B
+x \not\in S
+\substack{i<n \\ i \ne j}
+\sum_{\substack{a \\ b \\ c}} x
+=
+\not=
+\ifmmode a+b\else\nosuchcommand\fi
+x = \ifmmode\mathbb{R}\else R\fi
+\sum_{\ifmmode i=1\else i\fi}^{n} a_i
+\ifmmode\ifmmode y\fi\else z\fi
+k\ifmmode+1\fi
+\ensuremath{x+1}
+\mathscr{ABH}
+\mathbin{\star}
+\mathrel{R}
+\mathord{!}
+\mathopen{[}x\mathclose{]}
+\hbox{note}
+\mbox{if } x>0
+\boxed{E=mc^2}
+\underbrace{a+b}_{s}
+\overbrace{x+y}^{t}
+\phantom{xy}z
+\hphantom{x}y
+\vphantom{X}y
+A\vDash B
+p\land q\lor r
+\llbracket x\rrbracket
+a\rtimes b
+x\hdots y
+\sum\limits_{i}a_i
+\therefore x
+a\boxplus b
+\bigstar
+\boxed{x}
+\phantom{x}
+\phantom drew ink
+\phantom{MMM}
+\ket{\psi}
+\bra{\phi}
+\braket{\phi|\psi}
+\ketbra{\psi}{\phi}
+\norm{x}
+\abs{-y}
+\Set{x}
+\ket{0}+\ket{1}
+\ket{x}
+\ifmmode a+b
+x\fi
+y\else z
+\mathpunct{,}x
+\mathinner{x}
+\mathop{X}
+\left^ a \right)
+\left_ a \right)
+\left' a \right)
+\binom{\zz}{k}
+\binom{a}{\zz}
+\overset{\zz}{x}
+\overset{a}{\zz}
+\underset{\zz}{x}
+\substack{\zz}
+\substack x
+\substack{a
+\not\zz
+\ket{\zz}
+\ketbra{\zz}{y}
+\ketbra{x}{\zz}
+\boxed{\zz}
+\underbrace{\zz}
+\phantom{\zz}
+\bigl\zz
+\xrightarrow{\zz}
+\xrightarrow[\zz]{x}
+\ensuremath{\zz}
+\mathbin{\zz}
+\mathscr{\zz}
+\overline{x}
+\underline{x}
+\nope
+a}
+{a
+\frac{a}
+x^
+\sqrt[3]{
+\sqrt[3
+\left(
+\left
+\begin
+\begin{nope} a \end{nope}
+\begin{matrix} a
+\begin{matrix
+\begin{matrix} a \end{bmatrix}
+\begin{matrix} a \end
+\begin{matrix} a \end{matrix
+\hat
+\mathbb
+\frac{\nope}{b}
+\frac{a}{\nope}
+\sqrt{\nope}
+\sqrt[\nope]{x}
+\hat{\nope}
+\overline{\nope}
+\underline{\nope}
+\mathbb{\nope}
+\left(\nope\right)
+\left(a\nope
+\begin{matrix}\nope\end{matrix}
+x^\nope
+x_\nope
+{\nope}
+\left\zzz a \right)
+\left( x \right\zzz
+^1
+_2
+^{1}
+_{ab}
+^a_b
+x + ^1
+x^{aaaaaa}
+x_{bbbbbb}
+I^{WWWW}_{MMMM}
+\sum_{kkkkkk}^{j} a
+\prod^{mmmmmm} b
+\left. x \right.
+\left\lfloor x \right\rfloor
+x^2_3
+\sqrt[3]{x}
+\begin{matrix} a \\ b & c \end{matrix}
+x'^{2}
+f''_{n}
+\bigcup_{i} A_i
+= + a
+x+1
+\nonesuch
+\bar
+\dot
+\tilde
+\vec
+\check
+{x}
+\left(x\right)
+\left(\frac{a}{b}\right)
+x_i^2
+\sum_{i=1}^n a_i
+x^2
+a\ast b
+a+b
+a{/}b
+a{:}b
+a{+}b
+a{-}b
+a{,}b
+a{;}b
+a\in b
+a{\in}b
+a\times b
+a{\times}b
+n{!}
+n{?}
+a:=b
+a=b
+{:}
+\mathchoice{a}{ab}{abc}{abcd}
+\mathchoice{}{}{x}{}
+a^{
+a^{}
+\mathchoice{}{a}{b}{c}z
+\mathchoice{a}{b}{c}
+\mathchoice{a}{b}
+\mathchoice{a}
+\mathchoice
+\mathchoice{a}{b}{c}x
+\mathchoice{\mkern-3mu}{}{}{}
+\mathchoice{}{}{\mskip-0.5mu}{\mskip-1mu}
+{\mathrm{1}\mkern-4mu{\mathchoice{}{}{\mskip-0.5mu}{\mskip-1mu}}}
+\mathchoice{\sum}{\sum}{\textstyle\sum}{\textstyle\sum}
+x^{\mathchoice{a}{b}{c}{d}}
+\frac{\mathchoice{a}{b}{c}{d}}{2}
+a\mkern18mu b
+a\mkern3mu b
+a\,b
+a\mkern-3mu b
+a\mskip3mu b
+a\mskip3mu plus 1mu b
+a\mskip3mu plus 1mu minus 2mu b
+a\mkern b
+a\mkern
+a\mkern3pt b
+a\mkern3 b
+\mathchoice{\nosuchmaththing}{b}{c}{d}
+\mathchoice{a}{b}{c}{d
+a\mkern.mu b
+a\mskip3mu plus1fil b
+$a+b$
+\(a+b\)
+\[a+b\]
+$a+b
+a+b$
+\(a+b
+a+b\)
+\$
+a\$b
+a+
++b
+\text{x}
+\text{$x$}
+\text{$x$x}
+\scalebox{0.5}{$a+b$}
+\raisebox{1pt}{\(a+b\)}
+\raisebox{-2pt}{\text{$x$}}
+\scalebox{1.3}{\ensuremath{$\alpha$}}
+\cup
+\ooalign{a\cr\cup}
+{a\cr b\cr c}
+\ooalign{$\cup$\cr\hidewidth$\cdot$\hidewidth}
+\cdot
+\ooalign{$\cdot$\cr$\cup$}
+\ooalign{$\cdot$\cr\hidewidth$\cup$\hidewidth}
+{$\cup$\cr\hidewidth$\cdot$\hidewidth}
+{$\cup$\cr\hidewidth$\cdot$}
+{$\cup$\cr$\cdot$}
+{a\cr b}
+{a\cr b\cr}
+{a\cr b\crcr}
+{a\cr\cr b}
+\ooalign{a\cr b}
+\ooalign{a\cr b\cr}
+\ooalign{a\cr b\crcr}
+\ooalign{a\crcr b\cr}
+a\hidewidth b
+\ooalign
+\ooalign a
+\ooalign{a\cr b
+a\ooalign{$\cup$\cr\hidewidth$\cdot$\hidewidth}b
+x^{\ooalign{$\cup$\cr\hidewidth$\cdot$\hidewidth}}
+\mathbin{\ooalign{$\cup$\cr\hidewidth$\cdot$\hidewidth}}
+{a\cr\nosuchmaththing}
+{\hidewidth$\cup$\hidewidth\cr\hidewidth$\cdot$\hidewidth}
+{{ab}\cr c}
+{{a\cr b}\cr c}
+a+\allowbreak b
+a+\nobreak b
+a+\break b
+\allowbreak x
+x\allowbreak
+\frac{a\allowbreak +b}{c}
+\frac{a+b}{c}
+x^{a\allowbreak b}
+\allowbreak swallowed the b
+a\allowbreak +b
+\allowbreak swallowed the +
+\mathstrut
+\vphantom{(}
+x\mathstrut
+a+\
+x\relax y
+\relax (x)
+x^{2\relax }
+x^{2}
+\sin\relax x
+\sin x
+\sqrt[10]{x}
+\sqrt[n+1]{x}
+\sqrt[888]{x}
+\sqrt[88]{x}
+translate\(([-0-9.]+),([-0-9.]+)\)
+\raisebox{10pt}{x}
+\raisebox{-10pt}{x}
+\raisebox{10pt}[3pt]{x}
+\raisebox{10pt}[3pt][4pt]{x}
+\raisebox{10pt}[]{x}
+\raisebox{1ex}{x}
+\raisebox{2ex}{x}
+\raisebox{.7ex}{x}
+\raisebox{8pt}{x}
+\raisebox{-0.65ex}{x}
+\raisebox{-2pt}{x}
+\raisebox{0.2ex}{x}
+\raisebox{1em}{x}
+\raisebox x
+\raisebox{2pt}{
+\raisebox{2pt}[3pt{x}
+\raisebox{2pt}[3pt
+\raisebox{2pt}[{x}
+\raisebox{2pt}[3pt][4pt{x}
+x^{\raisebox{1pt}{a}}
+\frac{\raisebox{2pt}{a}}{b}
+\raisebox{2pt}{\raisebox{2pt}{a}}
+\raisebox{2pt}{$a+b$}
+a\raisebox{1pt}{b}c
+\begin{array}{l}x\end{array}
+\begin{array}{l}x\\x\\x\end{array}
+\begin{matrix}x\end{matrix}
+\begin{matrix}x\\x\\x\end{matrix}
+\begin{pmatrix}x\end{pmatrix}
+\begin{pmatrix}x\\x\\x\end{pmatrix}
+\begin{bmatrix}x\end{bmatrix}
+\begin{bmatrix}x\\x\\x\end{bmatrix}
+\begin{vmatrix}x\end{vmatrix}
+\begin{vmatrix}x\\x\\x\end{vmatrix}
+\begin{cases}x & y\end{cases}
+\begin{cases}x & y\\x & y\\x & y\end{cases}
+\begin{aligned}x &= y\end{aligned}
+\begin{aligned}x &= y\\x &= y\\x &= y\end{aligned}
+\begin{gathered}x\end{gathered}
+\begin{gathered}x\\x\\x\end{gathered}
+\begin{pmatrix}x\\x\end{pmatrix}
+\begin{pmatrix}x\\x\\\frac{\frac{a}{b}}{c}\end{pmatrix}
+\begin{smallmatrix}\rule{1pt}{1pt}\\\rule{1pt}{1pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{1pt}\\\rule{1pt}{1pt}\\\rule{1pt}{1pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{4pt}\\\rule{1pt}{4pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{4.5pt}\\\rule{1pt}{4.5pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{5pt}\\\rule{1pt}{5pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{10pt}\\\rule{1pt}{10pt}\end{smallmatrix}
+\begin{smallmatrix}\rule{1pt}{10pt}\\\rule{1pt}{10pt}\\\rule{1pt}{10pt}\end{smallmatrix}
+\rule{1pt}{1pt}
+\rule{1pt}{2pt}
+\rule{1pt}{4pt}
+\begin{smallmatrix}
+\\
+\end{smallmatrix}
+\begin{smallmatrix}x\end{smallmatrix}
+\rule{40pt}{5pt}
+\rule{0pt}{10pt}
+\rule{10pt}{0pt}
+\rule[2pt]{10pt}{4pt}
+\rule[-3pt]{10pt}{4pt}
+\rule{1pc}{1in}
+\rule{bogus}{5pt}
+\rule{1pt}{1in}
+\rule{1pt}{1pc}
+\rule{1pt}{1cm}
+\rule{1pt}{1mm}
+\rule{1pt}{1bp}
+\rule{1pt}{1dd}
+\rule{1pt}{1cc}
+\rule{1pt}{65536sp}
+\rule{1pt}{1em}
+\rule{1pt}{5}
+\rule{1pt}{1zz}
+\rule{1pt}{1ex}
+\rule{1pt}{2ex}
+\rule[2pt{10pt}{4pt}
+\rule
+\rule{10pt}
+\rule[\baselineskip]{10pt}{4pt}
+\rule[-9pt]{10pt}{4pt}
+\scalebox{1}{abc}
+\scalebox{0.5}{abc}
+\scalebox{2}{abc}
+\scalebox{0.5}[1]{abc}
+\scalebox{1}[0.5]{abc}
+\scalebox{2}[0.5]{abc}
+\scalebox{-1}[1]{abc}
+\scalebox{-2}[1]{abc}
+\scalebox{1}[-1]{abc}
+\scalebox{1}[-2]{abc}
+\reflectbox{abc}
+\scalebox{x}{abc}
+\scalebox{}{abc}
+\scalebox{0.5x}{abc}
+\scalebox{2}
+\scalebox{2}[1
+\scalebox{2}{[}
+\scalebox{2}[1]{[}
+\scalebox{2}[x]{abc}
+\widecheck{S}
+\check{S}
+\widecheck{CM}
+\widecheck{C}
+\widehat{CM}
+\widehat{C}
+\widetilde{CM}
+\widetilde{C}
+\widecheck S
+\widecheck{S\cup Z}
+\widecheck{S}' = \widecheck{m}
+x^{\widecheck{S}}
+\frac{\widecheck{S}}{2}
+\xrightarrow{f}
+\xrightarrow[g]{f}
+\xleftarrow{n\to\infty}
+\xleftarrow[a]{b}
+\xleftrightarrow{x}
+\xhookrightarrow{i}
+\xhookleftarrow{j}
+\xmapsto{\phi}
+\xRightarrow{p}
+\xLeftarrow{q}
+\xrightarrow{}
+A \xrightarrow{f} B \xleftarrow[u]{v} C
+\xrightarrow{a}
+\xrightarrow{aaaaaaaa}
+\xrightarrow[wwwwwwww]{a}
+\xrightarrow{X}
+\xrightarrow[Y]{X}
+\xhookrightarrow{f}
+\xmapsto{f}
+
+# From the symbols of censussymbols_test.go of go-tex/math: 98 formulas.
+\blacktriangle
+\blacktriangledown
+\blacktriangleleft
+\blacktriangleright
+\triangledown
+\bigtriangledown
+\Join
+\Bbbk
+\restriction
+\upharpoonright
+\Lbag
+\Rbag
+\llceil
+\widecheck
+\underrightarrow
+\underleftarrow
+\dddot
+\lrcorner
+\smallsetminus
+\rightharpoonup
+\longleftrightarrow
+\Downarrow
+\frown
+\Uparrow
+\looparrowright
+\eqdef
+\llparenthesis
+\rightleftharpoons
+\sslash
+\nrightarrow
+\backsim
+\bigsqcap
+\mho
+\rightleftarrows
+\ulcorner
+\succsim
+\nsubseteq
+\rightarrowtail
+\multimap
+\geqq
+\Cup
+\nvDash
+\mapsfrom
+\nleq
+\dotminus
+\leftrightarrows
+\nprec
+\leqq
+\nRightarrow
+\Subset
+\precneqq
+\lll
+\smile
+\leftrightharpoons
+\ncong
+\lnsim
+\lneq
+\lessapprox
+\lbrack
+\gtreqqless
+\gtrapprox
+\fint
+\approxeq
+\rrparenthesis
+\urcorner
+\rbrack
+\llcorner
+\lhd
+\vartriangleleft
+\rhd
+\vartriangleright
+\unlhd
+\trianglelefteq
+\unrhd
+\trianglerighteq
+\bigcirc
+\circ
+\moo
+\fatsemi
+\lhook
+\nsubseteqq
+\blacklozenge
+\lightning
+\smallsmile
+\smallfrown
+\intop
+\medsquare
+\meddiamond
+\medsquaredot
+\medsquareminus
+\medsquarevert
+\medsquareplus
+\medsquaretimes
+\medsquarefilled
+\boxdot
+\boxminus
+\boxplus
+\boxtimes
+
+# From the examples of docs/config/math.md of Mermaid at mermaid@12.3.0: 10 formulas.
+\sqrt{x+3}
+\frac{1}{2}
+\overbrace{a+b+c}^{\text{note}}
+\pi r^2
+x = \begin{cases} a &\text{if } b \\ c &\text{if } d \end{cases}
+x(t)=c_1\begin{bmatrix}-\cos{t}+\sin{t}\\ 2\cos{t} \end{bmatrix}e^{2t}
+\beta
+\sqrt{2+2}
+2
+\sqrt{2+2}=\sqrt{4}=2
+
+# From the examples of docs/supported.md of KaTeX at v0.18.11: 784 formulas.
+a'
+\tilde{a}
+\mathring{g}
+a''
+\widetilde{ac}
+\overgroup{AB}
+a^{\prime}
+\utilde{AB}
+\undergroup{AB}
+\acute{a}
+\vec{F}
+\Overrightarrow{AB}
+\bar{y}
+\overleftarrow{AB}
+\breve{a}
+\underleftarrow{AB}
+\underrightarrow{AB}
+\check{a}
+\overleftharpoon{ac}
+\overrightharpoon{ac}
+\dot{a}
+\overleftrightarrow{AB}
+\overbrace{AB}
+\ddot{a}
+\underleftrightarrow{AB}
+\underbrace{AB}
+\dddot{a}
+\overline{AB}
+\overbracket{AB}
+\ddddot{a}
+\underline{AB}
+\underbracket{AB}
+\grave{a}
+\underbar{X}
+\overlinesegment{AB}
+\hat{\theta}
+\widecheck{ac}
+\underlinesegment{AB}
+\widehat{ac}
+\text{\'{a}}
+\text{\~{a}}
+\text{\.{a}}
+\text{\H{a}}
+\text{\`{a}}
+\text{\={a}}
+\text{\"{a}}
+\text{\v{a}}
+\text{\^{a}}
+\text{\u{a}}
+\text{\r{a}}
+(~)
+\lparen~\rparen
+⌈~⌉
+\lceil~\rceil
+\uparrow
+[~]
+\lbrack~\rbrack
+⌊~⌋
+\lfloor~\rfloor
+\downarrow
+\{ \}
+\lbrace \rbrace
+⎰⎱
+\lmoustache \rmoustache
+\updownarrow
+⟨~⟩
+\langle~\rangle
+⟮~⟯
+\lgroup~\rgroup
+\vert
+┌ ┐
+\ulcorner \urcorner
+\Vert
+└ ┘
+\llcorner \lrcorner
+\Updownarrow
+\lvert~\rvert
+\lVert~\rVert
+\backslash
+\lang~\rang
+\left\lt~\right\gt
+⟦~⟧
+\llbracket~\rrbracket
+/
+\lBrace~\rBrace
+\left(\LARGE{AB}\right)
+( \big( \Big( \bigg( \Bigg(
+\begin{array}{cc}a & b\\c & d\end{array}
+\begin{bmatrix} a & b \\ c & d \end{bmatrix}
+\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}
+\begin{Bmatrix} a & b \\ c & d \end{Bmatrix}
+\begin{rcases} a &\text{if } b \\ c &\text{if } d \end{rcases}⇒…
+\href{https://katex.org/}{\KaTeX}
+\url{https://katex.org/}
+\includegraphics[height=0.8em, totalheight=0.9em, width=0.9em, alt=KA logo]{https://katex.org/img/khan-academy.png}
+\htmlId{bar}{x}
+\htmlClass{foo}{x}
+\htmlStyle{color: red;}{x}
+\htmlData{foo=a, bar=b}{x}
+Α Β Γ Δ Ε Ζ Η Θ Ι \allowbreak Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω
+\allowbreak α β γ δ ϵ ζ η θ ι κ λ μ ν ξ o π \allowbreak ρ σ τ υ ϕ χ ψ ω ε ϑ ϖ ϱ ς φ ϝ
+\Alpha
+\Beta
+\Gamma
+\Delta
+\Epsilon
+\Zeta
+\Eta
+\Theta
+\Iota
+\Kappa
+\Lambda
+\Mu
+\Nu
+\Xi
+\Omicron
+\Pi
+\Rho
+\Sigma
+\Tau
+\Upsilon
+\Phi
+\Chi
+\Psi
+\Omega
+\varGamma
+\varDelta
+\varTheta
+\varLambda
+\varXi
+\varPi
+\varSigma
+\varUpsilon
+\varPhi
+\varPsi
+\varOmega
+\gamma
+\delta
+\epsilon
+\zeta
+\eta
+\theta
+\iota
+\kappa
+\lambda
+\mu
+\nu
+\xi
+\omicron
+\pi
+\rho
+\sigma
+\tau
+\upsilon
+\phi
+\chi
+\psi
+\omega
+\varepsilon
+\vartheta
+\thetasym
+\varpi
+\varrho
+\varsigma
+\varphi
+\imath
+\nabla
+\Im
+\Reals
+\text{\OE}
+\jmath
+\partial
+\image
+\wp
+\text{\o}
+\aleph
+\Game
+\weierp
+\text{\O}
+\alef
+\Finv
+\N
+\Z
+\text{\ss}
+\alefsym
+\cnums
+\natnums
+\text{\aa}
+\text{\i}
+\beth
+\Complex
+\R
+\text{\AA}
+\text{\j}
+\gimel
+\ell
+\Re
+\text{\ae}
+\daleth
+\hbar
+\real
+\text{\AE}
+\eth
+\hslash
+\reals
+\text{\oe}
+∂ ∇ ℑ Ⅎ ℵ ℶ ℷ ℸ ⅁ ℏ ð − ∗
+\text{𝐀-𝐙 𝐚-𝐳 𝟎-𝟗}
+\text{𝔸-}ℤ\ 𝕜
+\text{𝐴-𝑍 𝑎-𝑧}
+\text{𝖠-𝖹 𝖺-𝗓 𝟢-𝟫}
+\text{𝑨-𝒁 𝒂-𝒛}
+\text{𝗔-𝗭 𝗮-𝘇 𝟬-𝟵}
+\text{𝒜-𝒵}
+\text{𝘈-𝘡 𝘢-𝘻}
+\text{
+-
+}\text{
+\text{𝙰-𝚉 𝚊-𝚣 𝟶-𝟿}
+\text{𝕬-𝖅 𝖆-𝖟}
+\char"263a
+\cancel{5}
+\bcancel{5}
+\underbrace{a+b+c}_{\text{note}}
+\xcancel{ABC}
+\not =
+\text{\sout{abc}}
+\boxed{\pi=\frac c d}
+a_{\angl n}
+a_{\angl n}`                                            |
+\overbracket{a+b+c}^{\text{note}}
+\underbracket{a+b+c}_{\text{note}}
+\phase{-78^\circ}
+x_n
+\stackrel{!}{=}
+a \atop b
+e^x
+\overset{!}{=}
+a\raisebox{0.25em}{
+}c
+b
+\reflectbox{KaTeX}
+\mathreflectbox{x^2}
+_u^o
+\underset{!}{=}
+a+\left(\vcenter{\frac{\frac a b}c}\right)
+\frac{\frac a b}c
+…
+{=}\mathllap{/\,}
+\left(x^{\smash{2}}\right)
+\mathrlap{\,/}{=}
+\sqrt{\smash[b]{y}}
+\displaystyle\sum_{\mathclap{1\le i\le j\le n}} x_{ij}
+\forall
+\complement
+\therefore
+\emptyset
+\exists
+\subset
+\because
+\empty
+\exist
+\supset
+\mapsto
+\varnothing
+\nexists
+\mid
+\to
+\implies
+\in
+\land
+\gets
+\impliedby
+\isin
+\lor
+\leftrightarrow
+\iff
+\notin
+\ni
+\notni
+\neg
+\Set{ x \VERT x<\frac 1 2 }
+\set{x\VERT x<5}
+∀ ∴ ∁ ∵ ∃ ∣ ∈ ∉ ∋ ⊂ ⊃ ∧ ∨ ↦ → ← ↔ ¬
+\bigotimes
+\bigvee
+\coprod
+\bigoplus
+\bigwedge
+\iint
+\bigodot
+\bigcap
+\iiint
+\smallint
+\biguplus
+\oiint
+\oiiint
+\bigsqcup
+∫ ∬ ∭ ∮ ∏ ∐ ∑ ⋀ ⋁ ⋂ ⋃ ⨀ ⨁ ⨂ ⨄ ⨆
+\gtrdot
+x \pmod a
+\cdotp
+\intercal
+x \pod a
+\centerdot
+*
+\leftthreetimes
+\rightthreetimes
+\amalg
+\circledast
+\ldotp
+\rtimes
+\And
+\circledcirc
+\setminus
+\ast
+\circleddash
+\lessdot
+\barwedge
+\sqcap
+\ltimes
+\sqcup
+\curlyvee
+x \mod a
+\times
+\curlywedge
+\mp
+\div
+\odot
+\divideontimes
+\ominus
+\uplus
+\dotplus
+\oplus
+\vee
+\bullet
+\doublebarwedge
+\otimes
+\veebar
+\Cap
+\doublecap
+\oslash
+\wedge
+\cap
+\doublecup
+\pm
+\wr
++ - / * ⋅ ∘ ∙ ± × ÷ ∓ ∔ ∧ ∨ ∩ ∪ ≀ ⊎ ⊓ ⊔ ⊕ ⊖ ⊗ ⊘ ⊙ ⊚ ⊛ ⊝ ◯ ∖ {}
+\genfrac ( ] {2pt}{1}a{a+1}
+{a \above{2pt} b+1}
+a/b
+\cfrac{a}{1 + \cfrac{1}{b}}
+\dbinom{n}{k}
+{n\brace k}
+\tbinom{n}{k}
+{n\brack k}
+\cosec
+\arctg
+\cotg
+\sh
+\arcctg
+\ch
+\ctg
+\tg
+\cth
+\th
+\operatorname{f}
+\argmax
+\injlim
+\varinjlim
+\argmin
+\plim
+\varliminf
+\varlimsup
+\projlim
+\varprojlim
+\operatorname*{f}
+\operatornamewithlimits{f}
+\doteqdot
+<
+\eqcirc
+\lesseqgtr
+\sqsubset
+>
+\eqcolon
+\lesseqqgtr
+\sqsubseteq
+:
+\Eqcolon
+\lessgtr
+\sqsupset
+\approx
+\eqqcolon
+\lesssim
+\sqsupseteq
+\approxcolon
+\Eqqcolon
+\ll
+\approxcoloncolon
+\eqsim
+\eqslantgtr
+\llless
+\subseteq
+\asymp
+\eqslantless
+\lt
+\subseteqq
+\backepsilon
+\equiv
+\succ
+\fallingdotseq
+\models
+\succapprox
+\backsimeq
+\succcurlyeq
+\between
+\ge
+\origof
+\succeq
+\bowtie
+\geq
+\owns
+\bumpeq
+\parallel
+\Supset
+\Bumpeq
+\geqslant
+\perp
+\circeq
+\gg
+\pitchfork
+\supseteq
+\colonapprox
+\ggg
+\prec
+\supseteqq
+\Colonapprox
+\gggtr
+\precapprox
+\thickapprox
+\coloneq
+\gt
+\preccurlyeq
+\thicksim
+\Coloneq
+\preceq
+\coloneqq
+\gtreqless
+\precsim
+\triangleq
+\Coloneqq
+\propto
+\colonsim
+\gtrless
+\risingdotseq
+\varpropto
+\Colonsim
+\gtrsim
+\shortmid
+\vartriangle
+\cong
+\imageof
+\shortparallel
+\curlyeqprec
+\sim
+\curlyeqsucc
+\simcolon
+\vcentcolon
+\dashv
+\le
+\simcoloncolon
+\vdash
+\dblcolon
+\simeq
+\vDash
+\doteq
+\Vdash
+\Doteq
+\leqslant
+\Vvdash
+= < > : ∈ ∋ ∝ ∼ ∽ ≂ ≃ ≅ ≈ ≊ ≍ ≎ ≏ ≐ ≑ ≒ ≓ ≖ ≗ ≜ ≡ ≤ ≥ ≦ ≧ ≫ ≬ ≳ ≷ ≺ ≻ ≼ ≽ ≾ ≿ ⊂ ⊃ ⊆ ⊇ ⊏ ⊐ ⊑ ⊒ ⊢ ⊣ ⊩ ⊪ ⊸ ⋈ ⋍ ⋐ ⋑ ⋔ ⋙ ⋛ ⋞ ⋟ ⌢ ⌣ ⩾ ⪆ ⪌ ⪕ ⪖ ⪯ ⪰ ⪷ ⪸ ⫅ ⫆ ≲ ⩽ ⪅ ≶ ⋚ ⪋ ⟂ ⊨ ⊶ ⊷
+\gnapprox
+\ngeqslant
+\gneq
+\ngtr
+\precnsim
+\gneqq
+\nsucc
+\subsetneq
+\gnsim
+\nleqq
+\nsucceq
+\subsetneqq
+\gvertneqq
+\nleqslant
+\nsupseteq
+\succnapprox
+\lnapprox
+\nless
+\nsupseteqq
+\succneqq
+\nmid
+\ntriangleleft
+\succnsim
+\lneqq
+\ntrianglelefteq
+\supsetneq
+\ntriangleright
+\supsetneqq
+\lvertneqq
+\nparallel
+\ntrianglerighteq
+\varsubsetneq
+\nvdash
+\varsubsetneqq
+\ne
+\npreceq
+\varsupsetneq
+\neq
+\nshortmid
+\nVDash
+\varsupsetneqq
+\ngeq
+\nshortparallel
+\nVdash
+\ngeqq
+\nsim
+\precnapprox
+∉ ∌ ∤ ∦ ≁ ≆ ≠ ≨ ≩ ≮ ≯ ≰ ≱ ⊀ ⊁ ⊈ ⊉ ⊊ ⊋ ⊬ ⊭ ⊮ ⊯ ⋠ ⋡ ⋦ ⋧ ⋨ ⋩ ⋬ ⋭ ⪇ ⪈ ⪉ ⪊ ⪵ ⪶ ⪹ ⪺ ⫋ ⫌
+\circlearrowleft
+\leftharpoonup
+\rArr
+\circlearrowright
+\leftleftarrows
+\rarr
+\curvearrowleft
+\curvearrowright
+\Leftrightarrow
+\rightarrow
+\Darr
+\Rightarrow
+\dArr
+\darr
+\leftrightsquigarrow
+\rightharpoondown
+\dashleftarrow
+\Lleftarrow
+\dashrightarrow
+\longleftarrow
+\rightrightarrows
+\downdownarrows
+\rightsquigarrow
+\downharpoonleft
+\Rrightarrow
+\downharpoonright
+\Rsh
+\searrow
+\Harr
+\looparrowleft
+\swarrow
+\hArr
+\harr
+\Lrarr
+\twoheadleftarrow
+\hookleftarrow
+\lrArr
+\twoheadrightarrow
+\hookrightarrow
+\lrarr
+\Uarr
+\Lsh
+\uArr
+\uarr
+\nearrow
+\Larr
+\nleftarrow
+\lArr
+\nLeftarrow
+\larr
+\nleftrightarrow
+\leadsto
+\nLeftrightarrow
+\upharpoonleft
+\leftarrow
+\Leftarrow
+\upuparrows
+\leftarrowtail
+\nwarrow
+\leftharpoondown
+\Rarr
+← ↑ → ↓ ↔ ↕ ↖ ↗ ↘ ↙ ↚ ↛ ↞ ↠ ↢ ↣ ↦ ↩ ↪ ↫ ↬ ↭ ↮ ↰ ↱↶ ↷ ↺ ↻ ↼ ↽ ↾ ↾ ↿ ⇀ ⇁ ⇂ ⇃ ⇄ ⇆ ⇇ ⇈ ⇉ ⇊ ⇋ ⇌⇍ ⇎ ⇏ ⇐ ⇑ ⇒ ⇓ ⇔ ⇕ ⇚ ⇛ ⇝ ⇠ ⇢ ⟵ ⟶ ⟷ ⟸ ⟹ ⟺ ⟼
+\xleftarrow{abc}
+\xrightarrow[under]{over}
+\xLeftarrow{abc}
+\xRightarrow{abc}
+\xleftrightarrow{abc}
+\xLeftrightarrow{abc}
+\xhookleftarrow{abc}
+\xhookrightarrow{abc}
+\xtwoheadleftarrow{abc}
+\xtwoheadrightarrow{abc}
+\xleftharpoonup{abc}
+\xrightharpoonup{abc}
+\xleftharpoondown{abc}
+\xrightharpoondown{abc}
+\xleftrightharpoons{abc}
+\xrightleftharpoons{abc}
+\xtofrom{abc}
+\xmapsto{abc}
+\xlongequal{abc}
+\braket{\phi\VERT\psi}
+\Bra{\phi}
+\Ket{\psi}
+\Braket{ ϕ \VERT \frac{∂^2}{∂ t^2} \VERT ψ }
+\color{blue} F=ma
+\textcolor{blue}{F=ma}
+\textcolor{#228B22}{F=ma}
+\colorbox{aqua}{
+F=ma
+\fcolorbox{red}{aqua}{
+\mathrm{Ab0}
+\mathbf{Ab0}
+\mathsf{Ab0}
+\mathnormal{Ab0}
+\textbf{Ab0}
+\textsf{Ab0}
+\textrm{Ab0}
+\bf Ab0
+\sf Ab0
+\rm Ab0
+\bold{Ab0}
+\mathsfit{Ab0}
+\textnormal{Ab0}
+\boldsymbol{Ab0}
+\Bbb{AB}
+\text{Ab0}
+\bm{Ab0}
+\mathbb{AB}
+\textup{Ab0}
+\textmd{Ab0}
+\frak{Ab0}
+\mathit{Ab0}
+\mathtt{Ab0}
+\mathfrak{Ab0}
+\textit{Ab0}
+\texttt{Ab0}
+\mathcal{AB0}
+\it Ab0
+\tt Ab0
+\cal AB0
+\emph{Ab0}
+\mathscr{AB}
+\textsf{\textbf{H}}
+\mathsf{\mathbf{H}}
+\pmb{\mu}
+\Huge AB
+\normalsize AB
+\huge AB
+\small AB
+\LARGE AB
+\footnotesize AB
+\Large AB
+\scriptsize AB
+\large AB
+\tiny AB
+\displaystyle\sum_{i=1}^n
+\textstyle\sum_{i=1}^n
+\scriptstyle x
+\scriptscriptstyle x
+\lim\limits_x
+\lim\nolimits_x
+\verb!x^2!
+\dots
+\KaTeX
+\%
+\cdots
+\LaTeX
+\#
+\ddots
+\TeX
+\&
+\ldots
+\_
+\vdots
+\infty
+\text{\textunderscore}
+\dotsb
+\infin
+\text{--}
+\dotsc
+\checkmark
+\text{\textendash}
+\dotsi
+\dag
+\text{---}
+\dotsm
+\dagger
+\text{\textemdash}
+\dotso
+\text{\textdagger}
+\text{\textasciitilde}
+\sdot
+\ddag
+\text{\textasciicircum}
+\mathellipsis
+\ddagger
+`
+\text{\textellipsis}
+\text{\textdaggerdbl}
+\text{\textquoteleft}
+\Box
+\Dagger
+\lq
+\square
+\angle
+\text{\textquoteright}
+\blacksquare
+\measuredangle
+\rq
+\triangle
+\sphericalangle
+\text{\textquotedblleft}
+\top
+"
+\triangleleft
+\bot
+\text{\textquotedblright}
+\triangleright
+\colon
+\text{\textdollar}
+\backprime
+\bigtriangleup
+\pounds
+\prime
+\mathsterling
+\text{\textless}
+\text{\textsterling}
+\text{\textgreater}
+\yen
+\text{\textbar}
+\surd
+\text{\textbardbl}
+\diamond
+\degree
+\text{\textbraceleft}
+\Diamond
+\text{\textdegree}
+\text{\textbraceright}
+\lozenge
+\text{\textbackslash}
+\diagdown
+\text{\P}
+\star
+\diagup
+\text{\S}
+\flat
+\text{\sect}
+\clubsuit
+\natural
+\copyright
+\clubs
+\sharp
+\circledR
+\diamondsuit
+\heartsuit
+\text{\textregistered}
+\diamonds
+\hearts
+\circledS
+\spadesuit
+\spades
+\text{\textcircled a}
+\maltese
+\minuso
+£ ¥ ∇ ∞ · ∠ ∡ ∢ ♠ ♡ ♢ ♣ ♭ ♮ ♯ ✓ …  ⋮  ⋯  ⋱  !
+\rule{1em}{1em}
+\scriptscriptstyle\rule{1em}{1em}
+\huge\rule{1em}{1em}
+\rule{18mu}{18mu}
+\scriptscriptstyle\rule{18mu}{18mu}
+\huge\rule{18mu}{18mu}
+\rule{10pt}{10pt}
+\scriptscriptstyle\rule{10pt}{10pt}
+\huge\rule{10pt}{10pt}
+
+# The commands of phase 26 of D78: 40 formulas.
+\text{if } x > 0 \text{ and } y
+\textbf{bold} + \textit{italic} + \textsf{sans} + \texttt{mono}
+\text{Total: } \textbf{\textit{42}}
+\emph{a} \textit{\emph{b}}
+\color{red} x + \color{blue} y
+a \textcolor{red}{+} b = c
+\colorbox{aqua}{$x^2$ is text}
+\fcolorbox{red}{yellow}{note}
+\fbox{box}
+f^2 + V_1 + P^2_i
+\int_0^1 f(x)\,dx
+\hat{a} \hat{f} \tilde{V} \vec{x} \dot{A}
+\widehat{xyz} \widetilde{ABCD}
+\widehat{x} \widetilde{abcdefghij}
+\overbrace{a+b+c}^{\text{three}}
+\underbrace{x_1 + \cdots + x_n}_{n}
+\overbrace{a+b}
+\cancel{5} \bcancel{x+y} \xcancel{abc}
+E = mc^2 \tag{1}
+a+b \tag*{star}
+\begin{array}{c|c} a & b \\ \hline c & d \end{array}
+\begin{array}{cc} \hline a & b \\ c & d \\ \hline \end{array}
+\cfrac{1}{1+\cfrac{1}{x}}
+\scriptscriptstyle x+y
+a\kern1em b \kern-2pt c \kern 3mu d
+a\hspace{1em}b\hspace*{2pt}c
+\llap{x}y \rlap{x}y \clap{x}y
+\mathllap{x}y \mathrlap{x}y \mathclap{x}y
+\dddot{x} \ddddot{y}
+\newcommand{\pair}[2]{(#1, #2)} \pair{a}{b}
+\newcommand\half{\frac12} \half + \half
+\R \N \Z
+\reals \natnums \Complex
+\left( \frac{a}{b} \middle| c \right)
+\left\{ x \middle\| \frac{y^2}{z} \right\}
+\smash{\frac{a}{b}} x
+\smash[t]{y} \smash[b]{y}
+\large x \Large y \huge z
+\tiny a \normalsize b \Huge c

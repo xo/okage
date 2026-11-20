@@ -1,0 +1,15 @@
+tex "\\widecheck{S\\cup Z}"
+
+style display
+box 22.854444444444447 9.27 0.32 0
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1
+glyph 1696 10 7.862222222222222 0 text "∪" color 0 0 0 1
+glyph 3325 10 16.444444444444443 0 text "𝑍" color 0 0 0 1
+glyph 1433 10 1.772222222222224 -1.71 text "̌" color 0 0 0 1
+
+style text
+box 22.854444444444447 9.27 0.32 0
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1
+glyph 1696 10 7.862222222222222 0 text "∪" color 0 0 0 1
+glyph 3325 10 16.444444444444443 0 text "𝑍" color 0 0 0 1
+glyph 1433 10 1.772222222222224 -1.71 text "̌" color 0 0 0 1

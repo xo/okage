@@ -1,0 +1,9 @@
+tex "\\because"
+
+style display
+box 6.3500000000000005 5.33 0.17 0
+glyph 1753 10 0 0 text "∵" color 0 0 0 1
+
+style text
+box 6.3500000000000005 5.33 0.17 0
+glyph 1753 10 0 0 text "∵" color 0 0 0 1

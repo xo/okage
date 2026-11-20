@@ -1,0 +1,27 @@
+tex "normalsize"
+
+style display
+box 47.530000000000015 7.05 0.12 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 10.510000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3340 10 14.630000000000003 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 22.930000000000003 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 28.480000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 31.460000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 35.32000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3356 10 38.26000000000001 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 43.29000000000001 0 text "𝑒" color 0 0 0 1
+
+style text
+box 47.530000000000015 7.05 0.12 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 10.510000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3340 10 14.630000000000003 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 22.930000000000003 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 28.480000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 31.460000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 35.32000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3356 10 38.26000000000001 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 43.29000000000001 0 text "𝑒" color 0 0 0 1

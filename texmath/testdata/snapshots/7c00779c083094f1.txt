@@ -1,0 +1,17 @@
+tex "\\log_{x} a"
+
+style display
+box 24.409666666666666 7.0600000000000005 4.0200000000000005 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 270 10 2.83 0 text "o" color 0 0 0 1
+glyph 261 10 7.97 0 text "g" color 0 0 0 1
+glyph 3354 7 12.809999999999999 3.95 text "𝑥" color 0 0 0 1
+glyph 3326 10 18.859666666666666 0 text "𝑎" color 0 0 0 1
+
+style text
+box 24.409666666666666 7.0600000000000005 4.0200000000000005 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 270 10 2.83 0 text "o" color 0 0 0 1
+glyph 261 10 7.97 0 text "g" color 0 0 0 1
+glyph 3354 7 12.809999999999999 3.95 text "𝑥" color 0 0 0 1
+glyph 3326 10 18.859666666666666 0 text "𝑎" color 0 0 0 1

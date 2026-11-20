@@ -1,0 +1,33 @@
+tex "medsquarevert"
+
+style display
+box 63.96999999999999 7.05 2.2 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.3 0 text "𝑠" color 0 0 0 1
+glyph 3344 10 22.16 0 text "𝑞" color 0 0 0 1
+glyph 3348 10 27.33 0 text "𝑢" color 0 0 0 1
+glyph 3326 10 32.98 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 38.529999999999994 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 42.64999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3350 10 46.88999999999999 0 text "𝑣" color 0 0 0 1
+glyph 3330 10 52.07999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 56.31999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3347 10 60.43999999999999 0 text "𝑡" color 0 0 0 1
+
+style text
+box 63.96999999999999 7.05 2.2 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.3 0 text "𝑠" color 0 0 0 1
+glyph 3344 10 22.16 0 text "𝑞" color 0 0 0 1
+glyph 3348 10 27.33 0 text "𝑢" color 0 0 0 1
+glyph 3326 10 32.98 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 38.529999999999994 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 42.64999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3350 10 46.88999999999999 0 text "𝑣" color 0 0 0 1
+glyph 3330 10 52.07999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 56.31999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3347 10 60.43999999999999 0 text "𝑡" color 0 0 0 1

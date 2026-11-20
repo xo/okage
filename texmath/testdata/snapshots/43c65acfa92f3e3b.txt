@@ -1,0 +1,13 @@
+tex "a\\boxplus b"
+
+style display
+box 24.544444444444444 7.05 1.62 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1895 10 7.772222222222222 0 text "⊞" color 0 0 0 1
+glyph 3327 10 19.314444444444444 0 text "𝑏" color 0 0 0 1
+
+style text
+box 24.544444444444444 7.05 1.62 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1895 10 7.772222222222222 0 text "⊞" color 0 0 0 1
+glyph 3327 10 19.314444444444444 0 text "𝑏" color 0 0 0 1

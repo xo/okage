@@ -1,0 +1,7 @@
+tex "\\bumpeq"
+
+style display
+error "parsing tex math: unknown command \\bumpeq"
+
+style text
+error "parsing tex math: unknown command \\bumpeq"

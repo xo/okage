@@ -1,0 +1,17 @@
+tex "gamma"
+
+style display
+box 32.730000000000004 4.79 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 5.03 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 10.58 0 text "𝑚" color 0 0 0 1
+glyph 3340 10 18.880000000000003 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 27.180000000000003 0 text "𝑎" color 0 0 0 1
+
+style text
+box 32.730000000000004 4.79 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 5.03 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 10.58 0 text "𝑚" color 0 0 0 1
+glyph 3340 10 18.880000000000003 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 27.180000000000003 0 text "𝑎" color 0 0 0 1

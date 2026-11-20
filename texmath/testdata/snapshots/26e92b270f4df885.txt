@@ -1,0 +1,7 @@
+tex "\\precapprox"
+
+style display
+error "parsing tex math: unknown command \\precapprox"
+
+style text
+error "parsing tex math: unknown command \\precapprox"

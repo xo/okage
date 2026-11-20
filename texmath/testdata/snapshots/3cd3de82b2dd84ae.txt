@@ -1,0 +1,7 @@
+tex "\\text{\\textasciitilde}"
+
+style display
+error "parsing tex math: unknown command \\textasciitilde"
+
+style text
+error "parsing tex math: unknown command \\textasciitilde"

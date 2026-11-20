@@ -1,0 +1,7 @@
+tex "\\backepsilon"
+
+style display
+error "parsing tex math: unknown command \\backepsilon"
+
+style text
+error "parsing tex math: unknown command \\backepsilon"

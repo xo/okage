@@ -1,0 +1,7 @@
+tex "\\begin{rcases} a &\\text{if } b \\\\ c &\\text{if } d \\end{rcases}⇒…"
+
+style display
+error "parsing tex math: unknown environment \"rcases\""
+
+style text
+error "parsing tex math: unknown environment \"rcases\""

@@ -1,0 +1,47 @@
+tex "\\hat{x} \\bar{y} \\vec{v} \\tilde{n} \\dot{a} \\ddot{b} \\check{c} \\breve{d} \\acute{e} \\grave{f}"
+
+style display
+box 52.67 9.040000000000001 2.25 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 732 10 5.75 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 744 10 11.29 0.3299999999999992 text "̄" color 0 0 0 1
+glyph 3350 10 10.940000000000001 0 text "𝑣" color 0 0 0 1
+glyph 1277 10 16.44 0.6099999999999994 text "⃗" color 0 0 0 1
+glyph 3341 10 16.130000000000003 0 text "𝑛" color 0 0 0 1
+glyph 742 10 21.830000000000002 0.13999999999999968 text "̃" color 0 0 0 1
+glyph 3326 10 21.78 0 text "𝑎" color 0 0 0 1
+glyph 758 10 27.48 0.41000000000000014 text "̇" color 0 0 0 1
+glyph 3327 10 27.330000000000002 0 text "𝑏" color 0 0 0 1
+glyph 760 10 33.13 -1.8499999999999996 text "̈" color 0 0 0 1
+glyph 3328 10 32.56 0 text "𝑐" color 0 0 0 1
+glyph 768 10 37.760000000000005 0.05999999999999961 text "̌" color 0 0 0 1
+glyph 3329 10 36.7 0 text "𝑑" color 0 0 0 1
+glyph 748 10 42.800000000000004 -2.16 text "̆" color 0 0 0 1
+glyph 3330 10 42.46 0 text "𝑒" color 0 0 0 1
+glyph 730 10 47.760000000000005 0.019999999999999574 text "́" color 0 0 0 1
+glyph 3331 10 46.7 0 text "𝑓" color 0 0 0 1
+glyph 728 10 53.7 -2.3000000000000007 text "̀" color 0 0 0 1
+
+style text
+box 52.67 9.040000000000001 2.25 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 732 10 5.75 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 744 10 11.29 0.3299999999999992 text "̄" color 0 0 0 1
+glyph 3350 10 10.940000000000001 0 text "𝑣" color 0 0 0 1
+glyph 1277 10 16.44 0.6099999999999994 text "⃗" color 0 0 0 1
+glyph 3341 10 16.130000000000003 0 text "𝑛" color 0 0 0 1
+glyph 742 10 21.830000000000002 0.13999999999999968 text "̃" color 0 0 0 1
+glyph 3326 10 21.78 0 text "𝑎" color 0 0 0 1
+glyph 758 10 27.48 0.41000000000000014 text "̇" color 0 0 0 1
+glyph 3327 10 27.330000000000002 0 text "𝑏" color 0 0 0 1
+glyph 760 10 33.13 -1.8499999999999996 text "̈" color 0 0 0 1
+glyph 3328 10 32.56 0 text "𝑐" color 0 0 0 1
+glyph 768 10 37.760000000000005 0.05999999999999961 text "̌" color 0 0 0 1
+glyph 3329 10 36.7 0 text "𝑑" color 0 0 0 1
+glyph 748 10 42.800000000000004 -2.16 text "̆" color 0 0 0 1
+glyph 3330 10 42.46 0 text "𝑒" color 0 0 0 1
+glyph 730 10 47.760000000000005 0.019999999999999574 text "́" color 0 0 0 1
+glyph 3331 10 46.7 0 text "𝑓" color 0 0 0 1
+glyph 728 10 53.7 -2.3000000000000007 text "̀" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\text{\\sout{abc}}"
+
+style display
+error "parsing tex math: unknown command \\sout"
+
+style text
+error "parsing tex math: unknown command \\sout"

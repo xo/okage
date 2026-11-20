@@ -1,0 +1,13 @@
+tex "\\mathsfit{Ab0}"
+
+style display
+box 15.540000000000001 7.0600000000000005 0.12 0
+glyph 3767 10 0 0 text "𝘈" color 0 0 0 1
+glyph 3794 10 5.22 0 text "𝘣" color 0 0 0 1
+glyph 4243 10 10.46 0 text "𝟢" color 0 0 0 1
+
+style text
+box 15.540000000000001 7.0600000000000005 0.12 0
+glyph 3767 10 0 0 text "𝘈" color 0 0 0 1
+glyph 3794 10 5.22 0 text "𝘣" color 0 0 0 1
+glyph 4243 10 10.46 0 text "𝟢" color 0 0 0 1

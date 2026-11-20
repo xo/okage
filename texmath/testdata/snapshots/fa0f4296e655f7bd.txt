@@ -1,0 +1,15 @@
+tex "x \\pod a"
+
+style display
+box 28.380000000000003 7.36 1.96 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1064 10 15.69 0 text "(" color 0 0 0 1
+glyph 3326 10 19.259999999999998 0 text "𝑎" color 0 0 0 1
+glyph 1065 10 24.810000000000002 0 text ")" color 0 0 0 1
+
+style text
+box 28.380000000000003 7.36 1.96 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1064 10 15.69 0 text "(" color 0 0 0 1
+glyph 3326 10 19.259999999999998 0 text "𝑎" color 0 0 0 1
+glyph 1065 10 24.810000000000002 0 text ")" color 0 0 0 1

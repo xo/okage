@@ -1,0 +1,7 @@
+tex "\\gneqq"
+
+style display
+error "parsing tex math: unknown command \\gneqq"
+
+style text
+error "parsing tex math: unknown command \\gneqq"

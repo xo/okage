@@ -1,0 +1,7 @@
+tex "\\text{\\textasciicircum}"
+
+style display
+error "parsing tex math: unknown command \\textasciicircum"
+
+style text
+error "parsing tex math: unknown command \\textasciicircum"

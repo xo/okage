@@ -1,0 +1,25 @@
+tex "lightning"
+
+style display
+box 39.540000000000006 7.0600000000000005 2.25 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 2.9800000000000004 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 5.920000000000001 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 10.950000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 16.740000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3341 10 20.27 0 text "𝑛" color 0 0 0 1
+glyph 3334 10 25.92 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 28.860000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 34.510000000000005 0 text "𝑔" color 0 0 0 1
+
+style text
+box 39.540000000000006 7.0600000000000005 2.25 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 2.9800000000000004 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 5.920000000000001 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 10.950000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 16.740000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3341 10 20.27 0 text "𝑛" color 0 0 0 1
+glyph 3334 10 25.92 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 28.860000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 34.510000000000005 0 text "𝑔" color 0 0 0 1

@@ -1,0 +1,15 @@
+tex "nleq"
+
+style display
+box 18.04 7.05 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3339 10 5.65 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 8.629999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 12.87 0 text "𝑞" color 0 0 0 1
+
+style text
+box 18.04 7.05 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3339 10 5.65 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 8.629999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 12.87 0 text "𝑞" color 0 0 0 1

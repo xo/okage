@@ -1,0 +1,7 @@
+tex "\\text{\\H{a}}"
+
+style display
+error "parsing tex math: unknown command \\H"
+
+style text
+error "parsing tex math: unknown command \\H"

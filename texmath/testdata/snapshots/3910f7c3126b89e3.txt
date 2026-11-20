@@ -1,0 +1,13 @@
+tex "x + ^1"
+
+style display
+box 16.755 8.073 0.4 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 5.6899999999999995 0 text "+" color 0 0 0 1
+glyph 1138 7 12.89 -3.6 text "1" color 0 0 0 1
+
+style text
+box 16.755 8.073 0.4 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 5.6899999999999995 0 text "+" color 0 0 0 1
+glyph 1138 7 12.89 -3.6 text "1" color 0 0 0 1

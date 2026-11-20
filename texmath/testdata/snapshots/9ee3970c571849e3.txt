@@ -1,0 +1,9 @@
+tex "\\eqqcolon"
+
+style display
+box 8.44 4.2700000000000005 0 0
+glyph 1794 10 0 0 text "≕" color 0 0 0 1
+
+style text
+box 8.44 4.2700000000000005 0 0
+glyph 1794 10 0 0 text "≕" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\doublecup"
+
+style display
+error "parsing tex math: unknown command \\doublecup"
+
+style text
+error "parsing tex math: unknown command \\doublecup"

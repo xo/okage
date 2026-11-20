@@ -1,0 +1,19 @@
+tex "\\pmod n"
+
+style display
+box 43.50666666666667 7.36 1.96 0
+glyph 1064 10 10 0 text "(" color 0 0 0 1
+glyph 268 10 13.57 0 text "m" color 0 0 0 1
+glyph 270 10 22.09 0 text "o" color 0 0 0 1
+glyph 258 10 27.23 0 text "d" color 0 0 0 1
+glyph 3341 10 34.28666666666667 0 text "𝑛" color 0 0 0 1
+glyph 1065 10 39.93666666666667 0 text ")" color 0 0 0 1
+
+style text
+box 43.50666666666667 7.36 1.96 0
+glyph 1064 10 10 0 text "(" color 0 0 0 1
+glyph 268 10 13.57 0 text "m" color 0 0 0 1
+glyph 270 10 22.09 0 text "o" color 0 0 0 1
+glyph 258 10 27.23 0 text "d" color 0 0 0 1
+glyph 3341 10 34.28666666666667 0 text "𝑛" color 0 0 0 1
+glyph 1065 10 39.93666666666667 0 text ")" color 0 0 0 1

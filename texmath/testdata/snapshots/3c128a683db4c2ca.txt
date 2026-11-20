@@ -1,0 +1,11 @@
+tex "\\mathscr{AB}"
+
+style display
+box 15.719999999999999 6.95 0.12 0.2
+glyph 3412 10 0 0 text "𝒜" color 0 0 0 1
+glyph 1245 10 7.98 0 text "ℬ" color 0 0 0 1
+
+style text
+box 15.719999999999999 6.95 0.12 0.2
+glyph 3412 10 0 0 text "𝒜" color 0 0 0 1
+glyph 1245 10 7.98 0 text "ℬ" color 0 0 0 1

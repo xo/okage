@@ -1,0 +1,11 @@
+tex "-x"
+
+style display
+box 12.889999999999999 4.79 0.1 0.1
+glyph 1197 10 0 0 text "−" color 0 0 0 1
+glyph 3354 10 7.2 0 text "𝑥" color 0 0 0 1
+
+style text
+box 12.889999999999999 4.79 0.1 0.1
+glyph 1197 10 0 0 text "−" color 0 0 0 1
+glyph 3354 10 7.2 0 text "𝑥" color 0 0 0 1

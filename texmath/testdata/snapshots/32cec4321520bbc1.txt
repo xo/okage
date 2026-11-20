@@ -1,0 +1,17 @@
+tex "\\lim_{x} a"
+
+style display
+box 21.416666666666664 7.0600000000000005 6.7700000000000005 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 3354 7 5.108499999999999 6.7 text "𝑥" color 0 0 0 1
+glyph 3326 10 15.866666666666665 0 text "𝑎" color 0 0 0 1
+
+style text
+box 25.799666666666667 7.0600000000000005 2.17 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 3354 7 14.2 2.1 text "𝑥" color 0 0 0 1
+glyph 3326 10 20.249666666666666 0 text "𝑎" color 0 0 0 1

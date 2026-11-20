@@ -1,0 +1,21 @@
+tex "\\def\\g#1{#1_{ij}}\\g{A} + \\g{B}"
+
+style display
+box 35.114444444444445 6.61 3.675 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3334 7 6.8100000000000005 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 8.868 2.1 text "𝑗" color 0 0 0 1
+glyph 1196 10 14.647222222222222 0 text "+" color 0 0 0 1
+glyph 3301 10 24.069444444444443 0 text "𝐵" color 0 0 0 1
+glyph 3334 7 29.499444444444443 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 31.557444444444442 2.1 text "𝑗" color 0 0 0 1
+
+style text
+box 35.114444444444445 6.61 3.675 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3334 7 6.8100000000000005 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 8.868 2.1 text "𝑗" color 0 0 0 1
+glyph 1196 10 14.647222222222222 0 text "+" color 0 0 0 1
+glyph 3301 10 24.069444444444443 0 text "𝐵" color 0 0 0 1
+glyph 3334 7 29.499444444444443 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 31.557444444444442 2.1 text "𝑗" color 0 0 0 1

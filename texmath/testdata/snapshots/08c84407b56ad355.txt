@@ -1,0 +1,11 @@
+tex "tt"
+
+style display
+box 7.0600000000000005 5.93 0.09 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3347 10 3.53 0 text "𝑡" color 0 0 0 1
+
+style text
+box 7.0600000000000005 5.93 0.09 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3347 10 3.53 0 text "𝑡" color 0 0 0 1

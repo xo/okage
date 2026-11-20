@@ -1,0 +1,7 @@
+tex "\\overgroup{AB}"
+
+style display
+error "parsing tex math: unknown command \\overgroup"
+
+style text
+error "parsing tex math: unknown command \\overgroup"

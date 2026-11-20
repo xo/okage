@@ -1,0 +1,7 @@
+tex "\\text{\\textquotedblleft}"
+
+style display
+error "parsing tex math: unknown command \\textquotedblleft"
+
+style text
+error "parsing tex math: unknown command \\textquotedblleft"

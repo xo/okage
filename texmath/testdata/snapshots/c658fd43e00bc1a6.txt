@@ -1,0 +1,11 @@
+tex "_u^o"
+
+style display
+box 4.355 6.953 2.17 0
+glyph 3342 7 0 -3.6 text "𝑜" color 0 0 0 1
+glyph 3348 7 0 2.1 text "𝑢" color 0 0 0 1
+
+style text
+box 4.355 6.953 2.17 0
+glyph 3342 7 0 -3.6 text "𝑜" color 0 0 0 1
+glyph 3348 7 0 2.1 text "𝑢" color 0 0 0 1

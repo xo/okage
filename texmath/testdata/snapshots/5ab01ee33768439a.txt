@@ -1,0 +1,21 @@
+tex "fatsemi"
+
+style display
+box 34.39 7.11 2.25 0.2
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 3326 10 5.970000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 11.52 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 15.049999999999999 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 18.91 0 text "𝑒" color 0 0 0 1
+glyph 3340 10 23.15 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 31.45 0 text "𝑖" color 0 0 0 1
+
+style text
+box 34.39 7.11 2.25 0.2
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 3326 10 5.970000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 11.52 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 15.049999999999999 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 18.91 0 text "𝑒" color 0 0 0 1
+glyph 3340 10 23.15 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 31.45 0 text "𝑖" color 0 0 0 1

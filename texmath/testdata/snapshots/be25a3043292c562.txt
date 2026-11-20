@@ -1,0 +1,7 @@
+tex "\\gnapprox"
+
+style display
+error "parsing tex math: unknown command \\gnapprox"
+
+style text
+error "parsing tex math: unknown command \\gnapprox"

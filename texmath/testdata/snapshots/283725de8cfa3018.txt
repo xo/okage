@@ -1,0 +1,13 @@
+tex "\\scriptscriptstyle x+y"
+
+style display
+box 9.977 3.069 1.21 0.08249999999999999
+glyph 3354 5.5 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 5.5 3.1295 0 text "+" color 0 0 0 1
+glyph 3355 5.5 7.0895 0 text "𝑦" color 0 0 0 1
+
+style text
+box 9.977 3.069 1.21 0.08249999999999999
+glyph 3354 5.5 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 5.5 3.1295 0 text "+" color 0 0 0 1
+glyph 3355 5.5 7.0895 0 text "𝑦" color 0 0 0 1

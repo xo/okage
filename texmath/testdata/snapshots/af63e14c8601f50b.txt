@@ -1,0 +1,9 @@
+tex "l"
+
+style display
+box 2.9800000000000004 7.05 0.09 0.2
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+
+style text
+box 2.9800000000000004 7.05 0.09 0.2
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1

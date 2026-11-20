@@ -1,0 +1,15 @@
+tex "\\coth"
+
+style display
+box 18.52 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 275 10 9.6 0 text "t" color 0 0 0 1
+glyph 262 10 12.75 0 text "h" color 0 0 0 1
+
+style text
+box 18.52 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 275 10 9.6 0 text "t" color 0 0 0 1
+glyph 262 10 12.75 0 text "h" color 0 0 0 1

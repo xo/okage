@@ -1,0 +1,19 @@
+tex "digit 0"
+
+style display
+box 25.149999999999995 7.05 2.25 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 5.760000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.7 0 text "𝑔" color 0 0 0 1
+glyph 3334 10 13.73 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 16.669999999999998 0 text "𝑡" color 0 0 0 1
+glyph 1137 10 20.199999999999996 0 text "0" color 0 0 0 1
+
+style text
+box 25.149999999999995 7.05 2.25 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 5.760000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.7 0 text "𝑔" color 0 0 0 1
+glyph 3334 10 13.73 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 16.669999999999998 0 text "𝑡" color 0 0 0 1
+glyph 1137 10 20.199999999999996 0 text "0" color 0 0 0 1

@@ -1,0 +1,15 @@
+tex "\\left(x^{\\smash{2}}\\right)"
+
+style display
+box 16.695 7.24 2.08 0
+glyph 1064 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3354 10 3.5700000000000003 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 9.26 -3.6 text "2" color 0 0 0 1
+glyph 1065 10 13.125 0.1200000000000001 text ")" color 0 0 0 1
+
+style text
+box 16.695 7.24 2.08 0
+glyph 1064 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3354 10 3.5700000000000003 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 9.26 -3.6 text "2" color 0 0 0 1
+glyph 1065 10 13.125 0.1200000000000001 text ")" color 0 0 0 1

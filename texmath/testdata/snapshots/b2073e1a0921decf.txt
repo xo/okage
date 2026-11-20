@@ -1,0 +1,7 @@
+tex "\\th"
+
+style display
+error "parsing tex math: unknown command \\th"
+
+style text
+error "parsing tex math: unknown command \\th"

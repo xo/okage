@@ -1,0 +1,7 @@
+tex "\\ngtr"
+
+style display
+error "parsing tex math: unknown command \\ngtr"
+
+style text
+error "parsing tex math: unknown command \\ngtr"

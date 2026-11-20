@@ -1,0 +1,9 @@
+tex "\\thetasym"
+
+style display
+box 5.41 7.13 0.1 0
+glyph 918 10 0 0 text "ϑ" color 0 0 0 1
+
+style text
+box 5.41 7.13 0.1 0
+glyph 918 10 0 0 text "ϑ" color 0 0 0 1

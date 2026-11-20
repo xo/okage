@@ -1,0 +1,7 @@
+tex "\\begin{aligned} x &= y"
+
+style display
+error "parsing tex math: \\begin{aligned} without \\end"
+
+style text
+error "parsing tex math: \\begin{aligned} without \\end"

@@ -1,0 +1,15 @@
+tex "f(x)"
+
+style display
+box 18.8 7.36 2.25 0
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 1064 10 5.970000000000001 0 text "(" color 0 0 0 1
+glyph 3354 10 9.540000000000001 0 text "𝑥" color 0 0 0 1
+glyph 1065 10 15.23 0 text ")" color 0 0 0 1
+
+style text
+box 18.8 7.36 2.25 0
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 1064 10 5.970000000000001 0 text "(" color 0 0 0 1
+glyph 3354 10 9.540000000000001 0 text "𝑥" color 0 0 0 1
+glyph 1065 10 15.23 0 text ")" color 0 0 0 1

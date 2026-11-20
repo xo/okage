@@ -1,0 +1,7 @@
+tex "\\dotso"
+
+style display
+error "parsing tex math: unknown command \\dotso"
+
+style text
+error "parsing tex math: unknown command \\dotso"

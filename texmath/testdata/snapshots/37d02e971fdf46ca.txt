@@ -1,0 +1,7 @@
+tex "\\eqcirc"
+
+style display
+error "parsing tex math: unknown command \\eqcirc"
+
+style text
+error "parsing tex math: unknown command \\eqcirc"

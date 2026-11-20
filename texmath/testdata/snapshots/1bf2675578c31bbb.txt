@@ -1,0 +1,7 @@
+tex "\\begin{smallmatrix} a"
+
+style display
+error "parsing tex math: \\begin{smallmatrix} without \\end"
+
+style text
+error "parsing tex math: \\begin{smallmatrix} without \\end"

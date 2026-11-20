@@ -1,0 +1,7 @@
+tex "\\varDelta"
+
+style display
+error "parsing tex math: unknown command \\varDelta"
+
+style text
+error "parsing tex math: unknown command \\varDelta"

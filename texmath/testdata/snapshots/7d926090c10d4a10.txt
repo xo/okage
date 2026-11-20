@@ -1,0 +1,9 @@
+tex "\\vcentcolon"
+
+style display
+box 5.23 5.33 0.14 0
+glyph 1754 10 0 0 text "∶" color 0 0 0 1
+
+style text
+box 5.23 5.33 0.14 0
+glyph 1754 10 0 0 text "∶" color 0 0 0 1

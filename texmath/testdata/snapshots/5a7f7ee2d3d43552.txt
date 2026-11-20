@@ -1,0 +1,21 @@
+tex "succsim"
+
+style display
+box 32.89 6.65 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3348 10 3.86 0 text "𝑢" color 0 0 0 1
+glyph 3328 10 9.51 0 text "𝑐" color 0 0 0 1
+glyph 3328 10 13.649999999999999 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 21.65 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 24.59 0 text "𝑚" color 0 0 0 1
+
+style text
+box 32.89 6.65 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3348 10 3.86 0 text "𝑢" color 0 0 0 1
+glyph 3328 10 9.51 0 text "𝑐" color 0 0 0 1
+glyph 3328 10 13.649999999999999 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 21.65 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 24.59 0 text "𝑚" color 0 0 0 1

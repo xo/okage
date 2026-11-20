@@ -1,0 +1,33 @@
+tex "\\widehat{x} \\widetilde{abcdefghij}"
+
+style display
+box 54.85000000000001 9.170000000000002 2.25 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 732 10 5.75 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3326 10 5.6899999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 11.239999999999998 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 16.47 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 20.61 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 26.370000000000005 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 30.61 0 text "𝑓" color 0 0 0 1
+glyph 3332 10 36.58 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 41.61 0 text "ℎ" color 0 0 0 1
+glyph 3334 10 47.4 0 text "𝑖" color 0 0 0 1
+glyph 3336 10 50.34 0 text "𝑗" color 0 0 0 1
+glyph 1409 10 18.350000000000005 -1.6000000000000005 text "̃" color 0 0 0 1
+
+style text
+box 54.85000000000001 9.170000000000002 2.25 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 732 10 5.75 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3326 10 5.6899999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 11.239999999999998 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 16.47 0 text "𝑐" color 0 0 0 1
+glyph 3329 10 20.61 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 26.370000000000005 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 30.61 0 text "𝑓" color 0 0 0 1
+glyph 3332 10 36.58 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 41.61 0 text "ℎ" color 0 0 0 1
+glyph 3334 10 47.4 0 text "𝑖" color 0 0 0 1
+glyph 3336 10 50.34 0 text "𝑗" color 0 0 0 1
+glyph 1409 10 18.350000000000005 -1.6000000000000005 text "̃" color 0 0 0 1

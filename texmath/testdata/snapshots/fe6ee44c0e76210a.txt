@@ -1,0 +1,7 @@
+tex "\\varUpsilon"
+
+style display
+error "parsing tex math: unknown command \\varUpsilon"
+
+style text
+error "parsing tex math: unknown command \\varUpsilon"

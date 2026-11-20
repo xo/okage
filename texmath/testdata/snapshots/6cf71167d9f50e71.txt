@@ -1,0 +1,11 @@
+tex "\\lVert~\\rVert"
+
+style display
+box 11.873333333333335 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 1063 10 7.6033333333333335 0 text "‖" color 0 0 0 1
+
+style text
+box 11.873333333333335 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 1063 10 7.6033333333333335 0 text "‖" color 0 0 0 1

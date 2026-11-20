@@ -1,0 +1,7 @@
+tex "\\rule{10pt}"
+
+style display
+error "parsing tex math: \\rule needs {width}{height}"
+
+style text
+error "parsing tex math: \\rule needs {width}{height}"

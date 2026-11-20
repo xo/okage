@@ -1,0 +1,9 @@
+tex "\\text{\\P}"
+
+style display
+box 6.05 6.57 1.48 0
+glyph 1097 10 0 0 text "¶" color 0 0 0 1
+
+style text
+box 6.05 6.57 1.48 0
+glyph 1097 10 0 0 text "¶" color 0 0 0 1

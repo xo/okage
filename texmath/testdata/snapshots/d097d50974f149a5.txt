@@ -1,0 +1,17 @@
+tex "u \\lesssim v \\gtrsim w"
+
+style display
+box 43.77111111111111 6.8 1.68 0.15
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 1832 10 8.427777777777777 0 text "≲" color 0 0 0 1
+glyph 3350 10 18.405555555555555 0 text "𝑣" color 0 0 0 1
+glyph 1834 10 26.37333333333333 0 text "≳" color 0 0 0 1
+glyph 3352 10 36.35111111111111 0 text "𝑤" color 0 0 0 1
+
+style text
+box 43.77111111111111 6.8 1.68 0.15
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 1832 10 8.427777777777777 0 text "≲" color 0 0 0 1
+glyph 3350 10 18.405555555555555 0 text "𝑣" color 0 0 0 1
+glyph 1834 10 26.37333333333333 0 text "≳" color 0 0 0 1
+glyph 3352 10 36.35111111111111 0 text "𝑤" color 0 0 0 1

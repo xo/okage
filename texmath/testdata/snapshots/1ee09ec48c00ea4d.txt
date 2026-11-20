@@ -1,0 +1,9 @@
+tex "\\intercal"
+
+style display
+box 4.91 4.61 2.17 0
+glyph 1923 10 0 0 text "⊺" color 0 0 0 1
+
+style text
+box 4.91 4.61 2.17 0
+glyph 1923 10 0 0 text "⊺" color 0 0 0 1

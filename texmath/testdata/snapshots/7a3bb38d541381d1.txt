@@ -1,0 +1,13 @@
+tex "\\mathsf{Ab0}"
+
+style display
+box 16 7.0600000000000005 0.12 0
+glyph 3659 10 0 0 text "𝖠" color 0 0 0 1
+glyph 3686 10 5.5600000000000005 0 text "𝖻" color 0 0 0 1
+glyph 4243 10 10.920000000000002 0 text "𝟢" color 0 0 0 1
+
+style text
+box 16 7.0600000000000005 0.12 0
+glyph 3659 10 0 0 text "𝖠" color 0 0 0 1
+glyph 3686 10 5.5600000000000005 0 text "𝖻" color 0 0 0 1
+glyph 4243 10 10.920000000000002 0 text "𝟢" color 0 0 0 1

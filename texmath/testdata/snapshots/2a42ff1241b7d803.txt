@@ -1,0 +1,13 @@
+tex "\\text{a~b}"
+
+style display
+box 12.370000000000001 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 1 10 4.8 0 text " " color 0 0 0 1
+glyph 256 10 7.15 0 text "b" color 0 0 0 1
+
+style text
+box 12.370000000000001 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 1 10 4.8 0 text " " color 0 0 0 1
+glyph 256 10 7.15 0 text "b" color 0 0 0 1

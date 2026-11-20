@@ -1,0 +1,13 @@
+tex "x \\dblcolon y"
+
+style display
+box 23.695555555555554 5.33 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1755 10 8.467777777777776 0 text "∷" color 0 0 0 1
+glyph 3355 10 18.445555555555554 0 text "𝑦" color 0 0 0 1
+
+style text
+box 23.695555555555554 5.33 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1755 10 8.467777777777776 0 text "∷" color 0 0 0 1
+glyph 3355 10 18.445555555555554 0 text "𝑦" color 0 0 0 1

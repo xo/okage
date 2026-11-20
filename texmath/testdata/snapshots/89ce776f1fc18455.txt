@@ -1,0 +1,17 @@
+tex "( \\big( \\Big( \\bigg( \\Bigg("
+
+style display
+box 22.94 18.08 12.92 0
+glyph 1064 10 0 0 text "(" color 0 0 0 1
+glyph 1302 10 3.5700000000000003 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1304 10 7.61 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1307 10 12.11 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1309 10 17.3 0.11999999999999922 text "(" color 0 0 0 1
+
+style text
+box 22.94 18.08 12.92 0
+glyph 1064 10 0 0 text "(" color 0 0 0 1
+glyph 1302 10 3.5700000000000003 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1304 10 7.61 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1307 10 12.11 0.1200000000000001 text "(" color 0 0 0 1
+glyph 1309 10 17.3 0.11999999999999922 text "(" color 0 0 0 1

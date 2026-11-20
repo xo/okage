@@ -1,0 +1,11 @@
+tex "\\ulcorner \\urcorner"
+
+style display
+box 9.48 6.78 0 0
+glyph 2041 10 0 0 text "⌜" color 0 0 0 1
+glyph 2042 10 4.74 0 text "⌝" color 0 0 0 1
+
+style text
+box 9.48 6.78 0 0
+glyph 2041 10 0 0 text "⌜" color 0 0 0 1
+glyph 2042 10 4.74 0 text "⌝" color 0 0 0 1

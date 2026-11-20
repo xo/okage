@@ -1,0 +1,11 @@
+{
+  "name": "okage-texmath-katex",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The KaTeX oracle of texmath (D78), at the version of KaTeX that Mermaid 12.3.0 bundles.",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "dependencies": {
+    "katex": "0.18.11"
+  }
+}

@@ -1,0 +1,9 @@
+tex "\\ll"
+
+style display
+box 9.55 5.45 0.27 0
+glyph 1819 10 0 0 text "≪" color 0 0 0 1
+
+style text
+box 9.55 5.45 0.27 0
+glyph 1819 10 0 0 text "≪" color 0 0 0 1

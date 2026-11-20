@@ -1,0 +1,13 @@
+tex "tau"
+
+style display
+box 14.73 5.93 0.12 0
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 3.53 0 text "𝑎" color 0 0 0 1
+glyph 3348 10 9.08 0 text "𝑢" color 0 0 0 1
+
+style text
+box 14.73 5.93 0.12 0
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 3.53 0 text "𝑎" color 0 0 0 1
+glyph 3348 10 9.08 0 text "𝑢" color 0 0 0 1

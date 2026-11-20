@@ -1,0 +1,13 @@
+tex "a''"
+
+style display
+box 10.094 8.521 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1209 7 5.55 -3.6 text "′" color 0 0 0 1
+glyph 1209 7 7.622 -3.6 text "′" color 0 0 0 1
+
+style text
+box 10.094 8.521 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1209 7 5.55 -3.6 text "′" color 0 0 0 1
+glyph 1209 7 7.622 -3.6 text "′" color 0 0 0 1

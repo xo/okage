@@ -1,0 +1,21 @@
+tex "a+b \\tag*{star}"
+
+style display
+box 48.12444444444445 7.05 0.4 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 0 text "+" color 0 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1
+glyph 274 10 32.42444444444445 0 text "s" color 0 0 0 1
+glyph 275 10 36.37444444444445 0 text "t" color 0 0 0 1
+glyph 255 10 39.52444444444445 0 text "a" color 0 0 0 1
+glyph 273 10 44.324444444444445 0 text "r" color 0 0 0 1
+
+style text
+box 48.12444444444445 7.05 0.4 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 0 text "+" color 0 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1
+glyph 274 10 32.42444444444445 0 text "s" color 0 0 0 1
+glyph 275 10 36.37444444444445 0 text "t" color 0 0 0 1
+glyph 255 10 39.52444444444445 0 text "a" color 0 0 0 1
+glyph 273 10 44.324444444444445 0 text "r" color 0 0 0 1

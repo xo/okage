@@ -1,0 +1,9 @@
+tex "\\sum"
+
+style display
+box 11.120000000000001 9.205 4.045 0
+glyph 1647 10 0 -0.015000000000000568 text "∑" color 0 0 0 1
+
+style text
+box 9.36 7.73 2.57 0
+glyph 1646 10 0 0.08999999999999986 text "∑" color 0 0 0 1

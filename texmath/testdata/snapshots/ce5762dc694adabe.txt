@@ -1,0 +1,7 @@
+tex "\\phantom{x}"
+
+style display
+box 5.6899999999999995 4.79 0.1 0
+
+style text
+box 5.6899999999999995 4.79 0.1 0

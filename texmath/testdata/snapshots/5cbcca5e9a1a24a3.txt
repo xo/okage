@@ -1,0 +1,7 @@
+tex "\\text{\\O}"
+
+style display
+error "parsing tex math: unknown command \\O"
+
+style text
+error "parsing tex math: unknown command \\O"

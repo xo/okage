@@ -1,0 +1,9 @@
+tex "\\vphantom{X}y"
+
+style display
+box 5.250000000000001 6.57 2.2 0.15
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+
+style text
+box 5.250000000000001 6.57 2.2 0.15
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1

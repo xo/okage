@@ -1,0 +1,9 @@
+tex "\\sharp"
+
+style display
+box 4.51 7.86 1.87 0
+glyph 2390 10 0 0 text "♯" color 0 0 0 1
+
+style text
+box 4.51 7.86 1.87 0
+glyph 2390 10 0 0 text "♯" color 0 0 0 1

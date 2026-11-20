@@ -1,0 +1,19 @@
+tex "\\mbox{if } x>0"
+
+style display
+box 31.665555555555553 7.13 0.25 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 260 10 2.85 0 text "f" color 0 0 0 1
+glyph 1 10 5.92 0 text " " color 0 0 0 1
+glyph 3354 10 8.27 0 text "𝑥" color 0 0 0 1
+glyph 1204 10 16.737777777777776 0 text ">" color 0 0 0 1
+glyph 1137 10 26.715555555555554 0 text "0" color 0 0 0 1
+
+style text
+box 31.665555555555553 7.13 0.25 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 260 10 2.85 0 text "f" color 0 0 0 1
+glyph 1 10 5.92 0 text " " color 0 0 0 1
+glyph 3354 10 8.27 0 text "𝑥" color 0 0 0 1
+glyph 1204 10 16.737777777777776 0 text ">" color 0 0 0 1
+glyph 1137 10 26.715555555555554 0 text "0" color 0 0 0 1

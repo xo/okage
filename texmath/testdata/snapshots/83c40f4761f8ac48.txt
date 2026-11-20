@@ -1,0 +1,7 @@
+tex "\\upharpoonleft"
+
+style display
+error "parsing tex math: unknown command \\upharpoonleft"
+
+style text
+error "parsing tex math: unknown command \\upharpoonleft"

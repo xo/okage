@@ -1,0 +1,19 @@
+tex "{p{2cm}r}x"
+
+style display
+box 33.18 6.44 2.2 0.1
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1139 10 5.98 0 text "2" color 0 0 0 1
+glyph 3328 10 10.93 0 text "𝑐" color 0 0 0 1
+glyph 3340 10 15.07 0 text "𝑚" color 0 0 0 1
+glyph 3345 10 23.37 0 text "𝑟" color 0 0 0 1
+glyph 3354 10 27.490000000000002 0 text "𝑥" color 0 0 0 1
+
+style text
+box 33.18 6.44 2.2 0.1
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1139 10 5.98 0 text "2" color 0 0 0 1
+glyph 3328 10 10.93 0 text "𝑐" color 0 0 0 1
+glyph 3340 10 15.07 0 text "𝑚" color 0 0 0 1
+glyph 3345 10 23.37 0 text "𝑟" color 0 0 0 1
+glyph 3354 10 27.490000000000002 0 text "𝑥" color 0 0 0 1

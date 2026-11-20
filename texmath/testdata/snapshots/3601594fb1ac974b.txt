@@ -1,0 +1,7 @@
+tex "\\varPi"
+
+style display
+error "parsing tex math: unknown command \\varPi"
+
+style text
+error "parsing tex math: unknown command \\varPi"

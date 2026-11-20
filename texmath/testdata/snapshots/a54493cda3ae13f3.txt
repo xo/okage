@@ -1,0 +1,7 @@
+tex "\\lesseqgtr"
+
+style display
+error "parsing tex math: unknown command \\lesseqgtr"
+
+style text
+error "parsing tex math: unknown command \\lesseqgtr"

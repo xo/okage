@@ -1,0 +1,9 @@
+tex "\\updownarrow"
+
+style display
+box 5.23 7.47 2.3000000000000003 0
+glyph 1515 10 0 0 text "↕" color 0 0 0 1
+
+style text
+box 5.23 7.47 2.3000000000000003 0
+glyph 1515 10 0 0 text "↕" color 0 0 0 1

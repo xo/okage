@@ -1,0 +1,9 @@
+tex "3"
+
+style display
+box 4.95 6.44 0.13 0
+glyph 1140 10 0 0 text "3" color 0 0 0 1
+
+style text
+box 4.95 6.44 0.13 0
+glyph 1140 10 0 0 text "3" color 0 0 0 1

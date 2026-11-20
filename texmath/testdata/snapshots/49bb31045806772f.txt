@@ -1,0 +1,21 @@
+tex "\\text{𝐴-𝑍 𝑎-𝑧}"
+
+style display
+box 32 6.61 0.12 0.1
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1075 10 6.8100000000000005 0 text "-" color 0 0 0 1
+glyph 3325 10 9.96 0 text "𝑍" color 0 0 0 1
+glyph 1 10 16.020000000000003 0 text " " color 0 0 0 1
+glyph 3326 10 18.370000000000005 0 text "𝑎" color 0 0 0 1
+glyph 1075 10 23.920000000000005 0 text "-" color 0 0 0 1
+glyph 3356 10 27.070000000000004 0 text "𝑧" color 0 0 0 1
+
+style text
+box 32 6.61 0.12 0.1
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1075 10 6.8100000000000005 0 text "-" color 0 0 0 1
+glyph 3325 10 9.96 0 text "𝑍" color 0 0 0 1
+glyph 1 10 16.020000000000003 0 text " " color 0 0 0 1
+glyph 3326 10 18.370000000000005 0 text "𝑎" color 0 0 0 1
+glyph 1075 10 23.920000000000005 0 text "-" color 0 0 0 1
+glyph 3356 10 27.070000000000004 0 text "𝑧" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\operatorname*"
+
+style display
+error "parsing tex math: \\operatorname needs {name}"
+
+style text
+error "parsing tex math: \\operatorname needs {name}"

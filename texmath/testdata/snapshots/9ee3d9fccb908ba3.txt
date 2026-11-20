@@ -1,0 +1,17 @@
+tex "\\begin{pmatrix}x\\\\x\\\\x\\end{pmatrix}"
+
+style display
+box 17.43 20.58 15.419999999999996 0
+glyph 1310 10 0 0.120000000000001 text "(" color 0 0 0 1
+glyph 3354 10 5.87 -12.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.87 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.87 11.819999999999997 text "𝑥" color 0 0 0 1
+glyph 1322 10 11.559999999999999 0.120000000000001 text ")" color 0 0 0 1
+
+style text
+box 17.43 20.58 15.419999999999996 0
+glyph 1310 10 0 0.120000000000001 text "(" color 0 0 0 1
+glyph 3354 10 5.87 -12.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.87 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.87 11.819999999999997 text "𝑥" color 0 0 0 1
+glyph 1322 10 11.559999999999999 0.120000000000001 text ")" color 0 0 0 1

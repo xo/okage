@@ -1,0 +1,21 @@
+tex "bigcirc"
+
+style display
+box 28.54 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3334 10 5.2299999999999995 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.17 0 text "𝑔" color 0 0 0 1
+glyph 3328 10 13.2 0 text "𝑐" color 0 0 0 1
+glyph 3334 10 17.34 0 text "𝑖" color 0 0 0 1
+glyph 3345 10 20.279999999999998 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 24.4 0 text "𝑐" color 0 0 0 1
+
+style text
+box 28.54 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3334 10 5.2299999999999995 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.17 0 text "𝑔" color 0 0 0 1
+glyph 3328 10 13.2 0 text "𝑐" color 0 0 0 1
+glyph 3334 10 17.34 0 text "𝑖" color 0 0 0 1
+glyph 3345 10 20.279999999999998 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 24.4 0 text "𝑐" color 0 0 0 1

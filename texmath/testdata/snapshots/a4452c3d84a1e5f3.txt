@@ -1,0 +1,9 @@
+tex "\\tau"
+
+style display
+box 3.92 4.71 0.09 0
+glyph 904 10 0 0 text "τ" color 0 0 0 1
+
+style text
+box 3.92 4.71 0.09 0
+glyph 904 10 0 0 text "τ" color 0 0 0 1

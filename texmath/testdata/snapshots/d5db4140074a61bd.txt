@@ -1,0 +1,9 @@
+tex "\\phantom{xy}z"
+
+style display
+box 15.969999999999999 4.82 2.2 0.1
+glyph 3356 10 10.94 0 text "𝑧" color 0 0 0 1
+
+style text
+box 15.969999999999999 4.82 2.2 0.1
+glyph 3356 10 10.94 0 text "𝑧" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\imath"
+
+style display
+box 2.85 4.82 0 0
+glyph 382 10 0 0 text "ı" color 0 0 0 1
+
+style text
+box 2.85 4.82 0 0
+glyph 382 10 0 0 text "ı" color 0 0 0 1

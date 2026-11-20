@@ -1,0 +1,19 @@
+tex "\\mathbbm{1}_{\\{x>0\\}}"
+
+style display
+box 21.506 6.54 3.479 0
+glyph 4234 10 0 0 text "𝟙" color 0 0 0 1
+glyph 1068 7 4.04 2.1 text "{" color 0 0 0 1
+glyph 3354 7 6.329000000000001 2.1 text "𝑥" color 0 0 0 1
+glyph 1204 7 10.312000000000001 2.1 text ">" color 0 0 0 1
+glyph 1137 7 15.352 2.1 text "0" color 0 0 0 1
+glyph 1069 7 18.817 2.1 text "}" color 0 0 0 1
+
+style text
+box 21.506 6.54 3.479 0
+glyph 4234 10 0 0 text "𝟙" color 0 0 0 1
+glyph 1068 7 4.04 2.1 text "{" color 0 0 0 1
+glyph 3354 7 6.329000000000001 2.1 text "𝑥" color 0 0 0 1
+glyph 1204 7 10.312000000000001 2.1 text ">" color 0 0 0 1
+glyph 1137 7 15.352 2.1 text "0" color 0 0 0 1
+glyph 1069 7 18.817 2.1 text "}" color 0 0 0 1

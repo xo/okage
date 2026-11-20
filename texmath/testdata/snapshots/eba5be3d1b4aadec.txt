@@ -1,0 +1,7 @@
+tex "\\And"
+
+style display
+error "parsing tex math: unknown command \\And"
+
+style text
+error "parsing tex math: unknown command \\And"

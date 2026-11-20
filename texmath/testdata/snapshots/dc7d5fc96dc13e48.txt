@@ -1,0 +1,7 @@
+tex "\\simcoloncolon"
+
+style display
+error "parsing tex math: unknown command \\simcoloncolon"
+
+style text
+error "parsing tex math: unknown command \\simcoloncolon"

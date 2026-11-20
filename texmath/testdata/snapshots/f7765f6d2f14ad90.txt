@@ -1,0 +1,11 @@
+tex "\\mathring{g}"
+
+style display
+box 5.03 7.180000000000001 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 764 10 5.359999999999999 0.10999999999999943 text "̊" color 0 0 0 1
+
+style text
+box 5.03 7.180000000000001 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 764 10 5.359999999999999 0.10999999999999943 text "̊" color 0 0 0 1

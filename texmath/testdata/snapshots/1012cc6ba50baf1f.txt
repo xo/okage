@@ -1,0 +1,7 @@
+tex "\\text{\\textbackslash}"
+
+style display
+error "parsing tex math: unknown command \\textbackslash"
+
+style text
+error "parsing tex math: unknown command \\textbackslash"

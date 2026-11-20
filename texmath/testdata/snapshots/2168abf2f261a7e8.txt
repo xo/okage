@@ -1,0 +1,15 @@
+tex "\\overbrace{a+b}"
+
+style display
+box 26 13.52 0.4 0
+glyph 3326 10 1.7877777777777784 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 9.56 0 text "+" color 0 0 0 1
+glyph 3327 10 18.98222222222222 0 text "𝑏" color 0 0 0 1
+glyph 2113 10 0 -2.170000000000001 text "⏞" color 0 0 0 1
+
+style text
+box 26 13.52 0.4 0
+glyph 3326 10 1.7877777777777784 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 9.56 0 text "+" color 0 0 0 1
+glyph 3327 10 18.98222222222222 0 text "𝑏" color 0 0 0 1
+glyph 2113 10 0 -2.170000000000001 text "⏞" color 0 0 0 1

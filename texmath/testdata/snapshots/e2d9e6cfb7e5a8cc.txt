@@ -1,0 +1,7 @@
+tex "\\cotg"
+
+style display
+error "parsing tex math: unknown command \\cotg"
+
+style text
+error "parsing tex math: unknown command \\cotg"

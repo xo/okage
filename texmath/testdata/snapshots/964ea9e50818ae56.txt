@@ -1,0 +1,7 @@
+tex "a\\mkern3pt b"
+
+style display
+error "parsing tex math: \\mkern: expected mu"
+
+style text
+error "parsing tex math: \\mkern: expected mu"

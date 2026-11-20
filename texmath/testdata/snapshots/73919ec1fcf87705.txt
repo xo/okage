@@ -1,0 +1,7 @@
+tex "\\text{\\textdollar}"
+
+style display
+error "parsing tex math: unknown command \\textdollar"
+
+style text
+error "parsing tex math: unknown command \\textdollar"

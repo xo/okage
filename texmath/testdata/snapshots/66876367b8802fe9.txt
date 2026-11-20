@@ -1,0 +1,7 @@
+tex "\\def{x}{y} z"
+
+style display
+error "parsing tex math: unknown command \\def"
+
+style text
+error "parsing tex math: unknown command \\def"

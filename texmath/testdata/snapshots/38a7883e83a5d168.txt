@@ -1,0 +1,37 @@
+tex "\\xrightarrow[under]{over}"
+
+style display
+box 23.794 9.617 6.039 0
+rule 0 -2.92 19.594 0.68 color 0 0 0 1
+path 0 0 color 0 0 0 1
+  M 23.79400062561035 -2.5799999237060547
+  L 19.5939998626709 -0.18000000715255737
+  L 19.5939998626709 -4.980000019073486
+  Z
+glyph 3342 7 5.4535 -6.264 text "𝑜" color 0 0 0 1
+glyph 3350 7 8.8555 -6.264 text "𝑣" color 0 0 0 1
+glyph 3330 7 12.4885 -6.264 text "𝑒" color 0 0 0 1
+glyph 3345 7 15.4565 -6.264 text "𝑟" color 0 0 0 1
+glyph 3348 7 3 5.955 text "𝑢" color 0 0 0 1
+glyph 3341 7 6.955 5.955 text "𝑛" color 0 0 0 1
+glyph 3329 7 10.91 5.955 text "𝑑" color 0 0 0 1
+glyph 3330 7 14.942 5.955 text "𝑒" color 0 0 0 1
+glyph 3345 7 17.91 5.955 text "𝑟" color 0 0 0 1
+
+style text
+box 23.794 9.617 6.039 0
+rule 0 -2.92 19.594 0.68 color 0 0 0 1
+path 0 0 color 0 0 0 1
+  M 23.79400062561035 -2.5799999237060547
+  L 19.5939998626709 -0.18000000715255737
+  L 19.5939998626709 -4.980000019073486
+  Z
+glyph 3342 7 5.4535 -6.264 text "𝑜" color 0 0 0 1
+glyph 3350 7 8.8555 -6.264 text "𝑣" color 0 0 0 1
+glyph 3330 7 12.4885 -6.264 text "𝑒" color 0 0 0 1
+glyph 3345 7 15.4565 -6.264 text "𝑟" color 0 0 0 1
+glyph 3348 7 3 5.955 text "𝑢" color 0 0 0 1
+glyph 3341 7 6.955 5.955 text "𝑛" color 0 0 0 1
+glyph 3329 7 10.91 5.955 text "𝑑" color 0 0 0 1
+glyph 3330 7 14.942 5.955 text "𝑒" color 0 0 0 1
+glyph 3345 7 17.91 5.955 text "𝑟" color 0 0 0 1

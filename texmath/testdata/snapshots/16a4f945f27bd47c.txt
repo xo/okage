@@ -1,0 +1,11 @@
+tex "\\begin{aligned} a \\\\ b \\end{aligned}"
+
+style display
+box 5.55 16.08 10.919999999999998 0
+glyph 3326 10 0 -7.68 text "𝑎" color 0 0 0 1
+glyph 3327 10 0.3200000000000003 7.3199999999999985 text "𝑏" color 0 0 0 1
+
+style text
+box 5.55 16.08 10.919999999999998 0
+glyph 3326 10 0 -7.68 text "𝑎" color 0 0 0 1
+glyph 3327 10 0.3200000000000003 7.3199999999999985 text "𝑏" color 0 0 0 1

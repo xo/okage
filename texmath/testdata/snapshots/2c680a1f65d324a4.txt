@@ -1,0 +1,15 @@
+tex "a\\ooalign{$\\cup$\\cr\\hidewidth$\\cdot$\\hidewidth}b"
+
+style display
+box 17.14 7.05 0.32 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1696 10 5.55 0 text "∪" color 0 0 0 1
+glyph 1938 10 7.265 0 text "⋅" color 0 0 0 1
+glyph 3327 10 11.91 0 text "𝑏" color 0 0 0 1
+
+style text
+box 17.14 7.05 0.32 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1696 10 5.55 0 text "∪" color 0 0 0 1
+glyph 1938 10 7.265 0 text "⋅" color 0 0 0 1
+glyph 3327 10 11.91 0 text "𝑏" color 0 0 0 1

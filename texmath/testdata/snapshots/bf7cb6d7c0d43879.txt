@@ -1,0 +1,9 @@
+tex "\\Diamond"
+
+style display
+box 10.89 7.62 2.48 0
+glyph 2298 10 0 0 text "◇" color 0 0 0 1
+
+style text
+box 10.89 7.62 2.48 0
+glyph 2298 10 0 0 text "◇" color 0 0 0 1

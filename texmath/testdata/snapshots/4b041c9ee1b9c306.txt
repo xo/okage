@@ -1,0 +1,17 @@
+tex "\\overbrace{x+y}^{t}"
+
+style display
+box 26 18.264000000000003 2.2 0
+glyph 3354 10 1.7077777777777783 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 9.620000000000001 0 text "+" color 0 0 0 1
+glyph 3355 10 19.04222222222222 0 text "𝑦" color 0 0 0 1
+glyph 2113 10 0 -0.7000000000000002 text "⏞" color 0 0 0 1
+glyph 3347 7 11.7645 -14.113000000000001 text "𝑡" color 0 0 0 1
+
+style text
+box 26 18.264000000000003 2.2 0
+glyph 3354 10 1.7077777777777783 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 9.620000000000001 0 text "+" color 0 0 0 1
+glyph 3355 10 19.04222222222222 0 text "𝑦" color 0 0 0 1
+glyph 2113 10 0 -0.7000000000000002 text "⏞" color 0 0 0 1
+glyph 3347 7 11.7645 -14.113000000000001 text "𝑡" color 0 0 0 1

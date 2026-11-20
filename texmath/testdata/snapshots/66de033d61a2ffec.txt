@@ -1,0 +1,13 @@
+tex "\\sec"
+
+style display
+box 13.05 4.8500000000000005 0.11 0
+glyph 274 10 0 0 text "s" color 0 0 0 1
+glyph 259 10 3.95 0 text "e" color 0 0 0 1
+glyph 257 10 8.59 0 text "c" color 0 0 0 1
+
+style text
+box 13.05 4.8500000000000005 0.11 0
+glyph 274 10 0 0 text "s" color 0 0 0 1
+glyph 259 10 3.95 0 text "e" color 0 0 0 1
+glyph 257 10 8.59 0 text "c" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "1ex"
+
+style display
+box 14.88 6.390000000000001 0.12 0.1
+glyph 1138 10 0 0 text "1" color 0 0 0 1
+glyph 3330 10 4.95 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 9.190000000000001 0 text "𝑥" color 0 0 0 1
+
+style text
+box 14.88 6.390000000000001 0.12 0.1
+glyph 1138 10 0 0 text "1" color 0 0 0 1
+glyph 3330 10 4.95 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 9.190000000000001 0 text "𝑥" color 0 0 0 1

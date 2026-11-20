@@ -1,0 +1,13 @@
+tex "x \\triangleleft y"
+
+style display
+box 26.064444444444444 8.1 2.91 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 2292 10 7.912222222222222 0 text "◁" color 0 0 0 1
+glyph 3355 10 20.814444444444444 0 text "𝑦" color 0 0 0 1
+
+style text
+box 26.064444444444444 8.1 2.91 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 2292 10 7.912222222222222 0 text "◁" color 0 0 0 1
+glyph 3355 10 20.814444444444444 0 text "𝑦" color 0 0 0 1

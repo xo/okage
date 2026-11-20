@@ -1,0 +1,7 @@
+tex "\\overset{a}{\\zz}"
+
+style display
+error "parsing tex math: unknown command \\zz"
+
+style text
+error "parsing tex math: unknown command \\zz"

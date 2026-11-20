@@ -1,0 +1,21 @@
+tex "Upsigma"
+
+style display
+box 39.72 6.65 2.25 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3346 10 14.040000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 17.900000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 20.84 0 text "𝑔" color 0 0 0 1
+glyph 3340 10 25.87 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 34.17 0 text "𝑎" color 0 0 0 1
+
+style text
+box 39.72 6.65 2.25 0
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3346 10 14.040000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 17.900000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 20.84 0 text "𝑔" color 0 0 0 1
+glyph 3340 10 25.87 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 34.17 0 text "𝑎" color 0 0 0 1

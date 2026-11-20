@@ -1,0 +1,9 @@
+tex "\\theta"
+
+style display
+box 5.14 7.12 0.15 0
+glyph 892 10 0 0 text "θ" color 0 0 0 1
+
+style text
+box 5.14 7.12 0.15 0
+glyph 892 10 0 0 text "θ" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\substack x"
+
+style display
+error "parsing tex math: \\substack needs {…}"
+
+style text
+error "parsing tex math: \\substack needs {…}"

@@ -1,0 +1,9 @@
+tex "\\epsilon"
+
+style display
+box 3.8000000000000003 4.8100000000000005 0.14 0
+glyph 916 10 0 0 text "ϵ" color 0 0 0 1
+
+style text
+box 3.8000000000000003 4.8100000000000005 0.14 0
+glyph 916 10 0 0 text "ϵ" color 0 0 0 1

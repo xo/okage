@@ -1,0 +1,21 @@
+tex "\\lim_{x\\to 0} f"
+
+style display
+box 21.836666666666666 7.11 6.777 0.2
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 3354 7 0.05799999999999983 6.7 text "𝑥" color 0 0 0 1
+glyph 1510 7 4.041 6.7 text "→" color 0 0 0 1
+glyph 1137 7 10.677 6.7 text "0" color 0 0 0 1
+glyph 3331 10 15.866666666666665 0 text "𝑓" color 0 0 0 1
+
+style text
+box 36.32066666666667 7.11 2.25 0.2
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 3354 7 14.2 2.1 text "𝑥" color 0 0 0 1
+glyph 1510 7 18.183 2.1 text "→" color 0 0 0 1
+glyph 1137 7 24.819 2.1 text "0" color 0 0 0 1
+glyph 3331 10 30.350666666666665 0 text "𝑓" color 0 0 0 1

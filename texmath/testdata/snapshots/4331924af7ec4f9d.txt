@@ -1,0 +1,7 @@
+tex "\\gtrdot"
+
+style display
+error "parsing tex math: unknown command \\gtrdot"
+
+style text
+error "parsing tex math: unknown command \\gtrdot"

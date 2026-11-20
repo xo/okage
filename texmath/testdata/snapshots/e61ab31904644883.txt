@@ -1,0 +1,13 @@
+tex "a-b"
+
+style display
+box 22.424444444444443 7.05 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1197 10 7.772222222222222 0 text "−" color 0 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1
+
+style text
+box 22.424444444444443 7.05 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1197 10 7.772222222222222 0 text "−" color 0 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1

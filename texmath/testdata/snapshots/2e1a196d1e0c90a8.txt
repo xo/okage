@@ -1,0 +1,55 @@
+tex "Α Β Γ Δ Ε Ζ Η Θ Ι \\allowbreak Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω"
+
+style display
+box 161.60000000000005 6.69 0.13 0
+glyph 845 10 0 0 text "Α" color 0 0 0 1
+glyph 846 10 7.18 0 text "Β" color 0 0 0 1
+glyph 847 10 13.36 0 text "Γ" color 0 0 0 1
+glyph 848 10 19.05 0 text "Δ" color 0 0 0 1
+glyph 849 10 25.72 0 text "Ε" color 0 0 0 1
+glyph 850 10 31.979999999999997 0 text "Ζ" color 0 0 0 1
+glyph 851 10 37.919999999999995 0 text "Η" color 0 0 0 1
+glyph 852 10 45.69 0 text "Θ" color 0 0 0 1
+glyph 853 10 53.07 0 text "Ι" color 0 0 0 1
+glyph 854 10 56.64 0 text "Κ" color 0 0 0 1
+glyph 855 10 63.660000000000004 0 text "Λ" color 0 0 0 1
+glyph 856 10 70.76 0 text "Μ" color 0 0 0 1
+glyph 857 10 79.71000000000001 0 text "Ν" color 0 0 0 1
+glyph 858 10 87.13000000000001 0 text "Ξ" color 0 0 0 1
+glyph 859 10 93.61000000000001 0 text "Ο" color 0 0 0 1
+glyph 860 10 100.99000000000001 0 text "Π" color 0 0 0 1
+glyph 861 10 108.58000000000001 0 text "Ρ" color 0 0 0 1
+glyph 862 10 114.27000000000001 0 text "Σ" color 0 0 0 1
+glyph 863 10 120.31000000000002 0 text "Τ" color 0 0 0 1
+glyph 864 10 126.34000000000002 0 text "Υ" color 0 0 0 1
+glyph 865 10 132.81000000000003 0 text "Φ" color 0 0 0 1
+glyph 866 10 139.99000000000004 0 text "Χ" color 0 0 0 1
+glyph 867 10 146.63000000000005 0 text "Ψ" color 0 0 0 1
+glyph 868 10 153.83000000000004 0 text "Ω" color 0 0 0 1
+
+style text
+box 161.60000000000005 6.69 0.13 0
+glyph 845 10 0 0 text "Α" color 0 0 0 1
+glyph 846 10 7.18 0 text "Β" color 0 0 0 1
+glyph 847 10 13.36 0 text "Γ" color 0 0 0 1
+glyph 848 10 19.05 0 text "Δ" color 0 0 0 1
+glyph 849 10 25.72 0 text "Ε" color 0 0 0 1
+glyph 850 10 31.979999999999997 0 text "Ζ" color 0 0 0 1
+glyph 851 10 37.919999999999995 0 text "Η" color 0 0 0 1
+glyph 852 10 45.69 0 text "Θ" color 0 0 0 1
+glyph 853 10 53.07 0 text "Ι" color 0 0 0 1
+glyph 854 10 56.64 0 text "Κ" color 0 0 0 1
+glyph 855 10 63.660000000000004 0 text "Λ" color 0 0 0 1
+glyph 856 10 70.76 0 text "Μ" color 0 0 0 1
+glyph 857 10 79.71000000000001 0 text "Ν" color 0 0 0 1
+glyph 858 10 87.13000000000001 0 text "Ξ" color 0 0 0 1
+glyph 859 10 93.61000000000001 0 text "Ο" color 0 0 0 1
+glyph 860 10 100.99000000000001 0 text "Π" color 0 0 0 1
+glyph 861 10 108.58000000000001 0 text "Ρ" color 0 0 0 1
+glyph 862 10 114.27000000000001 0 text "Σ" color 0 0 0 1
+glyph 863 10 120.31000000000002 0 text "Τ" color 0 0 0 1
+glyph 864 10 126.34000000000002 0 text "Υ" color 0 0 0 1
+glyph 865 10 132.81000000000003 0 text "Φ" color 0 0 0 1
+glyph 866 10 139.99000000000004 0 text "Χ" color 0 0 0 1
+glyph 867 10 146.63000000000005 0 text "Ψ" color 0 0 0 1
+glyph 868 10 153.83000000000004 0 text "Ω" color 0 0 0 1

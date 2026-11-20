@@ -1,0 +1,11 @@
+tex "<g"
+
+style display
+box 15.007777777777779 5.47 2.25 0
+glyph 1203 10 0 0 text "<" color 0 0 0 1
+glyph 3332 10 9.977777777777778 0 text "𝑔" color 0 0 0 1
+
+style text
+box 15.007777777777779 5.47 2.25 0
+glyph 1203 10 0 0 text "<" color 0 0 0 1
+glyph 3332 10 9.977777777777778 0 text "𝑔" color 0 0 0 1

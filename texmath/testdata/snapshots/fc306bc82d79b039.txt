@@ -1,0 +1,11 @@
+tex "\\operatorname{a\\,b}"
+
+style display
+box 11.686666666666667 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 256 10 6.466666666666667 0 text "b" color 0 0 0 1
+
+style text
+box 11.686666666666667 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 256 10 6.466666666666667 0 text "b" color 0 0 0 1

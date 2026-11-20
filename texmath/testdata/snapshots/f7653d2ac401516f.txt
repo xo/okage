@@ -1,0 +1,13 @@
+tex "\\mathopen{[}x\\mathclose{]}"
+
+style display
+box 12.67 7.36 1.96 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1
+glyph 3354 10 3.49 0 text "𝑥" color 0 0 0 1
+glyph 1067 10 9.18 0 text "]" color 0 0 0 1
+
+style text
+box 12.67 7.36 1.96 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1
+glyph 3354 10 3.49 0 text "𝑥" color 0 0 0 1
+glyph 1067 10 9.18 0 text "]" color 0 0 0 1

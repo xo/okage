@@ -1,0 +1,15 @@
+tex "-0.5"
+
+style display
+box 19.55 6.42 0.13 0
+glyph 1197 10 0 0 text "−" color 0 0 0 1
+glyph 1137 10 7.2 0 text "0" color 0 0 0 1
+glyph 1052 10 12.15 0 text "." color 0 0 0 1
+glyph 1142 10 14.600000000000001 0 text "5" color 0 0 0 1
+
+style text
+box 19.55 6.42 0.13 0
+glyph 1197 10 0 0 text "−" color 0 0 0 1
+glyph 1137 10 7.2 0 text "0" color 0 0 0 1
+glyph 1052 10 12.15 0 text "." color 0 0 0 1
+glyph 1142 10 14.600000000000001 0 text "5" color 0 0 0 1

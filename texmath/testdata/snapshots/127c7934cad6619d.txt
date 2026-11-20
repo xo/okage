@@ -1,0 +1,35 @@
+tex "backtick bare cs"
+
+style display
+box 63.42999999999999 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 5.2299999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 10.78 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 14.919999999999998 0 text "𝑘" color 0 0 0 1
+glyph 3347 10 20.3 0 text "𝑡" color 0 0 0 1
+glyph 3334 10 23.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 26.77 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 30.91 0 text "𝑘" color 0 0 0 1
+glyph 3327 10 36.29 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 41.519999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 47.06999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 51.18999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 55.42999999999999 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 59.56999999999999 0 text "𝑠" color 0 0 0 1
+
+style text
+box 63.42999999999999 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 5.2299999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 10.78 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 14.919999999999998 0 text "𝑘" color 0 0 0 1
+glyph 3347 10 20.3 0 text "𝑡" color 0 0 0 1
+glyph 3334 10 23.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 26.77 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 30.91 0 text "𝑘" color 0 0 0 1
+glyph 3327 10 36.29 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 41.519999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 47.06999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 51.18999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 55.42999999999999 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 59.56999999999999 0 text "𝑠" color 0 0 0 1

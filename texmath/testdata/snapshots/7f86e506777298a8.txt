@@ -1,0 +1,7 @@
+tex "\\succnsim"
+
+style display
+error "parsing tex math: unknown command \\succnsim"
+
+style text
+error "parsing tex math: unknown command \\succnsim"

@@ -1,0 +1,9 @@
+tex "\\prod"
+
+style display
+box 14.17 9.23 4.07 0
+glyph 1641 10 0 -0.04000000000000048 text "∏" color 0 0 0 1
+
+style text
+box 11.35 7.73 2.57 0
+glyph 1640 10 0 0.08999999999999986 text "∏" color 0 0 0 1

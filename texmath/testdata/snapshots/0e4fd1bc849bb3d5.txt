@@ -1,0 +1,19 @@
+tex "nvDash"
+
+style display
+box 33.260000000000005 7.0600000000000005 0.12 0.1
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3350 10 5.65 0 text "𝑣" color 0 0 0 1
+glyph 3303 10 10.840000000000002 0 text "𝐷" color 0 0 0 1
+glyph 3326 10 18.060000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 23.610000000000003 0 text "𝑠" color 0 0 0 1
+glyph 1224 10 27.470000000000002 0 text "ℎ" color 0 0 0 1
+
+style text
+box 33.260000000000005 7.0600000000000005 0.12 0.1
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3350 10 5.65 0 text "𝑣" color 0 0 0 1
+glyph 3303 10 10.840000000000002 0 text "𝐷" color 0 0 0 1
+glyph 3326 10 18.060000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 23.610000000000003 0 text "𝑠" color 0 0 0 1
+glyph 1224 10 27.470000000000002 0 text "ℎ" color 0 0 0 1

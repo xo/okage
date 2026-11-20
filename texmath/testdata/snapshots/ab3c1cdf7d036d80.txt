@@ -1,0 +1,7 @@
+tex "\\ldotp"
+
+style display
+error "parsing tex math: unknown command \\ldotp"
+
+style text
+error "parsing tex math: unknown command \\ldotp"

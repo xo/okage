@@ -1,0 +1,13 @@
+tex "a{;}b"
+
+style display
+box 13.23 7.05 1.32 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1049 10 5.55 0 text ";" color 0 0 0 1
+glyph 3327 10 8 0 text "𝑏" color 0 0 0 1
+
+style text
+box 13.23 7.05 1.32 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1049 10 5.55 0 text ";" color 0 0 0 1
+glyph 3327 10 8 0 text "𝑏" color 0 0 0 1

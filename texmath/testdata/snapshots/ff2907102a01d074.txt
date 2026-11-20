@@ -1,0 +1,19 @@
+tex "lbrack"
+
+style display
+box 27.400000000000002 7.05 0.12 0.05
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3327 10 2.9800000000000004 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 8.21 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 12.330000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 17.880000000000003 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 22.020000000000003 0 text "𝑘" color 0 0 0 1
+
+style text
+box 27.400000000000002 7.05 0.12 0.05
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3327 10 2.9800000000000004 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 8.21 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 12.330000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 17.880000000000003 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 22.020000000000003 0 text "𝑘" color 0 0 0 1

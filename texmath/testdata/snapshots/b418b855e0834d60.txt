@@ -1,0 +1,9 @@
+tex "\\image"
+
+style display
+box 6.73 6.71 0.33 0
+glyph 1227 10 0 0 text "ℑ" color 0 0 0 1
+
+style text
+box 6.73 6.71 0.33 0
+glyph 1227 10 0 0 text "ℑ" color 0 0 0 1

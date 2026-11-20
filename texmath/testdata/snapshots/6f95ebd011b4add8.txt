@@ -1,0 +1,31 @@
+tex "\\text{if } x > 0 \\text{ and } y"
+
+style display
+box 57.565555555555555 7.13 2.2 0.15
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 260 10 2.85 0 text "f" color 0 0 0 1
+glyph 1 10 5.92 0 text " " color 0 0 0 1
+glyph 3354 10 8.27 0 text "𝑥" color 0 0 0 1
+glyph 1204 10 16.737777777777776 0 text ">" color 0 0 0 1
+glyph 1137 10 26.715555555555554 0 text "0" color 0 0 0 1
+glyph 1 10 31.665555555555553 0 text " " color 0 0 0 1
+glyph 255 10 34.01555555555555 0 text "a" color 0 0 0 1
+glyph 269 10 38.815555555555555 0 text "n" color 0 0 0 1
+glyph 258 10 44.57555555555555 0 text "d" color 0 0 0 1
+glyph 1 10 49.965555555555554 0 text " " color 0 0 0 1
+glyph 3355 10 52.315555555555555 0 text "𝑦" color 0 0 0 1
+
+style text
+box 57.565555555555555 7.13 2.2 0.15
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 260 10 2.85 0 text "f" color 0 0 0 1
+glyph 1 10 5.92 0 text " " color 0 0 0 1
+glyph 3354 10 8.27 0 text "𝑥" color 0 0 0 1
+glyph 1204 10 16.737777777777776 0 text ">" color 0 0 0 1
+glyph 1137 10 26.715555555555554 0 text "0" color 0 0 0 1
+glyph 1 10 31.665555555555553 0 text " " color 0 0 0 1
+glyph 255 10 34.01555555555555 0 text "a" color 0 0 0 1
+glyph 269 10 38.815555555555555 0 text "n" color 0 0 0 1
+glyph 258 10 44.57555555555555 0 text "d" color 0 0 0 1
+glyph 1 10 49.965555555555554 0 text " " color 0 0 0 1
+glyph 3355 10 52.315555555555555 0 text "𝑦" color 0 0 0 1

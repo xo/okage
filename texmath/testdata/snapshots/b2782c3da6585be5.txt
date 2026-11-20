@@ -1,0 +1,13 @@
+tex "x^{\\widecheck{S}}"
+
+style display
+box 10.038 9.620000000000001 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3318 7 5.6899999999999995 -3.6 text "𝑆" color 0 0 0 1
+glyph 768 7 9.925 -4.8740000000000006 text "̌" color 0 0 0 1
+
+style text
+box 10.038 9.620000000000001 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3318 7 5.6899999999999995 -3.6 text "𝑆" color 0 0 0 1
+glyph 768 7 9.925 -4.8740000000000006 text "̌" color 0 0 0 1

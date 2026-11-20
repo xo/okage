@@ -1,0 +1,7 @@
+tex "\\llcorner is in the table: no paper in the 999-paper census names it, "
+
+style display
+error "parsing tex math: unknown command \\llcorner"
+
+style text
+error "parsing tex math: unknown command \\llcorner"

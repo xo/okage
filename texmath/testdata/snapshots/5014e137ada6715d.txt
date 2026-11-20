@@ -1,0 +1,19 @@
+tex "\\argmax"
+
+style display
+box 33.21666666666667 4.88 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 261 10 8.6 0 text "g" color 0 0 0 1
+glyph 268 10 15.106666666666666 0 text "m" color 0 0 0 1
+glyph 255 10 23.626666666666665 0 text "a" color 0 0 0 1
+glyph 279 10 28.426666666666666 0 text "x" color 0 0 0 1
+
+style text
+box 33.21666666666667 4.88 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 261 10 8.6 0 text "g" color 0 0 0 1
+glyph 268 10 15.106666666666666 0 text "m" color 0 0 0 1
+glyph 255 10 23.626666666666665 0 text "a" color 0 0 0 1
+glyph 279 10 28.426666666666666 0 text "x" color 0 0 0 1

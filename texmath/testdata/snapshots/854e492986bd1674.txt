@@ -1,0 +1,7 @@
+tex "\\leftrightsquigarrow"
+
+style display
+error "parsing tex math: unknown command \\leftrightsquigarrow"
+
+style text
+error "parsing tex math: unknown command \\leftrightsquigarrow"

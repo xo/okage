@@ -1,0 +1,7 @@
+tex "\\varPsi"
+
+style display
+error "parsing tex math: unknown command \\varPsi"
+
+style text
+error "parsing tex math: unknown command \\varPsi"

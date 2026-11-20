@@ -1,0 +1,7 @@
+tex "\\left\\zzz a \\right)"
+
+style display
+error "parsing tex math: bad delimiter \"\\\\zzz\""
+
+style text
+error "parsing tex math: bad delimiter \"\\\\zzz\""

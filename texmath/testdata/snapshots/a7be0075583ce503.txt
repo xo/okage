@@ -1,0 +1,17 @@
+tex "\\begin{bmatrix}x\\\\x\\\\x\\end{bmatrix}"
+
+style display
+box 16.65 20.58 15.419999999999996 0
+glyph 1334 10 0 0.1150000000000011 text "[" color 0 0 0 1
+glyph 3354 10 5.48 -12.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.48 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.48 11.819999999999997 text "𝑥" color 0 0 0 1
+glyph 1346 10 11.17 0.1150000000000011 text "]" color 0 0 0 1
+
+style text
+box 16.65 20.58 15.419999999999996 0
+glyph 1334 10 0 0.1150000000000011 text "[" color 0 0 0 1
+glyph 3354 10 5.48 -12.18 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.48 -0.1800000000000015 text "𝑥" color 0 0 0 1
+glyph 3354 10 5.48 11.819999999999997 text "𝑥" color 0 0 0 1
+glyph 1346 10 11.17 0.1150000000000011 text "]" color 0 0 0 1

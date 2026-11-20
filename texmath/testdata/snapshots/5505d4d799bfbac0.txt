@@ -1,0 +1,23 @@
+tex "mathsans"
+
+style display
+box 42.089999999999996 7.0600000000000005 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 8.3 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 13.850000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 17.38 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 23.17 0 text "𝑠" color 0 0 0 1
+glyph 3326 10 27.03 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 32.58 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 38.23 0 text "𝑠" color 0 0 0 1
+
+style text
+box 42.089999999999996 7.0600000000000005 0.12 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 8.3 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 13.850000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 17.38 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 23.17 0 text "𝑠" color 0 0 0 1
+glyph 3326 10 27.03 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 32.58 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 38.23 0 text "𝑠" color 0 0 0 1

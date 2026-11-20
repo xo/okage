@@ -1,0 +1,7 @@
+tex "\\lang~\\rang"
+
+style display
+error "parsing tex math: unknown command \\lang"
+
+style text
+error "parsing tex math: unknown command \\lang"

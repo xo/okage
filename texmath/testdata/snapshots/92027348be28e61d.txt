@@ -1,0 +1,7 @@
+tex "\\nsupseteq"
+
+style display
+error "parsing tex math: unknown command \\nsupseteq"
+
+style text
+error "parsing tex math: unknown command \\nsupseteq"

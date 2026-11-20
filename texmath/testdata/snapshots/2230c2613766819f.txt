@@ -1,0 +1,15 @@
+tex "zeta"
+
+style display
+box 18.349999999999998 5.93 0.12 0
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 5.029999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 9.27 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 12.799999999999999 0 text "𝑎" color 0 0 0 1
+
+style text
+box 18.349999999999998 5.93 0.12 0
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 5.029999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 9.27 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 12.799999999999999 0 text "𝑎" color 0 0 0 1

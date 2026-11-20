@@ -1,0 +1,17 @@
+tex "\\boxed{x}"
+
+style display
+box 8.69 6.29 1.6 0
+glyph 3354 10 1.5 0 text "𝑥" color 0 0 0 1
+rule 0 -6.29 8.69 0.68 color 0 0 0 1
+rule 0 0.92 8.69 0.68 color 0 0 0 1
+rule 0 -6.29 0.68 7.890000000000001 color 0 0 0 1
+rule 8.01 -6.29 0.68 7.890000000000001 color 0 0 0 1
+
+style text
+box 8.69 6.29 1.6 0
+glyph 3354 10 1.5 0 text "𝑥" color 0 0 0 1
+rule 0 -6.29 8.69 0.68 color 0 0 0 1
+rule 0 0.92 8.69 0.68 color 0 0 0 1
+rule 0 -6.29 0.68 7.890000000000001 color 0 0 0 1
+rule 8.01 -6.29 0.68 7.890000000000001 color 0 0 0 1

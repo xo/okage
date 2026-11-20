@@ -1,0 +1,17 @@
+tex "a \\textcolor{red}{+} b = c"
+
+style display
+box 39.32 7.05 0.4 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 0 text "+" color 1 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1
+glyph 1202 10 25.202222222222222 0 text "=" color 0 0 0 1
+glyph 3328 10 35.18 0 text "𝑐" color 0 0 0 1
+
+style text
+box 39.32 7.05 0.4 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 0 text "+" color 1 0 0 1
+glyph 3327 10 17.194444444444443 0 text "𝑏" color 0 0 0 1
+glyph 1202 10 25.202222222222222 0 text "=" color 0 0 0 1
+glyph 3328 10 35.18 0 text "𝑐" color 0 0 0 1

@@ -1,0 +1,17 @@
+tex "\\textstyle\\sum_{i=1}^n"
+
+style display
+box 20.323 8.783 4.233 0
+glyph 1646 10 0 0.08999999999999986 text "∑" color 0 0 0 1
+glyph 3341 7 9.36 -5.43 text "𝑛" color 0 0 0 1
+glyph 3334 7 9.36 4.17 text "𝑖" color 0 0 0 1
+glyph 1202 7 11.418 4.17 text "=" color 0 0 0 1
+glyph 1138 7 16.458 4.17 text "1" color 0 0 0 1
+
+style text
+box 20.323 8.783 4.233 0
+glyph 1646 10 0 0.08999999999999986 text "∑" color 0 0 0 1
+glyph 3341 7 9.36 -5.43 text "𝑛" color 0 0 0 1
+glyph 3334 7 9.36 4.17 text "𝑖" color 0 0 0 1
+glyph 1202 7 11.418 4.17 text "=" color 0 0 0 1
+glyph 1138 7 16.458 4.17 text "1" color 0 0 0 1

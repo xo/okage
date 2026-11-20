@@ -1,0 +1,9 @@
+tex "\\nu"
+
+style display
+box 4.53 4.79 0.07 0
+glyph 897 10 0 0 text "ν" color 0 0 0 1
+
+style text
+box 4.53 4.79 0.07 0
+glyph 897 10 0 0 text "ν" color 0 0 0 1

@@ -1,0 +1,11 @@
+tex "\\mathpunct{,}x"
+
+style display
+box 9.806666666666667 4.79 1.32 0.1
+glyph 1048 10 0 0 text "," color 0 0 0 1
+glyph 3354 10 4.116666666666667 0 text "𝑥" color 0 0 0 1
+
+style text
+box 9.806666666666667 4.79 1.32 0.1
+glyph 1048 10 0 0 text "," color 0 0 0 1
+glyph 3354 10 4.116666666666667 0 text "𝑥" color 0 0 0 1

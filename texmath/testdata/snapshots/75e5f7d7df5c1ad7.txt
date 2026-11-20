@@ -1,0 +1,7 @@
+tex "\\url{https://katex.org/}"
+
+style display
+error "parsing tex math: unknown command \\url"
+
+style text
+error "parsing tex math: unknown command \\url"

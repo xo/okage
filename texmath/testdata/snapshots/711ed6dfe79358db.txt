@@ -1,0 +1,29 @@
+tex "x \\in A \\cup B, \\ y \\notin C \\cap D"
+
+style display
+box 92.83 6.78 2.2 0.2
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1629 10 8.467777777777776 0 text "∈" color 0 0 0 1
+glyph 3300 10 18.445555555555554 0 text "𝐴" color 0 0 0 1
+glyph 1696 10 27.477777777777774 0 text "∪" color 0 0 0 1
+glyph 3301 10 36.059999999999995 0 text "𝐵" color 0 0 0 1
+glyph 1048 10 42.28999999999999 0 text "," color 0 0 0 1
+glyph 3355 10 49.739999999999995 0 text "𝑦" color 0 0 0 1
+glyph 1631 10 57.76777777777777 0 text "∉" color 0 0 0 1
+glyph 3302 10 67.74555555555554 0 text "𝐶" color 0 0 0 1
+glyph 1694 10 77.02777777777777 0 text "∩" color 0 0 0 1
+glyph 3303 10 85.61 0 text "𝐷" color 0 0 0 1
+
+style text
+box 92.83 6.78 2.2 0.2
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1629 10 8.467777777777776 0 text "∈" color 0 0 0 1
+glyph 3300 10 18.445555555555554 0 text "𝐴" color 0 0 0 1
+glyph 1696 10 27.477777777777774 0 text "∪" color 0 0 0 1
+glyph 3301 10 36.059999999999995 0 text "𝐵" color 0 0 0 1
+glyph 1048 10 42.28999999999999 0 text "," color 0 0 0 1
+glyph 3355 10 49.739999999999995 0 text "𝑦" color 0 0 0 1
+glyph 1631 10 57.76777777777777 0 text "∉" color 0 0 0 1
+glyph 3302 10 67.74555555555554 0 text "𝐶" color 0 0 0 1
+glyph 1694 10 77.02777777777777 0 text "∩" color 0 0 0 1
+glyph 3303 10 85.61 0 text "𝐷" color 0 0 0 1

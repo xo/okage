@@ -1,0 +1,9 @@
+tex "\\supsetneqq"
+
+style display
+box 7.2 7.34 3.27 0
+glyph 3120 10 0 0 text "⫌" color 0 0 0 1
+
+style text
+box 7.2 7.34 3.27 0
+glyph 3120 10 0 0 text "⫌" color 0 0 0 1

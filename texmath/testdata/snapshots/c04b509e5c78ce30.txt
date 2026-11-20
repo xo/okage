@@ -1,0 +1,11 @@
+tex "\\scalebox{2}[1"
+
+style display
+box 11.93 14.72 3.92 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1 transform 2 0 0 2 0 0
+glyph 1138 10 6.98 0 text "1" color 0 0 0 1
+
+style text
+box 11.93 14.72 3.92 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1 transform 2 0 0 2 0 0
+glyph 1138 10 6.98 0 text "1" color 0 0 0 1

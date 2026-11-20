@@ -1,0 +1,7 @@
+tex "\\mathstrut"
+
+style display
+box 0 7.36 1.96 0
+
+style text
+box 0 7.36 1.96 0

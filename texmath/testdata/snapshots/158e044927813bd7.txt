@@ -1,0 +1,15 @@
+tex "\\sin x"
+
+style display
+box 19.916666666666668 6.73 0.11 0.1
+glyph 274 10 0 0 text "s" color 0 0 0 1
+glyph 263 10 3.95 0 text "i" color 0 0 0 1
+glyph 269 10 6.800000000000001 0 text "n" color 0 0 0 1
+glyph 3354 10 14.226666666666667 0 text "𝑥" color 0 0 0 1
+
+style text
+box 19.916666666666668 6.73 0.11 0.1
+glyph 274 10 0 0 text "s" color 0 0 0 1
+glyph 263 10 3.95 0 text "i" color 0 0 0 1
+glyph 269 10 6.800000000000001 0 text "n" color 0 0 0 1
+glyph 3354 10 14.226666666666667 0 text "𝑥" color 0 0 0 1

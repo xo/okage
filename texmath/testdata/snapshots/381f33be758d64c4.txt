@@ -1,0 +1,13 @@
+tex "\\frak{Ab0}"
+
+style display
+box 16.95 7.15 0.23 0
+glyph 3509 10 0 0 text "𝔄" color 0 0 0 1
+glyph 3531 10 6.97 0 text "𝔟" color 0 0 0 1
+glyph 1137 10 12 0 text "0" color 0 0 0 1
+
+style text
+box 16.95 7.15 0.23 0
+glyph 3509 10 0 0 text "𝔄" color 0 0 0 1
+glyph 3531 10 6.97 0 text "𝔟" color 0 0 0 1
+glyph 1137 10 12 0 text "0" color 0 0 0 1

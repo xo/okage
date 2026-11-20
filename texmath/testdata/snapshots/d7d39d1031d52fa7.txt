@@ -1,0 +1,9 @@
+tex "\\lozenge"
+
+style display
+box 8.09 8.14 2.96 0
+glyph 2301 10 0 0 text "◊" color 0 0 0 1
+
+style text
+box 8.09 8.14 2.96 0
+glyph 2301 10 0 0 text "◊" color 0 0 0 1

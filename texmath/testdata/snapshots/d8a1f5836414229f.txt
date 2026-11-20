@@ -1,0 +1,21 @@
+tex "aligned"
+
+style display
+box 32.150000000000006 7.05 2.25 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 5.55 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 8.53 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 11.469999999999999 0 text "𝑔" color 0 0 0 1
+glyph 3341 10 16.5 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 22.15 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 26.39 0 text "𝑑" color 0 0 0 1
+
+style text
+box 32.150000000000006 7.05 2.25 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 5.55 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 8.53 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 11.469999999999999 0 text "𝑔" color 0 0 0 1
+glyph 3341 10 16.5 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 22.15 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 26.39 0 text "𝑑" color 0 0 0 1

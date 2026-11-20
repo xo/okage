@@ -1,0 +1,15 @@
+tex "\\color{blue} F=ma"
+
+style display
+box 33.08555555555556 6.57 0.12 0
+glyph 3305 10 0 0 text "𝐹" color 0 0 1 1
+glyph 1202 10 9.257777777777779 0 text "=" color 0 0 1 1
+glyph 3340 10 19.235555555555557 0 text "𝑚" color 0 0 1 1
+glyph 3326 10 27.535555555555558 0 text "𝑎" color 0 0 1 1
+
+style text
+box 33.08555555555556 6.57 0.12 0
+glyph 3305 10 0 0 text "𝐹" color 0 0 1 1
+glyph 1202 10 9.257777777777779 0 text "=" color 0 0 1 1
+glyph 3340 10 19.235555555555557 0 text "𝑚" color 0 0 1 1
+glyph 3326 10 27.535555555555558 0 text "𝑎" color 0 0 1 1

@@ -1,0 +1,7 @@
+tex "\\left^ a \\right)"
+
+style display
+error "parsing tex math: bad delimiter \"^\""
+
+style text
+error "parsing tex math: bad delimiter \"^\""

@@ -1,0 +1,17 @@
+tex "f \\colon A \\to B"
+
+style display
+box 38.162222222222226 7.11 2.25 0.3
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 1051 10 5.970000000000001 0 text ":" color 0 0 0 1
+glyph 3300 10 10.086666666666668 0 text "𝐴" color 0 0 0 1
+glyph 1510 10 19.674444444444447 0 text "→" color 0 0 0 1
+glyph 3301 10 31.932222222222226 0 text "𝐵" color 0 0 0 1
+
+style text
+box 38.162222222222226 7.11 2.25 0.3
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 1051 10 5.970000000000001 0 text ":" color 0 0 0 1
+glyph 3300 10 10.086666666666668 0 text "𝐴" color 0 0 0 1
+glyph 1510 10 19.674444444444447 0 text "→" color 0 0 0 1
+glyph 3301 10 31.932222222222226 0 text "𝐵" color 0 0 0 1

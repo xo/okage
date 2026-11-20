@@ -1,0 +1,7 @@
+tex "\\diagup"
+
+style display
+error "parsing tex math: unknown command \\diagup"
+
+style text
+error "parsing tex math: unknown command \\diagup"

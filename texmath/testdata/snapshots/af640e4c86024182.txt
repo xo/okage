@@ -1,0 +1,9 @@
+tex "S"
+
+style display
+box 5.64 6.67 0.15 0.3
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1
+
+style text
+box 5.64 6.67 0.15 0.3
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1

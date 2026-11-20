@@ -1,0 +1,9 @@
+tex "\\alpha"
+
+style display
+box 5.61 4.78 0.14 0
+glyph 885 10 0 0 text "α" color 0 0 0 1
+
+style text
+box 5.61 4.78 0.14 0
+glyph 885 10 0 0 text "α" color 0 0 0 1

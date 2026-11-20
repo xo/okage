@@ -1,0 +1,17 @@
+tex "omega"
+
+style display
+box 27.98 4.79 2.25 0
+glyph 3342 10 0 0 text "𝑜" color 0 0 0 1
+glyph 3340 10 4.86 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 13.16 0 text "𝑒" color 0 0 0 1
+glyph 3332 10 17.4 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 22.43 0 text "𝑎" color 0 0 0 1
+
+style text
+box 27.98 4.79 2.25 0
+glyph 3342 10 0 0 text "𝑜" color 0 0 0 1
+glyph 3340 10 4.86 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 13.16 0 text "𝑒" color 0 0 0 1
+glyph 3332 10 17.4 0 text "𝑔" color 0 0 0 1
+glyph 3326 10 22.43 0 text "𝑎" color 0 0 0 1

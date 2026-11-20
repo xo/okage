@@ -1,0 +1,7 @@
+tex "\\rq"
+
+style display
+error "parsing tex math: unknown command \\rq"
+
+style text
+error "parsing tex math: unknown command \\rq"

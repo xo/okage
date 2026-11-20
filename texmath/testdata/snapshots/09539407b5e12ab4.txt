@@ -1,0 +1,9 @@
+tex "_2"
+
+style display
+box 3.8649999999999998 2.408 2.1 0
+glyph 1139 7 0 2.1 text "2" color 0 0 0 1
+
+style text
+box 3.8649999999999998 2.408 2.1 0
+glyph 1139 7 0 2.1 text "2" color 0 0 0 1

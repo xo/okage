@@ -1,0 +1,9 @@
+tex "\\scriptscriptstyle x"
+
+style display
+box 3.1295 2.6345 0.05499999999999999 0.05499999999999999
+glyph 3354 5.5 0 0 text "𝑥" color 0 0 0 1
+
+style text
+box 3.1295 2.6345 0.05499999999999999 0.05499999999999999
+glyph 3354 5.5 0 0 text "𝑥" color 0 0 0 1

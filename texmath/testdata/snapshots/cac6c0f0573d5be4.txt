@@ -1,0 +1,33 @@
+tex "backtick alone"
+
+style display
+box 59.57 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 5.2299999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 10.78 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 14.919999999999998 0 text "𝑘" color 0 0 0 1
+glyph 3347 10 20.3 0 text "𝑡" color 0 0 0 1
+glyph 3334 10 23.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 26.77 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 30.91 0 text "𝑘" color 0 0 0 1
+glyph 3326 10 36.29 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 41.839999999999996 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 44.82 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 49.68 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 55.33 0 text "𝑒" color 0 0 0 1
+
+style text
+box 59.57 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 5.2299999999999995 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 10.78 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 14.919999999999998 0 text "𝑘" color 0 0 0 1
+glyph 3347 10 20.3 0 text "𝑡" color 0 0 0 1
+glyph 3334 10 23.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 26.77 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 30.91 0 text "𝑘" color 0 0 0 1
+glyph 3326 10 36.29 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 41.839999999999996 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 44.82 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 49.68 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 55.33 0 text "𝑒" color 0 0 0 1

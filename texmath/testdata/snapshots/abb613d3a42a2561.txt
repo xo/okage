@@ -1,0 +1,11 @@
+tex "\\large AB"
+
+style display
+box 15.648 7.932 0 0.36
+glyph 3300 12 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 12 8.172 0 text "𝐵" color 0 0 0 1
+
+style text
+box 15.648 7.932 0 0.36
+glyph 3300 12 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 12 8.172 0 text "𝐵" color 0 0 0 1

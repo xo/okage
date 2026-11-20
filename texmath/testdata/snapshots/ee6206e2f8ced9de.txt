@@ -1,0 +1,15 @@
+tex "\\hbox{note}"
+
+style display
+box 18.689999999999998 6.1000000000000005 0.1 0
+glyph 269 10 0 0 text "n" color 0 0 0 1
+glyph 270 10 5.76 0 text "o" color 0 0 0 1
+glyph 275 10 10.899999999999999 0 text "t" color 0 0 0 1
+glyph 259 10 14.049999999999999 0 text "e" color 0 0 0 1
+
+style text
+box 18.689999999999998 6.1000000000000005 0.1 0
+glyph 269 10 0 0 text "n" color 0 0 0 1
+glyph 270 10 5.76 0 text "o" color 0 0 0 1
+glyph 275 10 10.899999999999999 0 text "t" color 0 0 0 1
+glyph 259 10 14.049999999999999 0 text "e" color 0 0 0 1

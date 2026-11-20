@@ -1,0 +1,9 @@
+tex "\""
+
+style display
+box 3.34 7.0600000000000005 0 0
+glyph 1071 10 0 0 text "\"" color 0 0 0 1
+
+style text
+box 3.34 7.0600000000000005 0 0
+glyph 1071 10 0 0 text "\"" color 0 0 0 1

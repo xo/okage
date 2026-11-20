@@ -1,0 +1,17 @@
+tex "\\mathbb{R}^n \\to \\mathbb{R}^m"
+
+style display
+box 40.18055555555556 7.622999999999999 0 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 3341 7 7.29 -4.27 text "𝑛" color 0 0 0 1
+glyph 1510 10 14.422777777777778 0 text "→" color 0 0 0 1
+glyph 1236 10 26.680555555555557 0 text "ℝ" color 0 0 0 1
+glyph 3340 7 33.970555555555556 -4.27 text "𝑚" color 0 0 0 1
+
+style text
+box 40.18055555555556 7.622999999999999 0 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 3341 7 7.29 -4.27 text "𝑛" color 0 0 0 1
+glyph 1510 10 14.422777777777778 0 text "→" color 0 0 0 1
+glyph 1236 10 26.680555555555557 0 text "ℝ" color 0 0 0 1
+glyph 3340 7 33.970555555555556 -4.27 text "𝑚" color 0 0 0 1

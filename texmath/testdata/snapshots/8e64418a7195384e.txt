@@ -1,0 +1,19 @@
+tex "\\phantom drew ink"
+
+style display
+box 35.51 7.05 0.12 0.05
+glyph 3345 10 5.760000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 9.88 0 text "𝑒" color 0 0 0 1
+glyph 3352 10 14.120000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3334 10 21.54 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 24.48 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 30.130000000000003 0 text "𝑘" color 0 0 0 1
+
+style text
+box 35.51 7.05 0.12 0.05
+glyph 3345 10 5.760000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 9.88 0 text "𝑒" color 0 0 0 1
+glyph 3352 10 14.120000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3334 10 21.54 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 24.48 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 30.130000000000003 0 text "𝑘" color 0 0 0 1

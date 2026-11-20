@@ -1,0 +1,13 @@
+tex "\\boldsymbol{Ab0}"
+
+style display
+box 18.810000000000002 7.05 0.14 0
+glyph 3358 10 0 0 text "𝑨" color 0 0 0 1
+glyph 3385 10 7.09 0 text "𝒃" color 0 0 0 1
+glyph 4223 10 12.920000000000002 0 text "𝟎" color 0 0 0 1
+
+style text
+box 18.810000000000002 7.05 0.14 0
+glyph 3358 10 0 0 text "𝑨" color 0 0 0 1
+glyph 3385 10 7.09 0 text "𝒃" color 0 0 0 1
+glyph 4223 10 12.920000000000002 0 text "𝟎" color 0 0 0 1

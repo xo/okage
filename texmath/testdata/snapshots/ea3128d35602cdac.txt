@@ -1,0 +1,7 @@
+tex "\\pounds"
+
+style display
+error "parsing tex math: unknown command \\pounds"
+
+style text
+error "parsing tex math: unknown command \\pounds"

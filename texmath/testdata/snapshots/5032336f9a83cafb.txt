@@ -1,0 +1,27 @@
+tex "meddiamond"
+
+style display
+box 57.12 7.05 0.12 0.2
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3329 10 18.3 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 24.06 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 26.999999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 32.55 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 40.849999999999994 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 45.709999999999994 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 51.35999999999999 0 text "𝑑" color 0 0 0 1
+
+style text
+box 57.12 7.05 0.12 0.2
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3329 10 18.3 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 24.06 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 26.999999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 32.55 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 40.849999999999994 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 45.709999999999994 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 51.35999999999999 0 text "𝑑" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\neg"
+
+style display
+box 7.2 4.16 0 0
+glyph 1205 10 0 0 text "¬" color 0 0 0 1
+
+style text
+box 7.2 4.16 0 0
+glyph 1205 10 0 0 text "¬" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "\\textmd{Ab0}"
+
+style display
+box 17.349999999999998 7.0600000000000005 0.11 0
+glyph 3 10 0 0 text "A" color 0 0 0 1
+glyph 256 10 7.18 0 text "b" color 0 0 0 1
+glyph 1137 10 12.399999999999999 0 text "0" color 0 0 0 1
+
+style text
+box 17.349999999999998 7.0600000000000005 0.11 0
+glyph 3 10 0 0 text "A" color 0 0 0 1
+glyph 256 10 7.18 0 text "b" color 0 0 0 1
+glyph 1137 10 12.399999999999999 0 text "0" color 0 0 0 1

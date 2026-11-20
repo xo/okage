@@ -1,0 +1,11 @@
+tex "\\raisebox{1pt}{a~b}"
+
+style display
+box 14.113333333333333 8.05 0 0
+glyph 3326 10 0 -1 text "𝑎" color 0 0 0 1
+glyph 3327 10 8.883333333333333 -1 text "𝑏" color 0 0 0 1
+
+style text
+box 14.113333333333333 8.05 0 0
+glyph 3326 10 0 -1 text "𝑎" color 0 0 0 1
+glyph 3327 10 8.883333333333333 -1 text "𝑏" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\mathtt{z}"
+
+style display
+box 5.4 4.5600000000000005 0 0
+glyph 3928 10 0 0 text "𝚣" color 0 0 0 1
+
+style text
+box 5.4 4.5600000000000005 0 0
+glyph 3928 10 0 0 text "𝚣" color 0 0 0 1

@@ -1,0 +1,45 @@
+tex "self-recursion halts"
+
+style display
+box 89.98444444444443 7.11 2.25 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 3.86 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 8.1 0 text "𝑙" color 0 0 0 1
+glyph 3331 10 11.079999999999998 0 text "𝑓" color 0 0 0 1
+glyph 1197 10 19.27222222222222 0 text "−" color 0 0 0 1
+glyph 3345 10 28.69444444444444 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 32.81444444444444 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 37.05444444444444 0 text "𝑐" color 0 0 0 1
+glyph 3348 10 41.19444444444444 0 text "𝑢" color 0 0 0 1
+glyph 3345 10 46.84444444444444 0 text "𝑟" color 0 0 0 1
+glyph 3346 10 50.96444444444444 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 54.82444444444444 0 text "𝑖" color 0 0 0 1
+glyph 3342 10 57.76444444444444 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 62.62444444444444 0 text "𝑛" color 0 0 0 1
+glyph 1224 10 68.27444444444444 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 74.06444444444443 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 79.61444444444443 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 82.59444444444443 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 86.12444444444444 0 text "𝑠" color 0 0 0 1
+
+style text
+box 89.98444444444443 7.11 2.25 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 3.86 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 8.1 0 text "𝑙" color 0 0 0 1
+glyph 3331 10 11.079999999999998 0 text "𝑓" color 0 0 0 1
+glyph 1197 10 19.27222222222222 0 text "−" color 0 0 0 1
+glyph 3345 10 28.69444444444444 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 32.81444444444444 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 37.05444444444444 0 text "𝑐" color 0 0 0 1
+glyph 3348 10 41.19444444444444 0 text "𝑢" color 0 0 0 1
+glyph 3345 10 46.84444444444444 0 text "𝑟" color 0 0 0 1
+glyph 3346 10 50.96444444444444 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 54.82444444444444 0 text "𝑖" color 0 0 0 1
+glyph 3342 10 57.76444444444444 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 62.62444444444444 0 text "𝑛" color 0 0 0 1
+glyph 1224 10 68.27444444444444 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 74.06444444444443 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 79.61444444444443 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 82.59444444444443 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 86.12444444444444 0 text "𝑠" color 0 0 0 1

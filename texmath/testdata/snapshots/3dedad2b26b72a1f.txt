@@ -1,0 +1,7 @@
+tex "\\text{\\sect}"
+
+style display
+error "parsing tex math: unknown command \\sect"
+
+style text
+error "parsing tex math: unknown command \\sect"

@@ -1,0 +1,13 @@
+tex "a{/}b"
+
+style display
+box 14.64 7.09 0.89 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1060 10 5.55 0 text "/" color 0 0 0 1
+glyph 3327 10 9.41 0 text "𝑏" color 0 0 0 1
+
+style text
+box 14.64 7.09 0.89 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1060 10 5.55 0 text "/" color 0 0 0 1
+glyph 3327 10 9.41 0 text "𝑏" color 0 0 0 1

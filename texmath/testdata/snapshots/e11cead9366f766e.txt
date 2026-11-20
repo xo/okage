@@ -1,0 +1,37 @@
+tex "amssymb.sty:140"
+
+style display
+box 78.29555555555557 7.05 2.2 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 5.55 0 text "𝑚" color 0 0 0 1
+glyph 3346 10 13.850000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 17.71 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 21.57 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 26.82 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 35.120000000000005 0 text "𝑏" color 0 0 0 1
+glyph 1052 10 40.35 0 text "." color 0 0 0 1
+glyph 3346 10 42.800000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3347 10 46.660000000000004 0 text "𝑡" color 0 0 0 1
+glyph 3355 10 50.190000000000005 0 text "𝑦" color 0 0 0 1
+glyph 1051 10 58.21777777777778 0 text ":" color 0 0 0 1
+glyph 1138 10 63.445555555555565 0 text "1" color 0 0 0 1
+glyph 1141 10 68.39555555555556 0 text "4" color 0 0 0 1
+glyph 1137 10 73.34555555555556 0 text "0" color 0 0 0 1
+
+style text
+box 78.29555555555557 7.05 2.2 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 5.55 0 text "𝑚" color 0 0 0 1
+glyph 3346 10 13.850000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 17.71 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 21.57 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 26.82 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 35.120000000000005 0 text "𝑏" color 0 0 0 1
+glyph 1052 10 40.35 0 text "." color 0 0 0 1
+glyph 3346 10 42.800000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3347 10 46.660000000000004 0 text "𝑡" color 0 0 0 1
+glyph 3355 10 50.190000000000005 0 text "𝑦" color 0 0 0 1
+glyph 1051 10 58.21777777777778 0 text ":" color 0 0 0 1
+glyph 1138 10 63.445555555555565 0 text "1" color 0 0 0 1
+glyph 1141 10 68.39555555555556 0 text "4" color 0 0 0 1
+glyph 1137 10 73.34555555555556 0 text "0" color 0 0 0 1

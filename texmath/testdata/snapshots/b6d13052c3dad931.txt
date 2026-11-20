@@ -1,0 +1,7 @@
+tex "\\begin{matrix} a \\end"
+
+style display
+error "parsing tex math: \\end needs {env}"
+
+style text
+error "parsing tex math: \\end needs {env}"

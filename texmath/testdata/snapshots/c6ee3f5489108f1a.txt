@@ -1,0 +1,7 @@
+tex "\\raisebox x"
+
+style display
+error "parsing tex math: \\raisebox needs {lift}"
+
+style text
+error "parsing tex math: \\raisebox needs {lift}"

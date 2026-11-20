@@ -1,0 +1,17 @@
+tex "large"
+
+style display
+box 21.92 7.05 2.25 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 2.9800000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 8.530000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 12.650000000000002 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 17.680000000000003 0 text "𝑒" color 0 0 0 1
+
+style text
+box 21.92 7.05 2.25 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 2.9800000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 8.530000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 12.650000000000002 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 17.680000000000003 0 text "𝑒" color 0 0 0 1

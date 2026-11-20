@@ -1,0 +1,7 @@
+tex "\\fallingdotseq"
+
+style display
+error "parsing tex math: unknown command \\fallingdotseq"
+
+style text
+error "parsing tex math: unknown command \\fallingdotseq"

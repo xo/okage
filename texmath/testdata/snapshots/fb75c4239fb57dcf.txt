@@ -1,0 +1,49 @@
+tex "\\textbf{bold} + \\textit{italic} + \\textsf{sans} + \\texttt{mono}"
+
+style display
+box 116.24333333333337 7.0600000000000005 0.4 0
+glyph 3273 10 0 0 text "𝐛" color 0 0 0 1
+glyph 3288 10 5.66 0 text "𝐨" color 0 0 0 1
+glyph 3285 10 11.06 0 text "𝐥" color 0 0 0 1
+glyph 3275 10 14.33 0 text "𝐝" color 0 0 0 1
+glyph 1196 10 22.31222222222222 0 text "+" color 0 0 0 1
+glyph 3334 10 31.734444444444442 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 34.474444444444444 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 37.85444444444444 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 43.404444444444444 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 46.18444444444444 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 48.92444444444444 0 text "𝑐" color 0 0 0 1
+glyph 1196 10 55.28666666666666 0 text "+" color 0 0 0 1
+glyph 3705 10 64.7088888888889 0 text "𝗌" color 0 0 0 1
+glyph 3685 10 68.7688888888889 0 text "𝖺" color 0 0 0 1
+glyph 3700 10 73.64888888888889 0 text "𝗇" color 0 0 0 1
+glyph 3705 10 78.9388888888889 0 text "𝗌" color 0 0 0 1
+glyph 1196 10 85.22111111111113 0 text "+" color 0 0 0 1
+glyph 3915 10 94.64333333333336 0 text "𝚖" color 0 0 0 1
+glyph 3917 10 100.04333333333336 0 text "𝚘" color 0 0 0 1
+glyph 3916 10 105.44333333333336 0 text "𝚗" color 0 0 0 1
+glyph 3917 10 110.84333333333336 0 text "𝚘" color 0 0 0 1
+
+style text
+box 116.24333333333337 7.0600000000000005 0.4 0
+glyph 3273 10 0 0 text "𝐛" color 0 0 0 1
+glyph 3288 10 5.66 0 text "𝐨" color 0 0 0 1
+glyph 3285 10 11.06 0 text "𝐥" color 0 0 0 1
+glyph 3275 10 14.33 0 text "𝐝" color 0 0 0 1
+glyph 1196 10 22.31222222222222 0 text "+" color 0 0 0 1
+glyph 3334 10 31.734444444444442 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 34.474444444444444 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 37.85444444444444 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 43.404444444444444 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 46.18444444444444 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 48.92444444444444 0 text "𝑐" color 0 0 0 1
+glyph 1196 10 55.28666666666666 0 text "+" color 0 0 0 1
+glyph 3705 10 64.7088888888889 0 text "𝗌" color 0 0 0 1
+glyph 3685 10 68.7688888888889 0 text "𝖺" color 0 0 0 1
+glyph 3700 10 73.64888888888889 0 text "𝗇" color 0 0 0 1
+glyph 3705 10 78.9388888888889 0 text "𝗌" color 0 0 0 1
+glyph 1196 10 85.22111111111113 0 text "+" color 0 0 0 1
+glyph 3915 10 94.64333333333336 0 text "𝚖" color 0 0 0 1
+glyph 3917 10 100.04333333333336 0 text "𝚘" color 0 0 0 1
+glyph 3916 10 105.44333333333336 0 text "𝚗" color 0 0 0 1
+glyph 3917 10 110.84333333333336 0 text "𝚘" color 0 0 0 1

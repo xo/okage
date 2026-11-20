@@ -1,0 +1,15 @@
+tex "a \\buildrel x \\over \\to b"
+
+style display
+box 25.81555555555556 9.013 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1510 10 8.327777777777778 0 text "→" color 0 0 0 1
+glyph 3354 7 11.076277777777777 -5.66 text "𝑥" color 0 0 0 1
+glyph 3327 10 20.58555555555556 0 text "𝑏" color 0 0 0 1
+
+style text
+box 25.81555555555556 9.013 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1510 10 8.327777777777778 0 text "→" color 0 0 0 1
+glyph 3354 7 11.076277777777777 -5.66 text "𝑥" color 0 0 0 1
+glyph 3327 10 20.58555555555556 0 text "𝑏" color 0 0 0 1

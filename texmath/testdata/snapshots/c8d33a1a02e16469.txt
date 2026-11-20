@@ -1,0 +1,27 @@
+tex "leavevmode"
+
+style display
+box 50.550000000000004 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 2.9800000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 7.220000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3350 10 12.77 0 text "𝑣" color 0 0 0 1
+glyph 3330 10 17.959999999999997 0 text "𝑒" color 0 0 0 1
+glyph 3350 10 22.199999999999996 0 text "𝑣" color 0 0 0 1
+glyph 3340 10 27.389999999999993 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 35.69 0 text "𝑜" color 0 0 0 1
+glyph 3329 10 40.55 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 46.31 0 text "𝑒" color 0 0 0 1
+
+style text
+box 50.550000000000004 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 2.9800000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 7.220000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3350 10 12.77 0 text "𝑣" color 0 0 0 1
+glyph 3330 10 17.959999999999997 0 text "𝑒" color 0 0 0 1
+glyph 3350 10 22.199999999999996 0 text "𝑣" color 0 0 0 1
+glyph 3340 10 27.389999999999993 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 35.69 0 text "𝑜" color 0 0 0 1
+glyph 3329 10 40.55 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 46.31 0 text "𝑒" color 0 0 0 1

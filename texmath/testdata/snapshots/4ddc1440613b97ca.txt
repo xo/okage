@@ -1,0 +1,33 @@
+tex "x = \\begin{cases} a &\\text{if } b \\\\ c &\\text{if } d \\end{cases}"
+
+style display
+box 48.82555555555555 16.98 11.82 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 8.467777777777776 0 text "=" color 0 0 0 1
+glyph 1355 10 18.445555555555554 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3326 10 23.245555555555555 -6.9 text "𝑎" color 0 0 0 1
+glyph 263 10 35.06055555555555 -6.9 text "i" color 0 0 0 1
+glyph 260 10 37.910555555555554 -6.9 text "f" color 0 0 0 1
+glyph 1 10 40.980555555555554 -6.9 text " " color 0 0 0 1
+glyph 3327 10 43.330555555555556 -6.9 text "𝑏" color 0 0 0 1
+glyph 3328 10 23.950555555555553 7.5 text "𝑐" color 0 0 0 1
+glyph 263 10 34.79555555555555 7.5 text "i" color 0 0 0 1
+glyph 260 10 37.64555555555555 7.5 text "f" color 0 0 0 1
+glyph 1 10 40.715555555555554 7.5 text " " color 0 0 0 1
+glyph 3329 10 43.065555555555555 7.5 text "𝑑" color 0 0 0 1
+
+style text
+box 48.82555555555555 16.98 11.82 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 8.467777777777776 0 text "=" color 0 0 0 1
+glyph 1355 10 18.445555555555554 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3326 10 23.245555555555555 -6.9 text "𝑎" color 0 0 0 1
+glyph 263 10 35.06055555555555 -6.9 text "i" color 0 0 0 1
+glyph 260 10 37.910555555555554 -6.9 text "f" color 0 0 0 1
+glyph 1 10 40.980555555555554 -6.9 text " " color 0 0 0 1
+glyph 3327 10 43.330555555555556 -6.9 text "𝑏" color 0 0 0 1
+glyph 3328 10 23.950555555555553 7.5 text "𝑐" color 0 0 0 1
+glyph 263 10 34.79555555555555 7.5 text "i" color 0 0 0 1
+glyph 260 10 37.64555555555555 7.5 text "f" color 0 0 0 1
+glyph 1 10 40.715555555555554 7.5 text " " color 0 0 0 1
+glyph 3329 10 43.065555555555555 7.5 text "𝑑" color 0 0 0 1

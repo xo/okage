@@ -1,0 +1,31 @@
+tex "blacklozenge"
+
+style display
+box 55.31 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3339 10 5.2299999999999995 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 8.209999999999999 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 13.759999999999998 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 17.9 0 text "𝑘" color 0 0 0 1
+glyph 3339 10 23.279999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 26.259999999999998 0 text "𝑜" color 0 0 0 1
+glyph 3356 10 31.119999999999997 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 36.15 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 40.39 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 46.04 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 51.07 0 text "𝑒" color 0 0 0 1
+
+style text
+box 55.31 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3339 10 5.2299999999999995 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 8.209999999999999 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 13.759999999999998 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 17.9 0 text "𝑘" color 0 0 0 1
+glyph 3339 10 23.279999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 26.259999999999998 0 text "𝑜" color 0 0 0 1
+glyph 3356 10 31.119999999999997 0 text "𝑧" color 0 0 0 1
+glyph 3330 10 36.15 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 40.39 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 46.04 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 51.07 0 text "𝑒" color 0 0 0 1

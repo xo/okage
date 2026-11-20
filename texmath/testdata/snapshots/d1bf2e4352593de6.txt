@@ -1,0 +1,13 @@
+tex "\\Diamond \\square \\blacksquare"
+
+style display
+box 29.53 7.62 2.48 0
+glyph 2298 10 0 0 text "◇" color 0 0 0 1
+glyph 2259 10 10.89 0 text "□" color 0 0 0 1
+glyph 2258 10 20.21 0 text "■" color 0 0 0 1
+
+style text
+box 29.53 7.62 2.48 0
+glyph 2298 10 0 0 text "◇" color 0 0 0 1
+glyph 2259 10 10.89 0 text "□" color 0 0 0 1
+glyph 2258 10 20.21 0 text "■" color 0 0 0 1

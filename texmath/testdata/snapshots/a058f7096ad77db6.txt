@@ -1,0 +1,37 @@
+tex "medsquarefilled"
+
+style display
+box 71.76000000000002 7.11 2.25 0.2
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.3 0 text "𝑠" color 0 0 0 1
+glyph 3344 10 22.16 0 text "𝑞" color 0 0 0 1
+glyph 3348 10 27.33 0 text "𝑢" color 0 0 0 1
+glyph 3326 10 32.98 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 38.529999999999994 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 42.64999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 46.88999999999999 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 52.86 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 55.800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 58.78000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 61.76000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 66.00000000000001 0 text "𝑑" color 0 0 0 1
+
+style text
+box 71.76000000000002 7.11 2.25 0.2
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 8.3 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 12.540000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.3 0 text "𝑠" color 0 0 0 1
+glyph 3344 10 22.16 0 text "𝑞" color 0 0 0 1
+glyph 3348 10 27.33 0 text "𝑢" color 0 0 0 1
+glyph 3326 10 32.98 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 38.529999999999994 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 42.64999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 46.88999999999999 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 52.86 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 55.800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 58.78000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 61.76000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 66.00000000000001 0 text "𝑑" color 0 0 0 1

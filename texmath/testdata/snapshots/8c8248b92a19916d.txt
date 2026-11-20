@@ -1,0 +1,25 @@
+tex "\\text{Total: } \\textbf{\\textit{42}}"
+
+style display
+box 37.03 7.0600000000000005 0.1 0
+glyph 22 10 0 0 text "T" color 0 0 0 1
+glyph 270 10 6.03 0 text "o" color 0 0 0 1
+glyph 275 10 11.17 0 text "t" color 0 0 0 1
+glyph 255 10 14.32 0 text "a" color 0 0 0 1
+glyph 267 10 19.12 0 text "l" color 0 0 0 1
+glyph 1051 10 21.950000000000003 0 text ":" color 0 0 0 1
+glyph 1 10 24.400000000000002 0 text " " color 0 0 0 1
+glyph 4227 10 26.750000000000004 0 text "𝟒" color 0 0 0 1
+glyph 4225 10 32.18000000000001 0 text "𝟐" color 0 0 0 1
+
+style text
+box 37.03 7.0600000000000005 0.1 0
+glyph 22 10 0 0 text "T" color 0 0 0 1
+glyph 270 10 6.03 0 text "o" color 0 0 0 1
+glyph 275 10 11.17 0 text "t" color 0 0 0 1
+glyph 255 10 14.32 0 text "a" color 0 0 0 1
+glyph 267 10 19.12 0 text "l" color 0 0 0 1
+glyph 1051 10 21.950000000000003 0 text ":" color 0 0 0 1
+glyph 1 10 24.400000000000002 0 text " " color 0 0 0 1
+glyph 4227 10 26.750000000000004 0 text "𝟒" color 0 0 0 1
+glyph 4225 10 32.18000000000001 0 text "𝟐" color 0 0 0 1

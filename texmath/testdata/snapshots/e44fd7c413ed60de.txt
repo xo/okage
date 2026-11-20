@@ -1,0 +1,9 @@
+tex "\\diamonds"
+
+style display
+box 7.2 6.23 1.08 0
+glyph 2379 10 0 0 text "♢" color 0 0 0 1
+
+style text
+box 7.2 6.23 1.08 0
+glyph 2379 10 0 0 text "♢" color 0 0 0 1

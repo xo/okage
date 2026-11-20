@@ -1,0 +1,13 @@
+tex "\\Set{x}"
+
+style display
+box 12.229999999999999 7.36 1.97 0
+glyph 1068 10 0 0 text "{" color 0 0 0 1
+glyph 3354 10 3.27 0 text "𝑥" color 0 0 0 1
+glyph 1069 10 8.959999999999999 0 text "}" color 0 0 0 1
+
+style text
+box 12.229999999999999 7.36 1.97 0
+glyph 1068 10 0 0 text "{" color 0 0 0 1
+glyph 3354 10 3.27 0 text "𝑥" color 0 0 0 1
+glyph 1069 10 8.959999999999999 0 text "}" color 0 0 0 1

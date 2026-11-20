@@ -1,0 +1,25 @@
+tex "non-digit"
+
+style display
+box 48.00444444444446 7.05 2.25 0.15
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 10.510000000000002 0 text "𝑛" color 0 0 0 1
+glyph 1197 10 18.382222222222225 0 text "−" color 0 0 0 1
+glyph 3329 10 27.804444444444446 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 33.56444444444445 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 36.50444444444445 0 text "𝑔" color 0 0 0 1
+glyph 3334 10 41.53444444444445 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 44.47444444444446 0 text "𝑡" color 0 0 0 1
+
+style text
+box 48.00444444444446 7.05 2.25 0.15
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 10.510000000000002 0 text "𝑛" color 0 0 0 1
+glyph 1197 10 18.382222222222225 0 text "−" color 0 0 0 1
+glyph 3329 10 27.804444444444446 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 33.56444444444445 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 36.50444444444445 0 text "𝑔" color 0 0 0 1
+glyph 3334 10 41.53444444444445 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 44.47444444444446 0 text "𝑡" color 0 0 0 1

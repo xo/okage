@@ -1,0 +1,9 @@
+tex "\\delta"
+
+style display
+box 4.79 7.11 0.14 0
+glyph 888 10 0 0 text "δ" color 0 0 0 1
+
+style text
+box 4.79 7.11 0.14 0
+glyph 888 10 0 0 text "δ" color 0 0 0 1

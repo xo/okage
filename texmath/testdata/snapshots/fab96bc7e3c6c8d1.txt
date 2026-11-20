@@ -1,0 +1,7 @@
+tex "\\downdownarrows"
+
+style display
+error "parsing tex math: unknown command \\downdownarrows"
+
+style text
+error "parsing tex math: unknown command \\downdownarrows"

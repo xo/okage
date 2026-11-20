@@ -1,0 +1,9 @@
+tex "\\Dagger"
+
+style display
+box 5.12 6.92 1.57 0
+glyph 1096 10 0 0 text "‡" color 0 0 0 1
+
+style text
+box 5.12 6.92 1.57 0
+glyph 1096 10 0 0 text "‡" color 0 0 0 1

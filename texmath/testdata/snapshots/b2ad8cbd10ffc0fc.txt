@@ -1,0 +1,13 @@
+tex "a\\lightning b"
+
+style display
+box 16.01 7.05 1.58 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1541 10 5.55 0 text "↯" color 0 0 0 1
+glyph 3327 10 10.780000000000001 0 text "𝑏" color 0 0 0 1
+
+style text
+box 16.01 7.05 1.58 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1541 10 5.55 0 text "↯" color 0 0 0 1
+glyph 3327 10 10.780000000000001 0 text "𝑏" color 0 0 0 1

@@ -1,0 +1,27 @@
+tex "\\hat{a} \\hat{f} \\tilde{V} \\vec{x} \\dot{A}"
+
+style display
+box 31.42 9.040000000000001 2.25 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 732 10 5.7 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3331 10 5.55 0 text "𝑓" color 0 0 0 1
+glyph 732 10 12.55 -2.3000000000000007 text "̂" color 0 0 0 1
+glyph 3321 10 11.52 0 text "𝑉" color 0 0 0 1
+glyph 742 10 18.22 -1.6400000000000006 text "̃" color 0 0 0 1
+glyph 3354 10 18.92 0 text "𝑥" color 0 0 0 1
+glyph 1277 10 24.67 0.6099999999999994 text "⃗" color 0 0 0 1
+glyph 3300 10 24.61 0 text "𝐴" color 0 0 0 1
+glyph 758 10 31.71 -1.4100000000000001 text "̇" color 0 0 0 1
+
+style text
+box 31.42 9.040000000000001 2.25 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 732 10 5.7 0.019999999999999574 text "̂" color 0 0 0 1
+glyph 3331 10 5.55 0 text "𝑓" color 0 0 0 1
+glyph 732 10 12.55 -2.3000000000000007 text "̂" color 0 0 0 1
+glyph 3321 10 11.52 0 text "𝑉" color 0 0 0 1
+glyph 742 10 18.22 -1.6400000000000006 text "̃" color 0 0 0 1
+glyph 3354 10 18.92 0 text "𝑥" color 0 0 0 1
+glyph 1277 10 24.67 0.6099999999999994 text "⃗" color 0 0 0 1
+glyph 3300 10 24.61 0 text "𝐴" color 0 0 0 1
+glyph 758 10 31.71 -1.4100000000000001 text "̇" color 0 0 0 1

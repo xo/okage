@@ -1,0 +1,13 @@
+tex "x_i^2"
+
+style display
+box 9.555 8.308 2.418 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 5.6899999999999995 -3.8000000000000003 text "2" color 0 0 0 1
+glyph 3334 7 5.59 2.355 text "𝑖" color 0 0 0 1
+
+style text
+box 9.555 8.308 2.418 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 5.6899999999999995 -3.8000000000000003 text "2" color 0 0 0 1
+glyph 3334 7 5.59 2.355 text "𝑖" color 0 0 0 1

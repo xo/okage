@@ -1,0 +1,9 @@
+tex "\\Eta"
+
+style display
+box 7.7700000000000005 6.57 0 0
+glyph 10 10 0 0 text "H" color 0 0 0 1
+
+style text
+box 7.7700000000000005 6.57 0 0
+glyph 10 10 0 0 text "H" color 0 0 0 1

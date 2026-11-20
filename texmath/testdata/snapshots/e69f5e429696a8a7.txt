@@ -1,0 +1,11 @@
+tex "\\lgroup~\\rgroup"
+
+style display
+box 8.433333333333334 7.29 1.86 0
+glyph 2514 10 0 0 text "⟮" color 0 0 0 1
+glyph 2515 10 5.883333333333334 0 text "⟯" color 0 0 0 1
+
+style text
+box 8.433333333333334 7.29 1.86 0
+glyph 2514 10 0 0 text "⟮" color 0 0 0 1
+glyph 2515 10 5.883333333333334 0 text "⟯" color 0 0 0 1

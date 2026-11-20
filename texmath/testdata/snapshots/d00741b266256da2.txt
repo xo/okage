@@ -1,0 +1,7 @@
+tex "\\llceil"
+
+style display
+error "parsing tex math: unknown command \\llceil"
+
+style text
+error "parsing tex math: unknown command \\llceil"

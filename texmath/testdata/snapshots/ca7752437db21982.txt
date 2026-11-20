@@ -1,0 +1,67 @@
+tex "a dimension ParseFloat cannot read"
+
+style display
+box 146.01000000000002 7.05 0.12 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3329 10 5.55 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 11.309999999999999 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 14.249999999999998 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 22.549999999999997 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 26.79 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 32.44 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 36.3 0 text "𝑖" color 0 0 0 1
+glyph 3342 10 39.24 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 44.1 0 text "𝑛" color 0 0 0 1
+glyph 3315 10 49.75 0 text "𝑃" color 0 0 0 1
+glyph 3326 10 55.79 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 61.339999999999996 0 text "𝑟" color 0 0 0 1
+glyph 3346 10 65.46 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 69.32 0 text "𝑒" color 0 0 0 1
+glyph 3305 10 73.55999999999999 0 text "𝐹" color 0 0 0 1
+glyph 3339 10 80.03999999999999 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 83.02 0 text "𝑜" color 0 0 0 1
+glyph 3326 10 87.88 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 93.42999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3328 10 96.96 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 101.1 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 106.64999999999999 0 text "𝑛" color 0 0 0 1
+glyph 3341 10 112.3 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 117.95 0 text "𝑜" color 0 0 0 1
+glyph 3347 10 122.81 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 126.34 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 130.46 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 134.70000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3329 10 140.25000000000003 0 text "𝑑" color 0 0 0 1
+
+style text
+box 146.01000000000002 7.05 0.12 0.2
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3329 10 5.55 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 11.309999999999999 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 14.249999999999998 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 22.549999999999997 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 26.79 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 32.44 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 36.3 0 text "𝑖" color 0 0 0 1
+glyph 3342 10 39.24 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 44.1 0 text "𝑛" color 0 0 0 1
+glyph 3315 10 49.75 0 text "𝑃" color 0 0 0 1
+glyph 3326 10 55.79 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 61.339999999999996 0 text "𝑟" color 0 0 0 1
+glyph 3346 10 65.46 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 69.32 0 text "𝑒" color 0 0 0 1
+glyph 3305 10 73.55999999999999 0 text "𝐹" color 0 0 0 1
+glyph 3339 10 80.03999999999999 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 83.02 0 text "𝑜" color 0 0 0 1
+glyph 3326 10 87.88 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 93.42999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3328 10 96.96 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 101.1 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 106.64999999999999 0 text "𝑛" color 0 0 0 1
+glyph 3341 10 112.3 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 117.95 0 text "𝑜" color 0 0 0 1
+glyph 3347 10 122.81 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 126.34 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 130.46 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 134.70000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3329 10 140.25000000000003 0 text "𝑑" color 0 0 0 1

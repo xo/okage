@@ -1,0 +1,13 @@
+tex "a\\hspace{1em}b\\hspace*{2pt}c"
+
+style display
+box 26.92 7.05 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 15.55 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 22.78 0 text "𝑐" color 0 0 0 1
+
+style text
+box 26.92 7.05 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 15.55 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 22.78 0 text "𝑐" color 0 0 0 1

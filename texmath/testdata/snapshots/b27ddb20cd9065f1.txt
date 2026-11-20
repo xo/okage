@@ -1,0 +1,9 @@
+tex "\\mathbb{0}"
+
+style display
+box 5.7 6.42 0.11 0
+glyph 4233 10 0 0 text "𝟘" color 0 0 0 1
+
+style text
+box 5.7 6.42 0.11 0
+glyph 4233 10 0 0 text "𝟘" color 0 0 0 1

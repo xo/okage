@@ -1,0 +1,15 @@
+tex "nope"
+
+style display
+box 20.730000000000004 4.79 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 10.510000000000002 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 16.490000000000002 0 text "𝑒" color 0 0 0 1
+
+style text
+box 20.730000000000004 4.79 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 10.510000000000002 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 16.490000000000002 0 text "𝑒" color 0 0 0 1

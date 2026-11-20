@@ -1,0 +1,11 @@
+tex "\\therefore x"
+
+style display
+box 14.817777777777778 5.33 0.17 0.1
+glyph 1752 10 0 0 text "∴" color 0 0 0 1
+glyph 3354 10 9.127777777777778 0 text "𝑥" color 0 0 0 1
+
+style text
+box 14.817777777777778 5.33 0.17 0.1
+glyph 1752 10 0 0 text "∴" color 0 0 0 1
+glyph 3354 10 9.127777777777778 0 text "𝑥" color 0 0 0 1

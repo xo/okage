@@ -1,0 +1,15 @@
+tex "x_\\bgroup i,j\\egroup"
+
+style display
+box 12.92 4.79 3.675 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3334 7 5.59 2.1 text "𝑖" color 0 0 0 1
+glyph 1048 7 7.648 2.1 text "," color 0 0 0 1
+glyph 3336 7 9.363 2.1 text "𝑗" color 0 0 0 1
+
+style text
+box 12.92 4.79 3.675 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3334 7 5.59 2.1 text "𝑖" color 0 0 0 1
+glyph 1048 7 7.648 2.1 text "," color 0 0 0 1
+glyph 3336 7 9.363 2.1 text "𝑗" color 0 0 0 1

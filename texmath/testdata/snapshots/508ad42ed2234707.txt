@@ -1,0 +1,7 @@
+tex "\\medsquarevert"
+
+style display
+error "parsing tex math: unknown command \\medsquarevert"
+
+style text
+error "parsing tex math: unknown command \\medsquarevert"

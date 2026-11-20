@@ -1,0 +1,15 @@
+tex "Huge"
+
+style display
+box 22.939999999999998 6.57 2.25 0
+glyph 3307 10 0 0 text "𝐻" color 0 0 0 1
+glyph 3348 10 8.02 0 text "𝑢" color 0 0 0 1
+glyph 3332 10 13.67 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 18.7 0 text "𝑒" color 0 0 0 1
+
+style text
+box 22.939999999999998 6.57 2.25 0
+glyph 3307 10 0 0 text "𝐻" color 0 0 0 1
+glyph 3348 10 8.02 0 text "𝑢" color 0 0 0 1
+glyph 3332 10 13.67 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 18.7 0 text "𝑒" color 0 0 0 1

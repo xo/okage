@@ -1,0 +1,21 @@
+tex "x^{aaaaaa}"
+
+style display
+box 29.4 6.953 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3326 7 5.6899999999999995 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 9.575 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 13.46 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 17.345 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 21.23 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 25.115000000000002 -3.6 text "𝑎" color 0 0 0 1
+
+style text
+box 29.4 6.953 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3326 7 5.6899999999999995 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 9.575 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 13.46 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 17.345 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 21.23 -3.6 text "𝑎" color 0 0 0 1
+glyph 3326 7 25.115000000000002 -3.6 text "𝑎" color 0 0 0 1

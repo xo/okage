@@ -1,0 +1,9 @@
+tex "\\bigstar"
+
+style display
+box 8.91 6.7 0.68 0
+glyph 2354 10 0 0 text "★" color 0 0 0 1
+
+style text
+box 8.91 6.7 0.68 0
+glyph 2354 10 0 0 text "★" color 0 0 0 1

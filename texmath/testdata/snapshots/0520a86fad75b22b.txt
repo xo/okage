@@ -1,0 +1,7 @@
+tex "\\origof"
+
+style display
+error "parsing tex math: unknown command \\origof"
+
+style text
+error "parsing tex math: unknown command \\origof"

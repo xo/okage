@@ -1,0 +1,13 @@
+tex "y = \\char\"ff"
+
+style display
+box 22.83555555555556 6.72 2.35 0
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 1202 10 8.027777777777779 0 text "=" color 0 0 0 1
+glyph 517 10 18.005555555555556 0 text "ÿ" color 0 0 0 1
+
+style text
+box 22.83555555555556 6.72 2.35 0
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 1202 10 8.027777777777779 0 text "=" color 0 0 0 1
+glyph 517 10 18.005555555555556 0 text "ÿ" color 0 0 0 1

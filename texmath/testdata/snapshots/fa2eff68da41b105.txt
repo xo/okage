@@ -1,0 +1,7 @@
+tex "\\lmoustache \\rmoustache"
+
+style display
+error "parsing tex math: unknown command \\lmoustache"
+
+style text
+error "parsing tex math: unknown command \\lmoustache"

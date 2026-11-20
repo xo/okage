@@ -1,0 +1,7 @@
+tex "{a \\above{2pt} b+1}"
+
+style display
+error "parsing tex math: unknown command \\above"
+
+style text
+error "parsing tex math: unknown command \\above"

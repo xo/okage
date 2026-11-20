@@ -1,0 +1,11 @@
+tex "\\lvert~\\rvert"
+
+style display
+box 8.673333333333334 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1062 10 6.003333333333334 0 text "|" color 0 0 0 1
+
+style text
+box 8.673333333333334 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1062 10 6.003333333333334 0 text "|" color 0 0 0 1

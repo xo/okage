@@ -1,0 +1,23 @@
+tex "capital A"
+
+style display
+box 37.48 7.05 2.2 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 9.69 0 text "𝑝" color 0 0 0 1
+glyph 3334 10 15.67 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 18.61 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 22.139999999999997 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 27.689999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3300 10 30.669999999999998 0 text "𝐴" color 0 0 0 1
+
+style text
+box 37.48 7.05 2.2 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 9.69 0 text "𝑝" color 0 0 0 1
+glyph 3334 10 15.67 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 18.61 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 22.139999999999997 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 27.689999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3300 10 30.669999999999998 0 text "𝐴" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\text{\\textsterling}"
+
+style display
+error "parsing tex math: unknown command \\textsterling"
+
+style text
+error "parsing tex math: unknown command \\textsterling"

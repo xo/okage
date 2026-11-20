@@ -1,0 +1,7 @@
+tex "\\circledS"
+
+style display
+error "parsing tex math: unknown command \\circledS"
+
+style text
+error "parsing tex math: unknown command \\circledS"

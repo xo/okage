@@ -1,0 +1,11 @@
+tex "n?"
+
+style display
+box 9.760000000000002 6.69 0.1 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 1056 10 5.65 0 text "?" color 0 0 0 1
+
+style text
+box 9.760000000000002 6.69 0.1 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 1056 10 5.65 0 text "?" color 0 0 0 1

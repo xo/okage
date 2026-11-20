@@ -1,0 +1,17 @@
+tex "alpha"
+
+style display
+box 25.85 7.0600000000000005 2.2 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 5.55 0 text "𝑙" color 0 0 0 1
+glyph 3343 10 8.53 0 text "𝑝" color 0 0 0 1
+glyph 1224 10 14.51 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 20.3 0 text "𝑎" color 0 0 0 1
+
+style text
+box 25.85 7.0600000000000005 2.2 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 5.55 0 text "𝑙" color 0 0 0 1
+glyph 3343 10 8.53 0 text "𝑝" color 0 0 0 1
+glyph 1224 10 14.51 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 20.3 0 text "𝑎" color 0 0 0 1

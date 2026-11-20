@@ -1,0 +1,19 @@
+tex "target %.2f: assembled to %.3f, overshooting by more than one "
+
+style display
+box 25.999999999999996 5.93 2.25 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 3.53 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 9.08 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 13.2 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 18.23 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 22.47 0 text "𝑡" color 0 0 0 1
+
+style text
+box 25.999999999999996 5.93 2.25 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 3.53 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 9.08 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 13.2 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 18.23 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 22.47 0 text "𝑡" color 0 0 0 1

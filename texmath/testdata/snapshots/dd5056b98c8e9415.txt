@@ -1,0 +1,7 @@
+tex "\\text{\\textgreater}"
+
+style display
+error "parsing tex math: unknown command \\textgreater"
+
+style text
+error "parsing tex math: unknown command \\textgreater"

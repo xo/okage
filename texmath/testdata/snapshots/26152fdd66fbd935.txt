@@ -1,0 +1,7 @@
+tex "\\sqrt{\\nope}"
+
+style display
+error "parsing tex math: unknown command \\nope"
+
+style text
+error "parsing tex math: unknown command \\nope"

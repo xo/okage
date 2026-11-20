@@ -1,0 +1,13 @@
+tex "A^\\intercal B"
+
+style display
+box 16.177 6.827 0 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1923 7 6.11 -3.6 text "⊺" color 0 0 0 1
+glyph 3301 10 9.947000000000001 0 text "𝐵" color 0 0 0 1
+
+style text
+box 16.177 6.827 0 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1923 7 6.11 -3.6 text "⊺" color 0 0 0 1
+glyph 3301 10 9.947000000000001 0 text "𝐵" color 0 0 0 1

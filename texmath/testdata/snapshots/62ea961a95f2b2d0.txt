@@ -1,0 +1,11 @@
+tex "\\begin{array}{c} i \\\\ W \\end{array}"
+
+style display
+box 10.13 14.579999999999998 9.419999999999998 0
+glyph 3334 10 3.595 -6.18 text "𝑖" color 0 0 0 1
+glyph 3322 10 0 5.8199999999999985 text "𝑊" color 0 0 0 1
+
+style text
+box 10.13 14.579999999999998 9.419999999999998 0
+glyph 3334 10 3.595 -6.18 text "𝑖" color 0 0 0 1
+glyph 3322 10 0 5.8199999999999985 text "𝑊" color 0 0 0 1

@@ -1,0 +1,15 @@
+tex "</g>"
+
+style display
+box 28.845555555555556 7.09 2.25 0
+glyph 1203 10 0 0 text "<" color 0 0 0 1
+glyph 1060 10 9.977777777777778 0 text "/" color 0 0 0 1
+glyph 3332 10 13.837777777777777 0 text "𝑔" color 0 0 0 1
+glyph 1204 10 21.645555555555557 0 text ">" color 0 0 0 1
+
+style text
+box 28.845555555555556 7.09 2.25 0
+glyph 1203 10 0 0 text "<" color 0 0 0 1
+glyph 1060 10 9.977777777777778 0 text "/" color 0 0 0 1
+glyph 3332 10 13.837777777777777 0 text "𝑔" color 0 0 0 1
+glyph 1204 10 21.645555555555557 0 text ">" color 0 0 0 1

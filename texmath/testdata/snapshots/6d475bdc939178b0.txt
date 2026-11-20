@@ -1,0 +1,19 @@
+tex "\\mathllap{x}y \\mathrlap{x}y \\mathclap{x}y"
+
+style display
+box 15.750000000000002 4.82 2.2 0.15
+glyph 3354 10 -5.6899999999999995 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 3354 10 5.250000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 5.250000000000001 0 text "𝑦" color 0 0 0 1
+glyph 3354 10 7.655000000000002 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 10.500000000000002 0 text "𝑦" color 0 0 0 1
+
+style text
+box 15.750000000000002 4.82 2.2 0.15
+glyph 3354 10 -5.6899999999999995 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 0 0 text "𝑦" color 0 0 0 1
+glyph 3354 10 5.250000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 5.250000000000001 0 text "𝑦" color 0 0 0 1
+glyph 3354 10 7.655000000000002 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 10.500000000000002 0 text "𝑦" color 0 0 0 1

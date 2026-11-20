@@ -1,0 +1,13 @@
+tex "\\R \\N \\Z"
+
+style display
+box 20.69 6.57 0 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1230 10 7.29 0 text "ℕ" color 0 0 0 1
+glyph 1238 10 14.21 0 text "ℤ" color 0 0 0 1
+
+style text
+box 20.69 6.57 0 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1230 10 7.29 0 text "ℕ" color 0 0 0 1
+glyph 1238 10 14.21 0 text "ℤ" color 0 0 0 1

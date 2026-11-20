@@ -1,0 +1,7 @@
+tex "\\varLambda"
+
+style display
+error "parsing tex math: unknown command \\varLambda"
+
+style text
+error "parsing tex math: unknown command \\varLambda"

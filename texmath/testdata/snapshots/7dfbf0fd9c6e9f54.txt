@@ -1,0 +1,7 @@
+tex "\\underleftrightarrow{AB}"
+
+style display
+error "parsing tex math: unknown command \\underleftrightarrow"
+
+style text
+error "parsing tex math: unknown command \\underleftrightarrow"

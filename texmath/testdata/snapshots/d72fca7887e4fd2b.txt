@@ -1,0 +1,9 @@
+tex "\\varsigma"
+
+style display
+box 3.77 4.8100000000000005 2.27 0
+glyph 903 10 0 0 text "ς" color 0 0 0 1
+
+style text
+box 3.77 4.8100000000000005 2.27 0
+glyph 903 10 0 0 text "ς" color 0 0 0 1

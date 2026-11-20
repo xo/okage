@@ -1,0 +1,11 @@
+tex "nu"
+
+style display
+box 11.3 4.79 0.1 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 5.65 0 text "𝑢" color 0 0 0 1
+
+style text
+box 11.3 4.79 0.1 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 5.65 0 text "𝑢" color 0 0 0 1

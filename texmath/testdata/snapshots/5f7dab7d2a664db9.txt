@@ -1,0 +1,9 @@
+tex "\\bigcap"
+
+style display
+box 12.950000000000001 10.31 5.15 0
+glyph 1934 10 0 5.15 text "⋂" color 0 0 0 1
+
+style text
+box 9.46 7.86 2.6999999999999997 0
+glyph 1933 10 0 0.09999999999999964 text "⋂" color 0 0 0 1

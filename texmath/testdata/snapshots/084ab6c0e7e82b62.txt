@@ -1,0 +1,11 @@
+tex "\\underbar{X}"
+
+style display
+box 7.17 6.57 3.1100000000000003 0
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1
+rule 0 1.75 7.17 0.68 color 0 0 0 1
+
+style text
+box 7.17 6.57 3.1100000000000003 0
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1
+rule 0 1.75 7.17 0.68 color 0 0 0 1

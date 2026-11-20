@@ -1,0 +1,7 @@
+tex "\\text{\\textdagger}"
+
+style display
+error "parsing tex math: unknown command \\textdagger"
+
+style text
+error "parsing tex math: unknown command \\textdagger"

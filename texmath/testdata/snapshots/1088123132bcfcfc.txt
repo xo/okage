@@ -1,0 +1,7 @@
+tex "\\htmlData{foo=a, bar=b}{x}"
+
+style display
+error "parsing tex math: unknown command \\htmlData"
+
+style text
+error "parsing tex math: unknown command \\htmlData"

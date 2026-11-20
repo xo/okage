@@ -1,0 +1,7 @@
+tex "\\varpropto"
+
+style display
+error "parsing tex math: unknown command \\varpropto"
+
+style text
+error "parsing tex math: unknown command \\varpropto"

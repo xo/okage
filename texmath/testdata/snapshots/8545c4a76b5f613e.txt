@@ -1,0 +1,7 @@
+tex "\\llless"
+
+style display
+error "parsing tex math: unknown command \\llless"
+
+style text
+error "parsing tex math: unknown command \\llless"

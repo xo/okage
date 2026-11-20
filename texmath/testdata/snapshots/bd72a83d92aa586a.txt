@@ -1,0 +1,13 @@
+tex "\\inf"
+
+style display
+box 11.68 7.13 0 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 269 10 2.85 0 text "n" color 0 0 0 1
+glyph 260 10 8.61 0 text "f" color 0 0 0 1
+
+style text
+box 11.68 7.13 0 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 269 10 2.85 0 text "n" color 0 0 0 1
+glyph 260 10 8.61 0 text "f" color 0 0 0 1

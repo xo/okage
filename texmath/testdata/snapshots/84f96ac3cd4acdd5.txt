@@ -1,0 +1,7 @@
+tex "\\mathsterling"
+
+style display
+error "parsing tex math: unknown command \\mathsterling"
+
+style text
+error "parsing tex math: unknown command \\mathsterling"

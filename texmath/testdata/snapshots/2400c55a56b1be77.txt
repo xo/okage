@@ -1,0 +1,7 @@
+tex "\\ntriangleright"
+
+style display
+error "parsing tex math: unknown command \\ntriangleright"
+
+style text
+error "parsing tex math: unknown command \\ntriangleright"

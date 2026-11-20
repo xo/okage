@@ -1,0 +1,7 @@
+tex "\\gnsim"
+
+style display
+error "parsing tex math: unknown command \\gnsim"
+
+style text
+error "parsing tex math: unknown command \\gnsim"

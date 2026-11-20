@@ -1,0 +1,27 @@
+tex "\\begin{split} f(x) &= a + b \\\\ &= c \\end{split}"
+
+style display
+box 52.90222222222222 16.08 10.919999999999998 0
+glyph 3331 10 0 -7.68 text "𝑓" color 0 0 0 1
+glyph 1064 10 5.970000000000001 -7.68 text "(" color 0 0 0 1
+glyph 3354 10 9.540000000000001 -7.68 text "𝑥" color 0 0 0 1
+glyph 1065 10 15.23 -7.68 text ")" color 0 0 0 1
+glyph 1202 10 20.5 -7.68 text "=" color 0 0 0 1
+glyph 3326 10 30.477777777777778 -7.68 text "𝑎" color 0 0 0 1
+glyph 1196 10 38.25 -7.68 text "+" color 0 0 0 1
+glyph 3327 10 47.67222222222222 -7.68 text "𝑏" color 0 0 0 1
+glyph 1202 10 20.5 7.3199999999999985 text "=" color 0 0 0 1
+glyph 3328 10 30.477777777777778 7.3199999999999985 text "𝑐" color 0 0 0 1
+
+style text
+box 52.90222222222222 16.08 10.919999999999998 0
+glyph 3331 10 0 -7.68 text "𝑓" color 0 0 0 1
+glyph 1064 10 5.970000000000001 -7.68 text "(" color 0 0 0 1
+glyph 3354 10 9.540000000000001 -7.68 text "𝑥" color 0 0 0 1
+glyph 1065 10 15.23 -7.68 text ")" color 0 0 0 1
+glyph 1202 10 20.5 -7.68 text "=" color 0 0 0 1
+glyph 3326 10 30.477777777777778 -7.68 text "𝑎" color 0 0 0 1
+glyph 1196 10 38.25 -7.68 text "+" color 0 0 0 1
+glyph 3327 10 47.67222222222222 -7.68 text "𝑏" color 0 0 0 1
+glyph 1202 10 20.5 7.3199999999999985 text "=" color 0 0 0 1
+glyph 3328 10 30.477777777777778 7.3199999999999985 text "𝑐" color 0 0 0 1

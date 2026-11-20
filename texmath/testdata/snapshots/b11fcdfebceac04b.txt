@@ -1,0 +1,9 @@
+tex "\\rule{1pc}{1in}"
+
+style display
+box 12 72.27 0 0
+rule 0 -72.27 12 72.27 color 0 0 0 1
+
+style text
+box 12 72.27 0 0
+rule 0 -72.27 12 72.27 color 0 0 0 1

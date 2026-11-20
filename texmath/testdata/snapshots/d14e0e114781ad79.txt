@@ -1,0 +1,9 @@
+tex "\\zeta"
+
+style display
+box 3.86 7.48 2.27 0
+glyph 890 10 0 0 text "ζ" color 0 0 0 1
+
+style text
+box 3.86 7.48 2.27 0
+glyph 890 10 0 0 text "ζ" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\Kappa"
+
+style display
+box 7.0200000000000005 6.57 0 0
+glyph 13 10 0 0 text "K" color 0 0 0 1
+
+style text
+box 7.0200000000000005 6.57 0 0
+glyph 13 10 0 0 text "K" color 0 0 0 1

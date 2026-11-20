@@ -1,0 +1,7 @@
+tex "\\degree"
+
+style display
+error "parsing tex math: unknown command \\degree"
+
+style text
+error "parsing tex math: unknown command \\degree"

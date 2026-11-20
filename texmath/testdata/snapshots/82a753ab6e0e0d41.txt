@@ -1,0 +1,7 @@
+tex "\\gtreqless"
+
+style display
+error "parsing tex math: unknown command \\gtreqless"
+
+style text
+error "parsing tex math: unknown command \\gtreqless"

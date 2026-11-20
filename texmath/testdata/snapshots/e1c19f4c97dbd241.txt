@@ -1,0 +1,9 @@
+tex "\\surd"
+
+style display
+box 7.94 9.22 2.65 0
+glyph 1657 10 0 0 text "√" color 0 0 0 1
+
+style text
+box 7.94 9.22 2.65 0
+glyph 1657 10 0 0 text "√" color 0 0 0 1

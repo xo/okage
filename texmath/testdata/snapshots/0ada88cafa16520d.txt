@@ -1,0 +1,13 @@
+tex "\\norm{x}"
+
+style display
+box 14.23 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 3354 10 4.2700000000000005 0 text "𝑥" color 0 0 0 1
+glyph 1063 10 9.96 0 text "‖" color 0 0 0 1
+
+style text
+box 14.23 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 3354 10 4.2700000000000005 0 text "𝑥" color 0 0 0 1
+glyph 1063 10 9.96 0 text "‖" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "\\lim"
+
+style display
+box 14.2 7.0600000000000005 0 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+
+style text
+box 14.2 7.0600000000000005 0 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1

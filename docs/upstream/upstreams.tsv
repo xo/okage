@@ -17,3 +17,4 @@ pdf-writer	https://github.com/typst/pdf-writer	upstream/pdf-writer	pdf-writer 0.
 subsetter	https://github.com/typst/subsetter	upstream/subsetter	subsetter 0.2.6	internal/subsetter	port	c3f23c67bc0190587f639bda84dc0005ca3f54d5	
 siphasher	https://github.com/jedisct1/rust-siphash	upstream/siphasher	siphasher 1.0.2	internal/siphasher	subset	db8172048a1c9bdef0dcec782d965c236161af13	
 write-fonts	https://github.com/googlefonts/fontations	upstream/write-fonts	write-fonts 0.48.0	internal/subsetter	subset	9af3f3188ab5522e23446a1fb98135cb3f7d96b6	
+go-tex-math	https://github.com/go-tex/math	upstream/go-tex-math	github.com/go-tex/math v0.50.0+11	texmath, texmath/stixtwomath, typesetting/font	port	6a6d2729f3b41117158da5b67fbaf3dbce2d84aa	

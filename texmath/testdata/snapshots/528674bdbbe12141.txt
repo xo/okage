@@ -1,0 +1,21 @@
+tex "\\ket{0}+\\ket{1}"
+
+style display
+box 33.66444444444444 7.36 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1137 10 2.67 0 text "0" color 0 0 0 1
+glyph 2497 10 7.62 0 text "⟩" color 0 0 0 1
+glyph 1196 10 13.232222222222223 0 text "+" color 0 0 0 1
+glyph 1062 10 22.654444444444444 0 text "|" color 0 0 0 1
+glyph 1138 10 25.324444444444445 0 text "1" color 0 0 0 1
+glyph 2497 10 30.274444444444445 0 text "⟩" color 0 0 0 1
+
+style text
+box 33.66444444444444 7.36 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 1137 10 2.67 0 text "0" color 0 0 0 1
+glyph 2497 10 7.62 0 text "⟩" color 0 0 0 1
+glyph 1196 10 13.232222222222223 0 text "+" color 0 0 0 1
+glyph 1062 10 22.654444444444444 0 text "|" color 0 0 0 1
+glyph 1138 10 25.324444444444445 0 text "1" color 0 0 0 1
+glyph 2497 10 30.274444444444445 0 text "⟩" color 0 0 0 1

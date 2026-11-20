@@ -1,0 +1,11 @@
+tex "{}{n}{k}"
+
+style display
+box 11.030000000000001 7.05 0.1 0.05
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 5.65 0 text "𝑘" color 0 0 0 1
+
+style text
+box 11.030000000000001 7.05 0.1 0.05
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 5.65 0 text "𝑘" color 0 0 0 1

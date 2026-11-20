@@ -1,0 +1,7 @@
+tex "\\varGamma"
+
+style display
+error "parsing tex math: unknown command \\varGamma"
+
+style text
+error "parsing tex math: unknown command \\varGamma"

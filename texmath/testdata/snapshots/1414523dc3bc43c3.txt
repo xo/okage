@@ -1,0 +1,13 @@
+tex "\\gcd"
+
+style display
+box 14.690000000000001 7.0600000000000005 2.35 0
+glyph 261 10 0 0 text "g" color 0 0 0 1
+glyph 257 10 4.84 0 text "c" color 0 0 0 1
+glyph 258 10 9.3 0 text "d" color 0 0 0 1
+
+style text
+box 14.690000000000001 7.0600000000000005 2.35 0
+glyph 261 10 0 0 text "g" color 0 0 0 1
+glyph 257 10 4.84 0 text "c" color 0 0 0 1
+glyph 258 10 9.3 0 text "d" color 0 0 0 1

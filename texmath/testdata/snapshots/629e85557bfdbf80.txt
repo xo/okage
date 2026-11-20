@@ -1,0 +1,7 @@
+tex "\\scalebox{2}"
+
+style display
+error "parsing tex math: expected an atom"
+
+style text
+error "parsing tex math: expected an atom"

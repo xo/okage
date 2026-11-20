@@ -1,0 +1,9 @@
+tex "\\triangleright"
+
+style display
+box 10.68 8.1 2.91 0
+glyph 2282 10 0 0 text "▷" color 0 0 0 1
+
+style text
+box 10.68 8.1 2.91 0
+glyph 2282 10 0 0 text "▷" color 0 0 0 1

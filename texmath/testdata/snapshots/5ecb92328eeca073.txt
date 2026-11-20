@@ -1,0 +1,7 @@
+tex "a_{\\angl n}`                                            |"
+
+style display
+error "parsing tex math: unknown command \\angl"
+
+style text
+error "parsing tex math: unknown command \\angl"

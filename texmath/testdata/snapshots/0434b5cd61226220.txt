@@ -1,0 +1,7 @@
+tex "\\curlyeqprec"
+
+style display
+error "parsing tex math: unknown command \\curlyeqprec"
+
+style text
+error "parsing tex math: unknown command \\curlyeqprec"

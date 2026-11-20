@@ -1,0 +1,9 @@
+tex "@"
+
+style display
+box 9.05 6.26 1.86 0
+glyph 1116 10 0 0 text "@" color 0 0 0 1
+
+style text
+box 9.05 6.26 1.86 0
+glyph 1116 10 0 0 text "@" color 0 0 0 1

@@ -1,6 +1,6 @@
 # D7. Each crate has a policy: port, subset, replace or none
 
-Status: Decided, amended by D41, D45, D48, D52 and D62.
+Status: Decided, amended by D41, D45, D48, D52, D62 and D78.
 
 Each crate that tiny-skia, usvg and resvg use has one policy:
 

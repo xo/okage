@@ -1,0 +1,7 @@
+tex "\\xtwoheadrightarrow{abc}"
+
+style display
+error "parsing tex math: unknown command \\xtwoheadrightarrow"
+
+style text
+error "parsing tex math: unknown command \\xtwoheadrightarrow"

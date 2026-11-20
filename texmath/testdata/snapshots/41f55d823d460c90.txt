@@ -1,0 +1,27 @@
+tex "gtreqqless"
+
+style display
+box 42.2 7.05 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 5.03 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 8.56 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 12.68 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 16.92 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 22.090000000000003 0 text "𝑞" color 0 0 0 1
+glyph 3339 10 27.260000000000005 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 30.240000000000006 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 34.480000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 38.34 0 text "𝑠" color 0 0 0 1
+
+style text
+box 42.2 7.05 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 5.03 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 8.56 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 12.68 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 16.92 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 22.090000000000003 0 text "𝑞" color 0 0 0 1
+glyph 3339 10 27.260000000000005 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 30.240000000000006 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 34.480000000000004 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 38.34 0 text "𝑠" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "\\pi r^2"
+
+style display
+box 13.895 8.108 0.09 0
+glyph 900 10 0 0 text "π" color 0 0 0 1
+glyph 3345 10 5.91 0 text "𝑟" color 0 0 0 1
+glyph 1139 7 10.030000000000001 -3.6 text "2" color 0 0 0 1
+
+style text
+box 13.895 8.108 0.09 0
+glyph 900 10 0 0 text "π" color 0 0 0 1
+glyph 3345 10 5.91 0 text "𝑟" color 0 0 0 1
+glyph 1139 7 10.030000000000001 -3.6 text "2" color 0 0 0 1

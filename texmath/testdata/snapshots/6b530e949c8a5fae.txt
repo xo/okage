@@ -1,0 +1,7 @@
+tex "\\@ifundefined"
+
+style display
+error "parsing tex math: unknown command \\@ifundefined"
+
+style text
+error "parsing tex math: unknown command \\@ifundefined"

@@ -1,0 +1,61 @@
+tex "\\times is Bin: a medium space each side"
+
+style display
+box 137.85555555555555 7.0600000000000005 2.2 0
+glyph 1200 10 0 0 text "×" color 0 0 0 1
+glyph 3334 10 7.2 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 10.14 0 text "𝑠" color 0 0 0 1
+glyph 3301 10 14 0 text "𝐵" color 0 0 0 1
+glyph 3334 10 20.23 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 23.169999999999998 0 text "𝑛" color 0 0 0 1
+glyph 1051 10 31.59777777777778 0 text ":" color 0 0 0 1
+glyph 3326 10 36.82555555555556 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 42.37555555555556 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 50.67555555555556 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 54.915555555555564 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 60.67555555555557 0 text "𝑖" color 0 0 0 1
+glyph 3348 10 63.615555555555574 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 69.26555555555558 0 text "𝑚" color 0 0 0 1
+glyph 3346 10 77.56555555555558 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 81.42555555555558 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 87.40555555555558 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 92.95555555555558 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 97.09555555555558 0 text "𝑒" color 0 0 0 1
+glyph 3330 10 101.33555555555557 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 105.57555555555557 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 111.12555555555556 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 115.26555555555557 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 121.05555555555556 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 124.91555555555556 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 127.85555555555555 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 133.61555555555555 0 text "𝑒" color 0 0 0 1
+
+style text
+box 137.85555555555555 7.0600000000000005 2.2 0
+glyph 1200 10 0 0 text "×" color 0 0 0 1
+glyph 3334 10 7.2 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 10.14 0 text "𝑠" color 0 0 0 1
+glyph 3301 10 14 0 text "𝐵" color 0 0 0 1
+glyph 3334 10 20.23 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 23.169999999999998 0 text "𝑛" color 0 0 0 1
+glyph 1051 10 31.59777777777778 0 text ":" color 0 0 0 1
+glyph 3326 10 36.82555555555556 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 42.37555555555556 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 50.67555555555556 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 54.915555555555564 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 60.67555555555557 0 text "𝑖" color 0 0 0 1
+glyph 3348 10 63.615555555555574 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 69.26555555555558 0 text "𝑚" color 0 0 0 1
+glyph 3346 10 77.56555555555558 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 81.42555555555558 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 87.40555555555558 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 92.95555555555558 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 97.09555555555558 0 text "𝑒" color 0 0 0 1
+glyph 3330 10 101.33555555555557 0 text "𝑒" color 0 0 0 1
+glyph 3326 10 105.57555555555557 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 111.12555555555556 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 115.26555555555557 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 121.05555555555556 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 124.91555555555556 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 127.85555555555555 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 133.61555555555555 0 text "𝑒" color 0 0 0 1

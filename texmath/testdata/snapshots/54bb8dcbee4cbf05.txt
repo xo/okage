@@ -1,0 +1,7 @@
+tex "\\lessdot"
+
+style display
+error "parsing tex math: unknown command \\lessdot"
+
+style text
+error "parsing tex math: unknown command \\lessdot"

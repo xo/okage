@@ -1,0 +1,11 @@
+tex "{a \\atop b}"
+
+style display
+box 7.949999999999999 12.59 7.0200000000000005 0
+glyph 3326 10 1.1999999999999997 -7.8 text "𝑎" color 0 0 0 1
+glyph 3327 10 1.3599999999999999 6.9 text "𝑏" color 0 0 0 1
+
+style text
+box 6.285 8.053 3.934 0
+glyph 3326 7 1.2 -4.7 text "𝑎" color 0 0 0 1
+glyph 3327 7 1.312 3.85 text "𝑏" color 0 0 0 1

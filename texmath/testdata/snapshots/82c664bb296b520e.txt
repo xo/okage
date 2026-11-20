@@ -1,0 +1,11 @@
+tex "\\overset{a}{b}"
+
+style display
+box 5.2299999999999995 11.487 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 7 0.6724999999999997 -8.134 text "𝑎" color 0 0 0 1
+
+style text
+box 5.2299999999999995 11.487 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3326 7 0.6724999999999997 -8.134 text "𝑎" color 0 0 0 1

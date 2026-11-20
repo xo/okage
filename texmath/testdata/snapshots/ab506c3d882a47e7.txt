@@ -1,0 +1,13 @@
+tex "\\ker"
+
+style display
+box 13.86 7.0600000000000005 0.1 0
+glyph 266 10 0 0 text "k" color 0 0 0 1
+glyph 259 10 5.42 0 text "e" color 0 0 0 1
+glyph 273 10 10.059999999999999 0 text "r" color 0 0 0 1
+
+style text
+box 13.86 7.0600000000000005 0.1 0
+glyph 266 10 0 0 text "k" color 0 0 0 1
+glyph 259 10 5.42 0 text "e" color 0 0 0 1
+glyph 273 10 10.059999999999999 0 text "r" color 0 0 0 1

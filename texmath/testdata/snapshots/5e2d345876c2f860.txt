@@ -1,0 +1,13 @@
+tex "\\pod n"
+
+style display
+box 22.79 7.36 1.96 0
+glyph 1064 10 10 0 text "(" color 0 0 0 1
+glyph 3341 10 13.57 0 text "𝑛" color 0 0 0 1
+glyph 1065 10 19.22 0 text ")" color 0 0 0 1
+
+style text
+box 22.79 7.36 1.96 0
+glyph 1064 10 10 0 text "(" color 0 0 0 1
+glyph 3341 10 13.57 0 text "𝑛" color 0 0 0 1
+glyph 1065 10 19.22 0 text ")" color 0 0 0 1

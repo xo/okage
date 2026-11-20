@@ -1,0 +1,7 @@
+tex "\\scalebox{x}{abc}"
+
+style display
+error "parsing tex math: \\scalebox factor \"x\" is not a number"
+
+style text
+error "parsing tex math: \\scalebox factor \"x\" is not a number"

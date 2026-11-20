@@ -1,0 +1,13 @@
+tex "cal"
+
+style display
+box 12.669999999999998 7.05 0.12 0.2
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 9.69 0 text "𝑙" color 0 0 0 1
+
+style text
+box 12.669999999999998 7.05 0.12 0.2
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 9.69 0 text "𝑙" color 0 0 0 1

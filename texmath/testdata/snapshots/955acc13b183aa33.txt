@@ -1,0 +1,7 @@
+tex "\\Overrightarrow{AB}"
+
+style display
+error "parsing tex math: unknown command \\Overrightarrow"
+
+style text
+error "parsing tex math: unknown command \\Overrightarrow"

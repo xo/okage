@@ -1,0 +1,7 @@
+tex "\\text{\\textellipsis}"
+
+style display
+error "parsing tex math: unknown command \\textellipsis"
+
+style text
+error "parsing tex math: unknown command \\textellipsis"

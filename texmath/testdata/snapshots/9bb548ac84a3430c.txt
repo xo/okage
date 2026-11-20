@@ -1,0 +1,13 @@
+tex "x\\hdots y"
+
+style display
+box 23.803333333333335 4.82 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1986 10 7.3566666666666665 0 text "⋯" color 0 0 0 1
+glyph 3355 10 18.553333333333335 0 text "𝑦" color 0 0 0 1
+
+style text
+box 23.803333333333335 4.82 2.2 0.15
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1986 10 7.3566666666666665 0 text "⋯" color 0 0 0 1
+glyph 3355 10 18.553333333333335 0 text "𝑦" color 0 0 0 1

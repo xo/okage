@@ -1,0 +1,7 @@
+tex "\\lparen~\\rparen"
+
+style display
+error "parsing tex math: unknown command \\lparen"
+
+style text
+error "parsing tex math: unknown command \\lparen"

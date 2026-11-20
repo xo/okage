@@ -1,0 +1,9 @@
+tex "\\Rho"
+
+style display
+box 5.69 6.57 0 0
+glyph 18 10 0 0 text "P" color 0 0 0 1
+
+style text
+box 5.69 6.57 0 0
+glyph 18 10 0 0 text "P" color 0 0 0 1

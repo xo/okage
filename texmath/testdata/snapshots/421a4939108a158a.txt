@@ -1,0 +1,13 @@
+tex "{lcr}"
+
+style display
+box 11.24 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3328 10 2.9800000000000004 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 7.12 0 text "𝑟" color 0 0 0 1
+
+style text
+box 11.24 7.05 0.12 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3328 10 2.9800000000000004 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 7.12 0 text "𝑟" color 0 0 0 1

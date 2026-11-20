@@ -1,0 +1,7 @@
+tex "{$\\cup$\\cr$\\cdot$}"
+
+style display
+error "parsing tex math: unknown command \\cr"
+
+style text
+error "parsing tex math: unknown command \\cr"

@@ -1,0 +1,15 @@
+tex "Join"
+
+style display
+box 18.03 6.65 0.12 0
+glyph 3309 10 0 0 text "𝐽" color 0 0 0 1
+glyph 3342 10 4.58 0 text "𝑜" color 0 0 0 1
+glyph 3334 10 9.440000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 12.38 0 text "𝑛" color 0 0 0 1
+
+style text
+box 18.03 6.65 0.12 0
+glyph 3309 10 0 0 text "𝐽" color 0 0 0 1
+glyph 3342 10 4.58 0 text "𝑜" color 0 0 0 1
+glyph 3334 10 9.440000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 12.38 0 text "𝑛" color 0 0 0 1

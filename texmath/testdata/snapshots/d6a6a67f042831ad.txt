@@ -1,0 +1,7 @@
+tex "\\nLeftrightarrow"
+
+style display
+error "parsing tex math: unknown command \\nLeftrightarrow"
+
+style text
+error "parsing tex math: unknown command \\nLeftrightarrow"

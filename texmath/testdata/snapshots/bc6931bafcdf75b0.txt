@@ -1,0 +1,7 @@
+tex "\\rule{bogus}{5pt}"
+
+style display
+box 0 5 0 0
+
+style text
+box 0 5 0 0

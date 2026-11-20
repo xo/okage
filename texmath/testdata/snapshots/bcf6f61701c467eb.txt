@@ -1,0 +1,11 @@
+tex "\\not ="
+
+style display
+box 7.2 5.965 2.015 0
+glyph 1202 10 0 0 text "=" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 1.125 text "/" color 0 0 0 1
+
+style text
+box 7.2 5.965 2.015 0
+glyph 1202 10 0 0 text "=" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 1.125 text "/" color 0 0 0 1

@@ -1,0 +1,19 @@
+tex "\\operatorname{argmax}"
+
+style display
+box 31.55 4.88 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 261 10 8.6 0 text "g" color 0 0 0 1
+glyph 268 10 13.44 0 text "m" color 0 0 0 1
+glyph 255 10 21.96 0 text "a" color 0 0 0 1
+glyph 279 10 26.76 0 text "x" color 0 0 0 1
+
+style text
+box 31.55 4.88 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 261 10 8.6 0 text "g" color 0 0 0 1
+glyph 268 10 13.44 0 text "m" color 0 0 0 1
+glyph 255 10 21.96 0 text "a" color 0 0 0 1
+glyph 279 10 26.76 0 text "x" color 0 0 0 1

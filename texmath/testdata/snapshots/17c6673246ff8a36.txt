@@ -1,0 +1,13 @@
+tex "\\raisebox{2pt}{$a+b$}"
+
+style display
+box 22.424444444444443 9.05 0 0
+glyph 3326 10 0 -2 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 -2 text "+" color 0 0 0 1
+glyph 3327 10 17.194444444444443 -2 text "𝑏" color 0 0 0 1
+
+style text
+box 22.424444444444443 9.05 0 0
+glyph 3326 10 0 -2 text "𝑎" color 0 0 0 1
+glyph 1196 10 7.772222222222222 -2 text "+" color 0 0 0 1
+glyph 3327 10 17.194444444444443 -2 text "𝑏" color 0 0 0 1

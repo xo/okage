@@ -1,0 +1,7 @@
+tex "\\begin{matrix"
+
+style display
+error "parsing tex math: \\begin{ unterminated"
+
+style text
+error "parsing tex math: \\begin{ unterminated"

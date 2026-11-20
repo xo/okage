@@ -1,0 +1,31 @@
+tex "scriptscript"
+
+style display
+box 49.14 6.65 2.2 0.15
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 3.86 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 8 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 12.120000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3343 10 15.06 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 21.04 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 24.569999999999997 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 28.429999999999996 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 32.56999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 36.68999999999999 0 text "𝑖" color 0 0 0 1
+glyph 3343 10 39.629999999999995 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 45.61 0 text "𝑡" color 0 0 0 1
+
+style text
+box 49.14 6.65 2.2 0.15
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 3.86 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 8 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 12.120000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3343 10 15.06 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 21.04 0 text "𝑡" color 0 0 0 1
+glyph 3346 10 24.569999999999997 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 28.429999999999996 0 text "𝑐" color 0 0 0 1
+glyph 3345 10 32.56999999999999 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 36.68999999999999 0 text "𝑖" color 0 0 0 1
+glyph 3343 10 39.629999999999995 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 45.61 0 text "𝑡" color 0 0 0 1

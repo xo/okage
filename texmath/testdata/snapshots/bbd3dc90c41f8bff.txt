@@ -1,0 +1,47 @@
+tex "unknown left delimiter"
+
+style display
+box 96.03000000000002 7.11 2.25 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 11.3 0 text "𝑘" color 0 0 0 1
+glyph 3341 10 16.680000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 22.330000000000005 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 27.190000000000005 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 34.61000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3339 10 40.260000000000005 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 43.24000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 47.48000000000001 0 text "𝑓" color 0 0 0 1
+glyph 3347 10 53.45000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3329 10 56.98000000000002 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 62.74000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 66.98000000000002 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 69.96000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 72.90000000000002 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 81.20000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 84.14000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 87.67000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 91.91000000000001 0 text "𝑟" color 0 0 0 1
+
+style text
+box 96.03000000000002 7.11 2.25 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 11.3 0 text "𝑘" color 0 0 0 1
+glyph 3341 10 16.680000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 22.330000000000005 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 27.190000000000005 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 34.61000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3339 10 40.260000000000005 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 43.24000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 47.48000000000001 0 text "𝑓" color 0 0 0 1
+glyph 3347 10 53.45000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3329 10 56.98000000000002 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 62.74000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 66.98000000000002 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 69.96000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 72.90000000000002 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 81.20000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 84.14000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 87.67000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 91.91000000000001 0 text "𝑟" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex ","
+
+style display
+box 2.45 1.21 1.32 0
+glyph 1048 10 0 0 text "," color 0 0 0 1
+
+style text
+box 2.45 1.21 1.32 0
+glyph 1048 10 0 0 text "," color 0 0 0 1

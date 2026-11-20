@@ -1,0 +1,7 @@
+tex "\\mathchoice"
+
+style display
+error "parsing tex math: \\mathchoice needs four {…} groups"
+
+style text
+error "parsing tex math: \\mathchoice needs four {…} groups"

@@ -1,0 +1,33 @@
+tex "llparenthesis"
+
+style display
+box 55.720000000000006 7.0600000000000005 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 2.9800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3343 10 5.960000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 11.940000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 17.490000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 21.610000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 25.85 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 31.5 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 35.03 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 40.82 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 45.06 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 48.92 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 51.86000000000001 0 text "𝑠" color 0 0 0 1
+
+style text
+box 55.720000000000006 7.0600000000000005 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 2.9800000000000004 0 text "𝑙" color 0 0 0 1
+glyph 3343 10 5.960000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 11.940000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 17.490000000000002 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 21.610000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 25.85 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 31.5 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 35.03 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 40.82 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 45.06 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 48.92 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 51.86000000000001 0 text "𝑠" color 0 0 0 1

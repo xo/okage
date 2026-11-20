@@ -1,0 +1,13 @@
+tex "\\ensuremath{x+1}"
+
+style display
+box 22.284444444444443 6.390000000000001 0.4 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 7.912222222222222 0 text "+" color 0 0 0 1
+glyph 1138 10 17.334444444444443 0 text "1" color 0 0 0 1
+
+style text
+box 22.284444444444443 6.390000000000001 0.4 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1196 10 7.912222222222222 0 text "+" color 0 0 0 1
+glyph 1138 10 17.334444444444443 0 text "1" color 0 0 0 1

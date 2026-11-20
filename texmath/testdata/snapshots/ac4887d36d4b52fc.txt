@@ -1,0 +1,7 @@
+tex "a+\\left(\\vcenter{\\frac{\\frac a b}c}\\right)"
+
+style display
+error "parsing tex math: unknown command \\vcenter"
+
+style text
+error "parsing tex math: unknown command \\vcenter"

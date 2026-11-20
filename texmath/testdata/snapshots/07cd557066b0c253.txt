@@ -1,0 +1,43 @@
+tex "bold italic capitals"
+
+style display
+box 75.44000000000001 7.05 2.2 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 10.09 0 text "𝑙" color 0 0 0 1
+glyph 3329 10 13.07 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 18.830000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 21.77 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 25.299999999999997 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 30.849999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 33.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 36.77 0 text "𝑐" color 0 0 0 1
+glyph 3328 10 40.910000000000004 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 45.050000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 50.6 0 text "𝑝" color 0 0 0 1
+glyph 3334 10 56.58 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 59.52 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 63.050000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 68.60000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 71.58000000000001 0 text "𝑠" color 0 0 0 1
+
+style text
+box 75.44000000000001 7.05 2.2 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 10.09 0 text "𝑙" color 0 0 0 1
+glyph 3329 10 13.07 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 18.830000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 21.77 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 25.299999999999997 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 30.849999999999998 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 33.83 0 text "𝑖" color 0 0 0 1
+glyph 3328 10 36.77 0 text "𝑐" color 0 0 0 1
+glyph 3328 10 40.910000000000004 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 45.050000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 50.6 0 text "𝑝" color 0 0 0 1
+glyph 3334 10 56.58 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 59.52 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 63.050000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 68.60000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 71.58000000000001 0 text "𝑠" color 0 0 0 1

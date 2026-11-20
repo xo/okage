@@ -1,0 +1,9 @@
+tex "\\rule{40pt}{5pt}"
+
+style display
+box 40 5 0 0
+rule 0 -5 40 5 color 0 0 0 1
+
+style text
+box 40 5 0 0
+rule 0 -5 40 5 color 0 0 0 1

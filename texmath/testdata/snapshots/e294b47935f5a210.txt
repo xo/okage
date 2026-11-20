@@ -1,0 +1,9 @@
+tex "\\Gamma"
+
+style display
+box 5.69 6.57 0 0
+glyph 847 10 0 0 text "Γ" color 0 0 0 1
+
+style text
+box 5.69 6.57 0 0
+glyph 847 10 0 0 text "Γ" color 0 0 0 1

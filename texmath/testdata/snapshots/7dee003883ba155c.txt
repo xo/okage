@@ -1,0 +1,21 @@
+tex "x_{bbbbbb}"
+
+style display
+box 27.956 4.79 2.184 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3327 7 5.59 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 9.251 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 12.911999999999999 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 16.573 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 20.234 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 23.895 2.1 text "𝑏" color 0 0 0 1
+
+style text
+box 27.956 4.79 2.184 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3327 7 5.59 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 9.251 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 12.911999999999999 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 16.573 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 20.234 2.1 text "𝑏" color 0 0 0 1
+glyph 3327 7 23.895 2.1 text "𝑏" color 0 0 0 1

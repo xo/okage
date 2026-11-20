@@ -1,0 +1,7 @@
+tex "\\Doteq"
+
+style display
+error "parsing tex math: unknown command \\Doteq"
+
+style text
+error "parsing tex math: unknown command \\Doteq"

@@ -1,0 +1,15 @@
+tex "\\text{𝔸-}ℤ\\ 𝕜"
+
+style display
+box 25.123333333333335 7.0600000000000005 0 0
+glyph 3612 10 0 0 text "𝔸" color 0 0 0 1
+glyph 1075 10 6.47 0 text "-" color 0 0 0 1
+glyph 1238 10 9.62 0 text "ℤ" color 0 0 0 1
+glyph 3643 10 19.433333333333334 0 text "𝕜" color 0 0 0 1
+
+style text
+box 25.123333333333335 7.0600000000000005 0 0
+glyph 3612 10 0 0 text "𝔸" color 0 0 0 1
+glyph 1075 10 6.47 0 text "-" color 0 0 0 1
+glyph 1238 10 9.62 0 text "ℤ" color 0 0 0 1
+glyph 3643 10 19.433333333333334 0 text "𝕜" color 0 0 0 1

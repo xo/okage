@@ -1,0 +1,15 @@
+tex "\\genfrac{\\{}{\\}}{0pt}{}{n}{k}"
+
+style display
+box 16.35 12.59 7 0
+glyph 1352 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3341 10 5.3500000000000005 -7.8 text "𝑛" color 0 0 0 1
+glyph 3338 10 5.485000000000001 6.9 text "𝑘" color 0 0 0 1
+glyph 1364 10 12.200000000000001 0.11500000000000021 text "}" color 0 0 0 1
+
+style text
+box 13.355 8.515 3.92 0
+glyph 1349 10 0 0.11500000000000021 text "{" color 0 0 0 1
+glyph 3341 7 4.7 -4.7 text "𝑛" color 0 0 0 1
+glyph 3338 7 4.7945 3.85 text "𝑘" color 0 0 0 1
+glyph 1361 10 9.855 0.11500000000000021 text "}" color 0 0 0 1

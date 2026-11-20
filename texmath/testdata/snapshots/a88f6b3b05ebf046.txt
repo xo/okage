@@ -1,0 +1,17 @@
+tex "cases"
+
+style display
+box 21.65 4.79 0.12 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 9.69 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 13.549999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1
+
+style text
+box 21.65 4.79 0.12 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 9.69 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 13.549999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1

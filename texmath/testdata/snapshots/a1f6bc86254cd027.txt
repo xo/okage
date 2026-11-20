@@ -1,0 +1,7 @@
+tex "a\\mkern.mu b"
+
+style display
+error "parsing tex math: \\mkern: unreadable dimension \".\""
+
+style text
+error "parsing tex math: \\mkern: unreadable dimension \".\""

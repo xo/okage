@@ -1,0 +1,15 @@
+tex "\\binom{n}{k}"
+
+style display
+box 17.05 12.59 7 0
+glyph 1304 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3341 10 5.7 -7.8 text "𝑛" color 0 0 0 1
+glyph 3338 10 5.835000000000001 6.9 text "𝑘" color 0 0 0 1
+glyph 1316 10 12.55 0.1200000000000001 text ")" color 0 0 0 1
+
+style text
+box 13.975000000000001 8.510000000000002 3.92 0
+glyph 1301 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3341 7 5.01 -4.7 text "𝑛" color 0 0 0 1
+glyph 3338 7 5.1045 3.85 text "𝑘" color 0 0 0 1
+glyph 1313 10 10.165000000000001 0.1200000000000001 text ")" color 0 0 0 1

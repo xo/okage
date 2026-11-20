@@ -1,0 +1,85 @@
+tex "an unknown command inside the SELECTED branch"
+
+style display
+box 215.13000000000008 7.0600000000000005 0.15 0.1
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 5.55 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 11.2 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 16.85 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 22.5 0 text "𝑘" color 0 0 0 1
+glyph 3341 10 27.88 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 33.53 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 38.39 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 45.81 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 51.46 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 55.6 0 text "𝑜" color 0 0 0 1
+glyph 3340 10 60.46 0 text "𝑚" color 0 0 0 1
+glyph 3340 10 68.76 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 77.06 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 82.61 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 88.26 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 94.02000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 96.96000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 102.61000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 106.47000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 109.41000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 115.17000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 119.41000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 122.94000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 128.73000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3318 10 132.97000000000003 0 text "𝑆" color 0 0 0 1
+glyph 3304 10 138.61000000000004 0 text "𝐸" color 0 0 0 1
+glyph 3311 10 145.05000000000007 0 text "𝐿" color 0 0 0 1
+glyph 3304 10 150.74000000000007 0 text "𝐸" color 0 0 0 1
+glyph 3302 10 157.18000000000006 0 text "𝐶" color 0 0 0 1
+glyph 3319 10 164.24000000000007 0 text "𝑇" color 0 0 0 1
+glyph 3304 10 170.99000000000007 0 text "𝐸" color 0 0 0 1
+glyph 3303 10 177.43000000000006 0 text "𝐷" color 0 0 0 1
+glyph 3327 10 184.65000000000006 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 189.88000000000008 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 194.00000000000009 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 199.5500000000001 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 205.2000000000001 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 209.3400000000001 0 text "ℎ" color 0 0 0 1
+
+style text
+box 215.13000000000008 7.0600000000000005 0.15 0.1
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 5.55 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 11.2 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 16.85 0 text "𝑛" color 0 0 0 1
+glyph 3338 10 22.5 0 text "𝑘" color 0 0 0 1
+glyph 3341 10 27.88 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 33.53 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 38.39 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 45.81 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 51.46 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 55.6 0 text "𝑜" color 0 0 0 1
+glyph 3340 10 60.46 0 text "𝑚" color 0 0 0 1
+glyph 3340 10 68.76 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 77.06 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 82.61 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 88.26 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 94.02000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 96.96000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 102.61000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 106.47000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 109.41000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 115.17000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 119.41000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 122.94000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 128.73000000000002 0 text "𝑒" color 0 0 0 1
+glyph 3318 10 132.97000000000003 0 text "𝑆" color 0 0 0 1
+glyph 3304 10 138.61000000000004 0 text "𝐸" color 0 0 0 1
+glyph 3311 10 145.05000000000007 0 text "𝐿" color 0 0 0 1
+glyph 3304 10 150.74000000000007 0 text "𝐸" color 0 0 0 1
+glyph 3302 10 157.18000000000006 0 text "𝐶" color 0 0 0 1
+glyph 3319 10 164.24000000000007 0 text "𝑇" color 0 0 0 1
+glyph 3304 10 170.99000000000007 0 text "𝐸" color 0 0 0 1
+glyph 3303 10 177.43000000000006 0 text "𝐷" color 0 0 0 1
+glyph 3327 10 184.65000000000006 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 189.88000000000008 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 194.00000000000009 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 199.5500000000001 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 205.2000000000001 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 209.3400000000001 0 text "ℎ" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\xleftrightharpoons{abc}"
+
+style display
+error "parsing tex math: unknown command \\xleftrightharpoons"
+
+style text
+error "parsing tex math: unknown command \\xleftrightharpoons"

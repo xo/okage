@@ -1,0 +1,15 @@
+tex "err/"
+
+style display
+box 16.34 7.09 0.89 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 4.24 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 8.36 0 text "𝑟" color 0 0 0 1
+glyph 1060 10 12.48 0 text "/" color 0 0 0 1
+
+style text
+box 16.34 7.09 0.89 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 4.24 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 8.36 0 text "𝑟" color 0 0 0 1
+glyph 1060 10 12.48 0 text "/" color 0 0 0 1

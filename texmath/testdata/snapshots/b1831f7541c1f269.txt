@@ -1,0 +1,7 @@
+tex "{n\\brace k}"
+
+style display
+error "parsing tex math: unknown command \\brace"
+
+style text
+error "parsing tex math: unknown command \\brace"

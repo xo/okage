@@ -1,0 +1,7 @@
+tex "\\nshortparallel"
+
+style display
+error "parsing tex math: unknown command \\nshortparallel"
+
+style text
+error "parsing tex math: unknown command \\nshortparallel"

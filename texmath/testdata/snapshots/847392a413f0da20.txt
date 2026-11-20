@@ -1,0 +1,41 @@
+tex "rightleftharpoons"
+
+style display
+box 78.80000000000001 7.11 2.25 0
+glyph 3345 10 0 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 4.12 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 7.0600000000000005 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 12.09 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 17.880000000000003 0 text "𝑡" color 0 0 0 1
+glyph 3339 10 21.41 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 24.39 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 28.630000000000003 0 text "𝑓" color 0 0 0 1
+glyph 3347 10 34.60000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 38.13000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 43.92000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 49.470000000000006 0 text "𝑟" color 0 0 0 1
+glyph 3343 10 53.59 0 text "𝑝" color 0 0 0 1
+glyph 3342 10 59.57000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 64.43 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 69.29 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 74.94000000000001 0 text "𝑠" color 0 0 0 1
+
+style text
+box 78.80000000000001 7.11 2.25 0
+glyph 3345 10 0 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 4.12 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 7.0600000000000005 0 text "𝑔" color 0 0 0 1
+glyph 1224 10 12.09 0 text "ℎ" color 0 0 0 1
+glyph 3347 10 17.880000000000003 0 text "𝑡" color 0 0 0 1
+glyph 3339 10 21.41 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 24.39 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 28.630000000000003 0 text "𝑓" color 0 0 0 1
+glyph 3347 10 34.60000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 38.13000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 43.92000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 49.470000000000006 0 text "𝑟" color 0 0 0 1
+glyph 3343 10 53.59 0 text "𝑝" color 0 0 0 1
+glyph 3342 10 59.57000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 64.43 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 69.29 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 74.94000000000001 0 text "𝑠" color 0 0 0 1

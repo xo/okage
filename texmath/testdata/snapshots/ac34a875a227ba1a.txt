@@ -1,0 +1,13 @@
+tex "x^{\\rm th}"
+
+style display
+box 12.334 8.542 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 275 7 5.6899999999999995 -3.6 text "t" color 0 0 0 1
+glyph 262 7 7.895 -3.6 text "h" color 0 0 0 1
+
+style text
+box 12.334 8.542 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 275 7 5.6899999999999995 -3.6 text "t" color 0 0 0 1
+glyph 262 7 7.895 -3.6 text "h" color 0 0 0 1

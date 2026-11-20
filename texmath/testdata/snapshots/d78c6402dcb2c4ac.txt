@@ -1,0 +1,21 @@
+tex "\\mathbf{x} \\mathsf{y} \\mathtt{z} \\mathit{w} \\mathrm{d} \\text{if}"
+
+style display
+box 34.21 7.13 2.24 0
+glyph 3297 10 0 0 text "𝐱" color 0 0 0 1
+glyph 3711 10 5.55 0 text "𝗒" color 0 0 0 1
+glyph 3928 10 10.08 0 text "𝚣" color 0 0 0 1
+glyph 3352 10 15.48 0 text "𝑤" color 0 0 0 1
+glyph 258 10 22.900000000000002 0 text "d" color 0 0 0 1
+glyph 263 10 28.290000000000003 0 text "i" color 0 0 0 1
+glyph 260 10 31.140000000000004 0 text "f" color 0 0 0 1
+
+style text
+box 34.21 7.13 2.24 0
+glyph 3297 10 0 0 text "𝐱" color 0 0 0 1
+glyph 3711 10 5.55 0 text "𝗒" color 0 0 0 1
+glyph 3928 10 10.08 0 text "𝚣" color 0 0 0 1
+glyph 3352 10 15.48 0 text "𝑤" color 0 0 0 1
+glyph 258 10 22.900000000000002 0 text "d" color 0 0 0 1
+glyph 263 10 28.290000000000003 0 text "i" color 0 0 0 1
+glyph 260 10 31.140000000000004 0 text "f" color 0 0 0 1

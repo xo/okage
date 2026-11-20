@@ -1,0 +1,21 @@
+tex "Uparrow"
+
+style display
+box 40.11000000000001 6.57 2.2 0.15
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 14.040000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 19.59 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 23.71 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 27.830000000000002 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 32.690000000000005 0 text "𝑤" color 0 0 0 1
+
+style text
+box 40.11000000000001 6.57 2.2 0.15
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 14.040000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 19.59 0 text "𝑟" color 0 0 0 1
+glyph 3345 10 23.71 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 27.830000000000002 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 32.690000000000005 0 text "𝑤" color 0 0 0 1

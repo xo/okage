@@ -1,0 +1,7 @@
+tex "\\char`\\"
+
+style display
+error "parsing tex math: \\char needs a character code"
+
+style text
+error "parsing tex math: \\char needs a character code"

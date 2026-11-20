@@ -1,0 +1,13 @@
+tex "\\mathtt{Ab0}"
+
+style display
+box 17.4 7.0600000000000005 0.12 0
+glyph 3875 10 0 0 text "𝙰" color 0 0 0 1
+glyph 3902 10 6 0 text "𝚋" color 0 0 0 1
+glyph 4263 10 11.4 0 text "𝟶" color 0 0 0 1
+
+style text
+box 17.4 7.0600000000000005 0.12 0
+glyph 3875 10 0 0 text "𝙰" color 0 0 0 1
+glyph 3902 10 6 0 text "𝚋" color 0 0 0 1
+glyph 4263 10 11.4 0 text "𝟶" color 0 0 0 1

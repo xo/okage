@@ -1,0 +1,15 @@
+tex "\\cosh"
+
+style display
+box 19.32 7.0600000000000005 0.11 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 274 10 9.6 0 text "s" color 0 0 0 1
+glyph 262 10 13.55 0 text "h" color 0 0 0 1
+
+style text
+box 19.32 7.0600000000000005 0.11 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 274 10 9.6 0 text "s" color 0 0 0 1
+glyph 262 10 13.55 0 text "h" color 0 0 0 1

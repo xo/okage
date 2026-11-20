@@ -1,0 +1,7 @@
+tex "\\underbracket{AB}"
+
+style display
+error "parsing tex math: unknown command \\underbracket"
+
+style text
+error "parsing tex math: unknown command \\underbracket"

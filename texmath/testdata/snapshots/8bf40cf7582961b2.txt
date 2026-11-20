@@ -1,0 +1,7 @@
+tex "\\verb!x^2!"
+
+style display
+error "parsing tex math: unknown command \\verb"
+
+style text
+error "parsing tex math: unknown command \\verb"

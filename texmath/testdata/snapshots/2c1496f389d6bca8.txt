@@ -1,0 +1,11 @@
+tex "\\scalebox{0.5}{a%c\nb}"
+
+style display
+box 5.390000000000001 3.525 0.06 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1 transform 0.5 0 0 0.5 0 0
+glyph 3327 10 5.55 0 text "𝑏" color 0 0 0 1 transform 0.5 0 0 0.5 0 0
+
+style text
+box 5.390000000000001 3.525 0.06 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1 transform 0.5 0 0 0.5 0 0
+glyph 3327 10 5.55 0 text "𝑏" color 0 0 0 1 transform 0.5 0 0 0.5 0 0

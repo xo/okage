@@ -1,0 +1,13 @@
+tex "\\kappa \\ne \\varkappa"
+
+style display
+box 22.745555555555555 6.78 1.6 0
+glyph 894 10 0 0 text "κ" color 0 0 0 1
+glyph 1805 10 7.727777777777778 0 text "≠" color 0 0 0 1
+glyph 919 10 17.705555555555556 0 text "ϰ" color 0 0 0 1
+
+style text
+box 22.745555555555555 6.78 1.6 0
+glyph 894 10 0 0 text "κ" color 0 0 0 1
+glyph 1805 10 7.727777777777778 0 text "≠" color 0 0 0 1
+glyph 919 10 17.705555555555556 0 text "ϰ" color 0 0 0 1

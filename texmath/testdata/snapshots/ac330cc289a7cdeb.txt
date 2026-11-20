@@ -1,0 +1,9 @@
+tex "\\bigtriangledown"
+
+style display
+box 11.72 8.3 1.3 0
+glyph 2288 10 0 0 text "▽" color 0 0 0 1
+
+style text
+box 11.72 8.3 1.3 0
+glyph 2288 10 0 0 text "▽" color 0 0 0 1

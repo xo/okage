@@ -1,0 +1,13 @@
+tex "\\imath + \\jmath"
+
+style display
+box 17.124444444444443 5.58 2.35 0
+glyph 382 10 0 0 text "ı" color 0 0 0 1
+glyph 1196 10 5.072222222222223 0 text "+" color 0 0 0 1
+glyph 386 10 14.494444444444444 0 text "ȷ" color 0 0 0 1
+
+style text
+box 17.124444444444443 5.58 2.35 0
+glyph 382 10 0 0 text "ı" color 0 0 0 1
+glyph 1196 10 5.072222222222223 0 text "+" color 0 0 0 1
+glyph 386 10 14.494444444444444 0 text "ȷ" color 0 0 0 1

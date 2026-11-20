@@ -1,0 +1,7 @@
+tex "\\Finv"
+
+style display
+error "parsing tex math: unknown command \\Finv"
+
+style text
+error "parsing tex math: unknown command \\Finv"

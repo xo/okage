@@ -1,0 +1,9 @@
+tex "\\Bbbk"
+
+style display
+box 5.69 7.0600000000000005 0 0
+glyph 3643 10 0 0 text "𝕜" color 0 0 0 1
+
+style text
+box 5.69 7.0600000000000005 0 0
+glyph 3643 10 0 0 text "𝕜" color 0 0 0 1

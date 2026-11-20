@@ -1,0 +1,23 @@
+tex "vartheta"
+
+style display
+box 37.5 7.0600000000000005 0.12 0
+glyph 3350 10 0 0 text "𝑣" color 0 0 0 1
+glyph 3326 10 5.19 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 10.74 0 text "𝑟" color 0 0 0 1
+glyph 3347 10 14.86 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 18.389999999999997 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 24.18 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 28.42 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 31.95 0 text "𝑎" color 0 0 0 1
+
+style text
+box 37.5 7.0600000000000005 0.12 0
+glyph 3350 10 0 0 text "𝑣" color 0 0 0 1
+glyph 3326 10 5.19 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 10.74 0 text "𝑟" color 0 0 0 1
+glyph 3347 10 14.86 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 18.389999999999997 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 24.18 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 28.42 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 31.95 0 text "𝑎" color 0 0 0 1

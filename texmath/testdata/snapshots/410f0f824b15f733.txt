@@ -1,0 +1,17 @@
+tex "nprec"
+
+style display
+box 24.130000000000003 4.79 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3343 10 5.65 0 text "𝑝" color 0 0 0 1
+glyph 3345 10 11.63 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 15.75 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 19.990000000000002 0 text "𝑐" color 0 0 0 1
+
+style text
+box 24.130000000000003 4.79 2.2 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3343 10 5.65 0 text "𝑝" color 0 0 0 1
+glyph 3345 10 11.63 0 text "𝑟" color 0 0 0 1
+glyph 3330 10 15.75 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 19.990000000000002 0 text "𝑐" color 0 0 0 1

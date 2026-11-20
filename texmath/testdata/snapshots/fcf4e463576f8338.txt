@@ -1,0 +1,7 @@
+tex "\\KaTeX"
+
+style display
+error "parsing tex math: unknown command \\KaTeX"
+
+style text
+error "parsing tex math: unknown command \\KaTeX"

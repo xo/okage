@@ -1,0 +1,7 @@
+tex "\\upuparrows"
+
+style display
+error "parsing tex math: unknown command \\upuparrows"
+
+style text
+error "parsing tex math: unknown command \\upuparrows"

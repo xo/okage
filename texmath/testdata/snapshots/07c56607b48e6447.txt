@@ -1,0 +1,9 @@
+tex " b"
+
+style display
+box 5.2299999999999995 7.05 0.12 0.05
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+
+style text
+box 5.2299999999999995 7.05 0.12 0.05
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1

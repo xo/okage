@@ -1,0 +1,7 @@
+tex "\\varsubsetneq"
+
+style display
+error "parsing tex math: unknown command \\varsubsetneq"
+
+style text
+error "parsing tex math: unknown command \\varsubsetneq"

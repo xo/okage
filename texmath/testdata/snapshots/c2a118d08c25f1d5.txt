@@ -1,0 +1,7 @@
+tex "\\circleddash"
+
+style display
+error "parsing tex math: unknown command \\circleddash"
+
+style text
+error "parsing tex math: unknown command \\circleddash"

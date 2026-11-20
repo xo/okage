@@ -1,0 +1,15 @@
+tex "\\smash{\\frac{a}{b}} x"
+
+style display
+box 13.639999999999999 4.79 0.1 0.1
+glyph 3326 10 1.1999999999999997 -6.4 text "𝑎" color 0 0 0 1
+glyph 3327 10 1.3599999999999999 6.4 text "𝑏" color 0 0 0 1
+rule 1.2 -2.92 5.55 0.68 color 0 0 0 1
+glyph 3354 10 7.949999999999999 0 text "𝑥" color 0 0 0 1
+
+style text
+box 11.975 4.79 0.1 0.1
+glyph 3326 7 1.2 -5.8500000000000005 text "𝑎" color 0 0 0 1
+glyph 3327 7 1.312 5.8500000000000005 text "𝑏" color 0 0 0 1
+rule 1.2 -2.92 3.8850000000000002 0.68 color 0 0 0 1
+glyph 3354 10 6.285 0 text "𝑥" color 0 0 0 1

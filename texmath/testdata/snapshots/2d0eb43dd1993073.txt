@@ -1,0 +1,13 @@
+tex "\\dim"
+
+style display
+box 16.759999999999998 7.0600000000000005 0.08 0
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 263 10 5.39 0 text "i" color 0 0 0 1
+glyph 268 10 8.24 0 text "m" color 0 0 0 1
+
+style text
+box 16.759999999999998 7.0600000000000005 0.08 0
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 263 10 5.39 0 text "i" color 0 0 0 1
+glyph 268 10 8.24 0 text "m" color 0 0 0 1

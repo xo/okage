@@ -1,0 +1,13 @@
+tex "eta"
+
+style display
+box 13.32 5.93 0.12 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 4.24 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 7.7700000000000005 0 text "𝑎" color 0 0 0 1
+
+style text
+box 13.32 5.93 0.12 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 4.24 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 7.7700000000000005 0 text "𝑎" color 0 0 0 1

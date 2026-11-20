@@ -1,0 +1,7 @@
+tex "\\text{\\v{a}}"
+
+style display
+error "parsing tex math: unknown command \\v"
+
+style text
+error "parsing tex math: unknown command \\v"

@@ -1,0 +1,21 @@
+tex "display"
+
+style display
+box 32.32 7.05 2.2 0.15
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 5.760000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 8.7 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 12.559999999999999 0 text "𝑝" color 0 0 0 1
+glyph 3339 10 18.54 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 21.52 0 text "𝑎" color 0 0 0 1
+glyph 3355 10 27.07 0 text "𝑦" color 0 0 0 1
+
+style text
+box 32.32 7.05 2.2 0.15
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3334 10 5.760000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 8.7 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 12.559999999999999 0 text "𝑝" color 0 0 0 1
+glyph 3339 10 18.54 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 21.52 0 text "𝑎" color 0 0 0 1
+glyph 3355 10 27.07 0 text "𝑦" color 0 0 0 1

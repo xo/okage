@@ -1,0 +1,7 @@
+tex "\\begin{array}{c}\\nope\\end{array}"
+
+style display
+error "parsing tex math: unknown command \\nope"
+
+style text
+error "parsing tex math: unknown command \\nope"

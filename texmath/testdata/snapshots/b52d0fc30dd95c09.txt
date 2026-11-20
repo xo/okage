@@ -1,0 +1,13 @@
+tex "\\def\\R{\\mathbb{R}}\\def\\C{\\mathbb{C}}\\R\\to\\C"
+
+style display
+box 29.275555555555556 6.69 0.15 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1510 10 10.067777777777778 0 text "→" color 0 0 0 1
+glyph 1217 10 22.325555555555557 0 text "ℂ" color 0 0 0 1
+
+style text
+box 29.275555555555556 6.69 0.15 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1510 10 10.067777777777778 0 text "→" color 0 0 0 1
+glyph 1217 10 22.325555555555557 0 text "ℂ" color 0 0 0 1

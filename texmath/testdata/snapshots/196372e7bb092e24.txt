@@ -1,0 +1,9 @@
+tex "\\varTheta"
+
+style display
+box 7.38 6.68 0.13 0
+glyph 852 10 0 0 text "Θ" color 0 0 0 1
+
+style text
+box 7.38 6.68 0.13 0
+glyph 852 10 0 0 text "Θ" color 0 0 0 1

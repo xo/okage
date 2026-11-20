@@ -1,0 +1,11 @@
+tex "\\scriptsize AB"
+
+style display
+box 9.128 4.627 0 0.21
+glyph 3300 7 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 7 4.767 0 text "𝐵" color 0 0 0 1
+
+style text
+box 9.128 4.627 0 0.21
+glyph 3300 7 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 7 4.767 0 text "𝐵" color 0 0 0 1

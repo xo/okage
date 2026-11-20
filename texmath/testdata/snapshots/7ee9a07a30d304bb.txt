@@ -1,0 +1,7 @@
+tex "\\rule{1pt}{1zz}"
+
+style display
+box 1 0 0 0
+
+style text
+box 1 0 0 0

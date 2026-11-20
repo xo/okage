@@ -1,0 +1,13 @@
+tex "\\left\\lfloor x \\right\\rfloor"
+
+style display
+box 12.67 7.210000000000001 2.05 0
+glyph 2017 10 0 0.1499999999999999 text "⌊" color 0 0 0 1
+glyph 3354 10 3.49 0 text "𝑥" color 0 0 0 1
+glyph 2022 10 9.18 0.1499999999999999 text "⌋" color 0 0 0 1
+
+style text
+box 12.67 7.210000000000001 2.05 0
+glyph 2017 10 0 0.1499999999999999 text "⌊" color 0 0 0 1
+glyph 3354 10 3.49 0 text "𝑥" color 0 0 0 1
+glyph 2022 10 9.18 0.1499999999999999 text "⌋" color 0 0 0 1

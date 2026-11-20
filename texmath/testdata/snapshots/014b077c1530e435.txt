@@ -1,0 +1,31 @@
+tex "triangledown"
+
+style display
+box 57.730000000000004 7.05 2.25 0
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 3.53 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 7.65 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 10.59 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 16.14 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 21.79 0 text "𝑔" color 0 0 0 1
+glyph 3339 10 26.82 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 29.8 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 34.04 0 text "𝑑" color 0 0 0 1
+glyph 3342 10 39.800000000000004 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 44.660000000000004 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 52.080000000000005 0 text "𝑛" color 0 0 0 1
+
+style text
+box 57.730000000000004 7.05 2.25 0
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 3.53 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 7.65 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 10.59 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 16.14 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 21.79 0 text "𝑔" color 0 0 0 1
+glyph 3339 10 26.82 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 29.8 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 34.04 0 text "𝑑" color 0 0 0 1
+glyph 3342 10 39.800000000000004 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 44.660000000000004 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 52.080000000000005 0 text "𝑛" color 0 0 0 1

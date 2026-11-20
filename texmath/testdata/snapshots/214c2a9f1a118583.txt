@@ -1,0 +1,9 @@
+tex "\\mathsf{y}"
+
+style display
+box 4.53 4.74 2.24 0
+glyph 3711 10 0 0 text "𝗒" color 0 0 0 1
+
+style text
+box 4.53 4.74 2.24 0
+glyph 3711 10 0 0 text "𝗒" color 0 0 0 1

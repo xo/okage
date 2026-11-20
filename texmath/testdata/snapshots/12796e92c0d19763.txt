@@ -1,0 +1,7 @@
+tex "\\smallint"
+
+style display
+error "parsing tex math: unknown command \\smallint"
+
+style text
+error "parsing tex math: unknown command \\smallint"

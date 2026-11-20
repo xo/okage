@@ -1,0 +1,21 @@
+tex "x \\pmod a"
+
+style display
+box 49.096666666666664 7.36 1.96 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1064 10 15.69 0 text "(" color 0 0 0 1
+glyph 268 10 19.259999999999998 0 text "m" color 0 0 0 1
+glyph 270 10 27.78 0 text "o" color 0 0 0 1
+glyph 258 10 32.92 0 text "d" color 0 0 0 1
+glyph 3326 10 39.97666666666667 0 text "𝑎" color 0 0 0 1
+glyph 1065 10 45.526666666666664 0 text ")" color 0 0 0 1
+
+style text
+box 49.096666666666664 7.36 1.96 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1064 10 15.69 0 text "(" color 0 0 0 1
+glyph 268 10 19.259999999999998 0 text "m" color 0 0 0 1
+glyph 270 10 27.78 0 text "o" color 0 0 0 1
+glyph 258 10 32.92 0 text "d" color 0 0 0 1
+glyph 3326 10 39.97666666666667 0 text "𝑎" color 0 0 0 1
+glyph 1065 10 45.526666666666664 0 text ")" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\lambda"
+
+style display
+box 5.0600000000000005 7.0600000000000005 0.11 0
+glyph 895 10 0 0 text "λ" color 0 0 0 1
+
+style text
+box 5.0600000000000005 7.0600000000000005 0.11 0
+glyph 895 10 0 0 text "λ" color 0 0 0 1

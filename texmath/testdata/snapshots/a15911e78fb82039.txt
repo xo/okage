@@ -1,0 +1,7 @@
+tex "\\Game"
+
+style display
+error "parsing tex math: unknown command \\Game"
+
+style text
+error "parsing tex math: unknown command \\Game"

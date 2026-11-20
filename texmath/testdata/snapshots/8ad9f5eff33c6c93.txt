@@ -1,0 +1,15 @@
+tex "Upxi"
+
+style display
+box 22.670000000000005 6.65 2.2 0.2
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3354 10 14.040000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3334 10 19.730000000000004 0 text "𝑖" color 0 0 0 1
+
+style text
+box 22.670000000000005 6.65 2.2 0.2
+glyph 3320 10 0 0 text "𝑈" color 0 0 0 1
+glyph 3343 10 8.06 0 text "𝑝" color 0 0 0 1
+glyph 3354 10 14.040000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3334 10 19.730000000000004 0 text "𝑖" color 0 0 0 1

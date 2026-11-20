@@ -1,0 +1,13 @@
+tex "\\bra{\\phi}"
+
+style display
+box 11.81 7.36 2.2 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 922 10 3.39 0 text "ϕ" color 0 0 0 1
+glyph 1062 10 9.14 0 text "|" color 0 0 0 1
+
+style text
+box 11.81 7.36 2.2 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 922 10 3.39 0 text "ϕ" color 0 0 0 1
+glyph 1062 10 9.14 0 text "|" color 0 0 0 1

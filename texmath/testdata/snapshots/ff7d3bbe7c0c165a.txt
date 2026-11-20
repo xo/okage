@@ -1,0 +1,19 @@
+tex "small z"
+
+style display
+box 28.700000000000003 7.05 0.12 0.1
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3356 10 23.67 0 text "𝑧" color 0 0 0 1
+
+style text
+box 28.700000000000003 7.05 0.12 0.1
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3356 10 23.67 0 text "𝑧" color 0 0 0 1

@@ -1,0 +1,9 @@
+tex "\\$"
+
+style display
+box 4.95 7.05 0.93 0
+glyph 1124 10 0 0 text "$" color 0 0 0 1
+
+style text
+box 4.95 7.05 0.93 0
+glyph 1124 10 0 0 text "$" color 0 0 0 1

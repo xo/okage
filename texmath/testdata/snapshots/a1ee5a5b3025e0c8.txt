@@ -1,0 +1,19 @@
+tex "\\arctan"
+
+style display
+box 26.769999999999996 6.1000000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 275 10 13.059999999999999 0 text "t" color 0 0 0 1
+glyph 255 10 16.209999999999997 0 text "a" color 0 0 0 1
+glyph 269 10 21.009999999999998 0 text "n" color 0 0 0 1
+
+style text
+box 26.769999999999996 6.1000000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 275 10 13.059999999999999 0 text "t" color 0 0 0 1
+glyph 255 10 16.209999999999997 0 text "a" color 0 0 0 1
+glyph 269 10 21.009999999999998 0 text "n" color 0 0 0 1

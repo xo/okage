@@ -1,0 +1,7 @@
+tex "\\varlimsup"
+
+style display
+error "parsing tex math: unknown command \\varlimsup"
+
+style text
+error "parsing tex math: unknown command \\varlimsup"

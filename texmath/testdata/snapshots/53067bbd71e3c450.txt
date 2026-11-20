@@ -1,0 +1,7 @@
+tex "\\begin{matrix} a \\end{bmatrix}"
+
+style display
+error "parsing tex math: \\begin{matrix} closed by \\end{bmatrix}"
+
+style text
+error "parsing tex math: \\begin{matrix} closed by \\end{bmatrix}"

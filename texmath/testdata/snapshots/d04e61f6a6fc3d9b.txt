@@ -1,0 +1,23 @@
+tex "no number"
+
+style display
+box 43.7 7.05 0.12 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 10.510000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 16.160000000000004 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 21.810000000000002 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 30.110000000000003 0 text "𝑏" color 0 0 0 1
+glyph 3330 10 35.34 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 39.580000000000005 0 text "𝑟" color 0 0 0 1
+
+style text
+box 43.7 7.05 0.12 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 10.510000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 16.160000000000004 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 21.810000000000002 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 30.110000000000003 0 text "𝑏" color 0 0 0 1
+glyph 3330 10 35.34 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 39.580000000000005 0 text "𝑟" color 0 0 0 1

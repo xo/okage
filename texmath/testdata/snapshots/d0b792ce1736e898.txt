@@ -1,0 +1,7 @@
+tex "\\gggtr"
+
+style display
+error "parsing tex math: unknown command \\gggtr"
+
+style text
+error "parsing tex math: unknown command \\gggtr"

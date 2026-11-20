@@ -1,0 +1,9 @@
+tex "\\alefsym"
+
+style display
+box 6.98 6.93 0.14 0
+glyph 1252 10 0 0 text "ℵ" color 0 0 0 1
+
+style text
+box 6.98 6.93 0.14 0
+glyph 1252 10 0 0 text "ℵ" color 0 0 0 1

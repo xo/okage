@@ -1,0 +1,9 @@
+tex "\\bigoplus"
+
+style display
+box 15.92 10.185 5.025 0
+glyph 2811 10 0 5.025 text "⨁" color 0 0 0 1
+
+style text
+box 11.53 7.8100000000000005 2.65 0
+glyph 2810 10 0 0 text "⨁" color 0 0 0 1

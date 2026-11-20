@@ -1,0 +1,13 @@
+tex "\\exp"
+
+style display
+box 14.8 4.8500000000000005 2.2 0
+glyph 259 10 0 0 text "e" color 0 0 0 1
+glyph 279 10 4.64 0 text "x" color 0 0 0 1
+glyph 271 10 9.43 0 text "p" color 0 0 0 1
+
+style text
+box 14.8 4.8500000000000005 2.2 0
+glyph 259 10 0 0 text "e" color 0 0 0 1
+glyph 279 10 4.64 0 text "x" color 0 0 0 1
+glyph 271 10 9.43 0 text "p" color 0 0 0 1

@@ -1,0 +1,21 @@
+tex "epsilon"
+
+style display
+box 30.509999999999998 7.05 2.2 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3343 10 4.24 0 text "𝑝" color 0 0 0 1
+glyph 3346 10 10.22 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 14.08 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 17.02 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 20 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 24.86 0 text "𝑛" color 0 0 0 1
+
+style text
+box 30.509999999999998 7.05 2.2 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3343 10 4.24 0 text "𝑝" color 0 0 0 1
+glyph 3346 10 10.22 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 14.08 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 17.02 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 20 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 24.86 0 text "𝑛" color 0 0 0 1

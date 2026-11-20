@@ -1,0 +1,9 @@
+tex "\\blacktriangleright"
+
+style display
+box 10.68 8.09 2.92 0
+glyph 2281 10 0 0 text "▶" color 0 0 0 1
+
+style text
+box 10.68 8.09 2.92 0
+glyph 2281 10 0 0 text "▶" color 0 0 0 1

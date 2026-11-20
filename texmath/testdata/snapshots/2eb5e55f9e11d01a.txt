@@ -1,0 +1,25 @@
+tex "widecheck"
+
+style display
+box 44.05 7.0600000000000005 0.12 0.05
+glyph 3352 10 0 0 text "𝑤" color 0 0 0 1
+glyph 3334 10 7.420000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 10.36 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 16.12 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 20.36 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 24.5 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 30.290000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 34.53 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 38.67 0 text "𝑘" color 0 0 0 1
+
+style text
+box 44.05 7.0600000000000005 0.12 0.05
+glyph 3352 10 0 0 text "𝑤" color 0 0 0 1
+glyph 3334 10 7.420000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3329 10 10.36 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 16.12 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 20.36 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 24.5 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 30.290000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 34.53 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 38.67 0 text "𝑘" color 0 0 0 1

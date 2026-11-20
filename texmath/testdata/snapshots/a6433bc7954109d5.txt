@@ -1,0 +1,17 @@
+tex "z = \\char98 + 1"
+
+style display
+box 39.6 7.0600000000000005 0.4 0
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+glyph 1202 10 7.807777777777777 0 text "=" color 0 0 0 1
+glyph 256 10 17.785555555555554 0 text "b" color 0 0 0 1
+glyph 1196 10 25.227777777777774 0 text "+" color 0 0 0 1
+glyph 1138 10 34.65 0 text "1" color 0 0 0 1
+
+style text
+box 39.6 7.0600000000000005 0.4 0
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+glyph 1202 10 7.807777777777777 0 text "=" color 0 0 0 1
+glyph 256 10 17.785555555555554 0 text "b" color 0 0 0 1
+glyph 1196 10 25.227777777777774 0 text "+" color 0 0 0 1
+glyph 1138 10 34.65 0 text "1" color 0 0 0 1

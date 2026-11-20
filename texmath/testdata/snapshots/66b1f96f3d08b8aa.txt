@@ -1,0 +1,13 @@
+tex "{Axz}"
+
+style display
+box 17.53 6.61 0.1 0.1
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3354 10 6.8100000000000005 0 text "𝑥" color 0 0 0 1
+glyph 3356 10 12.5 0 text "𝑧" color 0 0 0 1
+
+style text
+box 17.53 6.61 0.1 0.1
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3354 10 6.8100000000000005 0 text "𝑥" color 0 0 0 1
+glyph 3356 10 12.5 0 text "𝑧" color 0 0 0 1

@@ -1,0 +1,11 @@
+tex "+b"
+
+style display
+box 12.43 7.05 0.4 0.05
+glyph 1196 10 0 0 text "+" color 0 0 0 1
+glyph 3327 10 7.2 0 text "𝑏" color 0 0 0 1
+
+style text
+box 12.43 7.05 0.4 0.05
+glyph 1196 10 0 0 text "+" color 0 0 0 1
+glyph 3327 10 7.2 0 text "𝑏" color 0 0 0 1

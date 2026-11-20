@@ -1,0 +1,51 @@
+tex "\\lightning (Ord) spaces like \\rightarrow (Rel)"
+
+style display
+box 108.43555555555557 7.36 2.2 0
+glyph 1541 10 0 0 text "↯" color 0 0 0 1
+glyph 1064 10 5.23 0 text "(" color 0 0 0 1
+glyph 3314 10 8.8 0 text "𝑂" color 0 0 0 1
+glyph 3345 10 16.07 0 text "𝑟" color 0 0 0 1
+glyph 3329 10 20.19 0 text "𝑑" color 0 0 0 1
+glyph 1065 10 25.95 0 text ")" color 0 0 0 1
+glyph 3346 10 29.52 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 33.38 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 39.36 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 44.91 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 49.05 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 53.29 0 text "𝑠" color 0 0 0 1
+glyph 3339 10 57.15 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 60.13 0 text "𝑖" color 0 0 0 1
+glyph 3338 10 63.07000000000001 0 text "𝑘" color 0 0 0 1
+glyph 3330 10 68.45 0 text "𝑒" color 0 0 0 1
+glyph 1510 10 75.46777777777777 0 text "→" color 0 0 0 1
+glyph 1064 10 87.72555555555554 0 text "(" color 0 0 0 1
+glyph 3317 10 91.29555555555555 0 text "𝑅" color 0 0 0 1
+glyph 3330 10 97.64555555555556 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 101.88555555555556 0 text "𝑙" color 0 0 0 1
+glyph 1065 10 104.86555555555556 0 text ")" color 0 0 0 1
+
+style text
+box 108.43555555555557 7.36 2.2 0
+glyph 1541 10 0 0 text "↯" color 0 0 0 1
+glyph 1064 10 5.23 0 text "(" color 0 0 0 1
+glyph 3314 10 8.8 0 text "𝑂" color 0 0 0 1
+glyph 3345 10 16.07 0 text "𝑟" color 0 0 0 1
+glyph 3329 10 20.19 0 text "𝑑" color 0 0 0 1
+glyph 1065 10 25.95 0 text ")" color 0 0 0 1
+glyph 3346 10 29.52 0 text "𝑠" color 0 0 0 1
+glyph 3343 10 33.38 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 39.36 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 44.91 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 49.05 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 53.29 0 text "𝑠" color 0 0 0 1
+glyph 3339 10 57.15 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 60.13 0 text "𝑖" color 0 0 0 1
+glyph 3338 10 63.07000000000001 0 text "𝑘" color 0 0 0 1
+glyph 3330 10 68.45 0 text "𝑒" color 0 0 0 1
+glyph 1510 10 75.46777777777777 0 text "→" color 0 0 0 1
+glyph 1064 10 87.72555555555554 0 text "(" color 0 0 0 1
+glyph 3317 10 91.29555555555555 0 text "𝑅" color 0 0 0 1
+glyph 3330 10 97.64555555555556 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 101.88555555555556 0 text "𝑙" color 0 0 0 1
+glyph 1065 10 104.86555555555556 0 text ")" color 0 0 0 1

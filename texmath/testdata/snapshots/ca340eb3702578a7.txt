@@ -1,0 +1,7 @@
+tex "a\\mkern"
+
+style display
+error "parsing tex math: \\mkern: no dimension"
+
+style text
+error "parsing tex math: \\mkern: no dimension"

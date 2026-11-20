@@ -1,0 +1,9 @@
+tex "\\rule{1pt}{1ex}"
+
+style display
+box 1 4.73 0 0
+rule 0 -4.73 1 4.73 color 0 0 0 1
+
+style text
+box 1 4.73 0 0
+rule 0 -4.73 1 4.73 color 0 0 0 1

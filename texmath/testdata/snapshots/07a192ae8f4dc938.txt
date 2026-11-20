@@ -1,0 +1,13 @@
+tex "k\\ifmmode+1\\fi"
+
+style display
+box 21.974444444444444 7.05 0.4 0
+glyph 3338 10 0 0 text "𝑘" color 0 0 0 1
+glyph 1196 10 7.602222222222222 0 text "+" color 0 0 0 1
+glyph 1138 10 17.024444444444445 0 text "1" color 0 0 0 1
+
+style text
+box 21.974444444444444 7.05 0.4 0
+glyph 3338 10 0 0 text "𝑘" color 0 0 0 1
+glyph 1196 10 7.602222222222222 0 text "+" color 0 0 0 1
+glyph 1138 10 17.024444444444445 0 text "1" color 0 0 0 1

@@ -1,0 +1,11 @@
+tex "\\footnotesize AB"
+
+style display
+box 10.432 5.288 0 0.24
+glyph 3300 8 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 8 5.448 0 text "𝐵" color 0 0 0 1
+
+style text
+box 10.432 5.288 0 0.24
+glyph 3300 8 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 8 5.448 0 text "𝐵" color 0 0 0 1

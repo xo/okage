@@ -1,0 +1,7 @@
+tex "\\begin{gathered} a"
+
+style display
+error "parsing tex math: \\begin{gathered} without \\end"
+
+style text
+error "parsing tex math: \\begin{gathered} without \\end"

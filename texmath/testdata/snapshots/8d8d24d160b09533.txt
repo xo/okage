@@ -1,0 +1,7 @@
+tex "\\begin{matrix}\\nope\\end{matrix}"
+
+style display
+error "parsing tex math: unknown command \\nope"
+
+style text
+error "parsing tex math: unknown command \\nope"

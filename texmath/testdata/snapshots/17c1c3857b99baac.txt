@@ -1,0 +1,7 @@
+tex "\\begin"
+
+style display
+error "parsing tex math: \\begin needs {env}"
+
+style text
+error "parsing tex math: \\begin needs {env}"

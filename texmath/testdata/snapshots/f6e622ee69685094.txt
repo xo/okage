@@ -1,0 +1,17 @@
+tex "\\varkappa_{ij} + \\digamma"
+
+style display
+box 26.159444444444443 5.58 3.675 0
+glyph 919 10 0 0 text "ϰ" color 0 0 0 1
+glyph 3334 7 5.04 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 7.098000000000001 2.1 text "𝑗" color 0 0 0 1
+glyph 1196 10 12.877222222222223 0 text "+" color 0 0 0 1
+glyph 910 10 22.299444444444443 0 text "ϝ" color 0 0 0 1
+
+style text
+box 26.159444444444443 5.58 3.675 0
+glyph 919 10 0 0 text "ϰ" color 0 0 0 1
+glyph 3334 7 5.04 2.1 text "𝑖" color 0 0 0 1
+glyph 3336 7 7.098000000000001 2.1 text "𝑗" color 0 0 0 1
+glyph 1196 10 12.877222222222223 0 text "+" color 0 0 0 1
+glyph 910 10 22.299444444444443 0 text "ϝ" color 0 0 0 1

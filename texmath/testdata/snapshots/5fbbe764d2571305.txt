@@ -1,0 +1,15 @@
+tex "\\plim"
+
+style display
+box 19.57 7.0600000000000005 2.2 0
+glyph 271 10 0 0 text "p" color 0 0 0 1
+glyph 267 10 5.37 0 text "l" color 0 0 0 1
+glyph 263 10 8.2 0 text "i" color 0 0 0 1
+glyph 268 10 11.049999999999999 0 text "m" color 0 0 0 1
+
+style text
+box 19.57 7.0600000000000005 2.2 0
+glyph 271 10 0 0 text "p" color 0 0 0 1
+glyph 267 10 5.37 0 text "l" color 0 0 0 1
+glyph 263 10 8.2 0 text "i" color 0 0 0 1
+glyph 268 10 11.049999999999999 0 text "m" color 0 0 0 1

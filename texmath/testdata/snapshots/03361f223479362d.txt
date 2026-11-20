@@ -1,0 +1,13 @@
+tex "x^{\\ooalign{$\\cup$\\cr\\hidewidth$\\cdot$\\hidewidth}}"
+
+style display
+box 10.542 7.443 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1696 7 5.6899999999999995 -3.6 text "∪" color 0 0 0 1
+glyph 1938 7 6.890499999999999 -3.6 text "⋅" color 0 0 0 1
+
+style text
+box 10.542 7.443 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1696 7 5.6899999999999995 -3.6 text "∪" color 0 0 0 1
+glyph 1938 7 6.890499999999999 -3.6 text "⋅" color 0 0 0 1

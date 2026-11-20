@@ -1,0 +1,11 @@
+tex "[~]"
+
+style display
+box 10.313333333333334 7.36 1.96 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1
+glyph 1067 10 6.823333333333334 0 text "]" color 0 0 0 1
+
+style text
+box 10.313333333333334 7.36 1.96 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1
+glyph 1067 10 6.823333333333334 0 text "]" color 0 0 0 1

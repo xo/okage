@@ -1,0 +1,15 @@
+tex "\\dbinom{n}{2}"
+
+style display
+box 17.05 12.59 6.95 0
+glyph 1304 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3341 10 5.7 -7.8 text "𝑛" color 0 0 0 1
+glyph 1139 10 6.050000000000001 6.9 text "2" color 0 0 0 1
+glyph 1316 10 12.55 0.1200000000000001 text ")" color 0 0 0 1
+
+style text
+box 17.05 12.59 6.95 0
+glyph 1304 10 0 0.1200000000000001 text "(" color 0 0 0 1
+glyph 3341 10 5.7 -7.8 text "𝑛" color 0 0 0 1
+glyph 1139 10 6.050000000000001 6.9 text "2" color 0 0 0 1
+glyph 1316 10 12.55 0.1200000000000001 text ")" color 0 0 0 1

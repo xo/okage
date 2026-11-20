@@ -1,0 +1,7 @@
+tex "\\sf"
+
+style display
+box 0 0 0 0
+
+style text
+box 0 0 0 0

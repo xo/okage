@@ -1,0 +1,7 @@
+tex "\\Braket{ ϕ \\VERT \\frac{∂^2}{∂ t^2} \\VERT ψ }"
+
+style display
+error "parsing tex math: unknown command \\Braket"
+
+style text
+error "parsing tex math: unknown command \\Braket"

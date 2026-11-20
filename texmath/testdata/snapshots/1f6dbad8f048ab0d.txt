@@ -1,0 +1,7 @@
+tex "\\Colonsim"
+
+style display
+error "parsing tex math: unknown command \\Colonsim"
+
+style text
+error "parsing tex math: unknown command \\Colonsim"

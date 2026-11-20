@@ -1,0 +1,7 @@
+tex "\\lhook"
+
+style display
+error "parsing tex math: unknown command \\lhook"
+
+style text
+error "parsing tex math: unknown command \\lhook"

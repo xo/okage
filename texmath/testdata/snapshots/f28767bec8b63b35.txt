@@ -1,0 +1,11 @@
+tex "\\widecheck S"
+
+style display
+box 5.64 8.600000000000001 0.15 0
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1
+glyph 768 10 6.050000000000001 -1.8200000000000003 text "̌" color 0 0 0 1
+
+style text
+box 5.64 8.600000000000001 0.15 0
+glyph 3318 10 0 0 text "𝑆" color 0 0 0 1
+glyph 768 10 6.050000000000001 -1.8200000000000003 text "̌" color 0 0 0 1

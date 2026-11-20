@@ -1,0 +1,7 @@
+tex "\\genfrac{}{\\foo}{}{}{a}{b}"
+
+style display
+error "parsing tex math: bad delimiter \"\\\\foo\""
+
+style text
+error "parsing tex math: bad delimiter \"\\\\foo\""

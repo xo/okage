@@ -1,0 +1,9 @@
+tex "\\rho"
+
+style display
+box 5.15 4.8100000000000005 2.17 0
+glyph 901 10 0 0 text "ρ" color 0 0 0 1
+
+style text
+box 5.15 4.8100000000000005 2.17 0
+glyph 901 10 0 0 text "ρ" color 0 0 0 1

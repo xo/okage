@@ -1,0 +1,7 @@
+tex "\\xtofrom{abc}"
+
+style display
+error "parsing tex math: unknown command \\xtofrom"
+
+style text
+error "parsing tex math: unknown command \\xtofrom"

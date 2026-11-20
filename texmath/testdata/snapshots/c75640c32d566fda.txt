@@ -1,0 +1,9 @@
+tex "\\blacktriangle"
+
+style display
+box 6.76 5.66 0 0
+glyph 2279 10 0 0 text "▴" color 0 0 0 1
+
+style text
+box 6.76 5.66 0 0
+glyph 2279 10 0 0 text "▴" color 0 0 0 1

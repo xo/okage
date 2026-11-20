@@ -1,0 +1,7 @@
+tex "\\projlim"
+
+style display
+error "parsing tex math: unknown command \\projlim"
+
+style text
+error "parsing tex math: unknown command \\projlim"

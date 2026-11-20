@@ -1,0 +1,7 @@
+tex "\\begin{nope} a \\end{nope}"
+
+style display
+error "parsing tex math: unknown environment \"nope\""
+
+style text
+error "parsing tex math: unknown environment \"nope\""

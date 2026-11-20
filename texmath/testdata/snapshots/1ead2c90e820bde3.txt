@@ -1,0 +1,7 @@
+tex "\\nshortmid"
+
+style display
+error "parsing tex math: unknown command \\nshortmid"
+
+style text
+error "parsing tex math: unknown command \\nshortmid"

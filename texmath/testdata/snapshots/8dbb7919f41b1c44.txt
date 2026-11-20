@@ -1,0 +1,13 @@
+tex "Phi"
+
+style display
+box 14.77 7.0600000000000005 0.1 0.2
+glyph 3315 10 0 0 text "𝑃" color 0 0 0 1
+glyph 1224 10 6.04 0 text "ℎ" color 0 0 0 1
+glyph 3334 10 11.83 0 text "𝑖" color 0 0 0 1
+
+style text
+box 14.77 7.0600000000000005 0.1 0.2
+glyph 3315 10 0 0 text "𝑃" color 0 0 0 1
+glyph 1224 10 6.04 0 text "ℎ" color 0 0 0 1
+glyph 3334 10 11.83 0 text "𝑖" color 0 0 0 1

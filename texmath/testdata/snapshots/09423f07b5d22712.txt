@@ -1,0 +1,11 @@
+tex "Pi"
+
+style display
+box 8.98 6.65 0.09 0.2
+glyph 3315 10 0 0 text "𝑃" color 0 0 0 1
+glyph 3334 10 6.04 0 text "𝑖" color 0 0 0 1
+
+style text
+box 8.98 6.65 0.09 0.2
+glyph 3315 10 0 0 text "𝑃" color 0 0 0 1
+glyph 3334 10 6.04 0 text "𝑖" color 0 0 0 1

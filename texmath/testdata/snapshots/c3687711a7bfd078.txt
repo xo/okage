@@ -1,0 +1,17 @@
+tex "ncong"
+
+style display
+box 25.33 4.79 2.25 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 5.65 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 9.79 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 14.649999999999999 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 20.299999999999997 0 text "𝑔" color 0 0 0 1
+
+style text
+box 25.33 4.79 2.25 0
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 5.65 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 9.79 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 14.649999999999999 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 20.299999999999997 0 text "𝑔" color 0 0 0 1

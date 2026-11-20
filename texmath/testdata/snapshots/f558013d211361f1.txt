@@ -1,0 +1,7 @@
+tex "\\@ x"
+
+style display
+error "parsing tex math: unknown command \\@"
+
+style text
+error "parsing tex math: unknown command \\@"

@@ -1,0 +1,7 @@
+tex "\\ooalign{a\\cr b"
+
+style display
+error "parsing tex math: \\ooalign needs a {…} group"
+
+style text
+error "parsing tex math: \\ooalign needs a {…} group"

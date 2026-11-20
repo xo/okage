@@ -1,0 +1,15 @@
+tex "text"
+
+style display
+box 16.99 5.93 0.12 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 3.53 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 7.77 0 text "𝑥" color 0 0 0 1
+glyph 3347 10 13.459999999999999 0 text "𝑡" color 0 0 0 1
+
+style text
+box 16.99 5.93 0.12 0.15
+glyph 3347 10 0 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 3.53 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 7.77 0 text "𝑥" color 0 0 0 1
+glyph 3347 10 13.459999999999999 0 text "𝑡" color 0 0 0 1

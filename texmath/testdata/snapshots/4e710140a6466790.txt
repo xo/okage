@@ -1,0 +1,13 @@
+tex "\\tiny a \\normalsize b \\Huge c"
+
+style display
+box 18.30532 11.91752 0.29856 0
+glyph 3326 5 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 2.775 0 text "𝑏" color 0 0 0 1
+glyph 3328 24.88 8.004999999999999 0 text "𝑐" color 0 0 0 1
+
+style text
+box 18.30532 11.91752 0.29856 0
+glyph 3326 5 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 2.775 0 text "𝑏" color 0 0 0 1
+glyph 3328 24.88 8.004999999999999 0 text "𝑐" color 0 0 0 1

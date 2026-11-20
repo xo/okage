@@ -1,0 +1,19 @@
+tex "{|c|c|}a"
+
+style display
+box 21.84 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3328 10 2.67 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 6.81 0 text "|" color 0 0 0 1
+glyph 3328 10 9.48 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 13.620000000000001 0 text "|" color 0 0 0 1
+glyph 3326 10 16.29 0 text "𝑎" color 0 0 0 1
+
+style text
+box 21.84 7.0600000000000005 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3328 10 2.67 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 6.81 0 text "|" color 0 0 0 1
+glyph 3328 10 9.48 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 13.620000000000001 0 text "|" color 0 0 0 1
+glyph 3326 10 16.29 0 text "𝑎" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\downharpoonright"
+
+style display
+error "parsing tex math: unknown command \\downharpoonright"
+
+style text
+error "parsing tex math: unknown command \\downharpoonright"

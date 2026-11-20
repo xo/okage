@@ -1,0 +1,17 @@
+tex "bogus"
+
+style display
+box 24.630000000000003 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3332 10 10.09 0 text "𝑔" color 0 0 0 1
+glyph 3348 10 15.120000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 20.770000000000003 0 text "𝑠" color 0 0 0 1
+
+style text
+box 24.630000000000003 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3332 10 10.09 0 text "𝑔" color 0 0 0 1
+glyph 3348 10 15.120000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 20.770000000000003 0 text "𝑠" color 0 0 0 1

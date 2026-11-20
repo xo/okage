@@ -1,0 +1,15 @@
+tex "\\measuredangle ABC"
+
+style display
+box 27.300000000000004 6.7 0.74 0.5
+glyph 1682 10 0 0 text "∡" color 0 0 0 1
+glyph 3300 10 7.2 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 14.010000000000002 0 text "𝐵" color 0 0 0 1
+glyph 3302 10 20.240000000000002 0 text "𝐶" color 0 0 0 1
+
+style text
+box 27.300000000000004 6.7 0.74 0.5
+glyph 1682 10 0 0 text "∡" color 0 0 0 1
+glyph 3300 10 7.2 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 14.010000000000002 0 text "𝐵" color 0 0 0 1
+glyph 3302 10 20.240000000000002 0 text "𝐶" color 0 0 0 1

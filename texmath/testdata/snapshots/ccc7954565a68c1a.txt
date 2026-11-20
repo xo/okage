@@ -1,0 +1,9 @@
+tex "\\varepsilon"
+
+style display
+box 3.81 4.8100000000000005 0.14 0
+glyph 889 10 0 0 text "ε" color 0 0 0 1
+
+style text
+box 3.81 4.8100000000000005 0.14 0
+glyph 889 10 0 0 text "ε" color 0 0 0 1

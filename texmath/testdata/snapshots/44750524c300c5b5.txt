@@ -1,0 +1,7 @@
+tex "\\overlinesegment{AB}"
+
+style display
+error "parsing tex math: unknown command \\overlinesegment"
+
+style text
+error "parsing tex math: unknown command \\overlinesegment"

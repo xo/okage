@@ -1,0 +1,27 @@
+tex "boldsymbol"
+
+style display
+box 49.31 7.05 2.2 0.2
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 10.09 0 text "𝑙" color 0 0 0 1
+glyph 3329 10 13.07 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.830000000000002 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 22.69 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 27.94 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 36.24 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 41.47 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 46.33 0 text "𝑙" color 0 0 0 1
+
+style text
+box 49.31 7.05 2.2 0.2
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 10.09 0 text "𝑙" color 0 0 0 1
+glyph 3329 10 13.07 0 text "𝑑" color 0 0 0 1
+glyph 3346 10 18.830000000000002 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 22.69 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 27.94 0 text "𝑚" color 0 0 0 1
+glyph 3327 10 36.24 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 41.47 0 text "𝑜" color 0 0 0 1
+glyph 3339 10 46.33 0 text "𝑙" color 0 0 0 1

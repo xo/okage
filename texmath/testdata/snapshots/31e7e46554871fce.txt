@@ -1,0 +1,13 @@
+tex "\\bf Ab0"
+
+style display
+box 19.04 7.0600000000000005 0.11 0
+glyph 3246 10 0 0 text "𝐀" color 0 0 0 1
+glyph 3273 10 7.49 0 text "𝐛" color 0 0 0 1
+glyph 4223 10 13.15 0 text "𝟎" color 0 0 0 1
+
+style text
+box 19.04 7.0600000000000005 0.11 0
+glyph 3246 10 0 0 text "𝐀" color 0 0 0 1
+glyph 3273 10 7.49 0 text "𝐛" color 0 0 0 1
+glyph 4223 10 13.15 0 text "𝟎" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "{\\bf v}\\cdot w"
+
+style display
+box 20.454444444444444 4.79 0.09 0.15
+glyph 3295 10 0 0 text "𝐯" color 0 0 0 1
+glyph 1938 10 7.8822222222222225 0 text "⋅" color 0 0 0 1
+glyph 3352 10 13.034444444444446 0 text "𝑤" color 0 0 0 1
+
+style text
+box 20.454444444444444 4.79 0.09 0.15
+glyph 3295 10 0 0 text "𝐯" color 0 0 0 1
+glyph 1938 10 7.8822222222222225 0 text "⋅" color 0 0 0 1
+glyph 3352 10 13.034444444444446 0 text "𝑤" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\maltese"
+
+style display
+error "parsing tex math: unknown command \\maltese"
+
+style text
+error "parsing tex math: unknown command \\maltese"

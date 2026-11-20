@@ -1,0 +1,7 @@
+tex "\\yen"
+
+style display
+error "parsing tex math: unknown command \\yen"
+
+style text
+error "parsing tex math: unknown command \\yen"

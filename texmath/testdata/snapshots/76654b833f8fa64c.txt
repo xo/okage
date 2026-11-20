@@ -1,0 +1,7 @@
+tex "\\impliedby"
+
+style display
+error "parsing tex math: unknown command \\impliedby"
+
+style text
+error "parsing tex math: unknown command \\impliedby"

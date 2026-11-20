@@ -1,0 +1,19 @@
+tex "\\arccos"
+
+style display
+box 26.61 4.88 0.11 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 257 10 13.059999999999999 0 text "c" color 0 0 0 1
+glyph 270 10 17.52 0 text "o" color 0 0 0 1
+glyph 274 10 22.66 0 text "s" color 0 0 0 1
+
+style text
+box 26.61 4.88 0.11 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 257 10 13.059999999999999 0 text "c" color 0 0 0 1
+glyph 270 10 17.52 0 text "o" color 0 0 0 1
+glyph 274 10 22.66 0 text "s" color 0 0 0 1

@@ -1,0 +1,11 @@
+tex "e^x"
+
+style display
+box 8.623000000000001 6.953 0.12 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3354 7 4.24 -3.6 text "𝑥" color 0 0 0 1
+
+style text
+box 8.623000000000001 6.953 0.12 0
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3354 7 4.24 -3.6 text "𝑥" color 0 0 0 1

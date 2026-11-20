@@ -1,0 +1,29 @@
+tex "\\colorbox{aqua}{$x^2$ is text}"
+
+style display
+box 39.785 9.608 1.61 0
+rule 0 -9.608 39.785 11.218 color 0 1 1 1
+glyph 3354 10 1.5 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 7.1899999999999995 -3.6 text "2" color 0 0 0 1
+glyph 1 10 11.055 0 text " " color 0 0 0 1
+glyph 263 10 13.405 0 text "i" color 0 0 0 1
+glyph 274 10 16.255 0 text "s" color 0 0 0 1
+glyph 1 10 20.205 0 text " " color 0 0 0 1
+glyph 275 10 22.555 0 text "t" color 0 0 0 1
+glyph 259 10 25.705 0 text "e" color 0 0 0 1
+glyph 279 10 30.345 0 text "x" color 0 0 0 1
+glyph 275 10 35.135 0 text "t" color 0 0 0 1
+
+style text
+box 39.785 9.608 1.61 0
+rule 0 -9.608 39.785 11.218 color 0 1 1 1
+glyph 3354 10 1.5 0 text "𝑥" color 0 0 0 1
+glyph 1139 7 7.1899999999999995 -3.6 text "2" color 0 0 0 1
+glyph 1 10 11.055 0 text " " color 0 0 0 1
+glyph 263 10 13.405 0 text "i" color 0 0 0 1
+glyph 274 10 16.255 0 text "s" color 0 0 0 1
+glyph 1 10 20.205 0 text " " color 0 0 0 1
+glyph 275 10 22.555 0 text "t" color 0 0 0 1
+glyph 259 10 25.705 0 text "e" color 0 0 0 1
+glyph 279 10 30.345 0 text "x" color 0 0 0 1
+glyph 275 10 35.135 0 text "t" color 0 0 0 1

@@ -1,0 +1,43 @@
+tex "unbalanced argument"
+
+style display
+box 92.47000000000001 7.05 2.25 0.15
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3327 10 11.3 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 16.53 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 22.080000000000002 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 25.060000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 30.610000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 36.260000000000005 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 40.400000000000006 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 44.64000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3326 10 50.40000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 55.95000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 60.07000000000001 0 text "𝑔" color 0 0 0 1
+glyph 3348 10 65.10000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 70.75000000000001 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 79.05000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 83.29 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 88.94000000000001 0 text "𝑡" color 0 0 0 1
+
+style text
+box 92.47000000000001 7.05 2.25 0.15
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3327 10 11.3 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 16.53 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 22.080000000000002 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 25.060000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 30.610000000000003 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 36.260000000000005 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 40.400000000000006 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 44.64000000000001 0 text "𝑑" color 0 0 0 1
+glyph 3326 10 50.40000000000001 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 55.95000000000001 0 text "𝑟" color 0 0 0 1
+glyph 3332 10 60.07000000000001 0 text "𝑔" color 0 0 0 1
+glyph 3348 10 65.10000000000001 0 text "𝑢" color 0 0 0 1
+glyph 3340 10 70.75000000000001 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 79.05000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 83.29 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 88.94000000000001 0 text "𝑡" color 0 0 0 1

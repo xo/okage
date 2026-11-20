@@ -1,0 +1,11 @@
+tex "\\ln"
+
+style display
+box 8.59 7.0600000000000005 0 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 269 10 2.83 0 text "n" color 0 0 0 1
+
+style text
+box 8.59 7.0600000000000005 0 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 269 10 2.83 0 text "n" color 0 0 0 1

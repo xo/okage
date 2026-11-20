@@ -1,0 +1,13 @@
+tex "A \\Longrightarrow B"
+
+style display
+box 34.715555555555554 6.61 0.46 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 2526 10 9.587777777777777 0 text "⟹" color 0 0 0 1
+glyph 3301 10 28.485555555555557 0 text "𝐵" color 0 0 0 1
+
+style text
+box 34.715555555555554 6.61 0.46 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 2526 10 9.587777777777777 0 text "⟹" color 0 0 0 1
+glyph 3301 10 28.485555555555557 0 text "𝐵" color 0 0 0 1

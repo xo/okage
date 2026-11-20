@@ -1,0 +1,7 @@
+tex "\\begin{matrix} a \\end{matrix"
+
+style display
+error "parsing tex math: \\end{ unterminated"
+
+style text
+error "parsing tex math: \\end{ unterminated"

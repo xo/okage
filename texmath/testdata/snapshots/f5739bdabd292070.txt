@@ -1,0 +1,9 @@
+tex "\\gamma"
+
+style display
+box 4.66 4.76 2.14 0
+glyph 887 10 0 0 text "γ" color 0 0 0 1
+
+style text
+box 4.66 4.76 2.14 0
+glyph 887 10 0 0 text "γ" color 0 0 0 1

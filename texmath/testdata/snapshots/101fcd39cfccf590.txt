@@ -1,0 +1,11 @@
+tex "\\underset{c}{d}"
+
+style display
+box 5.760000000000001 7.05 4.557 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3328 7 1.4310000000000003 4.473000000000001 text "𝑐" color 0 0 0 1
+
+style text
+box 5.760000000000001 7.05 4.557 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3328 7 1.4310000000000003 4.473000000000001 text "𝑐" color 0 0 0 1

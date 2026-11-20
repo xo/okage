@@ -1,0 +1,23 @@
+tex "noindent"
+
+style display
+box 38.28 7.05 0.12 0.15
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3334 10 10.510000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 13.450000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 19.1 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 24.860000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 29.1 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 34.75 0 text "𝑡" color 0 0 0 1
+
+style text
+box 38.28 7.05 0.12 0.15
+glyph 3341 10 0 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 5.65 0 text "𝑜" color 0 0 0 1
+glyph 3334 10 10.510000000000002 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 13.450000000000001 0 text "𝑛" color 0 0 0 1
+glyph 3329 10 19.1 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 24.860000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 29.1 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 34.75 0 text "𝑡" color 0 0 0 1

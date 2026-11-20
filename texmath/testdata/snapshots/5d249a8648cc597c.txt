@@ -1,0 +1,11 @@
+tex "\\small z^2"
+
+style display
+box 8.2305 7.2972 0 0
+glyph 3356 9 0 0 text "𝑧" color 0 0 0 1
+glyph 1139 6.3 4.751999999999999 -3.2399999999999998 text "2" color 0 0 0 1
+
+style text
+box 8.2305 7.2972 0 0
+glyph 3356 9 0 0 text "𝑧" color 0 0 0 1
+glyph 1139 6.3 4.751999999999999 -3.2399999999999998 text "2" color 0 0 0 1

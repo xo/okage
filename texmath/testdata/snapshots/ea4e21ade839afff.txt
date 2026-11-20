@@ -1,0 +1,11 @@
+tex "\\mathrm{a}b"
+
+style display
+box 10.030000000000001 7.05 0.12 0.05
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 3327 10 4.8 0 text "𝑏" color 0 0 0 1
+
+style text
+box 10.030000000000001 7.05 0.12 0.05
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 3327 10 4.8 0 text "𝑏" color 0 0 0 1

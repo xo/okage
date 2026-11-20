@@ -1,0 +1,13 @@
+tex "moo"
+
+style display
+box 18.02 4.79 0.1 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 8.3 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 13.16 0 text "𝑜" color 0 0 0 1
+
+style text
+box 18.02 4.79 0.1 0
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3342 10 8.3 0 text "𝑜" color 0 0 0 1
+glyph 3342 10 13.16 0 text "𝑜" color 0 0 0 1

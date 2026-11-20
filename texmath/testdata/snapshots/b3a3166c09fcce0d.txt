@@ -1,0 +1,13 @@
+tex "\\ket{x}"
+
+style display
+box 11.75 7.36 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3354 10 2.67 0 text "𝑥" color 0 0 0 1
+glyph 2497 10 8.36 0 text "⟩" color 0 0 0 1
+
+style text
+box 11.75 7.36 2.2 0
+glyph 1062 10 0 0 text "|" color 0 0 0 1
+glyph 3354 10 2.67 0 text "𝑥" color 0 0 0 1
+glyph 2497 10 8.36 0 text "⟩" color 0 0 0 1

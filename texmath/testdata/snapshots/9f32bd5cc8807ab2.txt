@@ -1,0 +1,17 @@
+tex "\\raisebox{2pt}[3pt{x}"
+
+style display
+box 23.64 9.36 2.2 0.1
+glyph 1066 10 0 -2 text "[" color 0 0 0 1
+glyph 1140 10 3.49 0 text "3" color 0 0 0 1
+glyph 3343 10 8.440000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 14.420000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3354 10 17.95 0 text "𝑥" color 0 0 0 1
+
+style text
+box 23.64 9.36 2.2 0.1
+glyph 1066 10 0 -2 text "[" color 0 0 0 1
+glyph 1140 10 3.49 0 text "3" color 0 0 0 1
+glyph 3343 10 8.440000000000001 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 14.420000000000002 0 text "𝑡" color 0 0 0 1
+glyph 3354 10 17.95 0 text "𝑥" color 0 0 0 1

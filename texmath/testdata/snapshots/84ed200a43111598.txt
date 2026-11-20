@@ -1,0 +1,7 @@
+tex "\\gvertneqq"
+
+style display
+error "parsing tex math: unknown command \\gvertneqq"
+
+style text
+error "parsing tex math: unknown command \\gvertneqq"

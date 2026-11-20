@@ -1,0 +1,25 @@
+tex "I^{WWWW}_{MMMM}"
+
+style display
+box 32.644 8.441 2.299 0
+glyph 3308 10 0 0 text "𝐼" color 0 0 0 1
+glyph 3322 7 3.8800000000000003 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 10.971 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 18.061999999999998 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 25.153 -3.842 text "𝑊" color 0 0 0 1
+glyph 3312 7 3.43 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 9.828000000000001 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 16.226000000000003 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 22.624000000000002 2.299 text "𝑀" color 0 0 0 1
+
+style text
+box 32.644 8.441 2.299 0
+glyph 3308 10 0 0 text "𝐼" color 0 0 0 1
+glyph 3322 7 3.8800000000000003 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 10.971 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 18.061999999999998 -3.842 text "𝑊" color 0 0 0 1
+glyph 3322 7 25.153 -3.842 text "𝑊" color 0 0 0 1
+glyph 3312 7 3.43 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 9.828000000000001 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 16.226000000000003 2.299 text "𝑀" color 0 0 0 1
+glyph 3312 7 22.624000000000002 2.299 text "𝑀" color 0 0 0 1

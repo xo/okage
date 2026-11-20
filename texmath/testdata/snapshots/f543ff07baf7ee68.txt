@@ -1,0 +1,7 @@
+tex "missing }"
+
+style display
+error "parsing tex math: unexpected \"}\""
+
+style text
+error "parsing tex math: unexpected \"}\""

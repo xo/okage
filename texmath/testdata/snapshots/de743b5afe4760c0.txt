@@ -1,0 +1,7 @@
+tex "\\oiint"
+
+style display
+error "parsing tex math: unknown command \\oiint"
+
+style text
+error "parsing tex math: unknown command \\oiint"

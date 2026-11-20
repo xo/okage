@@ -1,0 +1,9 @@
+tex "\\mathop{X}"
+
+style display
+box 7.17 6.57 0 0.8
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1
+
+style text
+box 7.17 6.57 0 0.8
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1

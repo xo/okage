@@ -1,0 +1,17 @@
+tex "\\underbrace{a+b}_{s}"
+
+style display
+box 26 7.05 12.299999999999999 0
+glyph 3326 10 1.7877777777777784 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 9.56 0 text "+" color 0 0 0 1
+glyph 3327 10 18.98222222222222 0 text "𝑏" color 0 0 0 1
+glyph 2122 10 0 0.8699999999999999 text "⏟" color 0 0 0 1
+glyph 3346 7 11.649000000000001 12.222999999999999 text "𝑠" color 0 0 0 1
+
+style text
+box 26 7.05 12.299999999999999 0
+glyph 3326 10 1.7877777777777784 0 text "𝑎" color 0 0 0 1
+glyph 1196 10 9.56 0 text "+" color 0 0 0 1
+glyph 3327 10 18.98222222222222 0 text "𝑏" color 0 0 0 1
+glyph 2122 10 0 0.8699999999999999 text "⏟" color 0 0 0 1
+glyph 3346 7 11.649000000000001 12.222999999999999 text "𝑠" color 0 0 0 1

@@ -1,0 +1,11 @@
+tex "\\mathrm\\bgroup d\\egroup x"
+
+style display
+box 11.08 7.0600000000000005 0.1 0.1
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 3354 10 5.39 0 text "𝑥" color 0 0 0 1
+
+style text
+box 11.08 7.0600000000000005 0.1 0.1
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 3354 10 5.39 0 text "𝑥" color 0 0 0 1

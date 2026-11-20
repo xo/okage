@@ -1,0 +1,7 @@
+tex "unknown command \\unknowncmd"
+
+style display
+error "parsing tex math: unknown command \\unknowncmd"
+
+style text
+error "parsing tex math: unknown command \\unknowncmd"

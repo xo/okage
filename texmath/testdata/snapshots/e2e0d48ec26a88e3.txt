@@ -1,0 +1,7 @@
+tex "\\mathreflectbox{x^2}"
+
+style display
+error "parsing tex math: unknown command \\mathreflectbox"
+
+style text
+error "parsing tex math: unknown command \\mathreflectbox"

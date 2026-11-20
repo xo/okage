@@ -1,0 +1,7 @@
+tex "\\rule[2pt{10pt}{4pt}"
+
+style display
+error "parsing tex math: \\rule: unterminated [lift]"
+
+style text
+error "parsing tex math: \\rule: unterminated [lift]"

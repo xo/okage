@@ -1,0 +1,7 @@
+tex "\\xlongequal{abc}"
+
+style display
+error "parsing tex math: unknown command \\xlongequal"
+
+style text
+error "parsing tex math: unknown command \\xlongequal"

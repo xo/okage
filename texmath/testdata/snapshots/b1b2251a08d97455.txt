@@ -1,0 +1,9 @@
+tex "\\Mu"
+
+style display
+box 8.950000000000001 6.57 0 0
+glyph 15 10 0 0 text "M" color 0 0 0 1
+
+style text
+box 8.950000000000001 6.57 0 0
+glyph 15 10 0 0 text "M" color 0 0 0 1

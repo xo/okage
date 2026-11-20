@@ -1,0 +1,7 @@
+tex "\\Rsh"
+
+style display
+error "parsing tex math: unknown command \\Rsh"
+
+style text
+error "parsing tex math: unknown command \\Rsh"

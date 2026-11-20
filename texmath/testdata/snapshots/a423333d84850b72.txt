@@ -1,0 +1,9 @@
+tex "\\top"
+
+style display
+box 7.2 6.78 0 0
+glyph 1901 10 0 0 text "⊤" color 0 0 0 1
+
+style text
+box 7.2 6.78 0 0
+glyph 1901 10 0 0 text "⊤" color 0 0 0 1

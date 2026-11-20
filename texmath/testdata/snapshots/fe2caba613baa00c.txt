@@ -1,0 +1,13 @@
+tex "\\mathds{Z}_{\\geq 0}"
+
+style display
+box 15.385 6.57 2.842 0
+glyph 1238 10 0 0 text "ℤ" color 0 0 0 1
+glyph 1812 7 6.48 2.1 text "≥" color 0 0 0 1
+glyph 1137 7 11.52 2.1 text "0" color 0 0 0 1
+
+style text
+box 15.385 6.57 2.842 0
+glyph 1238 10 0 0 text "ℤ" color 0 0 0 1
+glyph 1812 7 6.48 2.1 text "≥" color 0 0 0 1
+glyph 1137 7 11.52 2.1 text "0" color 0 0 0 1

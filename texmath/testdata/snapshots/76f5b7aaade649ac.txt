@@ -1,0 +1,9 @@
+tex "\\Rightarrow"
+
+style display
+box 8.870000000000001 5.64 0.46 0
+glyph 1579 10 0 0 text "⇒" color 0 0 0 1
+
+style text
+box 8.870000000000001 5.64 0.46 0
+glyph 1579 10 0 0 text "⇒" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "\\begin{cases}x & y\\end{cases}"
+
+style display
+box 20.66 9.780000000000001 4.62 0
+glyph 1350 10 0 0.11499999999999977 text "{" color 0 0 0 1
+glyph 3354 10 3.72 0.29999999999999893 text "𝑥" color 0 0 0 1
+glyph 3355 10 15.41 0.29999999999999893 text "𝑦" color 0 0 0 1
+
+style text
+box 20.66 9.780000000000001 4.62 0
+glyph 1350 10 0 0.11499999999999977 text "{" color 0 0 0 1
+glyph 3354 10 3.72 0.29999999999999893 text "𝑥" color 0 0 0 1
+glyph 3355 10 15.41 0.29999999999999893 text "𝑦" color 0 0 0 1

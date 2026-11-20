@@ -1,0 +1,7 @@
+tex "\\rule{10pt}{0pt}"
+
+style display
+box 10 0 0 0
+
+style text
+box 10 0 0 0

@@ -1,0 +1,7 @@
+tex "\\text{\\textunderscore}"
+
+style display
+error "parsing tex math: unknown command \\textunderscore"
+
+style text
+error "parsing tex math: unknown command \\textunderscore"

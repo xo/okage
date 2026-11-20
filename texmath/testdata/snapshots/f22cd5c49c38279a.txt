@@ -1,0 +1,11 @@
+tex "\\Bbb{AB}"
+
+style display
+box 13.19 6.57 0 0
+glyph 3612 10 0 0 text "𝔸" color 0 0 0 1
+glyph 3613 10 6.47 0 text "𝔹" color 0 0 0 1
+
+style text
+box 13.19 6.57 0 0
+glyph 3612 10 0 0 text "𝔸" color 0 0 0 1
+glyph 3613 10 6.47 0 text "𝔹" color 0 0 0 1

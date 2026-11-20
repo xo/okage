@@ -1,0 +1,17 @@
+tex "Delta"
+
+style display
+box 23.52 7.05 0.12 0
+glyph 3303 10 0 0 text "𝐷" color 0 0 0 1
+glyph 3330 10 7.220000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 11.46 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 14.440000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 17.97 0 text "𝑎" color 0 0 0 1
+
+style text
+box 23.52 7.05 0.12 0
+glyph 3303 10 0 0 text "𝐷" color 0 0 0 1
+glyph 3330 10 7.220000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 11.46 0 text "𝑙" color 0 0 0 1
+glyph 3347 10 14.440000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 17.97 0 text "𝑎" color 0 0 0 1

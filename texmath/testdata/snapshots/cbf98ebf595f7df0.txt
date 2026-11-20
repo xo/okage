@@ -1,0 +1,7 @@
+tex "\\text{\\aa}"
+
+style display
+error "parsing tex math: unknown command \\aa"
+
+style text
+error "parsing tex math: unknown command \\aa"

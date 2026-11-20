@@ -1,0 +1,19 @@
+tex "\\mathfrak{CHIRZg}"
+
+style display
+box 39.45 6.8 2.31 0
+glyph 1246 10 0 0 text "ℭ" color 0 0 0 1
+glyph 1222 10 6.390000000000001 0 text "ℌ" color 0 0 0 1
+glyph 1227 10 13.670000000000002 0 text "ℑ" color 0 0 0 1
+glyph 1235 10 20.400000000000002 0 text "ℜ" color 0 0 0 1
+glyph 1242 10 28.180000000000003 0 text "ℨ" color 0 0 0 1
+glyph 3536 10 34.59 0 text "𝔤" color 0 0 0 1
+
+style text
+box 39.45 6.8 2.31 0
+glyph 1246 10 0 0 text "ℭ" color 0 0 0 1
+glyph 1222 10 6.390000000000001 0 text "ℌ" color 0 0 0 1
+glyph 1227 10 13.670000000000002 0 text "ℑ" color 0 0 0 1
+glyph 1235 10 20.400000000000002 0 text "ℜ" color 0 0 0 1
+glyph 1242 10 28.180000000000003 0 text "ℨ" color 0 0 0 1
+glyph 3536 10 34.59 0 text "𝔤" color 0 0 0 1

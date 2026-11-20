@@ -1,0 +1,11 @@
+tex "a\\,b"
+
+style display
+box 12.446666666666667 7.05 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 7.216666666666667 0 text "𝑏" color 0 0 0 1
+
+style text
+box 12.446666666666667 7.05 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 7.216666666666667 0 text "𝑏" color 0 0 0 1

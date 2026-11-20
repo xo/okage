@@ -1,0 +1,15 @@
+tex "leqq"
+
+style display
+box 17.560000000000002 7.05 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 2.9800000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 7.220000000000001 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 12.39 0 text "𝑞" color 0 0 0 1
+
+style text
+box 17.560000000000002 7.05 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 2.9800000000000004 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 7.220000000000001 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 12.39 0 text "𝑞" color 0 0 0 1

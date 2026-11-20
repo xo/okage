@@ -1,0 +1,13 @@
+tex "a\\bigcirc b"
+
+style display
+box 23.844444444444445 7.05 1.22 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 2302 10 7.772222222222222 0 text "○" color 0 0 0 1
+glyph 3327 10 18.614444444444445 0 text "𝑏" color 0 0 0 1
+
+style text
+box 23.844444444444445 7.05 1.22 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 2302 10 7.772222222222222 0 text "○" color 0 0 0 1
+glyph 3327 10 18.614444444444445 0 text "𝑏" color 0 0 0 1

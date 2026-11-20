@@ -1,0 +1,15 @@
+tex "Lbag"
+
+style display
+box 21.500000000000004 7.05 2.25 0
+glyph 3311 10 0 0 text "𝐿" color 0 0 0 1
+glyph 3327 10 5.69 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 10.920000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 16.470000000000002 0 text "𝑔" color 0 0 0 1
+
+style text
+box 21.500000000000004 7.05 2.25 0
+glyph 3311 10 0 0 text "𝐿" color 0 0 0 1
+glyph 3327 10 5.69 0 text "𝑏" color 0 0 0 1
+glyph 3326 10 10.920000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 16.470000000000002 0 text "𝑔" color 0 0 0 1

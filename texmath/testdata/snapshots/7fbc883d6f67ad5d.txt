@@ -1,0 +1,9 @@
+tex "\\psi"
+
+style display
+box 6.2 6.95 2.17 0
+glyph 908 10 0 0 text "ψ" color 0 0 0 1
+
+style text
+box 6.2 6.95 2.17 0
+glyph 908 10 0 0 text "ψ" color 0 0 0 1

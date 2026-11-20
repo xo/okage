@@ -1,0 +1,10 @@
+tex "\\mathchoice{}{a}{b}{c}z"
+
+style display
+box 5.029999999999999 4.67 0 0.1
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+
+style text
+box 10.58 4.79 0.12 0.1
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3356 10 5.55 0 text "𝑧" color 0 0 0 1

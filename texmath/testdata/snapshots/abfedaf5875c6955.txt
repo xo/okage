@@ -1,0 +1,7 @@
+tex "\\centerdot"
+
+style display
+error "parsing tex math: unknown command \\centerdot"
+
+style text
+error "parsing tex math: unknown command \\centerdot"

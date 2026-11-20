@@ -1,0 +1,9 @@
+tex "\\Sigma"
+
+style display
+box 6.04 6.57 0 0
+glyph 862 10 0 0 text "Σ" color 0 0 0 1
+
+style text
+box 6.04 6.57 0 0
+glyph 862 10 0 0 text "Σ" color 0 0 0 1

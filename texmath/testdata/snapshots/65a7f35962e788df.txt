@@ -1,0 +1,7 @@
+tex "\\thicksim"
+
+style display
+error "parsing tex math: unknown command \\thicksim"
+
+style text
+error "parsing tex math: unknown command \\thicksim"

@@ -1,0 +1,7 @@
+tex "\\end{smallmatrix}"
+
+style display
+error "parsing tex math: unknown command \\end"
+
+style text
+error "parsing tex math: unknown command \\end"

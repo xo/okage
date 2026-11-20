@@ -1,0 +1,11 @@
+tex "Xi"
+
+style display
+box 10.11 6.65 0.09 0.2
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1
+glyph 3334 10 7.17 0 text "𝑖" color 0 0 0 1
+
+style text
+box 10.11 6.65 0.09 0.2
+glyph 3323 10 0 0 text "𝑋" color 0 0 0 1
+glyph 3334 10 7.17 0 text "𝑖" color 0 0 0 1

@@ -1,0 +1,13 @@
+tex "p \\nmid q"
+
+style display
+box 20.83555555555556 7.0600000000000005 2.2 0
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1686 10 8.757777777777779 0 text "∤" color 0 0 0 1
+glyph 3344 10 15.665555555555557 0 text "𝑞" color 0 0 0 1
+
+style text
+box 20.83555555555556 7.0600000000000005 2.2 0
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1686 10 8.757777777777779 0 text "∤" color 0 0 0 1
+glyph 3344 10 15.665555555555557 0 text "𝑞" color 0 0 0 1

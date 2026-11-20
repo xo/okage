@@ -1,0 +1,17 @@
+tex "eqdef"
+
+style display
+box 25.38 7.11 2.25 0.2
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 4.24 0 text "𝑞" color 0 0 0 1
+glyph 3329 10 9.41 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 15.17 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 19.41 0 text "𝑓" color 0 0 0 1
+
+style text
+box 25.38 7.11 2.25 0.2
+glyph 3330 10 0 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 4.24 0 text "𝑞" color 0 0 0 1
+glyph 3329 10 9.41 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 15.17 0 text "𝑒" color 0 0 0 1
+glyph 3331 10 19.41 0 text "𝑓" color 0 0 0 1

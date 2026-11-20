@@ -1,0 +1,7 @@
+tex "\\genfrac"
+
+style display
+error "parsing tex math: \\genfrac needs its six arguments"
+
+style text
+error "parsing tex math: \\genfrac needs its six arguments"

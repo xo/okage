@@ -1,0 +1,9 @@
+tex "\\Pi"
+
+style display
+box 7.59 6.57 0 0
+glyph 860 10 0 0 text "Π" color 0 0 0 1
+
+style text
+box 7.59 6.57 0 0
+glyph 860 10 0 0 text "Π" color 0 0 0 1

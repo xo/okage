@@ -1,0 +1,7 @@
+tex "\\def\\p#1#2{#1#2}\\p{a}"
+
+style display
+error "parsing tex math: unknown command \\p"
+
+style text
+error "parsing tex math: unknown command \\p"

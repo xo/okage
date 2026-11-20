@@ -1,0 +1,19 @@
+tex "\\scalebox{2}[x]{abc}"
+
+style display
+box 31.080000000000002 14.72 3.92 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1 transform 2 0 0 2 0 0
+glyph 3354 10 6.98 0 text "𝑥" color 0 0 0 1
+glyph 1067 10 12.67 0 text "]" color 0 0 0 1
+glyph 3326 10 16.16 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 21.71 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 26.94 0 text "𝑐" color 0 0 0 1
+
+style text
+box 31.080000000000002 14.72 3.92 0
+glyph 1066 10 0 0 text "[" color 0 0 0 1 transform 2 0 0 2 0 0
+glyph 3354 10 6.98 0 text "𝑥" color 0 0 0 1
+glyph 1067 10 12.67 0 text "]" color 0 0 0 1
+glyph 3326 10 16.16 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 21.71 0 text "𝑏" color 0 0 0 1
+glyph 3328 10 26.94 0 text "𝑐" color 0 0 0 1

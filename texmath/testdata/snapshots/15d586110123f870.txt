@@ -1,0 +1,27 @@
+tex "\\alpha\\beta\\gamma\\Delta\\Omega \\infty \\partial \\nabla \\forall \\exists"
+
+style display
+box 63.260000000000005 7.16 2.17 0
+glyph 885 10 0 0 text "α" color 0 0 0 1
+glyph 886 10 5.61 0 text "β" color 0 0 0 1
+glyph 887 10 10.91 0 text "γ" color 0 0 0 1
+glyph 848 10 15.57 0 text "Δ" color 0 0 0 1
+glyph 868 10 22.240000000000002 0 text "Ω" color 0 0 0 1
+glyph 1679 10 30.01 0 text "∞" color 0 0 0 1
+glyph 1622 10 39.54 0 text "∂" color 0 0 0 1
+glyph 1628 10 44.32 0 text "∇" color 0 0 0 1
+glyph 1620 10 51.8 0 text "∀" color 0 0 0 1
+glyph 1623 10 57.53 0 text "∃" color 0 0 0 1
+
+style text
+box 63.260000000000005 7.16 2.17 0
+glyph 885 10 0 0 text "α" color 0 0 0 1
+glyph 886 10 5.61 0 text "β" color 0 0 0 1
+glyph 887 10 10.91 0 text "γ" color 0 0 0 1
+glyph 848 10 15.57 0 text "Δ" color 0 0 0 1
+glyph 868 10 22.240000000000002 0 text "Ω" color 0 0 0 1
+glyph 1679 10 30.01 0 text "∞" color 0 0 0 1
+glyph 1622 10 39.54 0 text "∂" color 0 0 0 1
+glyph 1628 10 44.32 0 text "∇" color 0 0 0 1
+glyph 1620 10 51.8 0 text "∀" color 0 0 0 1
+glyph 1623 10 57.53 0 text "∃" color 0 0 0 1

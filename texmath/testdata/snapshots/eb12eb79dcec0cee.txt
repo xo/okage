@@ -1,0 +1,9 @@
+tex "\\rule{1pt}{1in}"
+
+style display
+box 1 72.27 0 0
+rule 0 -72.27 1 72.27 color 0 0 0 1
+
+style text
+box 1 72.27 0 0
+rule 0 -72.27 1 72.27 color 0 0 0 1

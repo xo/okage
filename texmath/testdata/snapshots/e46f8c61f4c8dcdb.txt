@@ -1,0 +1,13 @@
+tex "x = \\char`A"
+
+style display
+box 25.625555555555554 6.62 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 8.467777777777776 0 text "=" color 0 0 0 1
+glyph 3 10 18.445555555555554 0 text "A" color 0 0 0 1
+
+style text
+box 25.625555555555554 6.62 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 8.467777777777776 0 text "=" color 0 0 0 1
+glyph 3 10 18.445555555555554 0 text "A" color 0 0 0 1

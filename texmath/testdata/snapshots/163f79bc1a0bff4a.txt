@@ -1,0 +1,7 @@
+tex "\\text{\\textbraceright}"
+
+style display
+error "parsing tex math: unknown command \\textbraceright"
+
+style text
+error "parsing tex math: unknown command \\textbraceright"

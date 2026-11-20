@@ -1,0 +1,7 @@
+tex "\\notni"
+
+style display
+error "parsing tex math: unknown command \\notni"
+
+style text
+error "parsing tex math: unknown command \\notni"

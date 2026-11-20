@@ -1,0 +1,27 @@
+tex "smallsmile"
+
+style display
+box 45.99000000000001 7.05 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 23.67 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 27.53 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 35.83 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 38.77 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 41.75000000000001 0 text "𝑒" color 0 0 0 1
+
+style text
+box 45.99000000000001 7.05 0.12 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 3.86 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 12.16 0 text "𝑎" color 0 0 0 1
+glyph 3339 10 17.71 0 text "𝑙" color 0 0 0 1
+glyph 3339 10 20.69 0 text "𝑙" color 0 0 0 1
+glyph 3346 10 23.67 0 text "𝑠" color 0 0 0 1
+glyph 3340 10 27.53 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 35.83 0 text "𝑖" color 0 0 0 1
+glyph 3339 10 38.77 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 41.75000000000001 0 text "𝑒" color 0 0 0 1

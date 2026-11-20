@@ -1,0 +1,17 @@
+tex "intop"
+
+style display
+box 22.96 6.65 2.2 0
+glyph 3334 10 0 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 2.9400000000000004 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 8.59 0 text "𝑡" color 0 0 0 1
+glyph 3342 10 12.12 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 16.98 0 text "𝑝" color 0 0 0 1
+
+style text
+box 22.96 6.65 2.2 0
+glyph 3334 10 0 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 2.9400000000000004 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 8.59 0 text "𝑡" color 0 0 0 1
+glyph 3342 10 12.12 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 16.98 0 text "𝑝" color 0 0 0 1

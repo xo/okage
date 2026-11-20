@@ -1,0 +1,11 @@
+tex "\\ooalign{$\\cup$\\cr\\hidewidth$\\cdot$}"
+
+style display
+box 6.36 5.49 0.32 0
+glyph 1696 10 0 0 text "∪" color 0 0 0 1
+glyph 1938 10 3.43 0 text "⋅" color 0 0 0 1
+
+style text
+box 6.36 5.49 0.32 0
+glyph 1696 10 0 0 text "∪" color 0 0 0 1
+glyph 1938 10 3.43 0 text "⋅" color 0 0 0 1

@@ -1,0 +1,27 @@
+tex "mathsfbfit"
+
+style display
+box 50.670000000000016 7.11 2.25 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 8.3 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 13.850000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 17.38 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 23.17 0 text "𝑠" color 0 0 0 1
+glyph 3331 10 27.03 0 text "𝑓" color 0 0 0 1
+glyph 3327 10 33.00000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3331 10 38.230000000000004 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 44.20000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 47.140000000000015 0 text "𝑡" color 0 0 0 1
+
+style text
+box 50.670000000000016 7.11 2.25 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 8.3 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 13.850000000000001 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 17.38 0 text "ℎ" color 0 0 0 1
+glyph 3346 10 23.17 0 text "𝑠" color 0 0 0 1
+glyph 3331 10 27.03 0 text "𝑓" color 0 0 0 1
+glyph 3327 10 33.00000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3331 10 38.230000000000004 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 44.20000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 47.140000000000015 0 text "𝑡" color 0 0 0 1

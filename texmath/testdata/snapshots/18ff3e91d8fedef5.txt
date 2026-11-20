@@ -1,0 +1,29 @@
+tex "missing body"
+
+style display
+box 53.68000000000001 7.05 2.25 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 8.3 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 11.24 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 15.1 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 18.96 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 21.900000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 27.550000000000004 0 text "𝑔" color 0 0 0 1
+glyph 3327 10 32.580000000000005 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 37.81 0 text "𝑜" color 0 0 0 1
+glyph 3329 10 42.67 0 text "𝑑" color 0 0 0 1
+glyph 3355 10 48.43000000000001 0 text "𝑦" color 0 0 0 1
+
+style text
+box 53.68000000000001 7.05 2.25 0.15
+glyph 3340 10 0 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 8.3 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 11.24 0 text "𝑠" color 0 0 0 1
+glyph 3346 10 15.1 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 18.96 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 21.900000000000002 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 27.550000000000004 0 text "𝑔" color 0 0 0 1
+glyph 3327 10 32.580000000000005 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 37.81 0 text "𝑜" color 0 0 0 1
+glyph 3329 10 42.67 0 text "𝑑" color 0 0 0 1
+glyph 3355 10 48.43000000000001 0 text "𝑦" color 0 0 0 1

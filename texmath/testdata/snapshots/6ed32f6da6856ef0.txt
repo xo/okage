@@ -1,0 +1,11 @@
+tex "\\normalsize AB"
+
+style display
+box 13.040000000000001 6.61 0 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+
+style text
+box 13.040000000000001 6.61 0 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1

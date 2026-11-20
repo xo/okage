@@ -1,0 +1,9 @@
+tex "\\natural"
+
+style display
+box 4.41 7.86 1.86 0
+glyph 2389 10 0 0 text "♮" color 0 0 0 1
+
+style text
+box 4.41 7.86 1.86 0
+glyph 2389 10 0 0 text "♮" color 0 0 0 1

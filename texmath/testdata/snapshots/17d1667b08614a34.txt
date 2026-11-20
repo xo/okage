@@ -1,0 +1,49 @@
+tex "£ ¥ ∇ ∞ · ∠ ∡ ∢ ♠ ♡ ♢ ♣ ♭ ♮ ♯ ✓ …  ⋮  ⋯  ⋱  !"
+
+style display
+box 137.50000000000006 7.86 1.87 0
+glyph 1126 10 0 0 text "£" color 0 0 0 1
+glyph 1127 10 4.95 0 text "¥" color 0 0 0 1
+glyph 1628 10 9.9 0 text "∇" color 0 0 0 1
+glyph 1679 10 17.380000000000003 0 text "∞" color 0 0 0 1
+glyph 1101 10 26.910000000000004 0 text "·" color 0 0 0 1
+glyph 1681 10 29.730000000000004 0 text "∠" color 0 0 0 1
+glyph 1682 10 36.93000000000001 0 text "∡" color 0 0 0 1
+glyph 1683 10 44.13000000000001 0 text "∢" color 0 0 0 1
+glyph 2377 10 51.33000000000001 0 text "♠" color 0 0 0 1
+glyph 2378 10 58.530000000000015 0 text "♡" color 0 0 0 1
+glyph 2379 10 65.73000000000002 0 text "♢" color 0 0 0 1
+glyph 2380 10 72.93000000000002 0 text "♣" color 0 0 0 1
+glyph 2388 10 80.13000000000002 0 text "♭" color 0 0 0 1
+glyph 2389 10 84.81000000000003 0 text "♮" color 0 0 0 1
+glyph 2390 10 89.22000000000003 0 text "♯" color 0 0 0 1
+glyph 2411 10 93.73000000000003 0 text "✓" color 0 0 0 1
+glyph 1053 10 101.46000000000004 0 text "…" color 0 0 0 1
+glyph 1985 10 110.33000000000004 0 text "⋮" color 0 0 0 1
+glyph 1986 10 115.52000000000004 0 text "⋯" color 0 0 0 1
+glyph 1988 10 125.05000000000004 0 text "⋱" color 0 0 0 1
+glyph 1054 10 134.67000000000004 0 text "!" color 0 0 0 1
+
+style text
+box 137.50000000000006 7.86 1.87 0
+glyph 1126 10 0 0 text "£" color 0 0 0 1
+glyph 1127 10 4.95 0 text "¥" color 0 0 0 1
+glyph 1628 10 9.9 0 text "∇" color 0 0 0 1
+glyph 1679 10 17.380000000000003 0 text "∞" color 0 0 0 1
+glyph 1101 10 26.910000000000004 0 text "·" color 0 0 0 1
+glyph 1681 10 29.730000000000004 0 text "∠" color 0 0 0 1
+glyph 1682 10 36.93000000000001 0 text "∡" color 0 0 0 1
+glyph 1683 10 44.13000000000001 0 text "∢" color 0 0 0 1
+glyph 2377 10 51.33000000000001 0 text "♠" color 0 0 0 1
+glyph 2378 10 58.530000000000015 0 text "♡" color 0 0 0 1
+glyph 2379 10 65.73000000000002 0 text "♢" color 0 0 0 1
+glyph 2380 10 72.93000000000002 0 text "♣" color 0 0 0 1
+glyph 2388 10 80.13000000000002 0 text "♭" color 0 0 0 1
+glyph 2389 10 84.81000000000003 0 text "♮" color 0 0 0 1
+glyph 2390 10 89.22000000000003 0 text "♯" color 0 0 0 1
+glyph 2411 10 93.73000000000003 0 text "✓" color 0 0 0 1
+glyph 1053 10 101.46000000000004 0 text "…" color 0 0 0 1
+glyph 1985 10 110.33000000000004 0 text "⋮" color 0 0 0 1
+glyph 1986 10 115.52000000000004 0 text "⋯" color 0 0 0 1
+glyph 1988 10 125.05000000000004 0 text "⋱" color 0 0 0 1
+glyph 1054 10 134.67000000000004 0 text "!" color 0 0 0 1

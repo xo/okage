@@ -1,0 +1,23 @@
+tex "boxminus"
+
+style display
+box 42.18 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 10.09 0 text "𝑥" color 0 0 0 1
+glyph 3340 10 15.78 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 24.08 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 27.02 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 32.67 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 38.32 0 text "𝑠" color 0 0 0 1
+
+style text
+box 42.18 7.05 0.12 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3342 10 5.2299999999999995 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 10.09 0 text "𝑥" color 0 0 0 1
+glyph 3340 10 15.78 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 24.08 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 27.02 0 text "𝑛" color 0 0 0 1
+glyph 3348 10 32.67 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 38.32 0 text "𝑠" color 0 0 0 1

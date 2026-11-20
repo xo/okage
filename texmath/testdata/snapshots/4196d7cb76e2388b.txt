@@ -1,0 +1,13 @@
+tex "\\begin{smallmatrix}\\rule{1pt}{1pt}\\\\\\rule{1pt}{1pt}\\\\\\rule{1pt}{1pt}\\end{smallmatrix}"
+
+style display
+box 4.333333333333334 9.08 3.92 0
+rule 1.6666666666666667 -9.08 1 1 color 0 0 0 1
+rule 1.6666666666666667 -3.08 1 1 color 0 0 0 1
+rule 1.6666666666666667 2.92 1 1 color 0 0 0 1
+
+style text
+box 4.333333333333334 9.08 3.92 0
+rule 1.6666666666666667 -9.08 1 1 color 0 0 0 1
+rule 1.6666666666666667 -3.08 1 1 color 0 0 0 1
+rule 1.6666666666666667 2.92 1 1 color 0 0 0 1

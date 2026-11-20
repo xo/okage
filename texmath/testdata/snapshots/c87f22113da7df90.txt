@@ -1,0 +1,9 @@
+tex "\\scriptscriptstyle\\rule{1em}{1em}"
+
+style display
+box 5.5 5.5 0 0
+rule 0 -5.5 5.5 5.5 color 0 0 0 1
+
+style text
+box 5.5 5.5 0 0
+rule 0 -5.5 5.5 5.5 color 0 0 0 1

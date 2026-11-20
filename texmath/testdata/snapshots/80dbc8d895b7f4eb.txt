@@ -1,0 +1,9 @@
+tex "\\Coloneqq"
+
+style display
+box 10.39 4.2700000000000005 0 0
+glyph 3027 10 0 0 text "⩴" color 0 0 0 1
+
+style text
+box 10.39 4.2700000000000005 0 0
+glyph 3027 10 0 0 text "⩴" color 0 0 0 1

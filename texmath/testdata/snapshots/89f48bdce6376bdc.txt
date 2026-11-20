@@ -1,0 +1,7 @@
+tex "\\arctg"
+
+style display
+error "parsing tex math: unknown command \\arctg"
+
+style text
+error "parsing tex math: unknown command \\arctg"

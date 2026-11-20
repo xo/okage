@@ -1,0 +1,13 @@
+tex "\\log"
+
+style display
+box 12.809999999999999 7.0600000000000005 2.35 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 270 10 2.83 0 text "o" color 0 0 0 1
+glyph 261 10 7.97 0 text "g" color 0 0 0 1
+
+style text
+box 12.809999999999999 7.0600000000000005 2.35 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 270 10 2.83 0 text "o" color 0 0 0 1
+glyph 261 10 7.97 0 text "g" color 0 0 0 1

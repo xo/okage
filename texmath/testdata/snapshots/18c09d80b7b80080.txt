@@ -1,0 +1,31 @@
+tex "cases one row = %.3f, this state is 16.67 (tectonic 18.00) - "
+
+style display
+box 62.77777777777778 4.79 0.12 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 9.69 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 13.549999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1
+glyph 3342 10 21.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 26.509999999999998 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 32.16 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 36.4 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 40.519999999999996 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 45.379999999999995 0 text "𝑤" color 0 0 0 1
+glyph 1202 10 55.577777777777776 0 text "=" color 0 0 0 1
+
+style text
+box 62.77777777777778 4.79 0.12 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 3326 10 4.14 0 text "𝑎" color 0 0 0 1
+glyph 3346 10 9.69 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 13.549999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 17.79 0 text "𝑠" color 0 0 0 1
+glyph 3342 10 21.65 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 26.509999999999998 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 32.16 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 36.4 0 text "𝑟" color 0 0 0 1
+glyph 3342 10 40.519999999999996 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 45.379999999999995 0 text "𝑤" color 0 0 0 1
+glyph 1202 10 55.577777777777776 0 text "=" color 0 0 0 1

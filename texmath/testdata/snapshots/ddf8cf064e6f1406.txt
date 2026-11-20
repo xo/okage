@@ -1,0 +1,15 @@
+tex "\\dddot{x} \\ddddot{y}"
+
+style display
+box 10.940000000000001 6.24 2.2 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1278 10 5.75 0.16000000000000014 text "⃛" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 1279 10 11.29 0.1299999999999999 text "⃜" color 0 0 0 1
+
+style text
+box 10.940000000000001 6.24 2.2 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 1278 10 5.75 0.16000000000000014 text "⃛" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 1279 10 11.29 0.1299999999999999 text "⃜" color 0 0 0 1

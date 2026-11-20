@@ -1,0 +1,13 @@
+tex "\\hom"
+
+style display
+box 19.43 7.0600000000000005 0.1 0
+glyph 262 10 0 0 text "h" color 0 0 0 1
+glyph 270 10 5.7700000000000005 0 text "o" color 0 0 0 1
+glyph 268 10 10.91 0 text "m" color 0 0 0 1
+
+style text
+box 19.43 7.0600000000000005 0.1 0
+glyph 262 10 0 0 text "h" color 0 0 0 1
+glyph 270 10 5.7700000000000005 0 text "o" color 0 0 0 1
+glyph 268 10 10.91 0 text "m" color 0 0 0 1

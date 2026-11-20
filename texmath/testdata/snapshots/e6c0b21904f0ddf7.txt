@@ -1,0 +1,7 @@
+tex "a^{"
+
+style display
+error "parsing tex math: missing }"
+
+style text
+error "parsing tex math: missing }"

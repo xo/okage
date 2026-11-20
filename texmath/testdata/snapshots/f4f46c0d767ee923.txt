@@ -1,0 +1,7 @@
+tex "\\varprojlim"
+
+style display
+error "parsing tex math: unknown command \\varprojlim"
+
+style text
+error "parsing tex math: unknown command \\varprojlim"

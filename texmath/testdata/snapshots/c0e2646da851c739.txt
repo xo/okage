@@ -1,0 +1,9 @@
+tex "\\Leftrightarrow"
+
+style display
+box 9.48 5.29 0.1 0
+glyph 1582 10 0 0 text "⇔" color 0 0 0 1
+
+style text
+box 9.48 5.29 0.1 0
+glyph 1582 10 0 0 text "⇔" color 0 0 0 1

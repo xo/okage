@@ -1,0 +1,7 @@
+tex "\\begin{matrix} a"
+
+style display
+error "parsing tex math: \\begin{matrix} without \\end"
+
+style text
+error "parsing tex math: \\begin{matrix} without \\end"

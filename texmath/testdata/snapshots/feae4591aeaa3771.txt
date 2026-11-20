@@ -1,0 +1,7 @@
+tex "\\phantom{MMM}"
+
+style display
+box 27.419999999999998 6.57 0 0
+
+style text
+box 27.419999999999998 6.57 0 0

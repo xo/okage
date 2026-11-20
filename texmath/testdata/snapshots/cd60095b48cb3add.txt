@@ -1,0 +1,19 @@
+tex "\\arcsin"
+
+style display
+box 25.619999999999997 6.73 0.11 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 274 10 13.059999999999999 0 text "s" color 0 0 0 1
+glyph 263 10 17.009999999999998 0 text "i" color 0 0 0 1
+glyph 269 10 19.86 0 text "n" color 0 0 0 1
+
+style text
+box 25.619999999999997 6.73 0.11 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 274 10 13.059999999999999 0 text "s" color 0 0 0 1
+glyph 263 10 17.009999999999998 0 text "i" color 0 0 0 1
+glyph 269 10 19.86 0 text "n" color 0 0 0 1

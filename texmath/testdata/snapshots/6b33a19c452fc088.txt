@@ -1,0 +1,7 @@
+tex "\\overrightharpoon{ac}"
+
+style display
+error "parsing tex math: unknown command \\overrightharpoon"
+
+style text
+error "parsing tex math: unknown command \\overrightharpoon"

@@ -1,0 +1,9 @@
+tex "\\operatornamewithlimits{f}"
+
+style display
+box 3.0700000000000003 7.13 0 0
+glyph 260 10 0 0 text "f" color 0 0 0 1
+
+style text
+box 3.0700000000000003 7.13 0 0
+glyph 260 10 0 0 text "f" color 0 0 0 1

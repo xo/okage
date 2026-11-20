@@ -1,0 +1,9 @@
+tex "^{1}"
+
+style display
+box 3.8649999999999998 8.073 0 0
+glyph 1138 7 0 -3.6 text "1" color 0 0 0 1
+
+style text
+box 3.8649999999999998 8.073 0 0
+glyph 1138 7 0 -3.6 text "1" color 0 0 0 1

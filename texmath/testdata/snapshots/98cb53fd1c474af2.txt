@@ -1,0 +1,29 @@
+tex "viewBox=\"0 0 "
+
+style display
+box 62.56555555555556 7.0600000000000005 0.12 0
+glyph 3350 10 0 0 text "𝑣" color 0 0 0 1
+glyph 3334 10 5.19 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 8.13 0 text "𝑒" color 0 0 0 1
+glyph 3352 10 12.370000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3301 10 19.79 0 text "𝐵" color 0 0 0 1
+glyph 3342 10 26.02 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 30.88 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 39.34777777777778 0 text "=" color 0 0 0 1
+glyph 1071 10 49.32555555555556 0 text "\"" color 0 0 0 1
+glyph 1137 10 52.66555555555556 0 text "0" color 0 0 0 1
+glyph 1137 10 57.61555555555556 0 text "0" color 0 0 0 1
+
+style text
+box 62.56555555555556 7.0600000000000005 0.12 0
+glyph 3350 10 0 0 text "𝑣" color 0 0 0 1
+glyph 3334 10 5.19 0 text "𝑖" color 0 0 0 1
+glyph 3330 10 8.13 0 text "𝑒" color 0 0 0 1
+glyph 3352 10 12.370000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3301 10 19.79 0 text "𝐵" color 0 0 0 1
+glyph 3342 10 26.02 0 text "𝑜" color 0 0 0 1
+glyph 3354 10 30.88 0 text "𝑥" color 0 0 0 1
+glyph 1202 10 39.34777777777778 0 text "=" color 0 0 0 1
+glyph 1071 10 49.32555555555556 0 text "\"" color 0 0 0 1
+glyph 1137 10 52.66555555555556 0 text "0" color 0 0 0 1
+glyph 1137 10 57.61555555555556 0 text "0" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\utilde{AB}"
+
+style display
+error "parsing tex math: unknown command \\utilde"
+
+style text
+error "parsing tex math: unknown command \\utilde"

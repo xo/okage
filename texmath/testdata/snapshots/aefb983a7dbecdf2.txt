@@ -1,0 +1,9 @@
+tex "\\raisebox{.7ex}{x}"
+
+style display
+box 5.6899999999999995 8.100999999999999 0 0
+glyph 3354 10 0 -3.311 text "𝑥" color 0 0 0 1
+
+style text
+box 5.6899999999999995 8.100999999999999 0 0
+glyph 3354 10 0 -3.311 text "𝑥" color 0 0 0 1

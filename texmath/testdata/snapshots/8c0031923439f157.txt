@@ -1,0 +1,43 @@
+tex "delimited parameter"
+
+style display
+box 86.32 7.05 2.2 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 5.760000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 10 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 12.98 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 15.92 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 24.22 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 27.16 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 30.689999999999998 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 34.93 0 text "𝑑" color 0 0 0 1
+glyph 3343 10 40.690000000000005 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 46.67 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 52.22 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 56.339999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 61.88999999999999 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 70.19 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 74.42999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 77.96 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 82.19999999999999 0 text "𝑟" color 0 0 0 1
+
+style text
+box 86.32 7.05 2.2 0
+glyph 3329 10 0 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 5.760000000000001 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 10 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 12.98 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 15.92 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 24.22 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 27.16 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 30.689999999999998 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 34.93 0 text "𝑑" color 0 0 0 1
+glyph 3343 10 40.690000000000005 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 46.67 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 52.22 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 56.339999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 61.88999999999999 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 70.19 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 74.42999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 77.96 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 82.19999999999999 0 text "𝑟" color 0 0 0 1

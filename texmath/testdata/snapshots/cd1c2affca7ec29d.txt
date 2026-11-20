@@ -1,0 +1,7 @@
+tex "\\set{x\\VERT x<5}"
+
+style display
+error "parsing tex math: unknown command \\VERT"
+
+style text
+error "parsing tex math: unknown command \\VERT"

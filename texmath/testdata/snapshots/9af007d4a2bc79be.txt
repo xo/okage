@@ -1,0 +1,7 @@
+tex "\\left("
+
+style display
+error "parsing tex math: \\left without \\right"
+
+style text
+error "parsing tex math: \\left without \\right"

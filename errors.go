@@ -438,6 +438,31 @@ const (
 	ErrLottieDotLottie Error = "reading dotlottie"
 )
 
+// The sentinel errors of texmath (D78). An error of texmath.Parse is a
+// *texmath.SyntaxError that wraps one of them.
+const (
+	// ErrTeXMathSyntax is the error of texmath.Parse for TeX math that the
+	// parser cannot read, such as a missing }, a \left without a \right, or
+	// \begin{x} closed by \end{y}. The *texmath.SyntaxError gives the
+	// position and the message of go-tex/math.
+	ErrTeXMathSyntax Error = "parsing tex math"
+
+	// ErrTeXMathUnknownCommand is the error of texmath.Parse for an unknown
+	// command or environment. The *texmath.SyntaxError also wraps
+	// ErrTeXMathSyntax, and its field Command names the command.
+	ErrTeXMathUnknownCommand Error = "parsing tex math: unknown command"
+
+	// ErrMathLimit is the error of texmath for a formula past one of its
+	// limits, such as the depth of nesting, the number of nodes, or the
+	// number of tokens after the expansion of the macros. go-tex/math has no
+	// such limit.
+	ErrMathLimit Error = "typesetting math: limit reached"
+
+	// ErrMathNoMathTable is the error of the layout of texmath for a face
+	// without a MATH table, as New of go-tex/math gives.
+	ErrMathNoMathTable Error = "laying out math: the face has no MATH table"
+)
+
 // The sentinel errors of the conversion of fonts in a web format (D45, D51).
 const (
 	// ErrFontData is the error of webfont.Convert and svg.ConvertFontData

@@ -1,0 +1,7 @@
+tex "\\undergroup{AB}"
+
+style display
+error "parsing tex math: unknown command \\undergroup"
+
+style text
+error "parsing tex math: unknown command \\undergroup"

@@ -1,0 +1,7 @@
+tex "\\htmlClass{foo}{x}"
+
+style display
+error "parsing tex math: unknown command \\htmlClass"
+
+style text
+error "parsing tex math: unknown command \\htmlClass"

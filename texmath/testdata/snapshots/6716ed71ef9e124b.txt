@@ -1,0 +1,15 @@
+tex "geqq"
+
+style display
+box 19.61 4.79 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 5.03 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 9.27 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 14.44 0 text "𝑞" color 0 0 0 1
+
+style text
+box 19.61 4.79 2.25 0
+glyph 3332 10 0 0 text "𝑔" color 0 0 0 1
+glyph 3330 10 5.03 0 text "𝑒" color 0 0 0 1
+glyph 3344 10 9.27 0 text "𝑞" color 0 0 0 1
+glyph 3344 10 14.44 0 text "𝑞" color 0 0 0 1

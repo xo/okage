@@ -1,0 +1,13 @@
+tex "{c|c}"
+
+style display
+box 10.95 7.0600000000000005 2.2 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 4.14 0 text "|" color 0 0 0 1
+glyph 3328 10 6.81 0 text "𝑐" color 0 0 0 1
+
+style text
+box 10.95 7.0600000000000005 2.2 0
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 1062 10 4.14 0 text "|" color 0 0 0 1
+glyph 3328 10 6.81 0 text "𝑐" color 0 0 0 1

@@ -1,0 +1,21 @@
+tex "scshape"
+
+style display
+box 33.42 7.0600000000000005 2.2 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 3.86 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 8 0 text "𝑠" color 0 0 0 1
+glyph 1224 10 11.86 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 17.650000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 23.200000000000003 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 29.180000000000003 0 text "𝑒" color 0 0 0 1
+
+style text
+box 33.42 7.0600000000000005 2.2 0
+glyph 3346 10 0 0 text "𝑠" color 0 0 0 1
+glyph 3328 10 3.86 0 text "𝑐" color 0 0 0 1
+glyph 3346 10 8 0 text "𝑠" color 0 0 0 1
+glyph 1224 10 11.86 0 text "ℎ" color 0 0 0 1
+glyph 3326 10 17.650000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 23.200000000000003 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 29.180000000000003 0 text "𝑒" color 0 0 0 1

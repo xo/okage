@@ -1,0 +1,7 @@
+tex "\\Set{ x \\VERT x<\\frac 1 2 }"
+
+style display
+error "parsing tex math: unknown command \\VERT"
+
+style text
+error "parsing tex math: unknown command \\VERT"

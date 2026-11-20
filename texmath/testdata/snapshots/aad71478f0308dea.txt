@@ -1,0 +1,15 @@
+tex "fint"
+
+style display
+box 18.09 7.11 2.25 0.15
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 5.970000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 8.91 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 14.56 0 text "𝑡" color 0 0 0 1
+
+style text
+box 18.09 7.11 2.25 0.15
+glyph 3331 10 0 0 text "𝑓" color 0 0 0 1
+glyph 3334 10 5.970000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 8.91 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 14.56 0 text "𝑡" color 0 0 0 1

@@ -1,6 +1,6 @@
 # D13. Each package keeps the license of its upstream
 
-Status: Decided, amended by D45, D49, D50 and D52.
+Status: Decided, amended by D45, D49, D50, D52 and D78.
 
 okage translates or copies code under four licenses, and the code keeps the
 license of its source:

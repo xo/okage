@@ -1,0 +1,9 @@
+tex "\\huge\\rule{18mu}{18mu}"
+
+style display
+box 20.74 20.74 0 0
+rule 0 -20.74 20.74 20.74 color 0 0 0 1
+
+style text
+box 20.74 20.74 0 0
+rule 0 -20.74 20.74 20.74 color 0 0 0 1

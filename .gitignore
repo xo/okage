@@ -23,3 +23,7 @@
 # comparison of lottie with ThorVG and velato (D41). The corpus is fetched,
 # not source.
 /test/lottie/testdata/emoji
+
+# The packages of npm of the KaTeX oracle of texmath (D78). npm ci installs
+# them in this folder from test/texmath/katex/package-lock.json.
+/test/texmath/katex/node_modules

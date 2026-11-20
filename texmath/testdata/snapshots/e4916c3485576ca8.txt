@@ -1,0 +1,13 @@
+tex "A \\subsetneq B"
+
+style display
+box 25.795555555555556 6.61 2.21 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1868 10 9.587777777777777 0 text "⊊" color 0 0 0 1
+glyph 3301 10 19.565555555555555 0 text "𝐵" color 0 0 0 1
+
+style text
+box 25.795555555555556 6.61 2.21 0.3
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 1868 10 9.587777777777777 0 text "⊊" color 0 0 0 1
+glyph 3301 10 19.565555555555555 0 text "𝐵" color 0 0 0 1

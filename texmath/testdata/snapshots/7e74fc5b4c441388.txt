@@ -1,0 +1,7 @@
+tex "\\injlim"
+
+style display
+error "parsing tex math: unknown command \\injlim"
+
+style text
+error "parsing tex math: unknown command \\injlim"

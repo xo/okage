@@ -1,0 +1,25 @@
+tex "\\widehat{xyz} \\widetilde{ABCD}"
+
+style display
+box 43.29 8.760000000000002 2.2 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 3356 10 10.94 0 text "𝑧" color 0 0 0 1
+glyph 1397 10 0.5099999999999989 0.13999999999999968 text "̂" color 0 0 0 1
+glyph 3300 10 15.969999999999999 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 22.78 0 text "𝐵" color 0 0 0 1
+glyph 3302 10 29.009999999999998 0 text "𝐶" color 0 0 0 1
+glyph 3303 10 36.07 0 text "𝐷" color 0 0 0 1
+glyph 1409 10 17.71 -1.1900000000000004 text "̃" color 0 0 0 1
+
+style text
+box 43.29 8.760000000000002 2.2 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3355 10 5.6899999999999995 0 text "𝑦" color 0 0 0 1
+glyph 3356 10 10.94 0 text "𝑧" color 0 0 0 1
+glyph 1397 10 0.5099999999999989 0.13999999999999968 text "̂" color 0 0 0 1
+glyph 3300 10 15.969999999999999 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 22.78 0 text "𝐵" color 0 0 0 1
+glyph 3302 10 29.009999999999998 0 text "𝐶" color 0 0 0 1
+glyph 3303 10 36.07 0 text "𝐷" color 0 0 0 1
+glyph 1409 10 17.71 -1.1900000000000004 text "̃" color 0 0 0 1

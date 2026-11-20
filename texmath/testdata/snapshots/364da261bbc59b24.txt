@@ -1,0 +1,61 @@
+tex "unclosed brace on the delimiter"
+
+style display
+box 123.53999999999999 7.0600000000000005 0.12 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 11.3 0 text "𝑐" color 0 0 0 1
+glyph 3339 10 15.440000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 18.42 0 text "𝑜" color 0 0 0 1
+glyph 3346 10 23.28 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 27.14 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 31.380000000000003 0 text "𝑑" color 0 0 0 1
+glyph 3327 10 37.14000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 42.370000000000005 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 46.49 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 52.04 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 56.18 0 text "𝑒" color 0 0 0 1
+glyph 3342 10 60.42 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 65.28 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 70.93 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 74.46000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 80.25 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 84.49 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 90.25 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 94.49 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 97.47 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 100.41 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 108.71 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 111.64999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 115.17999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 119.41999999999999 0 text "𝑟" color 0 0 0 1
+
+style text
+box 123.53999999999999 7.0600000000000005 0.12 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3341 10 5.65 0 text "𝑛" color 0 0 0 1
+glyph 3328 10 11.3 0 text "𝑐" color 0 0 0 1
+glyph 3339 10 15.440000000000001 0 text "𝑙" color 0 0 0 1
+glyph 3342 10 18.42 0 text "𝑜" color 0 0 0 1
+glyph 3346 10 23.28 0 text "𝑠" color 0 0 0 1
+glyph 3330 10 27.14 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 31.380000000000003 0 text "𝑑" color 0 0 0 1
+glyph 3327 10 37.14000000000001 0 text "𝑏" color 0 0 0 1
+glyph 3345 10 42.370000000000005 0 text "𝑟" color 0 0 0 1
+glyph 3326 10 46.49 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 52.04 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 56.18 0 text "𝑒" color 0 0 0 1
+glyph 3342 10 60.42 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 65.28 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 70.93 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 74.46000000000001 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 80.25 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 84.49 0 text "𝑑" color 0 0 0 1
+glyph 3330 10 90.25 0 text "𝑒" color 0 0 0 1
+glyph 3339 10 94.49 0 text "𝑙" color 0 0 0 1
+glyph 3334 10 97.47 0 text "𝑖" color 0 0 0 1
+glyph 3340 10 100.41 0 text "𝑚" color 0 0 0 1
+glyph 3334 10 108.71 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 111.64999999999999 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 115.17999999999999 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 119.41999999999999 0 text "𝑟" color 0 0 0 1

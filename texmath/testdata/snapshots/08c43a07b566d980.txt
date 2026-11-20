@@ -1,0 +1,11 @@
+tex "up"
+
+style display
+box 11.63 4.79 2.2 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3343 10 5.65 0 text "𝑝" color 0 0 0 1
+
+style text
+box 11.63 4.79 2.2 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3343 10 5.65 0 text "𝑝" color 0 0 0 1

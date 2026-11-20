@@ -1,0 +1,25 @@
+tex "checkmark"
+
+style display
+box 47.03999999999999 7.0600000000000005 0.12 0.05
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 4.14 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 9.93 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 14.17 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 18.31 0 text "𝑘" color 0 0 0 1
+glyph 3340 10 23.69 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 31.990000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 37.54 0 text "𝑟" color 0 0 0 1
+glyph 3338 10 41.66 0 text "𝑘" color 0 0 0 1
+
+style text
+box 47.03999999999999 7.0600000000000005 0.12 0.05
+glyph 3328 10 0 0 text "𝑐" color 0 0 0 1
+glyph 1224 10 4.14 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 9.93 0 text "𝑒" color 0 0 0 1
+glyph 3328 10 14.17 0 text "𝑐" color 0 0 0 1
+glyph 3338 10 18.31 0 text "𝑘" color 0 0 0 1
+glyph 3340 10 23.69 0 text "𝑚" color 0 0 0 1
+glyph 3326 10 31.990000000000002 0 text "𝑎" color 0 0 0 1
+glyph 3345 10 37.54 0 text "𝑟" color 0 0 0 1
+glyph 3338 10 41.66 0 text "𝑘" color 0 0 0 1

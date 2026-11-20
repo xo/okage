@@ -1,0 +1,9 @@
+tex "\\mathds{1}"
+
+style display
+box 4.04 6.54 0 0
+glyph 4234 10 0 0 text "𝟙" color 0 0 0 1
+
+style text
+box 4.04 6.54 0 0
+glyph 4234 10 0 0 text "𝟙" color 0 0 0 1

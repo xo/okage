@@ -1,0 +1,7 @@
+tex "\\pmb{\\mu}"
+
+style display
+error "parsing tex math: unknown command \\pmb"
+
+style text
+error "parsing tex math: unknown command \\pmb"

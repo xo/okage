@@ -1,0 +1,15 @@
+tex "a \\stackrel{\\sim}{=} b"
+
+style display
+box 23.535555555555558 7.54 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1202 10 8.327777777777778 0 text "=" color 0 0 0 1
+glyph 1760 7 9.407777777777778 -4.95 text "∼" color 0 0 0 1
+glyph 3327 10 18.305555555555557 0 text "𝑏" color 0 0 0 1
+
+style text
+box 23.535555555555558 7.54 0.12 0.05
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 1202 10 8.327777777777778 0 text "=" color 0 0 0 1
+glyph 1760 7 9.407777777777778 -4.95 text "∼" color 0 0 0 1
+glyph 3327 10 18.305555555555557 0 text "𝑏" color 0 0 0 1

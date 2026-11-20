@@ -1,0 +1,7 @@
+tex "\\minuso"
+
+style display
+error "parsing tex math: unknown command \\minuso"
+
+style text
+error "parsing tex math: unknown command \\minuso"

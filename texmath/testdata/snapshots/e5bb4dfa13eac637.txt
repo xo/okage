@@ -1,0 +1,7 @@
+tex "\\Bra{\\phi}"
+
+style display
+error "parsing tex math: unknown command \\Bra"
+
+style text
+error "parsing tex math: unknown command \\Bra"

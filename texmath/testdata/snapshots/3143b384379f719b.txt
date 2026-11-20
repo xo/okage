@@ -1,0 +1,9 @@
+tex "\\longmapsto"
+
+style display
+box 16.12 4.61 0 0
+glyph 2529 10 0 0 text "⟼" color 0 0 0 1
+
+style text
+box 16.12 4.61 0 0
+glyph 2529 10 0 0 text "⟼" color 0 0 0 1

@@ -1,0 +1,69 @@
+tex "\\allowbreak α β γ δ ϵ ζ η θ ι κ λ μ ν ξ o π \\allowbreak ρ σ τ υ ϕ χ ψ ω ε ϑ ϖ ϱ ς φ ϝ"
+
+style display
+box 153.94000000000003 7.5600000000000005 2.38 0
+glyph 885 10 0 0 text "α" color 0 0 0 1
+glyph 886 10 5.61 0 text "β" color 0 0 0 1
+glyph 887 10 10.91 0 text "γ" color 0 0 0 1
+glyph 888 10 15.57 0 text "δ" color 0 0 0 1
+glyph 916 10 20.36 0 text "ϵ" color 0 0 0 1
+glyph 890 10 24.16 0 text "ζ" color 0 0 0 1
+glyph 891 10 28.02 0 text "η" color 0 0 0 1
+glyph 892 10 33.12 0 text "θ" color 0 0 0 1
+glyph 893 10 38.26 0 text "ι" color 0 0 0 1
+glyph 894 10 40.849999999999994 0 text "κ" color 0 0 0 1
+glyph 895 10 45.8 0 text "λ" color 0 0 0 1
+glyph 896 10 50.86 0 text "μ" color 0 0 0 1
+glyph 897 10 56.38 0 text "ν" color 0 0 0 1
+glyph 898 10 60.910000000000004 0 text "ξ" color 0 0 0 1
+glyph 3342 10 64.81 0 text "𝑜" color 0 0 0 1
+glyph 900 10 69.67 0 text "π" color 0 0 0 1
+glyph 901 10 75.58 0 text "ρ" color 0 0 0 1
+glyph 902 10 80.73 0 text "σ" color 0 0 0 1
+glyph 904 10 86.18 0 text "τ" color 0 0 0 1
+glyph 905 10 90.10000000000001 0 text "υ" color 0 0 0 1
+glyph 922 10 95.01 0 text "ϕ" color 0 0 0 1
+glyph 907 10 100.76 0 text "χ" color 0 0 0 1
+glyph 908 10 105.38000000000001 0 text "ψ" color 0 0 0 1
+glyph 909 10 111.58000000000001 0 text "ω" color 0 0 0 1
+glyph 889 10 118.18 0 text "ε" color 0 0 0 1
+glyph 918 10 121.99000000000001 0 text "ϑ" color 0 0 0 1
+glyph 920 10 127.4 0 text "ϖ" color 0 0 0 1
+glyph 921 10 135.61 0 text "ϱ" color 0 0 0 1
+glyph 903 10 140.28 0 text "ς" color 0 0 0 1
+glyph 906 10 144.05 0 text "φ" color 0 0 0 1
+glyph 910 10 150.08 0 text "ϝ" color 0 0 0 1
+
+style text
+box 153.94000000000003 7.5600000000000005 2.38 0
+glyph 885 10 0 0 text "α" color 0 0 0 1
+glyph 886 10 5.61 0 text "β" color 0 0 0 1
+glyph 887 10 10.91 0 text "γ" color 0 0 0 1
+glyph 888 10 15.57 0 text "δ" color 0 0 0 1
+glyph 916 10 20.36 0 text "ϵ" color 0 0 0 1
+glyph 890 10 24.16 0 text "ζ" color 0 0 0 1
+glyph 891 10 28.02 0 text "η" color 0 0 0 1
+glyph 892 10 33.12 0 text "θ" color 0 0 0 1
+glyph 893 10 38.26 0 text "ι" color 0 0 0 1
+glyph 894 10 40.849999999999994 0 text "κ" color 0 0 0 1
+glyph 895 10 45.8 0 text "λ" color 0 0 0 1
+glyph 896 10 50.86 0 text "μ" color 0 0 0 1
+glyph 897 10 56.38 0 text "ν" color 0 0 0 1
+glyph 898 10 60.910000000000004 0 text "ξ" color 0 0 0 1
+glyph 3342 10 64.81 0 text "𝑜" color 0 0 0 1
+glyph 900 10 69.67 0 text "π" color 0 0 0 1
+glyph 901 10 75.58 0 text "ρ" color 0 0 0 1
+glyph 902 10 80.73 0 text "σ" color 0 0 0 1
+glyph 904 10 86.18 0 text "τ" color 0 0 0 1
+glyph 905 10 90.10000000000001 0 text "υ" color 0 0 0 1
+glyph 922 10 95.01 0 text "ϕ" color 0 0 0 1
+glyph 907 10 100.76 0 text "χ" color 0 0 0 1
+glyph 908 10 105.38000000000001 0 text "ψ" color 0 0 0 1
+glyph 909 10 111.58000000000001 0 text "ω" color 0 0 0 1
+glyph 889 10 118.18 0 text "ε" color 0 0 0 1
+glyph 918 10 121.99000000000001 0 text "ϑ" color 0 0 0 1
+glyph 920 10 127.4 0 text "ϖ" color 0 0 0 1
+glyph 921 10 135.61 0 text "ϱ" color 0 0 0 1
+glyph 903 10 140.28 0 text "ς" color 0 0 0 1
+glyph 906 10 144.05 0 text "φ" color 0 0 0 1
+glyph 910 10 150.08 0 text "ϝ" color 0 0 0 1

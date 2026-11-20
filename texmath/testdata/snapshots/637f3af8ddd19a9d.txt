@@ -1,0 +1,7 @@
+tex "\\substack{a"
+
+style display
+error "parsing tex math: \\substack without closing }"
+
+style text
+error "parsing tex math: \\substack without closing }"

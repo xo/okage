@@ -1,0 +1,13 @@
+tex "\\det"
+
+style display
+box 13.18 7.0600000000000005 0.1 0
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 259 10 5.39 0 text "e" color 0 0 0 1
+glyph 275 10 10.03 0 text "t" color 0 0 0 1
+
+style text
+box 13.18 7.0600000000000005 0.1 0
+glyph 258 10 0 0 text "d" color 0 0 0 1
+glyph 259 10 5.39 0 text "e" color 0 0 0 1
+glyph 275 10 10.03 0 text "t" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "%s adds %.3f above its nucleus and %s adds %.3f: "
+
+style display
+box 0 0 0 0
+
+style text
+box 0 0 0 0

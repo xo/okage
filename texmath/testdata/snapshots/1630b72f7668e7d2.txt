@@ -1,0 +1,37 @@
+tex "latexsym.sty:60"
+
+style display
+box 72.39555555555557 7.05 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 2.9800000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 8.530000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 12.06 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 16.3 0 text "𝑥" color 0 0 0 1
+glyph 3346 10 21.990000000000002 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 25.85 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 31.1 0 text "𝑚" color 0 0 0 1
+glyph 1052 10 39.400000000000006 0 text "." color 0 0 0 1
+glyph 3346 10 41.85000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3347 10 45.71000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3355 10 49.24000000000001 0 text "𝑦" color 0 0 0 1
+glyph 1051 10 57.26777777777779 0 text ":" color 0 0 0 1
+glyph 1143 10 62.49555555555557 0 text "6" color 0 0 0 1
+glyph 1137 10 67.44555555555557 0 text "0" color 0 0 0 1
+
+style text
+box 72.39555555555557 7.05 2.2 0
+glyph 3339 10 0 0 text "𝑙" color 0 0 0 1
+glyph 3326 10 2.9800000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3347 10 8.530000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3330 10 12.06 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 16.3 0 text "𝑥" color 0 0 0 1
+glyph 3346 10 21.990000000000002 0 text "𝑠" color 0 0 0 1
+glyph 3355 10 25.85 0 text "𝑦" color 0 0 0 1
+glyph 3340 10 31.1 0 text "𝑚" color 0 0 0 1
+glyph 1052 10 39.400000000000006 0 text "." color 0 0 0 1
+glyph 3346 10 41.85000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3347 10 45.71000000000001 0 text "𝑡" color 0 0 0 1
+glyph 3355 10 49.24000000000001 0 text "𝑦" color 0 0 0 1
+glyph 1051 10 57.26777777777779 0 text ":" color 0 0 0 1
+glyph 1143 10 62.49555555555557 0 text "6" color 0 0 0 1
+glyph 1137 10 67.44555555555557 0 text "0" color 0 0 0 1

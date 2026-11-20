@@ -1,0 +1,15 @@
+tex "\\left(\\LARGE{AB}\\right)"
+
+style display
+box 31.07312 11.42208 5.75 0
+glyph 1303 10 0 0.11999999999999966 text "(" color 0 0 0 1
+glyph 3300 17.28 4.2700000000000005 0 text "𝐴" color 0 0 0 1
+glyph 3301 17.28 16.03768 0 text "𝐵" color 0 0 0 1
+glyph 1315 10 26.80312 0.11999999999999966 text ")" color 0 0 0 1
+
+style text
+box 31.07312 11.42208 5.75 0
+glyph 1303 10 0 0.11999999999999966 text "(" color 0 0 0 1
+glyph 3300 17.28 4.2700000000000005 0 text "𝐴" color 0 0 0 1
+glyph 3301 17.28 16.03768 0 text "𝐵" color 0 0 0 1
+glyph 1315 10 26.80312 0.11999999999999966 text ")" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\nVdash"
+
+style display
+error "parsing tex math: unknown command \\nVdash"
+
+style text
+error "parsing tex math: unknown command \\nVdash"

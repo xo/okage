@@ -1,0 +1,9 @@
+tex "\\rrparenthesis"
+
+style display
+box 3.94 7.36 1.85 0
+glyph 2686 10 0 0 text "⦈" color 0 0 0 1
+
+style text
+box 3.94 7.36 1.85 0
+glyph 2686 10 0 0 text "⦈" color 0 0 0 1

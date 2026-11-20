@@ -1,0 +1,7 @@
+tex "\\owns"
+
+style display
+error "parsing tex math: unknown command \\owns"
+
+style text
+error "parsing tex math: unknown command \\owns"

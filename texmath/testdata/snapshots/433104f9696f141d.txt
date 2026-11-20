@@ -1,0 +1,13 @@
+tex "\\lVert v \\rVert"
+
+style display
+box 13.73 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 3350 10 4.2700000000000005 0 text "𝑣" color 0 0 0 1
+glyph 1063 10 9.46 0 text "‖" color 0 0 0 1
+
+style text
+box 13.73 7.0600000000000005 2.2 0
+glyph 1063 10 0 0 text "‖" color 0 0 0 1
+glyph 3350 10 4.2700000000000005 0 text "𝑣" color 0 0 0 1
+glyph 1063 10 9.46 0 text "‖" color 0 0 0 1

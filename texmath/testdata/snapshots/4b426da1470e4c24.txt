@@ -1,0 +1,17 @@
+tex "p\\land q\\lor r"
+
+style display
+box 36.87888888888888 5.49 2.2 0
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1692 10 8.202222222222222 0 text "∧" color 0 0 0 1
+glyph 3344 10 16.784444444444443 0 text "𝑞" color 0 0 0 1
+glyph 1693 10 24.176666666666662 0 text "∨" color 0 0 0 1
+glyph 3345 10 32.75888888888888 0 text "𝑟" color 0 0 0 1
+
+style text
+box 36.87888888888888 5.49 2.2 0
+glyph 3343 10 0 0 text "𝑝" color 0 0 0 1
+glyph 1692 10 8.202222222222222 0 text "∧" color 0 0 0 1
+glyph 3344 10 16.784444444444443 0 text "𝑞" color 0 0 0 1
+glyph 1693 10 24.176666666666662 0 text "∨" color 0 0 0 1
+glyph 3345 10 32.75888888888888 0 text "𝑟" color 0 0 0 1

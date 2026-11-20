@@ -1,0 +1,9 @@
+tex "\\rule{18mu}{18mu}"
+
+style display
+box 10 10 0 0
+rule 0 -10 10 10 color 0 0 0 1
+
+style text
+box 10 10 0 0
+rule 0 -10 10 10 color 0 0 0 1

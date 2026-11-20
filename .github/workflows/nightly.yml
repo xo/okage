@@ -67,6 +67,16 @@ jobs:
     - name: Test
       # TinyGo 0.44.0 is the lowest version that okage supports (D25)
       run: tinygo test ./...
+    - name: Install wasmtime
+      run: curl -sSf https://wasmtime.dev/install.sh | bash
+    - name: Test texmath for wasip1
+      # a goroutine of TinyGo for wasip1 has a stack of 64 KiB that does not
+      # grow. The deepest formula that the limits of D78 allow must parse and
+      # lay out in it, and TestParseStackUse measures the stack of Parse. The
+      # snapshots must give the same bytes as on amd64 (D78 section 6)
+      run: |
+        export PATH="$HOME/.wasmtime/bin:$PATH"
+        tinygo test -target wasip1 ./texmath/...
     - name: Build the tests for wasip1
       # tinygo build needs a main package, so the step builds the test
       # program of each package, and any error fails the step. tinygo test

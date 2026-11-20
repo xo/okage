@@ -1,0 +1,9 @@
+tex "\\Xi"
+
+style display
+box 6.48 6.57 0 0
+glyph 858 10 0 0 text "Ξ" color 0 0 0 1
+
+style text
+box 6.48 6.57 0 0
+glyph 858 10 0 0 text "Ξ" color 0 0 0 1

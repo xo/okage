@@ -1,0 +1,7 @@
+tex "\\left"
+
+style display
+error "parsing tex math: \\left/\\right needs a delimiter"
+
+style text
+error "parsing tex math: \\left/\\right needs a delimiter"

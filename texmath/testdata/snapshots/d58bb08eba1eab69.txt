@@ -1,0 +1,7 @@
+tex "\\underbracket{a+b+c}_{\\text{note}}"
+
+style display
+error "parsing tex math: unknown command \\underbracket"
+
+style text
+error "parsing tex math: unknown command \\underbracket"

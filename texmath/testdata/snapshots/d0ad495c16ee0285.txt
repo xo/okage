@@ -1,0 +1,19 @@
+tex "\\limsup"
+
+style display
+box 30.886666666666663 7.0600000000000005 2.2 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 274 10 15.866666666666665 0 text "s" color 0 0 0 1
+glyph 276 10 19.816666666666666 0 text "u" color 0 0 0 1
+glyph 271 10 25.516666666666666 0 text "p" color 0 0 0 1
+
+style text
+box 30.886666666666663 7.0600000000000005 2.2 0
+glyph 267 10 0 0 text "l" color 0 0 0 1
+glyph 263 10 2.83 0 text "i" color 0 0 0 1
+glyph 268 10 5.68 0 text "m" color 0 0 0 1
+glyph 274 10 15.866666666666665 0 text "s" color 0 0 0 1
+glyph 276 10 19.816666666666666 0 text "u" color 0 0 0 1
+glyph 271 10 25.516666666666666 0 text "p" color 0 0 0 1

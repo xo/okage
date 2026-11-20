@@ -1,0 +1,9 @@
+tex "\\bullet"
+
+style display
+box 4.57 3.84 0 0
+glyph 1656 10 0 0 text "∙" color 0 0 0 1
+
+style text
+box 4.57 3.84 0 0
+glyph 1656 10 0 0 text "∙" color 0 0 0 1

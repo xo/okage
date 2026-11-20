@@ -1,0 +1,7 @@
+tex "\\text{\\textemdash}"
+
+style display
+error "parsing tex math: unknown command \\textemdash"
+
+style text
+error "parsing tex math: unknown command \\textemdash"

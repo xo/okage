@@ -1,0 +1,7 @@
+tex "\\TeX"
+
+style display
+error "parsing tex math: unknown command \\TeX"
+
+style text
+error "parsing tex math: unknown command \\TeX"

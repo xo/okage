@@ -1,0 +1,9 @@
+tex "\\rule{1pt}{65536sp}"
+
+style display
+box 1 1 0 0
+rule 0 -1 1 1 color 0 0 0 1
+
+style text
+box 1 1 0 0
+rule 0 -1 1 1 color 0 0 0 1

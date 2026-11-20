@@ -1,0 +1,9 @@
+tex "*"
+
+style display
+box 5.36 4.82 0 0
+glyph 1654 10 0 0 text "∗" color 0 0 0 1
+
+style text
+box 5.36 4.82 0 0
+glyph 1654 10 0 0 text "∗" color 0 0 0 1

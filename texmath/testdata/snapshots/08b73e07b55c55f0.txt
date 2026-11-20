@@ -1,0 +1,11 @@
+tex "it"
+
+style display
+box 6.470000000000001 6.65 0.09 0.15
+glyph 3334 10 0 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 2.9400000000000004 0 text "𝑡" color 0 0 0 1
+
+style text
+box 6.470000000000001 6.65 0.09 0.15
+glyph 3334 10 0 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 2.9400000000000004 0 text "𝑡" color 0 0 0 1

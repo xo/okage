@@ -1,0 +1,9 @@
+tex "\\rule[2pt]{10pt}{4pt}"
+
+style display
+box 10 6 0 0
+rule 0 -6 10 4 color 0 0 0 1
+
+style text
+box 10 6 0 0
+rule 0 -6 10 4 color 0 0 0 1

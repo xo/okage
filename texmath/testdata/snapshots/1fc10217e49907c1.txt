@@ -1,0 +1,37 @@
+tex "bigtriangledown"
+
+style display
+box 70.93000000000002 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3334 10 5.2299999999999995 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.17 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 13.2 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 16.729999999999997 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 20.849999999999998 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 23.789999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 29.339999999999996 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 34.989999999999995 0 text "𝑔" color 0 0 0 1
+glyph 3339 10 40.019999999999996 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 43 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 47.24 0 text "𝑑" color 0 0 0 1
+glyph 3342 10 53.00000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 57.86000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 65.28000000000002 0 text "𝑛" color 0 0 0 1
+
+style text
+box 70.93000000000002 7.05 2.25 0
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1
+glyph 3334 10 5.2299999999999995 0 text "𝑖" color 0 0 0 1
+glyph 3332 10 8.17 0 text "𝑔" color 0 0 0 1
+glyph 3347 10 13.2 0 text "𝑡" color 0 0 0 1
+glyph 3345 10 16.729999999999997 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 20.849999999999998 0 text "𝑖" color 0 0 0 1
+glyph 3326 10 23.789999999999996 0 text "𝑎" color 0 0 0 1
+glyph 3341 10 29.339999999999996 0 text "𝑛" color 0 0 0 1
+glyph 3332 10 34.989999999999995 0 text "𝑔" color 0 0 0 1
+glyph 3339 10 40.019999999999996 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 43 0 text "𝑒" color 0 0 0 1
+glyph 3329 10 47.24 0 text "𝑑" color 0 0 0 1
+glyph 3342 10 53.00000000000001 0 text "𝑜" color 0 0 0 1
+glyph 3352 10 57.86000000000001 0 text "𝑤" color 0 0 0 1
+glyph 3341 10 65.28000000000002 0 text "𝑛" color 0 0 0 1

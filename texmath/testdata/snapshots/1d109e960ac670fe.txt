@@ -1,0 +1,13 @@
+tex "\\reals \\natnums \\Complex"
+
+style display
+box 21.16 6.69 0.15 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1230 10 7.29 0 text "ℕ" color 0 0 0 1
+glyph 1217 10 14.21 0 text "ℂ" color 0 0 0 1
+
+style text
+box 21.16 6.69 0.15 0
+glyph 1236 10 0 0 text "ℝ" color 0 0 0 1
+glyph 1230 10 7.29 0 text "ℕ" color 0 0 0 1
+glyph 1217 10 14.21 0 text "ℂ" color 0 0 0 1

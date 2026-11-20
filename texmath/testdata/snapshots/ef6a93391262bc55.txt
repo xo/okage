@@ -1,0 +1,7 @@
+tex "\\text{\\r{a}}"
+
+style display
+error "parsing tex math: unknown command \\r"
+
+style text
+error "parsing tex math: unknown command \\r"

@@ -1,0 +1,7 @@
+tex "\\underrightarrow"
+
+style display
+error "parsing tex math: unknown command \\underrightarrow"
+
+style text
+error "parsing tex math: unknown command \\underrightarrow"

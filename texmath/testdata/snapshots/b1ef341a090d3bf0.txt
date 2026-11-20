@@ -1,0 +1,7 @@
+tex "\\sh"
+
+style display
+error "parsing tex math: unknown command \\sh"
+
+style text
+error "parsing tex math: unknown command \\sh"

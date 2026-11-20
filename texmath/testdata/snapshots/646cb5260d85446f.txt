@@ -1,0 +1,23 @@
+tex "urcorner"
+
+style display
+box 36.9 4.79 0.12 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3345 10 5.65 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 9.77 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 13.91 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 18.77 0 text "𝑟" color 0 0 0 1
+glyph 3341 10 22.89 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 28.54 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 32.78 0 text "𝑟" color 0 0 0 1
+
+style text
+box 36.9 4.79 0.12 0
+glyph 3348 10 0 0 text "𝑢" color 0 0 0 1
+glyph 3345 10 5.65 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 9.77 0 text "𝑐" color 0 0 0 1
+glyph 3342 10 13.91 0 text "𝑜" color 0 0 0 1
+glyph 3345 10 18.77 0 text "𝑟" color 0 0 0 1
+glyph 3341 10 22.89 0 text "𝑛" color 0 0 0 1
+glyph 3330 10 28.54 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 32.78 0 text "𝑟" color 0 0 0 1

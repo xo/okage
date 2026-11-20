@@ -1,0 +1,21 @@
+tex "hexagon"
+
+style display
+box 36.81 7.0600000000000005 2.25 0
+glyph 1224 10 0 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 5.79 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 10.030000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3326 10 15.72 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 21.27 0 text "𝑔" color 0 0 0 1
+glyph 3342 10 26.3 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 31.16 0 text "𝑛" color 0 0 0 1
+
+style text
+box 36.81 7.0600000000000005 2.25 0
+glyph 1224 10 0 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 5.79 0 text "𝑒" color 0 0 0 1
+glyph 3354 10 10.030000000000001 0 text "𝑥" color 0 0 0 1
+glyph 3326 10 15.72 0 text "𝑎" color 0 0 0 1
+glyph 3332 10 21.27 0 text "𝑔" color 0 0 0 1
+glyph 3342 10 26.3 0 text "𝑜" color 0 0 0 1
+glyph 3341 10 31.16 0 text "𝑛" color 0 0 0 1

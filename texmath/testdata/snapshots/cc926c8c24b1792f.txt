@@ -1,0 +1,7 @@
+tex "\\looparrowleft"
+
+style display
+error "parsing tex math: unknown command \\looparrowleft"
+
+style text
+error "parsing tex math: unknown command \\looparrowleft"

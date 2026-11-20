@@ -1,0 +1,9 @@
+tex "\\chi"
+
+style display
+box 4.62 4.79 2.1 0
+glyph 907 10 0 0 text "χ" color 0 0 0 1
+
+style text
+box 4.62 4.79 2.1 0
+glyph 907 10 0 0 text "χ" color 0 0 0 1

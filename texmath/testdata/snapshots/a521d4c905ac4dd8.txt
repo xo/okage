@@ -1,0 +1,7 @@
+tex "\\supseteqq"
+
+style display
+error "parsing tex math: unknown command \\supseteqq"
+
+style text
+error "parsing tex math: unknown command \\supseteqq"

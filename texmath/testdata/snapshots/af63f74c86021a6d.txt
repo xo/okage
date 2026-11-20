@@ -1,0 +1,9 @@
+tex "z"
+
+style display
+box 5.029999999999999 4.67 0 0.1
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1
+
+style text
+box 5.029999999999999 4.67 0 0.1
+glyph 3356 10 0 0 text "𝑧" color 0 0 0 1

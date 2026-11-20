@@ -1,0 +1,9 @@
+tex "\\bigl("
+
+style display
+box 4.04 9.71 4.55 0
+glyph 1302 10 0 0.1200000000000001 text "(" color 0 0 0 1
+
+style text
+box 4.04 9.71 4.55 0
+glyph 1302 10 0 0.1200000000000001 text "(" color 0 0 0 1

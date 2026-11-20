@@ -1,0 +1,13 @@
+tex "ok/"
+
+style display
+box 14.100000000000001 7.09 0.89 0
+glyph 3342 10 0 0 text "𝑜" color 0 0 0 1
+glyph 3338 10 4.86 0 text "𝑘" color 0 0 0 1
+glyph 1060 10 10.240000000000002 0 text "/" color 0 0 0 1
+
+style text
+box 14.100000000000001 7.09 0.89 0
+glyph 3342 10 0 0 text "𝑜" color 0 0 0 1
+glyph 3338 10 4.86 0 text "𝑘" color 0 0 0 1
+glyph 1060 10 10.240000000000002 0 text "/" color 0 0 0 1

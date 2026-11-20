@@ -1,0 +1,13 @@
+tex "{{0pt}}"
+
+style display
+box 14.459999999999999 6.42 2.2 0.15
+glyph 1137 10 0 0 text "0" color 0 0 0 1
+glyph 3343 10 4.95 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 10.93 0 text "𝑡" color 0 0 0 1
+
+style text
+box 14.459999999999999 6.42 2.2 0.15
+glyph 1137 10 0 0 text "0" color 0 0 0 1
+glyph 3343 10 4.95 0 text "𝑝" color 0 0 0 1
+glyph 3347 10 10.93 0 text "𝑡" color 0 0 0 1

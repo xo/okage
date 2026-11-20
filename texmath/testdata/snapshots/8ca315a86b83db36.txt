@@ -1,0 +1,9 @@
+tex "\\biguplus"
+
+style display
+box 12.950000000000001 10.26 5.1 0
+glyph 2817 10 0 5.1 text "⨄" color 0 0 0 1
+
+style text
+box 9.46 7.865 2.705 0
+glyph 2816 10 0 -0.004999999999999893 text "⨄" color 0 0 0 1

@@ -1,0 +1,7 @@
+tex "\\curlywedge"
+
+style display
+error "parsing tex math: unknown command \\curlywedge"
+
+style text
+error "parsing tex math: unknown command \\curlywedge"

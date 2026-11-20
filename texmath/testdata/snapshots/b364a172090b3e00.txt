@@ -1,0 +1,11 @@
+tex "x^{\\mathchoice{a}{b}{c}{d}}"
+
+style display
+box 8.988 6.953 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3328 7 5.6899999999999995 -3.6 text "𝑐" color 0 0 0 1
+
+style text
+box 8.988 6.953 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
+glyph 3328 7 5.6899999999999995 -3.6 text "𝑐" color 0 0 0 1

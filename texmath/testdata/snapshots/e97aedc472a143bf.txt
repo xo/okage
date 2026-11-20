@@ -1,0 +1,17 @@
+tex "\\braket{\\phi|\\psi}"
+
+style display
+box 21.400000000000002 7.36 2.2 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 922 10 3.39 0 text "ϕ" color 0 0 0 1
+glyph 1062 10 9.14 0 text "|" color 0 0 0 1
+glyph 908 10 11.81 0 text "ψ" color 0 0 0 1
+glyph 2497 10 18.01 0 text "⟩" color 0 0 0 1
+
+style text
+box 21.400000000000002 7.36 2.2 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 922 10 3.39 0 text "ϕ" color 0 0 0 1
+glyph 1062 10 9.14 0 text "|" color 0 0 0 1
+glyph 908 10 11.81 0 text "ψ" color 0 0 0 1
+glyph 2497 10 18.01 0 text "⟩" color 0 0 0 1

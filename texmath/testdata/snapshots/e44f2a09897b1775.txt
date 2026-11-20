@@ -1,0 +1,43 @@
+tex "∀ ∴ ∁ ∵ ∃ ∣ ∈ ∉ ∋ ⊂ ⊃ ∧ ∨ ↦ → ← ↔ ¬"
+
+style display
+box 125.46000000000002 7.78 1.94 0
+glyph 1620 10 0 0 text "∀" color 0 0 0 1
+glyph 1752 10 5.73 0 text "∴" color 0 0 0 1
+glyph 1621 10 12.080000000000002 0 text "∁" color 0 0 0 1
+glyph 1753 10 16.82 0 text "∵" color 0 0 0 1
+glyph 1623 10 23.17 0 text "∃" color 0 0 0 1
+glyph 1684 10 28.900000000000002 0 text "∣" color 0 0 0 1
+glyph 1629 10 31.62 0 text "∈" color 0 0 0 1
+glyph 1631 10 38.82 0 text "∉" color 0 0 0 1
+glyph 1634 10 46.02 0 text "∋" color 0 0 0 1
+glyph 1856 10 53.220000000000006 0 text "⊂" color 0 0 0 1
+glyph 1857 10 60.42000000000001 0 text "⊃" color 0 0 0 1
+glyph 1692 10 67.62 0 text "∧" color 0 0 0 1
+glyph 1693 10 73.98 0 text "∨" color 0 0 0 1
+glyph 1532 10 80.34 0 text "↦" color 0 0 0 1
+glyph 1510 10 89.82000000000001 0 text "→" color 0 0 0 1
+glyph 1506 10 99.30000000000001 0 text "←" color 0 0 0 1
+glyph 1514 10 108.78000000000002 0 text "↔" color 0 0 0 1
+glyph 1205 10 118.26000000000002 0 text "¬" color 0 0 0 1
+
+style text
+box 125.46000000000002 7.78 1.94 0
+glyph 1620 10 0 0 text "∀" color 0 0 0 1
+glyph 1752 10 5.73 0 text "∴" color 0 0 0 1
+glyph 1621 10 12.080000000000002 0 text "∁" color 0 0 0 1
+glyph 1753 10 16.82 0 text "∵" color 0 0 0 1
+glyph 1623 10 23.17 0 text "∃" color 0 0 0 1
+glyph 1684 10 28.900000000000002 0 text "∣" color 0 0 0 1
+glyph 1629 10 31.62 0 text "∈" color 0 0 0 1
+glyph 1631 10 38.82 0 text "∉" color 0 0 0 1
+glyph 1634 10 46.02 0 text "∋" color 0 0 0 1
+glyph 1856 10 53.220000000000006 0 text "⊂" color 0 0 0 1
+glyph 1857 10 60.42000000000001 0 text "⊃" color 0 0 0 1
+glyph 1692 10 67.62 0 text "∧" color 0 0 0 1
+glyph 1693 10 73.98 0 text "∨" color 0 0 0 1
+glyph 1532 10 80.34 0 text "↦" color 0 0 0 1
+glyph 1510 10 89.82000000000001 0 text "→" color 0 0 0 1
+glyph 1506 10 99.30000000000001 0 text "←" color 0 0 0 1
+glyph 1514 10 108.78000000000002 0 text "↔" color 0 0 0 1
+glyph 1205 10 118.26000000000002 0 text "¬" color 0 0 0 1
