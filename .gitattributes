@@ -17,6 +17,10 @@
 *.woff2 binary
 *.eot binary
 *.bin binary
+# The fonts of typesetting-utils in typesetting/testdata (D63).
+*.cff binary
+*.dfont binary
+*.otb binary
 # The ICC profiles in pdf/icc are the files of krilla, byte for byte.
 *.icc binary
 # A pattern with a slash matches from the root only, so the leading **/

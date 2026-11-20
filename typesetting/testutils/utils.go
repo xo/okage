@@ -3,9 +3,12 @@
 package testutils
 
 import (
-	"embed"
+	iofs "io/fs"
 	"path"
 	"testing"
+
+	"github.com/xo/okage/typesetting/internal/testfonts"
+	"github.com/xo/okage/typesetting/internal/testfonts/opentype"
 )
 
 func Assert(t testing.TB, b bool) {
@@ -15,6 +18,11 @@ func Assert(t testing.TB, b bool) {
 
 func AssertNoErr(t testing.TB, err error) {
 	t.Helper()
+	// okage: typesetting/testdata is a module of its own, and it is not in
+	// the module cache. A test that reads it skips then (D76).
+	if testfonts.Missing(err) {
+		t.Skip(err)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +35,26 @@ func AssertC(t testing.TB, b bool, context string) {
 	}
 }
 
-func FilenamesFS(t testing.TB, fs *embed.FS, dir string) []string {
+// SkipWithoutTestdata skips the test when typesetting/testdata is not there,
+// for a test that reads it without a check of the error.
+//
+// okage: this function is not in go-text (D76).
+func SkipWithoutTestdata(t testing.TB) {
+	t.Helper()
+	_, err := testfonts.Find()
+	AssertNoErr(t, err)
+}
+
+// Filenames return the "absolute" file names of the given directory
+// excluding directories, and not recursing.
+// It uses the opentype embed file system.
+func Filenames(t testing.TB, dir string) []string {
+	return FilenamesFS(t, &opentype.Files, dir)
+}
+
+// okage: fs is an fs.ReadDirFS, not an *embed.FS, so that it also reads the
+// copies of typesetting-utils in typesetting/testdata (D63).
+func FilenamesFS(t testing.TB, fs iofs.ReadDirFS, dir string) []string {
 	t.Helper()
 
 	files, err := fs.ReadDir(dir)

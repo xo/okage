@@ -1,0 +1,326 @@
+// SPDX-License-Identifier: Unlicense OR BSD-3-Clause
+
+package font
+
+import (
+	"bytes"
+	"encoding/binary"
+	"sort"
+	"testing"
+
+	ot "github.com/xo/okage/typesetting/font/opentype"
+	"github.com/xo/okage/typesetting/font/opentype/tables"
+	hb "github.com/xo/okage/typesetting/internal/testfonts/harfbuzz"
+	td "github.com/xo/okage/typesetting/internal/testfonts/opentype"
+	tu "github.com/xo/okage/typesetting/testutils"
+)
+
+// wrap td.Files.ReadFile
+func readFontFile(t testing.TB, filepath string) *ot.Loader {
+	t.Helper()
+
+	file, err := td.Files.ReadFile(filepath)
+	tu.AssertNoErr(t, err)
+
+	fp, err := ot.NewLoader(bytes.NewReader(file))
+	tu.AssertNoErr(t, err)
+
+	return fp
+}
+
+func readTable(t testing.TB, fl *ot.Loader, tag string) []byte {
+	t.Helper()
+
+	table, err := fl.RawTable(ot.MustNewTag(tag))
+	tu.AssertNoErr(t, err)
+
+	return table
+}
+
+func TestCrashes(t *testing.T) {
+	for _, filepath := range append(tu.Filenames(t, "common"), "toys/chromacheck-svg.ttf") {
+		loadFont(t, filepath)
+	}
+}
+
+func TestGlyphName(t *testing.T) {
+	ft := loadFont(t, "toys/NamesCFF.ttf")
+	tu.Assert(t, ft.post.names == nil)
+
+	expected := [20]string{
+		".notdef", "space", "uni0622", "uni0623", "uni0624", "uni0625", "uni0626", "uni0628",
+		"uni06C0", "uni06C2", "uni06D3", "uni0625.fina", "uni0623.fina", "uni0622.fina", "uni0628.fina",
+		"uni0626.init", "uni0628.init", "uni0626.medi", "uni0628.medi", "uni06C1.fina",
+	}
+	for i, exp := range expected {
+		tu.Assert(t, ft.GlyphName(GID(i)) == exp)
+	}
+}
+
+func BenchmarkLoad(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, filepath := range tu.Filenames(b, "common") {
+			loadFont(b, filepath)
+		}
+	}
+}
+
+func TestMaxpAndHmtx(t *testing.T) {
+	const maxp_data = "\x00\x00\x50\x00" + // version
+		"\x00\x05" // numGlyphs
+
+	const hhea_data = "\x00\x01\x00\x00" + /* FixedVersion<>version;	 * 0x00010000u for version 1.0. */
+		"\x02\x00" + /* FWORD		ascender;	 * Typographic ascent. */
+		"\x00\x10" + /* FWORD		descender;	 * Typographic descent. */
+		"\x00\x00" + /* FWORD		lineGap;	 * Typographic line gap. */
+		"\x00\x00" + /* UFWORD	advanceMax;	 * Maximum advance width/height value in metrics table. */
+		"\x00\x00" + /* FWORD		minLeadingBearing;  * Minimum left/top sidebearing value in metrics table. */
+		"\x00\x00" + /* FWORD		minTrailingBearing;  * Minimum right/bottom sidebearing value; */
+		"\x01\x00" + /* FWORD		maxExtent;	 * horizontal: Max(lsb + (xMax - xMin)), */
+		"\x00\x00" + /* HBINT16	caretSlopeRise;	 * Used to calculate the slope of the,*/
+		"\x00\x00" + /* HBINT16	caretSlopeRun;	 * 0 for vertical caret, 1 for horizontal. */
+		"\x00\x00" + /* HBINT16	caretOffset;	 * The amount by which a slanted */
+		"\x00\x00" + /* HBINT16	reserved1;	 * Set to 0. */
+		"\x00\x00" + /* HBINT16	reserved2;	 * Set to 0. */
+		"\x00\x00" + /* HBINT16	reserved3;	 * Set to 0. */
+		"\x00\x00" + /* HBINT16	reserved4;	 * Set to 0. */
+		"\x00\x00" + /* HBINT16	metricDataFormat; * 0 for current format. */
+		"\x00\x02" /* HBUINT16	numberOfLongMetrics;  * Number of LongMetric entries in metric table. */
+
+	const hmtx_data = "\x00\x01\x00\x02" + /* glyph 0 advance lsb */
+		"\x00\x03\x00\x04" + /* glyph 1 advance lsb */
+		"\x00\x05" + /* glyph 2         lsb */
+		"\x00\x06" + /* glyph 3         lsb */
+		"\x00\x07" + /* glyph 4         lsb */
+		"\x00\x08" + /* glyph 5 advance */
+		"\x00\x09" /* glyph 6 advance */
+
+	maxp, _, err := tables.ParseMaxp([]byte(maxp_data))
+	tu.AssertNoErr(t, err)
+	_, hmtx, err := loadHVtmx([]byte(hhea_data), []byte(hmtx_data), int(maxp.NumGlyphs))
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, hmtx.Advance(0) == 1)
+	tu.Assert(t, hmtx.Advance(1) == 3)
+	tu.Assert(t, hmtx.Advance(2) == 3)
+	tu.Assert(t, hmtx.Advance(3) == 3)
+	tu.Assert(t, hmtx.Advance(4) == 3)
+
+	// spec expansion
+	// tu.Assert(t, hmtx.Advance(5) == 8)
+	// tu.Assert(t, hmtx.Advance(6) == 9)
+	// tu.Assert(t, hmtx.Advance(7) == 9)
+
+	tu.Assert(t, hmtx.Advance(8) == 0)
+	tu.Assert(t, hmtx.Advance(9) == 0)
+	tu.Assert(t, hmtx.Advance(10) == 0)
+	tu.Assert(t, hmtx.Advance(11) == 0)
+}
+
+func TestLoadCFF2(t *testing.T) {
+	ld := readFontFile(t, "common/NotoSansCJKjp-VF.otf")
+
+	font, err := NewFont(ld)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, font.Flavor == ot.OpenType)
+
+	tu.Assert(t, font.cff2 != nil)
+	tu.Assert(t, font.cff2.VarStore.AxisCount() == 1)
+}
+
+func TestCapHeight(t *testing.T) {
+	ld := readFontFile(t, "common/mplus-1p-regular.ttf")
+	font, err := NewFont(ld)
+	tu.AssertNoErr(t, err)
+	face := NewFace(font)
+
+	// reference values from Harfbuzz
+	tu.Assert(t, face.LineMetric(CapHeight) == 730)
+	tu.Assert(t, face.LineMetric(XHeight) == 520)
+}
+
+func TestLoadColor(t *testing.T) {
+	ld := readFontFile(t, "color/NotoColorEmoji-Regular.ttf")
+	ft, err := NewFont(ld)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, ft.Flavor == ot.TrueType)
+	tu.Assert(t, ft.COLR != nil && ft.CPAL != nil)
+
+	ld = readFontFile(t, "color/CoralPixels-Regular.ttf")
+	ft, err = NewFont(ld)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, ft.COLR != nil && ft.CPAL != nil)
+}
+
+func TestParseSTAT(t *testing.T) {
+	for _, path := range td.WithAvar {
+		ld := readFontFile(t, path)
+		ft, err := NewFont(ld)
+		tu.AssertNoErr(t, err)
+		tu.Assert(t, ft.STAT != nil)
+	}
+}
+
+func TestGDEFBlocklist(t *testing.T) {
+	t.Skip("requiert a proprietary font")
+
+	file, err := hb.Files.ReadFile("harfbuzz_reference/in-house/macos/System/Library/Fonts/Supplemental/Courier New.ttf")
+	tu.AssertNoErr(t, err)
+
+	fp, err := ot.NewLoader(bytes.NewReader(file))
+	tu.AssertNoErr(t, err)
+
+	ft, err := NewFont(fp)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, ft.GDEF.GlyphClassDef == nil)
+}
+
+func TestBitmapExtents(t *testing.T) {
+	ld := readFontFile(t, "bitmap/cherry-10-r.otb")
+	ft, err := NewFont(ld)
+	tu.AssertNoErr(t, err)
+	face := NewFace(ft)
+	extents, ok := face.GlyphExtents(41)
+	tu.Assert(t, ok && extents.Width == 819.2 && extents.Height == -1433.6)
+}
+
+func BenchmarkCmap(b *testing.B) {
+	font := loadFont(b, "common/Roboto-BoldItalic.ttf")
+	face := NewFace(font)
+	latinText := []rune("Hi this is a test with some âccents : $£8")
+	chineseText := []rune("襄陽曲四首/魯中都東樓醉起作-李白 刊误")
+	mixedText := append(latinText, chineseText...)
+
+	b.ResetTimer()
+
+	b.Run("latin text", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, r := range latinText {
+				_, _ = face.NominalGlyph(r)
+			}
+		}
+	})
+	b.Run("chinese text", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, r := range chineseText {
+				_, _ = face.NominalGlyph(r)
+			}
+		}
+	})
+	b.Run("mixed text", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			for _, r := range mixedText {
+				_, _ = face.NominalGlyph(r)
+			}
+		}
+	})
+}
+
+func TestNewFontIgnoresInvalidOptionalGlyf(t *testing.T) {
+	// okage: the test reads typesetting/testdata without
+	// tu.AssertNoErr, so it skips first when the folder is not there
+	// (D76).
+	tu.SkipWithoutTestdata(t)
+	data, err := td.Files.ReadFile("common/mplus-1p-regular.ttf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Keep loca intact but make glyf empty in the sfnt directory.
+	found := false
+	for i := 0; i < int(binary.BigEndian.Uint16(data[4:])); i++ {
+		entry := data[12+16*i:]
+		if string(entry[:4]) == "glyf" {
+			binary.BigEndian.PutUint32(entry[12:], 0)
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("fixture has no glyf table")
+	}
+	loader, err := ot.NewLoader(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	font, err := NewFont(loader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// okage: ParseGlyf keeps a glyph whose range in loca is out of the
+	// table, without an outline, as read-fonts and FreeType do. go-text
+	// drops the whole table (D65, D67).
+	if font.glyf == nil {
+		t.Fatal("glyf table was dropped")
+	}
+	for gid, glyph := range font.glyf {
+		if glyph.Data != nil {
+			t.Fatalf("glyph %d has an outline", gid)
+		}
+	}
+}
+
+func TestUnsignedAdvanceMetrics(t *testing.T) {
+	// One long metric followed by an extra signed side bearing. Both glyphs
+	// share the unsigned advance width and vertical advance height.
+	metrics, _, err := tables.ParseHmtx([]byte{0x9c, 0x40, 0xff, 0xfe, 0xff, 0xfd}, 1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	face := NewFace(&Font{nGlyphs: 2, hmtx: metrics, vmtx: metrics})
+	for gid := GID(0); gid < 2; gid++ {
+		if got := face.HorizontalAdvance(gid); got != 40000 {
+			t.Errorf("glyph %d: horizontal advance %g, want 40000", gid, got)
+		}
+		if got := face.VerticalAdvance(gid); got != -40000 {
+			t.Errorf("glyph %d: vertical advance %g, want -40000", gid, got)
+		}
+		if got := metrics.SideBearing(gID(gid)); got != -2-int16(gid) {
+			t.Errorf("glyph %d: wrong signed side bearing %d", gid, got)
+		}
+	}
+}
+
+func TestPostNames20Sanitize(t *testing.T) {
+	p := postNames20{GlyphNameIndexes: []uint16{uint16(numBuiltInPostNames)}}
+	tu.Assert(t, p.sanitize() != nil)
+	p.Strings = []string{"a"}
+	tu.AssertNoErr(t, p.sanitize())
+	tu.Assert(t, p.glyphName(0) == "a")
+}
+
+func TestInvalidCPAL(t *testing.T) {
+	ld := readFontFile(t, "color/CoralPixels-Regular.ttf")
+	var tbs []ot.Table
+	for _, tag := range ld.Tables() {
+		content, _ := ld.RawTable(tag)
+		if tag == ot.MustNewTag("CPAL") {
+			content = nil
+		}
+		tbs = append(tbs, ot.Table{Tag: tag, Content: content})
+	}
+	sort.Slice(tbs, func(i, j int) bool { return tbs[i].Tag < tbs[j].Tag })
+	ld, err := ot.NewLoader(bytes.NewReader(ot.WriteOpentype(tbs, ot.TrueType)))
+	tu.AssertNoErr(t, err)
+	ft, err := NewFont(ld)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, ft.COLR == nil && ft.CPAL == nil)
+}
+
+func TestAvarAxisCount(t *testing.T) {
+	ld := readFontFile(t, "toys/CFF2-VF.otf")
+	var ts []ot.Table
+	for _, name := range []string{"cmap", "head", "maxp", "fvar"} {
+		ts = append(ts, ot.Table{Tag: ot.MustNewTag(name), Content: readTable(t, ld, name)})
+	}
+	// Two empty axis maps parse fine, but fvar has only one axis.
+	ts = append(ts, ot.Table{Tag: ot.MustNewTag("avar"), Content: []byte{0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0}})
+	sort.Slice(ts, func(i, j int) bool { return ts[i].Tag < ts[j].Tag })
+	face, err := ParseTTF(bytes.NewReader(ot.WriteOpentype(ts, ot.TrueType)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(face.avar.AxisSegmentMaps) != 0 {
+		t.Fatal("mismatched avar was retained")
+	}
+	face.SetVariations([]Variation{{Tag: 0x77676874, Value: 500}})
+}

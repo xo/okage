@@ -85,8 +85,9 @@ linters:
             # the copy of go-text in typesetting (D52)
             - golang.org/x/image/math/fixed
             - golang.org/x/image/tiff
-            # a test of typesetting/shaping only (D52)
+            # the tests of typesetting/shaping only (D52, D63)
             - golang.org/x/image/font/gofont/goregular
+            - golang.org/x/image/font/gofont/gomono
             # the vips oracle of the test module only, with the tag vips (D22)
             - github.com/cshum/vipsgen/v2
             # the ThorVG oracle of lottie in the test module only (D42, D43)
@@ -214,6 +215,7 @@ linters:
           - makezero
           - misspell
           - modernize
+          - musttag
           - nakedret
           - perfsprint
           - revive
