@@ -661,3 +661,149 @@ func TestKerxFormat1Bounds(t *testing.T) {
 	kerx := kerxTable(kerxFormat1(entries, 10, 20), last)
 	testFlags(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, true, "ab", "aab", "abab", "xab")
 }
+
+// stateMachine is an extended state table of morx or kerx. lookup is its
+// class table. Each state is a row of nClasses entry indexes, and each
+// entry is its new state, its flags and its data.
+type stateMachine struct {
+	lookup   []byte
+	nClasses int
+	states   [][]int
+	entries  [][]int
+}
+
+// bytes gives the state table, with one 32-bit field after its header for
+// each tail, and the tails after the table. A field is fields[i] OR the
+// offset of tails[i] from the start of the state table.
+func (m stateMachine) bytes(fields []uint32, tails ...[]byte) []byte {
+	var states, entries []byte
+	for _, row := range m.states {
+		states = append(states, u16s(row...)...)
+	}
+	for _, e := range m.entries {
+		entries = append(entries, u16s(e...)...)
+	}
+	header := 16 + 4*len(tails)
+	offset := header + len(m.lookup)
+	out := u32s(uint32(m.nClasses), uint32(header), uint32(offset), uint32(offset+len(states)))
+	offset += len(states) + len(entries)
+	for i, tail := range tails {
+		out = append(out, u32s(fields[i]|uint32(offset))...)
+		offset += len(tail)
+	}
+	out = append(out, m.lookup...)
+	out = append(out, states...)
+	out = append(out, entries...)
+	for _, tail := range tails {
+		out = append(out, tail...)
+	}
+	return out
+}
+
+// lookup8 builds a lookup table of format 8, which gives the values to the
+// glyphs from first on.
+func lookup8(first int, values ...int) []byte {
+	return append(u16s(8, first, len(values)), u16s(values...)...)
+}
+
+// morxSubtable is a subtable of a chain of morx: its coverage, with the
+// type in the low byte, and its data after its header of 12 bytes.
+type morxSubtable struct {
+	coverage uint32
+	data     []byte
+}
+
+// morxChain builds a chain of morx with the subtables, whose default flags
+// and subtable flags are 1.
+func morxChain(subtables ...morxSubtable) []byte {
+	var data []byte
+	for _, st := range subtables {
+		data = append(data, u32s(uint32(12+len(st.data)), st.coverage, 1)...)
+		data = append(data, st.data...)
+	}
+	out := u32s(1, uint32(16+len(data)), 0, uint32(len(subtables)))
+	return append(out, data...)
+}
+
+// morxTable builds a table morx of version 2 with the chains.
+func morxTable(chains ...[]byte) []byte {
+	out := u16s(2, 0)
+	out = append(out, u32s(uint32(len(chains)))...)
+	for _, c := range chains {
+		out = append(out, c...)
+	}
+	return out
+}
+
+// The coverages of the subtables of morx and kerx that the tests use.
+const (
+	morxNoncontextual = 0x20000004
+	morxInsertion     = 0x20000005
+	kerxFormat4       = 4
+	kerxCrossStream   = 0x40000000
+	kerxBackwards     = 0x10000000
+)
+
+// The flags of the entries of the state machines.
+const (
+	kerxMark          = 0x8000 // the flag Mark of format 4 of kerx
+	insertCurrentOne  = 1 << 5 // insert one glyph at the current glyph
+	insertNone        = 0xFFFF // the index of no insertion
+	kerx4Coordinates  = 2 << 30
+	kerx4NoActionData = 0xFFFF
+)
+
+// TestAATInitialGlyphs: subtables with a state machine, whose class table
+// gives the class 4 to a, and from whose start state the class 4 starts no
+// action. HarfBuzz applies such a subtable only when the buffer holds a
+// glyph whose class can start an action from the start state, and never
+// takes a glyph outside the class table for one:
+//   - In a subtable of format 1 of kerx, x is outside the class table. It
+//     pushes itself and kerns itself by -100.
+//   - In a subtable of format 4 of kerx, x is outside the class table. It
+//     marks itself and attaches to the glyph that it marked before.
+//   - A subtable of morx inserts b at the end of the text.
+//   - In a chain of morx, a noncontextual subtable deletes a. Then an
+//     insertion subtable, whose class table holds only c, inserts b after a
+//     deleted glyph. HarfBuzz takes the deleted glyph for a glyph of the
+//     subtable.
+func TestAATInitialGlyphs(t *testing.T) {
+	kerx1 := stateMachine{
+		lookup:   lookup8(robotoA, 4),
+		nClasses: 5,
+		states:   [][]int{{0, 1, 0, 0, 0}, {0, 1, 0, 0, 0}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxPush, 0}},
+	}
+	kerx := kerxTable(kerxSubtable{coverage: 1, data: kerx1.bytes([]uint32{0}, u16s(-100, kerxEnd))})
+	testFlags(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, true, "xa", "ax", "xax", "x", "a")
+
+	kerx4 := stateMachine{
+		lookup:   lookup8(robotoA, 4),
+		nClasses: 5,
+		states:   [][]int{{0, 1, 0, 0, 0}, {0, 1, 0, 0, 0}},
+		entries:  [][]int{{0, 0, kerx4NoActionData}, {0, kerxMark, 0}},
+	}
+	kerx = kerxTable(kerxSubtable{coverage: kerxFormat4, data: kerx4.bytes([]uint32{kerx4Coordinates}, u16s(50, 60, 10, 20))})
+	testFlags(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, true, "xxa", "axx", "xax", "xx")
+
+	insertion := stateMachine{
+		lookup:   lookup8(robotoA, 4),
+		nClasses: 5,
+		states:   [][]int{{1, 0, 0, 0, 0}, {1, 0, 0, 0, 0}},
+		entries:  [][]int{{0, 0, insertNone, insertNone}, {0, insertCurrentOne, 0, insertNone}},
+	}
+	morx := morxTable(morxChain(morxSubtable{morxInsertion, insertion.bytes([]uint32{0}, u16s(robotoB))}))
+	testFlags(t, robotoWith(t, map[string][]byte{"morx": morx}), false, true, "a", "aa", "xa", "x")
+
+	insertion = stateMachine{
+		lookup:   lookup8(robotoC, 4),
+		nClasses: 5,
+		states:   [][]int{{0, 0, 1, 0, 0}, {0, 2, 1, 0, 0}},
+		entries:  [][]int{{0, 0, insertNone, insertNone}, {1, 0, insertNone, insertNone}, {0, insertCurrentOne, 0, insertNone}},
+	}
+	morx = morxTable(morxChain(
+		morxSubtable{morxNoncontextual, lookup8(robotoA, 0xFFFF)},
+		morxSubtable{morxInsertion, insertion.bytes([]uint32{0}, u16s(robotoB))},
+	))
+	testFlags(t, robotoWith(t, map[string][]byte{"morx": morx}), false, true, "ax", "axx", "xax", "aaxa", "x", "cx")
+}

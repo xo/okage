@@ -2,6 +2,7 @@ package harfbuzz
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/xo/okage/typesetting/font"
 	ot "github.com/xo/okage/typesetting/font/opentype"
@@ -871,6 +872,128 @@ func (sp *otShapePlan) aatLayoutPosition(font *Font, buffer *Buffer) {
 func collectLookupGlyphs(dst *intSet, src tables.AatLookupMixed) {
 	for _, r := range src.Coverage() {
 		dst.addRange(uint32(r[0]), uint32(r[1]))
+	}
+}
+
+// aatActionable is the part of a driverContext that tells whether an
+// entry has an action.
+type aatActionable interface {
+	isActionable(entry tables.AATStateEntry) bool
+}
+
+// aatActionInitiable is the flag of an entry that starts an action: Push
+// in kerx and kern, Mark in format 4 of kerx, MarkFirst in a
+// rearrangement subtable, SetMark in a contextual or an insertion
+// subtable, and SetComponent in a ligature subtable.
+const aatActionInitiable = 0x8000
+
+// aatClassFilter is a set of classes, as the hb_bit_page_t of HarfBuzz,
+// which reads a class modulo 512.
+type aatClassFilter [8]uint64
+
+func (f *aatClassFilter) add(class uint16) { f[class&511/64] |= 1 << (class & 63) }
+
+func (f *aatClassFilter) has(class uint16) bool { return f[class&511/64]&(1<<(class&63)) != 0 }
+
+// collectInitialGlyphs adds to dst the glyphs of the class table of the
+// machine whose class can start an action from the start state. A class
+// can start an action when its entry from the start state goes to another
+// state, has the flag aatActionInitiable, or has an action. extended is
+// false for a state table of kern.
+//
+// okage: this is collect_initial_glyphs of HarfBuzz 15.1.0. A glyph outside
+// the class table is never added, and the deleted glyph is added when its
+// class can start an action. When the machine has more than 512 classes,
+// HarfBuzz adds each glyph of the class table, without the glyphs of the
+// class 1 in kern. go-text added each glyph of the class table (D73).
+func collectInitialGlyphs(dst *intSet, machine *font.AATStateTable, table aatActionable, extended bool) {
+	var filter aatClassFilter
+	nClasses := machine.NClasses()
+	if nClasses > 512 {
+		for i := range filter {
+			filter[i] = ^uint64(0)
+		}
+		if !extended {
+			filter[0] &^= 1 << 1
+		}
+		collectLookupFiltered(dst, machine.Class, &filter)
+		return
+	}
+	for i := range nClasses {
+		entry := machine.GetEntry(0, uint16(i))
+		if entry.NewState == 0 && entry.Flags&aatActionInitiable == 0 && !table.isActionable(entry) {
+			continue
+		}
+		filter.add(uint16(i))
+	}
+	if filter.has(2) { // the class of the deleted glyph
+		dst.addGlyph(deletedGlyph)
+	}
+	collectLookupFiltered(dst, machine.Class, &filter)
+}
+
+// collectLookupFiltered adds to dst the glyphs of the lookup whose value is
+// in the filter, as collect_glyphs_filtered of the lookups of HarfBuzz
+// 15.1.0. A glyph is a uint32 here, as in HarfBuzz, so that a glyph after
+// 0xFFFF is not one of the first glyphs.
+//
+// okage: collectInitialGlyphs calls it (D73).
+func collectLookupFiltered(dst *intSet, lookup tables.AATLookup, filter *aatClassFilter) {
+	addValues := func(first tables.GlyphID, values []uint16) {
+		if len(values) == 0 || first == deletedGlyph {
+			return
+		}
+		for i, v := range values {
+			if filter.has(v) {
+				dst.add(uint32(first) + uint32(i))
+			}
+		}
+	}
+	switch lookup := lookup.(type) {
+	case tables.AATLoopkup0:
+		addValues(0, lookup.Values)
+	case tables.AATLoopkup2:
+		// HarfBuzz adds the segments one by one while they are sorted and
+		// disjoint, and then adds the rest as a single range.
+		var next uint32
+		i := 0
+		for ; i < len(lookup.Records); i++ {
+			r := lookup.Records[i]
+			if uint32(r.FirstGlyph) < next {
+				break
+			}
+			if r.FirstGlyph == deletedGlyph || r.FirstGlyph > r.LastGlyph || !filter.has(r.Value) {
+				continue
+			}
+			dst.addRange(uint32(r.FirstGlyph), uint32(r.LastGlyph))
+			next = uint32(r.LastGlyph) + 1
+		}
+		first, last := uint32(math.MaxUint32), uint32(0)
+		for ; i < len(lookup.Records); i++ {
+			r := lookup.Records[i]
+			if r.FirstGlyph == deletedGlyph || r.FirstGlyph > r.LastGlyph || !filter.has(r.Value) {
+				continue
+			}
+			first = min(first, uint32(r.FirstGlyph))
+			last = max(last, uint32(r.LastGlyph))
+		}
+		if first <= last {
+			dst.addRange(first, last)
+		}
+	case tables.AATLoopkup4:
+		for _, r := range lookup.Records {
+			addValues(r.FirstGlyph, r.Values)
+		}
+	case tables.AATLoopkup6:
+		for _, r := range lookup.Records {
+			if r.Glyph != deletedGlyph && filter.has(r.Value) {
+				dst.addGlyph(GID(r.Glyph))
+			}
+		}
+	case tables.AATLoopkup8:
+		addValues(lookup.FirstGlyph, lookup.Values)
+	case tables.AATLoopkup10:
+		addValues(lookup.FirstGlyph, lookup.Values)
 	}
 }
 

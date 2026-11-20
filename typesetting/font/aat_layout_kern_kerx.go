@@ -313,6 +313,12 @@ func newAATStableTable(k tables.AATStateTableExt) AATStateTable {
 	}
 }
 
+// NClasses returns the number of classes of the state table.
+//
+// okage: harfbuzz reads it to collect the glyphs whose class can start an
+// action, as HarfBuzz 15.1.0 does (D73).
+func (st *AATStateTable) NClasses() int { return int(st.nClass) }
+
 // GetClass return the class for the given glyph, with the correct default value.
 func (st *AATStateTable) GetClass(glyph GID) uint16 {
 	if glyph == 0xFFFF { // deleted glyph

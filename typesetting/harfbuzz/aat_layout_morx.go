@@ -645,17 +645,20 @@ type morxSubtableAccelerator struct {
 
 func (ma *morxSubtableAccelerator) init(subtable font.MorxSubtable) {
 	ma.classCache.clear()
+	// okage: a subtable with a state machine collects only the glyphs
+	// whose class can start an action, as HarfBuzz 15.1.0 (D73).
 	switch st := subtable.Data.(type) {
 	case font.MorxRearrangementSubtable:
-		collectLookupGlyphs(&ma.glyphSet, st.Class)
+		machine := font.AATStateTable(st)
+		collectInitialGlyphs(&ma.glyphSet, &machine, driverContextRearrangement{}, true)
 	case font.MorxContextualSubtable:
-		collectLookupGlyphs(&ma.glyphSet, st.Machine.Class)
+		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextContextual{}, true)
 	case font.MorxLigatureSubtable:
-		collectLookupGlyphs(&ma.glyphSet, st.Machine.Class)
+		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextLigature{}, true)
 	case font.MorxNonContextualSubtable:
 		collectLookupGlyphs(&ma.glyphSet, st.Class)
 	case font.MorxInsertionSubtable:
-		collectLookupGlyphs(&ma.glyphSet, st.Machine.Class)
+		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextInsertion{}, true)
 	}
 }
 

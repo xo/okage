@@ -446,7 +446,9 @@ func newKernxSubtableAccelerator(subtable font.KernSubtable) kernxSubtableAccele
 			out.second_set.add(uint32(pair.Right))
 		}
 	case font.Kern1:
-		collectLookupGlyphs(&out.first_set, st.Machine.Class)
+		// okage: collect only the glyphs whose class can start an action,
+		// as HarfBuzz 15.1.0 (D73).
+		collectInitialGlyphs(&out.first_set, &st.Machine, driverContextKerx1{}, subtable.IsExtended)
 		// collectLookupGlyphs (second_set, num_glyphs); // second_set is unused for machine kerning
 	case font.Kern2:
 		collectLookupGlyphs(&out.first_set, st.Left)
@@ -457,7 +459,8 @@ func newKernxSubtableAccelerator(subtable font.KernSubtable) kernxSubtableAccele
 			out.second_set.addRange(0, uint32(L-1))
 		}
 	case font.Kern4:
-		collectLookupGlyphs(&out.first_set, st.Machine.Class)
+		// okage: as for Kern1 (D73).
+		collectInitialGlyphs(&out.first_set, &st.Machine, driverContextKerx4{}, true)
 		// collectLookupGlyphs (second_set, num_glyphs); // second_set is unused for machine kerning
 	case font.Kern6:
 		collectLookupGlyphs(&out.first_set, st.Row)
