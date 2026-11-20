@@ -45,7 +45,7 @@ a23921809ca142514320ea47c514afcdf8b86b18	2026-09-30	not-applicable		[fontscan] r
 c1bea1e691d153422d41a99cf1fbc52080d2ed7a	2026-09-30	ported		[font] cache advances of variable fonts without HVAR/VVAR. It changes font
 f82a8f71c14c006b652c218ad38219d2abfb633c	2026-09-30	ported		[font] gvar: only copy the original points when needed. It changes font
 55f71f97b917a16d8d71853b72e17dfb94356571	2026-09-30	ported		[font] cff: reuse the charstring interpreter machine. It changes font, font/cff
-ec4cfa89e65ff7bf477f72238653320898826100	2026-09-30	pending		[segmenter] restart emoji sequences at adjacent pictographs. It changes segmenter
+ec4cfa89e65ff7bf477f72238653320898826100	2026-09-30	ported		[segmenter] restart emoji sequences at adjacent pictographs. It changes segmenter
 d373f8ac2945ad8105952f64dd4d3fdbf02f626d	2026-09-30	pending		[segmenter] restart numeric sequences after closing punctuation. It changes segmenter
 897f93006743c0fc1232032fbf0b14e4e3b625d1	2026-09-30	pending		[language] NewLangID: return false for the empty tag. It changes language
 1b47353e0adbaa1d78a14a66f202656126decc76	2026-09-30	ported		[font] cmap4: reject negative index, honor offsets on 0xFFFF segments. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
