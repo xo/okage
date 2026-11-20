@@ -24,14 +24,22 @@ func (l lookupGPOS) collectCoverage(dst *setDigest) {
 }
 
 func (l lookupGPOS) dispatchSubtables(ctx *getSubtablesContext) {
-	for _, table := range l.Subtables {
-		*ctx = append(*ctx, newGPOSApplicable(table))
+	for i, table := range l.Subtables {
+		// okage: each of the first 8 PairPos subtables of format 2 has a
+		// cache, as in HarfBuzz (D83).
+		var cache *pairPosCache
+		if pair, ok := table.(tables.PairPos); ok && i < maxCachedSubtables {
+			if _, ok := pair.Data.(tables.PairPosData2); ok {
+				cache = newPairPosCache()
+			}
+		}
+		*ctx = append(*ctx, newGPOSApplicable(table, cache))
 	}
 }
 
 func (l lookupGPOS) dispatchApply(ctx *otApplyContext) bool {
 	for _, table := range l.Subtables {
-		if ctx.applyGPOS(table) {
+		if ctx.applyGPOS(table, nil) {
 			return true
 		}
 	}
@@ -178,11 +186,13 @@ func applyRecurseGPOS(c *otApplyContext, lookupIndex uint16) bool {
 }
 
 // return `true` is the positionning found a match and was applied
-func (c *otApplyContext) applyGPOS(table tables.GPOSLookup) bool {
+//
+// okage: cache is the cache of a PairPos subtable of format 2, or nil (D83).
+func (c *otApplyContext) applyGPOS(table tables.GPOSLookup, cache *pairPosCache) bool {
 	buffer := c.buffer
 	glyphID := buffer.cur(0).Glyph
 	glyphPos := buffer.curPos(0)
-	index, ok := table.Cov().Index(gID(glyphID))
+	index, ok := cache.index(table.Cov(), gID(glyphID))
 	if !ok {
 		return false
 	}
@@ -211,7 +221,7 @@ func (c *otApplyContext) applyGPOS(table tables.GPOSLookup) bool {
 		case tables.PairPosData1:
 			return c.applyGPOSPair1(inner, index)
 		case tables.PairPosData2:
-			return c.applyGPOSPair2(inner)
+			return c.applyGPOSPair2(&inner, cache)
 		}
 
 	case tables.CursivePos:
@@ -375,15 +385,16 @@ func (c *otApplyContext) applyGPOSPair1(inner tables.PairPosData1, index int) bo
 	return true
 }
 
-func (c *otApplyContext) applyGPOSPair2(inner tables.PairPosData2) bool {
+func (c *otApplyContext) applyGPOSPair2(inner *tables.PairPosData2, cache *pairPosCache) bool {
 	buffer := c.buffer
 	skippyIter := &c.iterInput
 
 	// okage: a glyph that ClassDef2 does not hold has the class 0, and the
 	// subtable applies, as in HarfBuzz 15.1.0. go-text did not apply the
 	// subtable, and the lookup tried its next subtable (D73).
-	class1, _ := inner.ClassDef1.Class(gID(buffer.cur(0).Glyph))
-	class2, _ := inner.ClassDef2.Class(gID(buffer.Info[skippyIter.idx].Glyph))
+	//
+	// okage: the classes come from the cache of the subtable (D83).
+	class1, class2 := cache.classes(inner, gID(buffer.cur(0).Glyph), gID(buffer.Info[skippyIter.idx].Glyph))
 	// okage: a class outside the class counts does not apply, as in
 	// HarfBuzz. The sanitizer no longer refuses such a class (D73).
 	if class1 >= inner.Class1Count() || class2 >= inner.Class2Count() {
