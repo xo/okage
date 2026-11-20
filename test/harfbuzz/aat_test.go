@@ -55,10 +55,16 @@ func ligatureOffset(glyph int) uint32 {
 // morxLigature builds a ligature subtable that replaces a, b with x. It
 // deletes b.
 func morxLigature() morxAuditSubtable {
+	return morxLigatureAt(robotoB)
+}
+
+// morxLigatureAt builds the subtable of morxLigature, whose first action
+// reads the component at glyph minus the glyph on the stack.
+func morxLigatureAt(glyph int) morxAuditSubtable {
 	classTable := u16s(8, robotoA, 2, 4, 5)
 	states := u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2)
 	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, 0xA000, 0)
-	actions := u32s(ligatureOffset(robotoB), 0xC0000000|ligatureOffset(robotoA))
+	actions := u32s(ligatureOffset(glyph), 0xC0000000|ligatureOffset(robotoA))
 	components := u16s(0)
 	ligatures := u16s(robotoX)
 	classOffset := 28
@@ -356,4 +362,12 @@ func morxBudget(extra, empty int) []byte {
 func TestMorxMapBudget(t *testing.T) {
 	data := robotoWith(t, map[string][]byte{"morx": morxBudget(10000, 1000), "feat": featLigatures()})
 	compareOptions(t, data, shapeOptions{ranged: "liga", period: 2}, "aaaa", strings.Repeat("a", 2000))
+}
+
+// TestMorxLigatureNegativeComponent shapes texts with a ligature subtable
+// whose first action reads the component at the index -1. HarfBuzz stops
+// the action, and harfbuzz panicked before fix 27 of D73.
+func TestMorxLigatureNegativeComponent(t *testing.T) {
+	morx := morxAuditTable(morxLigatureAt(robotoB + 1))
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ab", "abc", "cab")
 }

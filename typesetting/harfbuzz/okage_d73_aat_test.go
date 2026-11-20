@@ -50,10 +50,16 @@ func ligatureOffset(glyph GID) uint32 {
 // morxLigature builds a ligature subtable that replaces a, b with x. It
 // deletes b.
 func morxLigature() morxAuditSubtable {
+	return morxLigatureAt(robotoB)
+}
+
+// morxLigatureAt builds the subtable of morxLigature, whose first action
+// reads the component at glyph minus the glyph on the stack.
+func morxLigatureAt(glyph GID) morxAuditSubtable {
 	classTable := u16s(8, int(robotoA), 2, 4, 5)
 	states := u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2)
 	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, 0xA000, 0)
-	actions := u32s(ligatureOffset(robotoB), 0xC0000000|ligatureOffset(robotoA))
+	actions := u32s(ligatureOffset(glyph), 0xC0000000|ligatureOffset(robotoA))
 	components := u16s(0)
 	ligatures := u16s(int(robotoX))
 	classOffset := 28
@@ -375,6 +381,33 @@ func TestMorxMapBudget(t *testing.T) {
 		}
 		if info.Glyph != want {
 			t.Fatalf("glyph %d: got %d, want %d", i, info.Glyph, want)
+		}
+	}
+}
+
+// TestMorxLigatureNegativeComponent shapes texts with a ligature subtable
+// whose first action reads the component at the index -1. HarfBuzz 15.1.0
+// stops the action and keeps the glyphs. go-text panicked with an index
+// out of range (D73).
+func TestMorxLigatureNegativeComponent(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"morx": morxAuditTable(morxLigatureAt(robotoB + 1))})
+	for _, text := range []string{"ab", "abc", "cab"} {
+		buf := NewBuffer()
+		buf.AddRunes([]rune(text), 0, -1)
+		buf.GuessSegmentProperties()
+		buf.Shape(NewFont(face), nil)
+		var got []GID
+		for _, info := range buf.Info {
+			got = append(got, info.Glyph)
+		}
+		want := map[string][]GID{"ab": {robotoA, robotoB}, "abc": {robotoA, robotoB, robotoC}, "cab": {robotoC, robotoA, robotoB}}[text]
+		if len(got) != len(want) {
+			t.Fatalf("%s: got the glyphs %v, want %v", text, got, want)
+		}
+		for i := range want {
+			if got[i] != want[i] {
+				t.Fatalf("%s: got the glyphs %v, want %v", text, got, want)
+			}
 		}
 	}
 }

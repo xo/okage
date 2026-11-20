@@ -383,7 +383,10 @@ func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDri
 			}
 			offset := int32(uoffset)
 			componentIdx := int32(buffer.cur(0).Glyph) + offset
-			if int(componentIdx) >= len(dc.table.Components) {
+			// okage: an index below 0 stops the action, as in HarfBuzz
+			// 15.1.0, where the unsigned index fails the sanitizer.
+			// go-text panicked with an index out of range (D73).
+			if componentIdx < 0 || int(componentIdx) >= len(dc.table.Components) {
 				break
 			}
 			componentData := dc.table.Components[componentIdx]
