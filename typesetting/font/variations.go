@@ -134,7 +134,11 @@ type tupleVariation struct {
 
 // sharedTuples has length tupleCount x axisCount
 // sharedTupleActiveIdx has length tupleCount
-func (t tupleVariation) calculateScalar(coords []VarCoord, sharedTuples [][]VarCoord, sharedTupleActiveIdx []int) float32 {
+//
+// okage: go-text computes the scalar in float32. The copy computes it in the
+// 16.16 format, with the rounded divisions of compute_scalar of read-fonts
+// src/tables/variations.rs (D84).
+func (t tupleVariation) calculateScalar(coords []VarCoord, sharedTuples [][]VarCoord, sharedTupleActiveIdx []int) tables.Fixed {
 	startIdx, endIdx := 0, len(coords)
 	peakTuple := t.PeakTuple.Values
 	if peakTuple == nil { // no peak specified -> use shared tuple
@@ -154,7 +158,7 @@ func (t tupleVariation) calculateScalar(coords []VarCoord, sharedTuples [][]VarC
 	startTuple, endTuple := t.IntermediateTuples[0].Values, t.IntermediateTuples[1].Values
 	hasIntermediate := startTuple != nil
 
-	var scalar float32 = 1.
+	scalar := tables.FixedOne
 	for i := startIdx; i < endIdx; i++ {
 		v, peak := coords[i], peakTuple[i]
 		if peak == 0 || v == peak {
@@ -172,17 +176,17 @@ func (t tupleVariation) calculateScalar(coords []VarCoord, sharedTuples [][]VarC
 			}
 			if v < peak {
 				if peak != start {
-					scalar *= float32(v-start) / float32(peak-start)
+					scalar = scalar.MulDiv(v.Fixed()-start.Fixed(), peak.Fixed()-start.Fixed())
 				}
 			} else {
 				if peak != end {
-					scalar *= float32(end-v) / float32(end-peak)
+					scalar = scalar.MulDiv(end.Fixed()-v.Fixed(), end.Fixed()-peak.Fixed())
 				}
 			}
 		} else if v == 0 || v < min(0, peak) || v > max(0, peak) {
 			return 0.
 		} else {
-			scalar *= float32(v) / float32(peak)
+			scalar = scalar.MulDiv(v.Fixed(), peak.Fixed())
 		}
 	}
 	return scalar
@@ -365,11 +369,28 @@ func unpackDeltas(data []byte, pointNumbersCount int) ([]int16, error) {
 
 // update `points` in place
 func (gvar gvar) applyDeltasToPoints(glyph gID, coords []VarCoord, points []contourPoint) {
+	// okage: the copy computes the deltas in computeDeltas, and adds them
+	// to the points at the end (D84).
+	total := gvar.computeDeltas(glyph, coords, points)
+	for i, d := range total {
+		points[i].X = float32(float64(points[i].X) + float64(float64(d.X)/(1<<16)))
+		points[i].Y = float32(float64(points[i].Y) + float64(float64(d.Y)/(1<<16)))
+	}
+}
+
+// computeDeltas returns the sum of the deltas of the tuples of the glyph
+// for each point, or nil when the glyph has no variation data.
+//
+// okage: this function is applyDeltasToPoints of go-text, which adds the
+// deltas of each tuple to the points in float32. The copy computes the
+// deltas of each tuple in the 16.16 format, and adds them up for the glyph,
+// as skrifa src/outline/glyf/deltas.rs does (D84).
+func (gvar gvar) computeDeltas(glyph gID, coords []VarCoord, points []contourPoint) []fixedDelta {
 	// adapted from harfbuzz/src/hb-ot-var-gvar-table.hh
 	const phantomOnly = false
 
 	if int(glyph) >= len(gvar.variations) { // should not happend
-		return
+		return nil
 	}
 
 	varData := gvar.variations[glyph]
@@ -384,7 +405,8 @@ func (gvar gvar) applyDeltasToPoints(glyph gID, coords []VarCoord, points []cont
 		}
 	}
 	// flag is used to indicate referenced point
-	deltas := make([]contourPoint, len(points))
+	deltas := make([]fixedDelta, len(points))
+	total := make([]fixedDelta, len(points))
 
 	for _, tuple := range varData {
 		scalar := tuple.calculateScalar(coords, gvar.sharedTuples, gvar.sharedTupleActiveIdx)
@@ -397,7 +419,7 @@ func (gvar gvar) applyDeltasToPoints(glyph gID, coords []VarCoord, points []cont
 
 		// reset the current deltas
 		for i := range deltas {
-			deltas[i] = contourPoint{}
+			deltas[i] = fixedDelta{}
 		}
 
 		for i := range xDeltas {
@@ -406,9 +428,8 @@ func (gvar gvar) applyDeltasToPoints(glyph gID, coords []VarCoord, points []cont
 				ptIndex = tuple.pointNumbers[i]
 			}
 			deltas[ptIndex].isExplicit = true
-			// okage: the conversions stop a fused multiply and add (D16, D71).
-			deltas[ptIndex].X += float32(float32(xDeltas[i]) * scalar)
-			deltas[ptIndex].Y += float32(float32(yDeltas[i]) * scalar)
+			deltas[ptIndex].X += tables.FixedFromInt(int32(xDeltas[i])).Mul(scalar)
+			deltas[ptIndex].Y += tables.FixedFromInt(int32(yDeltas[i])).Mul(scalar)
 		}
 
 		/* infer deltas for unreferenced points */
@@ -479,9 +500,29 @@ func (gvar gvar) applyDeltasToPoints(glyph gID, coords []VarCoord, points []cont
 
 		// apply specified / inferred deltas to points
 		for i, d := range deltas {
-			points[i].translate(d.X, d.Y)
+			total[i].X += d.X
+			total[i].Y += d.Y
 		}
 	}
+	return total
+}
+
+// fixedDelta is the delta of a point in the 16.16 format, and whether the
+// tuple gives it.
+//
+// okage: this type is not in go-text (D84).
+type fixedDelta struct {
+	X, Y       tables.Fixed
+	isExplicit bool
+}
+
+// fixedCoord returns a coordinate of a point of a glyph in the 16.16
+// format. The coordinates of a simple glyph and of its phantom points are
+// integers.
+//
+// okage: this function is not in go-text (D84).
+func fixedCoord(v float32) tables.Fixed {
+	return tables.FixedFromInt(int32(v))
 }
 
 func nextIndex(i, start, end int) int {
@@ -491,28 +532,32 @@ func nextIndex(i, start, end int) int {
 	return i + 1
 }
 
-func inferDelta(targetVal, prevVal, nextVal, prevDelta, nextDelta float32) float32 {
-	if prevVal == nextVal {
-		if prevDelta == nextDelta {
-			return prevDelta
+// okage: go-text interpolates the delta in float32. The copy interpolates
+// the point in the 16.16 format, with the rounded quotient and product of
+// Jiggler::interpolate of skrifa src/outline/glyf/deltas.rs, and returns its
+// delta (D84).
+func inferDelta(targetVal, prevVal, nextVal float32, prevDelta, nextDelta tables.Fixed) tables.Fixed {
+	target, in1, in2 := fixedCoord(targetVal), fixedCoord(prevVal), fixedCoord(nextVal)
+	d1, d2 := prevDelta, nextDelta
+	if in1 > in2 {
+		in1, in2 = in2, in1
+		d1, d2 = d2, d1
+	}
+	if in1 == in2 {
+		if d1 == d2 {
+			return d1
 		}
 		return 0
-	} else if targetVal <= min(prevVal, nextVal) {
-		if prevVal < nextVal {
-			return prevDelta
-		}
-		return nextDelta
-	} else if targetVal >= max(prevVal, nextVal) {
-		if prevVal > nextVal {
-			return prevDelta
-		}
-		return nextDelta
+	} else if target <= in1 {
+		return d1
+	} else if target >= in2 {
+		return d2
 	}
 
 	// linear interpolation
-	r := (targetVal - prevVal) / (nextVal - prevVal)
-	// okage: the conversion stops a fused multiply and add (D16, D71).
-	return prevDelta + float32(r*(nextDelta-prevDelta))
+	out1, out2 := in1+d1, in2+d2
+	scale := (out2 - out1).Div(in2 - in1)
+	return out1 + (target - in1).Mul(scale) - target
 }
 
 func sanitizeGDEF(table tables.GDEF, axisCount int) error {

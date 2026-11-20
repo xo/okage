@@ -96,17 +96,21 @@ func (store ItemVarStore) GetDelta(index VariationStoreIndex, coords []Coord) fl
 		return 0
 	}
 	deltaSet := varData.DeltaSets[index.DeltaSetInner]
-	var delta float32
+	// okage: go-text adds the products of the deltas and the scalars in
+	// float32. The copy computes each scalar in the 16.16 format and adds
+	// the products in 64 bits, as ItemVariationStore::compute_delta of
+	// read-fonts does (D84). It does not round the sum to an integer, so
+	// the delta of a device table of GPOS keeps its fraction, as in
+	// HarfBuzz.
+	var accum int64
 	regions := store.VariationRegionList.VariationRegions
 	for i, regionIndex := range varData.RegionIndexes {
 		if int(regionIndex) >= len(regions) {
 			return 0
 		}
-		v := regions[regionIndex].Evaluate(coords)
-		// okage: the conversion stops a fused multiply and add (D16, D71).
-		delta += float32(float32(deltaSet[i]) * v)
+		accum += int64(deltaSet[i]) * int64(regions[regionIndex].EvaluateFixed(coords))
 	}
-	return delta
+	return float32(float64(accum) / (1 << 16))
 }
 
 // AxisCount returns the number of axis found in the

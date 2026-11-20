@@ -5,6 +5,7 @@ package cff
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 
 	ps "github.com/xo/okage/typesetting/font/cff/interpreter"
@@ -198,7 +199,10 @@ type cff2CharstringHandler struct {
 	vars   tables.ItemVarStore
 
 	// the currently active ItemVariationData subtable (default to 0)
-	scalars []float32 // computed from the currently active ItemVariationData subtable
+	//
+	// okage: go-text keeps the scalars in float32. The copy keeps them in
+	// the 16.16 format, as BlendState of read-fonts does (D84).
+	scalars []tables.Fixed // computed from the currently active ItemVariationData subtable
 }
 
 func (cff2CharstringHandler) Context() ps.Context { return ps.CFF2Charstring }
@@ -217,7 +221,7 @@ func (met *cff2CharstringHandler) setVSIndex(index int) error {
 
 	vars := met.vars.ItemVariationDatas[index]
 	k := int32(len(vars.RegionIndexes)) // number of regions
-	met.scalars = append(met.scalars[:0], make([]float32, k)...)
+	met.scalars = append(met.scalars[:0], make([]tables.Fixed, k)...)
 	regions := met.vars.VariationRegionList.VariationRegions
 	for i, regionIndex := range vars.RegionIndexes {
 		// okage: go-text indexes the regions with each region index of the
@@ -225,7 +229,7 @@ func (met *cff2CharstringHandler) setVSIndex(index int) error {
 		if int(regionIndex) >= len(regions) {
 			return fmt.Errorf("invalid region index %d", regionIndex)
 		}
-		met.scalars[i] = regions[regionIndex].Evaluate(met.coords)
+		met.scalars[i] = regions[regionIndex].EvaluateFixed(met.coords)
 	}
 	return nil
 }
@@ -249,12 +253,20 @@ func (met *cff2CharstringHandler) blend(state *ps.Machine) error {
 		for i := int32(0); i < n; i++ {
 			baseValue := args[i]
 			deltas := args[n+i*k : n+(i+1)*k] // all the regions, for one operand
-			v := 0.
+			// okage: go-text adds the products of the deltas and the
+			// scalars in float64. The copy multiplies each delta and its
+			// scalar in the 16.16 format, and rounds each product, as
+			// Stack::apply_blend of read-fonts does (D84). A number of a
+			// char string is an integer or a number in the 16.16 format,
+			// so the stack holds each number and each sum exactly.
+			var v int64
 			for ik, delta := range deltas {
-				// okage: the conversion stops a fused multiply and add (D16, D71).
-				v += float64(float64(met.scalars[ik]) * delta)
+				if met.scalars[ik] == 0 {
+					continue
+				}
+				v += int64(fixedFromFloat64(delta).Mul(met.scalars[ik]))
 			}
-			args[i] = baseValue + v // update the stack with the blended value
+			args[i] = baseValue + float64(float64(v)/(1<<16)) // update the stack with the blended value
 		}
 	}
 
@@ -336,4 +348,13 @@ func (met *cff2CharstringHandler) Apply(state *ps.Machine, op ps.Operator) error
 	}
 	state.ArgStack.Clear()
 	return err
+}
+
+// fixedFromFloat64 returns a number of the stack of a char string in the
+// 16.16 format, as Fixed::from_i32 of font-types and the numbers of the
+// format of read-fonts give it.
+//
+// okage: this function is not in go-text (D84).
+func fixedFromFloat64(v float64) tables.Fixed {
+	return tables.Fixed(int32(int64(math.Round(v * (1 << 16)))))
 }
