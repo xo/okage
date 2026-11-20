@@ -55,7 +55,7 @@ d373f8ac2945ad8105952f64dd4d3fdbf02f626d	2026-09-30	ported		[segmenter] restart 
 7a608982d4b3f9da5ca310bdd56d28adb3dae7dd	2026-09-30	ported		[font] cmap: exclude glyph 0 from Lookup and RuneRanges. It changes font
 54959099dd93f17b938f39bdb8ef716b2690d4a4	2026-09-30	not-applicable		[fontscan] skip glyph 0 on the iterator path of rune coverage. It changes only fontscan, which okage does not copy
 cc144d5672dc21afc58d7a7cbdce9582c14e6054	2026-09-30	ported		[font] svg: check document offset+length without uint32 wrap. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The hunks of svg_test.go are applied by hand, because the copy of that file leaves out the tests that read typesetting-utils
-b17dec7aaa67a1f19df950ba19e7d62168c7e48a	2026-09-30	pending		[font] svg: report failure on a corrupt gzip glyph document. It changes font
+b17dec7aaa67a1f19df950ba19e7d62168c7e48a	2026-09-30	ported		[font] svg: report failure on a corrupt gzip glyph document. It changes font
 40afd1a92010a485af1b62060c2c5e5cef8d0829	2026-09-30	ported		[font] post: fix off by one in format 2.0 string index check. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
 209b08963eed9dbe1e10f2926b02ec22c6bb74c9	2026-09-30	ported		[font] bitmaps: reject subtables with LastGlyph < FirstGlyph. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
 65c26f76d4a8c2566d2fbe184eb47de34396db4c	2026-09-30	pending		[font] bitmaps: fix index format 5 image offsets and format 3 error text. It changes font
