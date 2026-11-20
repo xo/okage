@@ -42,6 +42,7 @@ type metadataSpec struct {
 	TextDirection   string      `json:"text_direction,omitempty"`
 	PageLayout      string      `json:"page_layout,omitempty"`
 	DisplayDocTitle *bool       `json:"display_doc_title,omitempty"`
+	Trapped         *bool       `json:"trapped,omitempty"`
 	CustomFields    [][2]string `json:"custom_fields,omitempty"`
 }
 
@@ -304,6 +305,9 @@ func goMetadata(s metadataSpec) (pdf.Metadata, error) {
 	if s.DisplayDocTitle != nil {
 		m = m.DisplayDocTitle(*s.DisplayDocTitle)
 	}
+	if s.Trapped != nil {
+		m = m.Trapped(*s.Trapped)
+	}
 	for _, f := range s.CustomFields {
 		m, _ = m.CustomField(f[0], f[1])
 	}
@@ -378,7 +382,7 @@ func fullMetadata() *metadataSpec {
 		Creator: new("krilla"), Producer: new("krilla"), Language: new("en"),
 		Keywords: []string{"keyword1", "keyword2", "keyword3"}, Title: new("An awesome title"),
 		Authors: []string{"John Doe", "Max Mustermann"}, TextDirection: "ltr",
-		PageLayout: "TwoColumnRight", DisplayDocTitle: new(true),
+		PageLayout: "TwoColumnRight", DisplayDocTitle: new(true), Trapped: new(true),
 	}
 }
 
@@ -418,7 +422,7 @@ func interchangeCases() []documentCase {
 		Keywords: []string{}, Authors: []string{}, Language: new(""),
 	}})
 	add("metadata custom fields", pretty(), interchangeSpec{Metadata: &metadataSpec{
-		Title: new("Standard title"),
+		Title: new("Standard title"), Trapped: new(false),
 		CustomFields: [][2]string{
 			{"CustomField", "old value"}, {"CustomField", "new value"}, {"Custom/Key", "Custom value"},
 			{"", "empty"}, {"Title", "reserved"}, {"ModDate", "reserved"}, {"B", "b"}, {"A", "ä"},
@@ -447,6 +451,9 @@ func interchangeCases() []documentCase {
 	}
 	add("metadata version id only", pretty(), interchangeSpec{Metadata: &metadataSpec{VersionID: new("1.2.3")}})
 	add("metadata display doc title false", pretty(), interchangeSpec{Metadata: &metadataSpec{DisplayDocTitle: new(false)}})
+	for _, v := range []string{"1.7", "2.0"} {
+		add("metadata trapped only "+v, withVersion(pretty(), v), interchangeSpec{Metadata: &metadataSpec{Trapped: new(false)}})
+	}
 
 	// The outlines.
 	three := []pageSpec{page(200, 200), page(300, 400), page(100, 50)}
@@ -717,6 +724,9 @@ func randomInterchange(r *rand.Rand) scene {
 		dirs := []string{"", "ltr", "rtl"}
 		m.TextDirection = dirs[r.IntN(len(dirs))]
 		m.DisplayDocTitle = new(r.IntN(2) == 0)
+		if r.IntN(3) == 0 {
+			m.Trapped = new(r.IntN(2) == 0)
+		}
 		for range r.IntN(3) {
 			m.CustomFields = append(m.CustomFields, [2]string{names[r.IntN(len(names))], text()})
 		}

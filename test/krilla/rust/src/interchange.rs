@@ -45,6 +45,7 @@ struct MetadataSpec {
     /// The name of a case of PageLayout, such as "TwoColumnRight".
     page_layout: Option<String>,
     display_doc_title: Option<bool>,
+    trapped: Option<bool>,
     /// Pairs of a name and a value, for Metadata::custom_field in their
     /// order. A field that krilla does not accept is left out.
     custom_fields: Vec<(String, String)>,
@@ -302,6 +303,9 @@ fn metadata(s: &MetadataSpec) -> Result<Metadata, String> {
     }
     if let Some(v) = s.display_doc_title {
         m = m.display_doc_title(v);
+    }
+    if let Some(v) = s.trapped {
+        m = m.trapped(v);
     }
     for (name, value) in &s.custom_fields {
         if let Some(next) = m.clone().custom_field(name.clone(), value.clone()) {

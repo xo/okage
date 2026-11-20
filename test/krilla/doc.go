@@ -289,8 +289,8 @@
 // The metadata M has the fields "title", "description", "creator",
 // "producer", "document_id", "version_id" and "language", which are
 // strings, "keywords" and "authors", which are lists of strings, and
-// "display_doc_title", a boolean. Each one calls the method of Metadata of
-// the same name. "text_direction" is "ltr" or "rtl". "page_layout" is the
+// "display_doc_title" and "trapped", which are booleans. Each one calls the
+// method of Metadata of the same name. "text_direction" is "ltr" or "rtl". "page_layout" is the
 // name of a case of PageLayout, such as "TwoColumnRight". "creation_date" is
 // {"year": 2024, "month": 11, "day": 8, "hour": 22, "minute": 23, "second":
 // 18, "utc_offset_hour": 1, "utc_offset_minute": 12}, where each field

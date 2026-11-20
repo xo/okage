@@ -46,6 +46,7 @@ type Metadata struct {
 	textDirection   *TextDirectionMetadata
 	pageLayout      *PageLayout
 	displayDocTitle bool
+	trapped         *bool
 	// customFields holds the custom fields of the information dictionary.
 	// Upstream keeps them in a BTreeMap, so the port writes them in the
 	// order of their names.
@@ -205,6 +206,16 @@ func (m Metadata) DisplayDocTitle(displayDocTitle bool) Metadata {
 	return m
 }
 
+// Trapped is Metadata::trapped in krilla src/interchange/metadata.rs.
+//
+// Whether the document has been trapped.
+//
+// If this is not set, the trapping status is unknown.
+func (m Metadata) Trapped(trapped bool) Metadata {
+	m.trapped = &trapped
+	return m
+}
+
 // CustomField is Metadata::custom_field in krilla
 // src/interchange/metadata.rs. It returns false where upstream returns None,
 // with the metadata as it was.
@@ -239,6 +250,7 @@ func (m *Metadata) hasDocumentInfo() bool {
 		m.creator != nil ||
 		m.creationDate != nil ||
 		m.description != nil ||
+		m.trapped != nil ||
 		len(m.customFields) != 0
 }
 
@@ -287,6 +299,14 @@ func (m *Metadata) serializeDocumentInfo(ref *pdfwriter.Ref, pdf *pdfwriter.Pdf,
 		}
 		if m.producer != nil {
 			documentInfo().Producer(pdfwriter.TextStr(*m.producer))
+		}
+
+		if m.trapped != nil {
+			if *m.trapped {
+				documentInfo().Trapped(pdfwriter.TrappingStatusTrapped)
+			} else {
+				documentInfo().Trapped(pdfwriter.TrappingStatusNotTrapped)
+			}
 		}
 	}
 

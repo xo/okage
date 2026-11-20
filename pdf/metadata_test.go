@@ -50,7 +50,8 @@ func metadataImpl(d *Document) {
 		Authors([]string{"John Doe", "Max Mustermann"}).
 		TextDirection(TextDirectionMetadataLeftToRight).
 		PageLayout(PageLayoutTwoColumnRight).
-		DisplayDocTitle(true)
+		DisplayDocTitle(true).
+		Trapped(true)
 	d.SetMetadata(metadata)
 }
 
@@ -74,7 +75,7 @@ func TestMetadataFull(t *testing.T) {
 // customMetadata is custom_metadata of krilla tests/src/metadata.rs.
 func customMetadata(t *testing.T) Metadata {
 	t.Helper()
-	m := NewMetadata().Title("Standard title")
+	m := NewMetadata().Title("Standard title").Trapped(false)
 	for _, f := range [][2]string{
 		{"CustomField", "old value"},
 		{"CustomField", "new value"},
@@ -153,8 +154,8 @@ func TestMetadataCopies(t *testing.T) {
 
 // TestMetadataInfo checks the information dictionary for the other fields
 // and versions: the document ID, a date with few fields, a language that
-// is empty and so ignored, a page layout that needs PDF 1.5, and text in
-// UTF-16.
+// is empty and so ignored, the trapping status, a page layout that needs
+// PDF 1.5, and text in UTF-16.
 func TestMetadataInfo(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -187,6 +188,18 @@ func TestMetadataInfo(t *testing.T) {
 			m:       NewMetadata().Language("en").Language(""),
 			want:    []string{"/Lang (en)"},
 			notWant: []string{"/Lang ()"},
+		},
+		{
+			name:    "not trapped",
+			version: PDF17,
+			m:       NewMetadata().Trapped(false),
+			want:    []string{"/Trapped /False", "/Info"},
+		},
+		{
+			name:    "trapped on PDF 2.0",
+			version: PDF20,
+			m:       NewMetadata().Trapped(true),
+			notWant: []string{"/Trapped", "/Info"},
 		},
 		{
 			name:    "two pages on PDF 1.4",
