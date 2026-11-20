@@ -27,7 +27,7 @@ type Font struct {
 	// glyphPropsCache holds the glyph properties of GDEF of some glyphs.
 	//
 	// okage: as glyph_props_cache of HarfBuzz (D83).
-	glyphPropsCache mappingCache
+	glyphPropsCache glyphPropsCache
 
 	// Point size of the font. Set to zero to unset.
 	// This is used in AAT layout, when applying 'trak' table.
