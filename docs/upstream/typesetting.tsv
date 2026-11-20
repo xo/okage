@@ -77,7 +77,7 @@ ed71a39ba10fb3055ffdab4b1e1c879ce23b75d5	2026-10-06	not-applicable		bump the min
 b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	ported		replace the hand-rolled min and max helpers with the builtins. It changes bidi, font, harfbuzz, shaping
 00dfa4fd057ccc5bac6bff26edf317aa7b7d74f3	2026-10-06	not-applicable		tests: stop calling the deprecated top-level math/rand functions. It changes font/opentype. It changes only tests that read typesetting-utils, which the copy leaves out (D52), and tests of fontscan
 1966ba783c7c00ba85f92e237f6233fde9066889	2026-10-06	not-applicable		[fontscan] use any and strings.CutPrefix, available since Go 1.18 and 1.20. It changes only fontscan, which okage does not copy
-2c07decd4b3d7723a4c029bcf68843226fbd3f4b	2026-10-06	pending		[shaping] drop the go1.18 build constraint on the fuzz test. It changes shaping
+2c07decd4b3d7723a4c029bcf68843226fbd3f4b	2026-10-06	ported		[shaping] drop the go1.18 build constraint on the fuzz test. It changes shaping
 54d50bbf7b872ef4b24e39ac2891f2b00f3afd69	2026-10-06	pending		[fontscan, harfbuzz] use min for two clamps. It changes harfbuzz
 e49e2bdf1e4b82a816d663c5861f830800e2ae3b	2026-10-06	not-applicable		[fontscan] say what serializeString does past the uint16 limit. It changes only fontscan, which okage does not copy
 a4cf8f401e160d9addb9de3343d9e02a1e931447	2026-10-20	not-applicable		[CI] attempt to fix CI failure. It changes only .github, which okage does not copy
