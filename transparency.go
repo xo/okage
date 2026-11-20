@@ -28,6 +28,7 @@ func MaskFromLuminance(pixmap PixmapRef, backdrop Color, opts ...Option) *Mask {
 		data:   make([]byte, dataLen),
 		size:   pixmap.Size(),
 		logger: newOptions(opts).logger,
+		stride: int(pixmap.Width()),
 	}
 	lumaBC := float32(backdrop.Red()*0.2126) + float32(backdrop.Green()*0.7152) + float32(backdrop.Blue()*0.0722)
 	pixels := pixmap.Pixels()

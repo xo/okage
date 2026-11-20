@@ -84,13 +84,18 @@ func (m *PixmapMut) drawPixmapAligned(
 	if o := path.NormalizedF32Clamped(paint.Opacity); o != path.NormalizedF32One {
 		opacity, scaled = o.Get(), true
 	}
-	// Port: the rows that the mask does not hold are 0, so their pixels
-	// keep the destination (D35).
-	var maskData []byte
+	// Port: the pixels that the mask does not hold are 0, so they keep the
+	// destination. The groups from first to last hold the columns that the
+	// mask holds, and start where the groups of the pipeline start (D35).
+	first, last := left, right
 	if mask != nil {
 		mt, mb := mask.rows()
+		ml, mr := mask.columns()
 		top, bottom = max(top, mt), min(bottom, mb)
-		maskData = mask.data
+		if ml > left {
+			first = left + (ml-left)/highpStageWidth*highpStageWidth
+		}
+		last = min(right, mr)
 	}
 
 	for row := top; row < bottom; row++ {
@@ -99,11 +104,13 @@ func (m *PixmapMut) drawPixmapAligned(
 		// its edge.
 		sy := min(max(row-oy, 0), sh-1)
 		srcRow := pixmap.data[sy*sw*BytesPerPixel : (sy+1)*sw*BytesPerPixel]
+		// maskRow holds the columns of the mask from maskLeft.
 		var maskRow []byte
+		maskLeft := 0
 		if mask != nil {
-			maskRow = maskData[(row-mask.top)*dw : (row-mask.top+1)*dw]
+			maskRow, maskLeft = mask.row(row), mask.left
 		}
-		for start := left; start < right; start += highpStageWidth {
+		for start := first; start < last; start += highpStageWidth {
 			end := min(start+highpStageWidth, right)
 			// The pipeline reads the source of a group before it stores
 			// the group.
@@ -118,8 +125,11 @@ func (m *PixmapMut) drawPixmapAligned(
 			}
 			for i := range end - start {
 				var cover uint8 = 255
-				if maskRow != nil {
-					cover = maskRow[start+i]
+				if mask != nil {
+					cover = 0
+					if j := start + i - maskLeft; j >= 0 && j < len(maskRow) {
+						cover = maskRow[j]
+					}
 				}
 				s := (*[BytesPerPixel]byte)(src[i*BytesPerPixel:])
 				d := (*[BytesPerPixel]byte)(dstRow[(start+i)*BytesPerPixel:])

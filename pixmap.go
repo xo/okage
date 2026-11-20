@@ -740,6 +740,7 @@ func (m *PixmapMut) asSubpixmap() subPixmapMut {
 		data:      m.data,
 		logger:    m.logger,
 		bottom:    int(m.Height()),
+		right:     int(m.Width()),
 	}
 }
 
@@ -761,6 +762,7 @@ func (m *PixmapMut) subpixmap(rect IntRect) (subPixmapMut, bool) {
 		data:      m.data[offset:],
 		logger:    m.logger,
 		bottom:    int(rect.Height()),
+		right:     int(rect.Width()),
 	}, true
 }
 
@@ -779,14 +781,16 @@ func (m *PixmapMut) subpixmap(rect IntRect) (subPixmapMut, bool) {
 //
 // Port: logger is the logger of D20, which the pipeline blitter and the
 // shaders log to. data starts at the row top, and holds the rows from top
-// to bottom, without bottom. Only the subpixmap of a Mask holds fewer rows
-// than its height (D35).
+// to bottom and the columns from left to right, without bottom and right.
+// Only the subpixmap of a Mask holds fewer rows or columns than its size.
+// Its realWidth is then its number of columns, and the byte of the pixel
+// (x, y) is at realWidth*(y-top) + x (D35).
 type subPixmapMut struct {
-	data        []byte
-	size        path.IntSize
-	realWidth   int
-	logger      *slog.Logger
-	top, bottom int
+	data                     []byte
+	size                     path.IntSize
+	realWidth                int
+	logger                   *slog.Logger
+	top, bottom, left, right int
 }
 
 // pixelsMut is SubPixmapMut::pixels_mut in tiny-skia src/pixmap.rs. It returns

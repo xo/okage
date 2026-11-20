@@ -60,20 +60,27 @@ func (t MaskType) String() string {
 // Port: logger is the logger of D20, which FillPath logs to. The option
 // WithLogger sets it. A nil logger logs nothing.
 //
-// Port: data holds only the rows from top to top+len(data)/width, and the
-// other rows are 0 (D35). A clip then takes the memory and the time of the
-// rows that its path covers, not of the whole pixmap. Clone shares data, and
-// the first write to a mask that shares its data copies it. A caller can
-// hold data after Data, DataMut, Take or MaskFromVec. Then data holds every
-// row, and the mask never shares it again. A caller sees no difference,
-// except in the memory that a mask takes.
+// Port: data holds only a rectangle of the mask, and the other pixels are 0
+// (D35). The rectangle has the rows from top and the columns from left to
+// left+stride. The byte of the pixel (x, y) is at stride*(y-top) + x, so the
+// first left bytes of data are not used, and the stages find a pixel with
+// the offset of upstream, with stride in place of the width. A clip then
+// takes the memory and the time of the pixels that its path covers, not of
+// the whole pixmap. The rectangle has a margin of maskChunk-1 columns on
+// each side of the pixels that are not 0, or ends at the side of the mask,
+// so that each chunk that maskBounds keeps is inside it (D60). Clone shares
+// data, and the first write to a mask that shares its data copies it. A
+// caller can hold data after Data, DataMut, Take or MaskFromVec. Then data
+// holds every pixel, and the mask never shares it again. A caller sees no
+// difference, except in the memory that a mask takes.
 type Mask struct {
 	data   []byte
 	size   path.IntSize
 	logger *slog.Logger
 
-	// top is the row of the first byte of data.
-	top int
+	// top is the first row and left the first column of data, and stride
+	// is the number of its columns. stride is 0 when data is empty.
+	top, left, stride int
 	// exposed is true when a caller can hold data. data then holds every
 	// row.
 	exposed bool
@@ -109,6 +116,7 @@ func MaskFromPixmap(pixmap PixmapRef, maskType MaskType, opts ...Option) *Mask {
 		data:   make([]byte, dataLen),
 		size:   pixmap.Size(),
 		logger: newOptions(opts).logger,
+		stride: int(pixmap.Width()),
 	}
 
 	// TODO: optimize
@@ -168,7 +176,13 @@ func MaskFromVec(data []byte, size path.IntSize, opts ...Option) (*Mask, bool) {
 		return nil, false
 	}
 
-	return &Mask{data: data, size: size, logger: newOptions(opts).logger, exposed: true}, true
+	return &Mask{
+		data:    data,
+		size:    size,
+		logger:  newOptions(opts).logger,
+		stride:  int(size.Width()),
+		exposed: true,
+	}, true
 }
 
 // Width is Mask::width in tiny-skia src/mask.rs. It returns mask's width.
@@ -191,7 +205,7 @@ func (m *Mask) Size() path.IntSize {
 
 // Data is Mask::data in tiny-skia src/mask.rs. It returns the internal data.
 //
-// Port: the first call makes data hold every row (D35).
+// Port: the first call makes data hold every pixel (D35).
 func (m *Mask) Data() []byte {
 	m.expose()
 	return m.data
@@ -200,7 +214,7 @@ func (m *Mask) Data() []byte {
 // DataMut is Mask::data_mut in tiny-skia src/mask.rs. It returns the mutable
 // internal data.
 //
-// Port: the first call makes data hold every row (D35).
+// Port: the first call makes data hold every pixel (D35).
 func (m *Mask) DataMut() []byte {
 	m.expose()
 	return m.data
@@ -228,27 +242,35 @@ func (m *Mask) Clone() *Mask {
 	c := &Mask{size: m.size, logger: m.logger}
 	if !m.exposed && m.cloned != nil {
 		m.cloned.Store(true)
-		c.data, c.top, c.cloned = m.data, m.top, m.cloned
+		c.data, c.top, c.left, c.stride, c.cloned = m.data, m.top, m.left, m.stride, m.cloned
 		return c
 	}
-	w := int(m.Width())
 	top, bottom := m.rows()
-	for top < bottom && allZero(m.data[(top-m.top)*w:(top-m.top+1)*w]) {
+	for top < bottom && allZero(m.row(top)) {
 		top++
 	}
-	for bottom > top && allZero(m.data[(bottom-m.top-1)*w:(bottom-m.top)*w]) {
+	for bottom > top && allZero(m.row(bottom-1)) {
 		bottom--
 	}
 	if top < bottom {
-		c.setRows(bytes.Clone(m.data[(top-m.top)*w:(bottom-m.top)*w]), top)
+		// The rows keep their columns, so the copy starts left bytes before
+		// the first column of the row top.
+		start := m.stride * (top - m.top)
+		end := m.stride*(bottom-m.top) + m.left
+		c.setData(bytes.Clone(m.data[start:end]), top, m.left, m.stride)
 	}
 	return c
 }
 
-// setRows makes data, which starts at the row top and which no other mask
-// holds, the data of the mask (D35).
-func (m *Mask) setRows(data []byte, top int) {
-	m.data, m.top, m.cloned = data, top, new(atomic.Bool)
+// setData makes data, which no other mask holds, the data of the mask, with
+// the rows from top and the columns from left to left+stride (D35).
+func (m *Mask) setData(data []byte, top, left, stride int) {
+	m.data, m.top, m.left, m.stride, m.cloned = data, top, left, stride, new(atomic.Bool)
+}
+
+// drop makes the mask hold no pixel (D35).
+func (m *Mask) drop() {
+	m.data, m.top, m.left, m.stride, m.cloned = nil, 0, 0, 0, nil
 }
 
 // isShared reports whether another mask can hold data (D35).
@@ -259,28 +281,53 @@ func (m *Mask) isShared() bool {
 // rows returns the rows that data holds: from top to bottom, without
 // bottom (D35).
 func (m *Mask) rows() (top, bottom int) {
-	return m.top, m.top + len(m.data)/int(m.Width())
+	if len(m.data) == 0 {
+		return m.top, m.top
+	}
+	return m.top, m.top + (len(m.data)-m.left)/m.stride
 }
 
-// dense makes data hold every row (D35).
+// columns returns the columns that data holds: from left to right, without
+// right (D35).
+func (m *Mask) columns() (left, right int) {
+	return m.left, m.left + m.stride
+}
+
+// row returns the columns that data holds of the row y, which data holds
+// (D35).
+func (m *Mask) row(y int) []byte {
+	start := m.stride*(y-m.top) + m.left
+	return m.data[start : start+m.stride]
+}
+
+// padColumns returns the columns from x0 to x1 with a margin of
+// maskChunk-1 columns on each side, inside the mask (D35, D60).
+func (m *Mask) padColumns(x0, x1 int) (left, right int) {
+	return max(x0-(maskChunk-1), 0), min(x1+maskChunk-1, int(m.Width()))
+}
+
+// dense makes data hold every pixel (D35).
 func (m *Mask) dense() {
 	w, h := int(m.Width()), int(m.Height())
-	if m.top == 0 && len(m.data) == w*h {
+	if m.top == 0 && m.left == 0 && m.stride == w && len(m.data) == w*h {
 		return
 	}
 	data := make([]byte, w*h)
-	copy(data[m.top*w:], m.data)
-	m.setRows(data, 0)
+	top, bottom := m.rows()
+	for y := top; y < bottom; y++ {
+		copy(data[y*w+m.left:], m.row(y))
+	}
+	m.setData(data, 0, 0, w)
 }
 
 // own copies data when another mask can hold it, before a write (D35).
 func (m *Mask) own() {
 	if m.isShared() {
-		m.setRows(bytes.Clone(m.data), m.top)
+		m.setData(bytes.Clone(m.data), m.top, m.left, m.stride)
 	}
 }
 
-// expose makes data hold every row, in a buffer that no other mask holds,
+// expose makes data hold every pixel, in a buffer that no other mask holds,
 // for a caller that can hold it (D35).
 func (m *Mask) expose() {
 	m.dense()
@@ -288,105 +335,137 @@ func (m *Mask) expose() {
 	m.exposed = true
 }
 
-// cover makes data hold the rows from top to bottom, with the rows that it
-// held before, in a buffer that no other mask shares. A mask that a caller
-// can hold already holds every row (D35).
-func (m *Mask) cover(top, bottom int) {
+// cover makes data hold the pixels from the column x0 to x1 and from the
+// row y0 to y1, without x1 and y1, with the margin of padColumns and the
+// pixels that it held before, in a buffer that no other mask shares. A mask
+// that a caller can hold already holds every pixel (D35).
+func (m *Mask) cover(x0, y0, x1, y1 int) {
 	if m.exposed {
 		return
 	}
 	oldTop, oldBottom := m.rows()
-	if oldTop < oldBottom {
-		top, bottom = min(top, oldTop), max(bottom, oldBottom)
+	oldLeft, oldRight := m.columns()
+	if x0 < x1 && y0 < y1 {
+		x0, x1 = m.padColumns(x0, x1)
+		if oldTop < oldBottom {
+			x0, x1 = min(x0, oldLeft), max(x1, oldRight)
+			y0, y1 = min(y0, oldTop), max(y1, oldBottom)
+		}
+	} else {
+		x0, y0, x1, y1 = oldLeft, oldTop, oldRight, oldBottom
 	}
-	if top >= bottom || (top == oldTop && bottom == oldBottom && !m.isShared()) {
+	if y0 >= y1 || (x0 == oldLeft && x1 == oldRight && y0 == oldTop && y1 == oldBottom && !m.isShared()) {
 		return
 	}
-	w := int(m.Width())
-	data := make([]byte, w*(bottom-top))
-	if oldTop < oldBottom {
-		copy(data[(oldTop-top)*w:], m.data)
+	stride := x1 - x0
+	data := make([]byte, x0+stride*(y1-y0))
+	for y := oldTop; y < oldBottom; y++ {
+		copy(data[stride*(y-y0)+oldLeft:], m.row(y))
 	}
-	m.setRows(data, top)
+	m.setData(data, y0, x0, stride)
 }
 
 // asSubmask is Mask::as_submask in tiny-skia src/mask.rs.
 //
-// Port: the submask holds the rows of data (D35).
+// Port: the submask holds the pixels of data (D35).
 func (m *Mask) asSubmask() subMaskRef {
 	top, bottom := m.rows()
+	left, right := m.columns()
 	return subMaskRef{
 		size:      m.size,
-		realWidth: m.size.Width(),
+		realWidth: uint32(m.stride),
 		data:      m.data,
 		top:       top,
 		bottom:    bottom,
+		left:      left,
+		right:     right,
 	}
 }
 
 // submask is Mask::submask in tiny-skia src/mask.rs.
 //
-// Port: the submask holds the rows of data inside rect (D35).
+// Port: the submask holds the pixels of data inside rect (D35).
 func (m *Mask) submask(rect IntRect) (subMaskRef, bool) {
 	rect, ok := m.size.ToIntRect(0, 0).Intersect(rect)
 	if !ok {
 		return subMaskRef{}, false
 	}
-	data, top, bottom := m.subrows(rect)
+	s := m.subrect(rect)
 	return subMaskRef{
 		size:      rect.Size(),
-		realWidth: m.size.Width(),
-		data:      data,
-		top:       top,
-		bottom:    bottom,
+		realWidth: uint32(m.stride),
+		data:      s.data,
+		top:       s.top,
+		bottom:    s.bottom,
+		left:      s.left,
+		right:     s.right,
 	}, true
 }
 
-// subrows returns the part of data from the row top of rect and the column
-// left of rect, and the rows from top to bottom of rect that data holds
-// (D35).
-func (m *Mask) subrows(rect IntRect) (data []byte, top, bottom int) {
+// maskRect is the part of the data of a mask inside a rectangle of the mask,
+// which subrect returns (D35).
+type maskRect struct {
+	// data starts at the row top of the rectangle and its column left.
+	data []byte
+	// top, bottom, left and right are the rows and the columns of the
+	// rectangle that data holds, without bottom and right.
+	top, bottom, left, right int
+}
+
+// subrect returns the part of data inside rect (D35).
+func (m *Mask) subrect(rect IntRect) maskRect {
 	mt, mb := m.rows()
-	top = max(mt-int(rect.Top()), 0)
-	bottom = min(mb-int(rect.Top()), int(rect.Height()))
-	if top >= bottom {
-		return nil, 0, 0
+	ml, mr := m.columns()
+	rt, rl := int(rect.Top()), int(rect.Left())
+	r := maskRect{
+		top:    max(mt-rt, 0),
+		bottom: min(mb-rt, int(rect.Height())),
+		left:   max(ml-rl, 0),
+		right:  min(mr-rl, int(rect.Width())),
 	}
-	offset := (int(rect.Top())+top-mt)*int(m.Width()) + int(rect.Left())
-	return m.data[offset:], top, bottom
+	if r.top >= r.bottom || r.left >= r.right {
+		return maskRect{}
+	}
+	r.data = m.data[m.stride*(rt+r.top-mt)+rl:]
+	return r
 }
 
 // asSubpixmap is Mask::as_subpixmap in tiny-skia src/mask.rs.
 //
-// Port: the subpixmap holds the rows of data (D35).
+// Port: the subpixmap holds the pixels of data (D35).
 func (m *Mask) asSubpixmap() subPixmapMut {
 	top, bottom := m.rows()
+	left, right := m.columns()
 	return subPixmapMut{
 		size:      m.size,
-		realWidth: int(m.size.Width()),
+		realWidth: m.stride,
 		data:      m.data,
 		logger:    m.logger,
 		top:       top,
 		bottom:    bottom,
+		left:      left,
+		right:     right,
 	}
 }
 
 // subpixmap is Mask::subpixmap in tiny-skia src/mask.rs.
 //
-// Port: the subpixmap holds the rows of data inside rect (D35).
+// Port: the subpixmap holds the pixels of data inside rect (D35).
 func (m *Mask) subpixmap(rect IntRect) (subPixmapMut, bool) {
 	rect, ok := m.size.ToIntRect(0, 0).Intersect(rect)
 	if !ok {
 		return subPixmapMut{}, false
 	}
-	data, top, bottom := m.subrows(rect)
+	s := m.subrect(rect)
 	return subPixmapMut{
 		size:      rect.Size(),
-		realWidth: int(m.size.Width()),
-		data:      data,
+		realWidth: m.stride,
+		data:      s.data,
 		logger:    m.logger,
-		top:       top,
-		bottom:    bottom,
+		top:       s.top,
+		bottom:    s.bottom,
+		left:      s.left,
+		right:     s.right,
 	}, true
 }
 
@@ -514,15 +593,14 @@ func (m *Mask) FillPath(
 	antiAlias bool,
 	transform Transform,
 ) {
-	// Port: data first holds the rows that the path can cover (D35).
+	// Port: data first holds the pixels that the path can cover (D35).
 	w, h := int(m.Width()), int(m.Height())
-	_, y0, _, y1 := pathPixelBounds(p, transform, w, h)
-	m.cover(y0, y1)
+	m.cover(pathPixelBounds(p, transform, w, h))
 	m.fillPath(p, fillRule, antiAlias, transform)
 }
 
 // fillPath is the body of Mask::fill_path in tiny-skia src/mask.rs. It
-// draws only on the rows that data holds (D35).
+// draws only on the pixels that data holds (D35).
 func (m *Mask) fillPath(
 	p *Path,
 	fillRule FillRule,
@@ -614,12 +692,13 @@ func (m *Mask) fillPath(
 //
 // A temporary mask with the same size as the current one is created.
 //
-// Port: the temporary mask comes from a pool, and only the rows that the
+// Port: the temporary mask comes from a pool, and only the pixels that the
 // path can cover are cleared and multiplied. The other pixels of the mask
 // are 0, as the multiplication by 0 of upstream gives. A clip of a page
 // then takes a time that depends on the size of the path, not on the size
 // of the page. The bytes are the same as upstream (D60). Then data holds
-// only the rows that the path and the mask both cover (D35).
+// only the pixels that the path and the mask both cover, with the margin of
+// padColumns (D35).
 func (m *Mask) IntersectPath(
 	p *Path,
 	fillRule FillRule,
@@ -628,15 +707,18 @@ func (m *Mask) IntersectPath(
 ) {
 	w, h := int(m.Width()), int(m.Height())
 	x0, y0, x1, y1 := pathPixelBounds(p, transform, w, h)
+	oldTop, _ := m.rows()
+	oldLeft, oldRight := m.columns()
 	if !m.exposed {
-		top, bottom := m.rows()
-		y0, y1 = max(y0, top), min(y1, bottom)
+		_, oldBottom := m.rows()
+		y0, y1 = max(y0, oldTop), min(y1, oldBottom)
+		x0, x1 = max(x0, oldLeft), min(x1, oldRight)
 	}
 	if x0 >= x1 || y0 >= y1 {
 		if m.exposed {
 			clear(m.data)
 		} else {
-			m.data, m.top, m.cloned = nil, 0, nil
+			m.drop()
 		}
 		return
 	}
@@ -645,43 +727,59 @@ func (m *Mask) IntersectPath(
 		buf = new([]byte)
 	}
 	defer maskPool.Put(buf)
-	n := w * (y1 - y0)
+	// The temporary mask holds the pixels from x0 to x1 and from y0 to y1.
+	// The blitter of fillPath draws only there.
+	stride := x1 - x0
+	n := x0 + stride*(y1-y0)
 	if cap(*buf) < n {
 		*buf = make([]byte, n)
 	}
-	// fillPath writes only the rows from y0 to y1.
 	data := (*buf)[:n]
-	clear(data)
-	submask := &Mask{data: data, size: m.size, logger: m.logger, top: y0}
+	clear(data[x0:])
+	submask := &Mask{data: data, size: m.size, logger: m.logger, top: y0, left: x0, stride: stride}
 	submask.fillPath(p, fillRule, antiAlias, transform)
 
-	top, _ := m.rows()
+	// out holds the result, with the rows from outTop and the columns from
+	// outLeft to outLeft+outStride.
+	outTop, outLeft, outStride := 0, 0, w
 	var out []byte
 	switch {
 	case m.exposed:
-		out = m.data[y0*w : y1*w]
-		clear(m.data[:y0*w])
-		clear(m.data[y1*w:])
-	case m.isShared():
-		out = make([]byte, n)
+		out = m.data
+		clear(out[:y0*w])
+		clear(out[y1*w:])
 	default:
-		out = m.data[(y0-top)*w : (y1-top)*w]
-	}
-	for y := range y1 - y0 {
-		row := m.data[(y+y0-top)*w : (y+y0-top+1)*w]
-		sub := data[y*w : (y+1)*w]
-		dst := out[y*w : (y+1)*w]
-		clear(dst[:x0])
-		for x := x0; x < x1; x++ {
-			dst[x] = premultiplyU8(row[x], sub[x])
+		outTop = y0
+		left, right := m.padColumns(x0, x1)
+		outLeft = max(left, oldLeft)
+		outStride = min(right, oldRight) - outLeft
+		outLen := outLeft + outStride*(y1-y0)
+		if m.isShared() {
+			out = make([]byte, outLen)
+		} else {
+			// The result is a part of data with fewer or the same rows and
+			// columns. A byte of the result is at the same index as its
+			// byte in data, or at a lower index, so the loop below reads
+			// each byte of data before it writes over it.
+			out = m.data[:outLen]
 		}
-		clear(dst[x1:])
+	}
+	for y := y0; y < y1; y++ {
+		row := m.row(y)
+		sub := submask.row(y)
+		start := outStride*(y-outTop) + outLeft
+		dst := out[start : start+outStride]
+		clear(dst[:x0-outLeft])
+		for x := x0; x < x1; x++ {
+			dst[x-outLeft] = premultiplyU8(row[x-oldLeft], sub[x-x0])
+		}
+		clear(dst[x1-outLeft:])
 	}
 	if !m.exposed {
 		if m.isShared() {
-			m.setRows(out, y0)
+			m.setData(out, outTop, outLeft, outStride)
 		} else {
-			m.data, m.top = out, y0
+			m.data, m.top, m.left, m.stride = out, outTop, outLeft, outStride
 		}
 	}
 }
@@ -718,7 +816,7 @@ func pathPixelBounds(p *Path, transform Transform, w, h int) (x0, y0, x1, y1 int
 
 // Invert is Mask::invert in tiny-skia src/mask.rs. It inverts the mask.
 //
-// Port: data first holds every row (D35).
+// Port: data first holds every pixel (D35).
 func (m *Mask) Invert() {
 	m.dense()
 	m.own()
@@ -731,13 +829,13 @@ func (m *Mask) Invert() {
 //
 // It zero-fills the internal data buffer.
 //
-// Port: a mask that no caller can hold drops its rows (D35).
+// Port: a mask that no caller can hold drops its data (D35).
 func (m *Mask) Clear() {
 	if m.exposed {
 		clear(m.data)
 		return
 	}
-	m.data, m.top, m.cloned = nil, 0, nil
+	m.drop()
 }
 
 // String is the Debug impl of Mask in tiny-skia src/mask.rs. It satisfies
@@ -748,13 +846,15 @@ func (m *Mask) String() string {
 
 // subMaskRef is SubMaskRef in tiny-skia src/mask.rs.
 //
-// Port: data starts at the row top, and holds the rows from top to bottom,
-// without bottom. The other rows are 0 (D35).
+// Port: data holds the rows from top to bottom and the columns from left to
+// right, without bottom and right, and realWidth is its number of columns.
+// The byte of the pixel (x, y) is at realWidth*(y-top) + x. The other
+// pixels are 0 (D35).
 type subMaskRef struct {
-	data        []byte
-	size        path.IntSize
-	realWidth   uint32
-	top, bottom int
+	data                     []byte
+	size                     path.IntSize
+	realWidth                uint32
+	top, bottom, left, right int
 }
 
 // maskCtx is SubMaskRef::mask_ctx in tiny-skia src/mask.rs.

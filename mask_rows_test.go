@@ -1,7 +1,8 @@
 package okage
 
 // This file ports no upstream file. It tests that a mask that holds only
-// some rows draws the same bytes as the same mask with every row (D35).
+// some rows and columns draws the same bytes as the same mask with every
+// pixel (D35).
 
 import (
 	"bytes"
@@ -33,20 +34,33 @@ func randomPath(r *rand.Rand, lo, hi int) *Path {
 	return p
 }
 
-// rowsMask returns a mask of w by h that holds only the rows of a few
-// paths, made with FillPath, Clone and IntersectPath.
+// rowsMask returns a mask of w by h that holds only the rows and the
+// columns of a few paths, made with FillPath, Clone and IntersectPath.
 func rowsMask(t *testing.T, r *rand.Rand, w, h uint32) *Mask {
 	t.Helper()
 	m, ok := NewMask(w, h)
 	if !ok {
 		t.Fatalf("NewMask(%d, %d) failed", w, h)
 	}
-	if p := randomPath(r, -10, int(max(w, h))+10); p != nil {
-		m.FillPath(p, FillRule(r.IntN(2)), r.IntN(2) == 0, IdentityTransform())
+	// pathIn returns a path on the whole mask, or a small path.
+	pathIn := func() *Path {
+		lo, hi := -10, int(max(w, h))+10
+		if r.IntN(2) == 0 {
+			c := r.IntN(hi)
+			lo, hi = c-20, c+20
+		}
+		return randomPath(r, lo, hi)
 	}
-	if r.IntN(2) == 0 {
-		m = m.Clone()
-		if p := randomPath(r, -10, int(max(w, h))+10); p != nil {
+	for range 1 + r.IntN(2) {
+		if p := pathIn(); p != nil {
+			m.FillPath(p, FillRule(r.IntN(2)), r.IntN(2) == 0, IdentityTransform())
+		}
+	}
+	for range r.IntN(3) {
+		if r.IntN(2) == 0 {
+			m = m.Clone()
+		}
+		if p := pathIn(); p != nil {
 			m.IntersectPath(p, FillRule(r.IntN(2)), r.IntN(2) == 0, IdentityTransform())
 		}
 	}
@@ -60,7 +74,7 @@ func TestMaskRowsBytes(t *testing.T) {
 	r := rand.New(rand.NewPCG(5, 6))
 	ar := alignedRand{r}
 	for i := range 600 {
-		w, h := uint32(1+r.IntN(80)), uint32(1+r.IntN(80))
+		w, h := uint32(1+r.IntN(200)), uint32(1+r.IntN(80))
 		if i%50 == 0 {
 			w = drawTilerMaxDimensions + uint32(1+r.IntN(40))
 		}
