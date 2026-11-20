@@ -30,3 +30,4 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported	27ab339	Properly recognize and reject recursive references (#1225). Port: usvg, tests
 5bdbae64eefadc4bf0caa56dcf91702037929086	2026-11-11	not-applicable		Prepare v0.50.0 release (#1230). It raises the versions in Cargo.toml, Cargo.lock and the headers of the C API, and changes CHANGELOG.md only
 121e1db8293dff33567d564e91f96bd0e2fadf3e	2026-11-14	ported		Support `color-interpolation` on gradients (#1229). Port: usvg, resvg, tests
+46de08c87c5be3faf64a5827b6ece0619c142ff1	2026-11-14	not-applicable		Update links and badges in the READMEs (#1214). It changes only the links and the badges of README.md and of the READMEs of the C API, svgtypes and usvg
