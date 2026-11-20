@@ -369,13 +369,18 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 	// okage: the table MATH is optional, as GDEF is (D78).
 	out.MATH = loadMATH(ld)
 
+	// okage: a table morx or kerx with an error in a chain or a subtable is
+	// refused whole, as in HarfBuzz 15.1.0. go-text kept the chains or the
+	// subtables before the error (D73).
 	raw, _ = ld.RawTable(ot.MustNewTag("morx"))
-	morx, _, _ := tables.ParseMorx(raw, out.nGlyphs)
-	out.Morx = newMorx(morx)
+	if morx, _, err := tables.ParseMorx(raw, out.nGlyphs); err == nil {
+		out.Morx = newMorx(morx)
+	}
 
 	raw, _ = ld.RawTable(ot.MustNewTag("kerx"))
-	kerx, _, _ := tables.ParseKerx(raw, out.nGlyphs)
-	out.Kerx = newKernxFromKerx(kerx)
+	if kerx, _, err := tables.ParseKerx(raw, out.nGlyphs); err == nil {
+		out.Kerx = newKernxFromKerx(kerx)
+	}
 
 	raw, _ = ld.RawTable(ot.MustNewTag("kern"))
 	kern, _, _ := tables.ParseKern(raw)

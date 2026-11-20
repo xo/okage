@@ -40,6 +40,13 @@ func ParseMorx(src []byte, valuesCount int) (Morx, int, error) {
 			if err != nil {
 				return item, 0, fmt.Errorf("reading Morx: %s", err)
 			}
+			// okage: in version 3, the glyph coverage of the subtables
+			// follows the subtables of each chain (D73).
+			if item.version >= 3 {
+				if err := elem.checkGlyphCoverage(src[offset:], valuesCount); err != nil {
+					return item, 0, fmt.Errorf("reading Morx: %s", err)
+				}
+			}
 			item.Chains = append(item.Chains, elem)
 			offset += read
 		}
@@ -60,6 +67,12 @@ func ParseMorxChain(src []byte, valuesCount int) (MorxChain, int, error) {
 	item.nFeatureEntries = binary.BigEndian.Uint32(src[8:])
 	item.nSubtable = binary.BigEndian.Uint32(src[12:])
 	n += 16
+	// okage: HarfBuzz 15.1.0 refuses a chain shorter than its header or
+	// longer than the table, and finds the next chain at the length of the
+	// chain (D73).
+	if item.chainLength < 16 || uint64(item.chainLength) > uint64(len(src)) {
+		return item, 0, fmt.Errorf("reading MorxChain: invalid chain length: %d", item.chainLength)
+	}
 
 	{
 		arrayLength := int(item.nFeatureEntries)
@@ -86,9 +99,10 @@ func ParseMorxChain(src []byte, valuesCount int) (MorxChain, int, error) {
 			item.Subtables = append(item.Subtables, elem)
 			offset += read
 		}
-		n = offset
 	}
-	return item, n, nil
+	// okage: the next chain starts at the length of the chain, and not
+	// after the subtables (D73).
+	return item, int(item.chainLength), nil
 }
 
 func ParseMorxChainSubtable(src []byte, valuesCount int) (MorxChainSubtable, int, error) {
@@ -123,7 +137,8 @@ func ParseMorxChainSubtable(src []byte, valuesCount int) (MorxChainSubtable, int
 		case MorxSubtableVersionRearrangement:
 			item.Data, read, err = ParseMorxSubtableRearrangement(src[12:], valuesCount)
 		default:
-			err = fmt.Errorf("unsupported MorxSubtableVersion %d", item.version)
+			// okage: HarfBuzz 15.1.0 accepts a subtable of another format, and
+			// does not apply it (D73).
 		}
 		if err != nil {
 			return item, 0, fmt.Errorf("reading MorxChainSubtable: %s", err)

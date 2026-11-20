@@ -26,8 +26,12 @@ func (st *OTKernSubtableHeader) parseEnd(src []byte) (int, error) {
 	if L, E := len(src), int(st.length); L < E {
 		return 0, fmt.Errorf("EOF: expected length: %d, got %d", E, L)
 	}
-	// okage: the values of format 1 go up to the end of the subtable (D73).
-	st.data = readKern1Values(st.data, src[6:max(6, int(st.length))])
+	// okage: HarfBuzz 15.1.0 refuses a subtable shorter than its header.
+	// The values of format 1 go up to the end of the subtable (D73).
+	if st.length < 6 {
+		return 0, fmt.Errorf("invalid kern subtable length: %d", st.length)
+	}
+	st.data = readKern1Values(st.data, src[6:st.length])
 	return int(st.length), nil
 }
 
@@ -44,8 +48,12 @@ func (st *AATKernSubtableHeader) parseEnd(src []byte) (int, error) {
 	if L, E := len(src), int(st.length); L < E {
 		return 0, fmt.Errorf("EOF: expected length: %d, got %d", E, L)
 	}
-	// okage: the values of format 1 go up to the end of the subtable (D73).
-	st.data = readKern1Values(st.data, src[8:max(8, int(st.length))])
+	// okage: HarfBuzz 15.1.0 refuses a subtable shorter than its header.
+	// The values of format 1 go up to the end of the subtable (D73).
+	if st.length < 8 {
+		return 0, fmt.Errorf("invalid kern subtable length: %d", st.length)
+	}
+	st.data = readKern1Values(st.data, src[8:st.length])
 	return int(st.length), nil
 }
 

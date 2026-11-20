@@ -94,10 +94,20 @@ func ParseKern(src []byte) (Kern, int, error) {
 			return Kern{}, 0, fmt.Errorf("reading Kern: "+"EOF: expected length: %d, got %d", nbRead, L)
 		}
 		src = src[nbRead:]
+		// okage: the data of a subtable must be in its length, except for
+		// the last subtable, whose length HarfBuzz 15.1.0 ignores, as for
+		// some versions of Calibri. go-text read the data of each subtable
+		// up to the end of the table (D73).
+		sub := src
+		if i < len(out)-1 {
+			if length := kernSubtableLength(src, isOT); length <= uint64(len(src)) {
+				sub = src[:length]
+			}
+		}
 		if isOT {
-			out[i], nbRead, err = ParseOTKernSubtableHeader(src)
+			out[i], nbRead, err = ParseOTKernSubtableHeader(sub)
 		} else {
-			out[i], nbRead, err = ParseAATKernSubtableHeader(src)
+			out[i], nbRead, err = ParseAATKernSubtableHeader(sub)
 		}
 		if err != nil {
 			return Kern{}, 0, err
@@ -125,5 +135,19 @@ func ParseKern(src []byte) (Kern, int, error) {
 }
 
 func (k AATKernSubtableHeader) Data() KernData { return k.data }
+
+// kernSubtableLength gives the length of the subtable at the start of src,
+// from its header, or len(src) when src is too short for the header.
+//
+// okage: ParseKern limits the data of a subtable to it (D73).
+func kernSubtableLength(src []byte, isOT bool) uint64 {
+	if len(src) < 4 {
+		return uint64(len(src))
+	}
+	if isOT {
+		return uint64(binary.BigEndian.Uint16(src[2:]))
+	}
+	return uint64(binary.BigEndian.Uint32(src))
+}
 
 func (k OTKernSubtableHeader) Data() KernData { return k.data }

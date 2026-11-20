@@ -39,7 +39,8 @@ func ParseAATKernSubtableHeader(src []byte) (AATKernSubtableHeader, int, error) 
 		case kernSTVersion3:
 			item.data, read, err = ParseKernData3(src[8:])
 		default:
-			err = fmt.Errorf("unsupported KernDataVersion %d", item.version)
+			// okage: HarfBuzz 15.1.0 accepts a subtable of another format, and
+			// does not apply it (D73).
 		}
 		if err != nil {
 			return item, 0, fmt.Errorf("reading AATKernSubtableHeader: %s", err)
@@ -327,7 +328,8 @@ func ParseOTKernSubtableHeader(src []byte) (OTKernSubtableHeader, int, error) {
 		case kernSTVersion3:
 			item.data, read, err = ParseKernData3(src[6:])
 		default:
-			err = fmt.Errorf("unsupported KernDataVersion %d", item.format)
+			// okage: HarfBuzz 15.1.0 accepts a subtable of another format, and
+			// does not apply it (D73).
 		}
 		if err != nil {
 			return item, 0, fmt.Errorf("reading OTKernSubtableHeader: %s", err)

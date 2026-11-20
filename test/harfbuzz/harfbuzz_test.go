@@ -911,3 +911,118 @@ func TestKernFormat1ValueTable(t *testing.T) {
 	kern = kernTable(kernFormat1(push, 48, 20, 30), kernFormat1([4]int{}, 48))
 	testFlags(t, robotoWith(t, map[string][]byte{"kern": kern}), false, true, "abc", "ac", "c", "abcc")
 }
+
+// kernPairs builds a subtable of format 0 of a table kern of Microsoft,
+// with the length and the pairs, each a left glyph, a right glyph and a
+// value.
+func kernPairs(length int, pairs ...int) []byte {
+	n := len(pairs) / 3
+	out := u16s(0, length, 1, n, 6*n, 0, 0)
+	return append(out, u16s(pairs...)...)
+}
+
+// kernOT builds a table kern of Microsoft with the subtables.
+func kernOT(subtables ...[]byte) []byte {
+	out := u16s(0, len(subtables))
+	for _, st := range subtables {
+		out = append(out, st...)
+	}
+	return out
+}
+
+// withLength gives the chain of morx or the subtable with the length at
+// the byte offset at in place of its length.
+func withLength(data []byte, at, length int) []byte {
+	out := slices.Clone(data)
+	copy(out[at:], u32s(uint32(length)))
+	return out
+}
+
+// withCoverage gives the chain of morx with a glyph coverage of version 3
+// after its subtables, which holds the offsets and room for one bitfield,
+// and with its length.
+func withCoverage(chain []byte, offsets ...uint32) []byte {
+	out := append(slices.Clone(chain), u32s(offsets...)...)
+	out = append(out, make([]byte, 4096)...)
+	return withLength(out, 4, len(out))
+}
+
+// TestAATTableErrors: tables kern, kerx and morx with an error, or with a
+// subtable that HarfBuzz does not apply. A subtable kerns a, b by -300, or
+// replaces a with b or c with x:
+//   - In kern, a subtable of format 0 has more pairs than its length holds.
+//     HarfBuzz refuses the table, except when the subtable is the last
+//     one, whose length it ignores, as for some versions of Calibri. It
+//     refuses a table whose last subtable is longer than the table, and a
+//     subtable shorter than its header. It does not apply a subtable of an
+//     unknown format, and applies the subtables after it.
+//   - In kerx, HarfBuzz refuses the whole table when a subtable after the
+//     first one is longer than the table, when a subtable is shorter than
+//     its header, and when a subtable that is not the last has more pairs
+//     than its length holds. It does not apply a subtable of an unknown
+//     format, and applies the subtables after it. In version 3, it refuses
+//     the table when the glyph coverage of a subtable is not in the table.
+//   - In morx, HarfBuzz refuses the whole table when a chain after the
+//     first one is longer than the table, when a chain is shorter than its
+//     header, and when a subtable is shorter than its header. It does not
+//     apply a subtable of an unknown type, and finds the next chain at the
+//     length of a chain, after the glyph coverage of version 3. It refuses
+//     the table when the glyph coverage of a subtable is not in the table.
+func TestAATTableErrors(t *testing.T) {
+	for _, kern := range [][]byte{
+		kernOT(kernPairs(14, robotoA, robotoB, -300)),
+		kernOT(kernPairs(20+100, robotoA, robotoB, -300)),
+		kernOT(u16s(0, 14, 1, 2, 12, 1, 0), kernPairs(20, robotoA, robotoB, -300)),
+		kernOT(kernPairs(0), kernPairs(20, robotoA, robotoB, -300)),
+		kernOT(u16s(0, 8, 5<<8|1, 0), kernPairs(20, robotoA, robotoB, -300)),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab")
+	}
+
+	// coverage3 gives the table kerx in version 3, with the offsets of its
+	// glyph coverage and room for one bitfield.
+	pairs := kerxPairs(robotoA, robotoB, -300)
+	coverage3 := func(kerx []byte, offsets ...uint32) []byte {
+		out := append(slices.Clone(kerx), u32s(offsets...)...)
+		out = append(out, make([]byte, 4096)...)
+		out[1] = 3
+		return out
+	}
+	for _, kerx := range [][]byte{
+		kerxTable(pairs, kerxSubtable{data: u32s(0, 0, 0, 0), length: 1000}),
+		kerxTable(kerxSubtable{coverage: 3, data: u32s(0)}, pairs),
+		kerxTable(kerxSubtable{data: u32s(0, 0, 0, 0), length: 8}, pairs),
+		kerxTable(kerxSubtable{data: u32s(1, 6, 0, 0)}, pairs),
+		coverage3(kerxTable(kerxPairs(), pairs), 0, 0xFFFFFFFF),
+		coverage3(kerxTable(kerxPairs(), pairs), 0, 8),
+		coverage3(kerxTable(kerxPairs(), pairs), 0, 4096),
+		coverage3(kerxTable(kerxPairs(), pairs), 0, 100000),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab")
+	}
+
+	ab := morxChain(morxSubtable{morxNoncontextual, lookup8(robotoA, robotoB)})
+	cx := morxChain(morxSubtable{morxNoncontextual, lookup8(robotoC, robotoX)})
+	unknown := morxSubtable{0x20000003, u32s(0)}
+	padded := withLength(append(slices.Clone(ab), 0, 0, 0, 0), 4, len(ab)+4)
+	twoSubtables := morxChain(morxSubtable{morxNoncontextual, lookup8(robotoA, robotoB)},
+		morxSubtable{morxNoncontextual, lookup8(robotoC, robotoX)})
+	for _, test := range []struct {
+		version int
+		chains  [][]byte
+	}{
+		{2, [][]byte{ab, withLength(cx, 4, 1000)}},
+		{2, [][]byte{cx, withLength(ab, 4, 8)}},
+		{2, [][]byte{morxChain(unknown, morxSubtable{morxNoncontextual, lookup8(robotoA, robotoB)})}},
+		{2, [][]byte{padded, cx}},
+		{2, [][]byte{withLength(twoSubtables, 16, 8)}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 0xFFFFFFFF)}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 4)}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 4096)}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 100000)}},
+	} {
+		morx := morxTable(test.chains...)
+		morx[1] = byte(test.version)
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ac", "ab")
+	}
+}

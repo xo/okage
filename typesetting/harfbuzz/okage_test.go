@@ -1317,3 +1317,114 @@ func TestKernFormat1ValueTable(t *testing.T) {
 		{"ac", []shapedGlyph{{robotoA, 0, 1144, 30, 0}, {robotoC, 1, 1092, 20, 0}}},
 	})
 }
+
+// kernPairs builds a subtable of format 0 of a table kern of Microsoft,
+// with the length and the pairs, each a left glyph, a right glyph and a
+// value.
+func kernPairs(length int, pairs ...int) []byte {
+	n := len(pairs) / 3
+	out := u16s(0, length, 1, n, 6*n, 0, 0)
+	return append(out, u16s(pairs...)...)
+}
+
+// kernOT builds a table kern of Microsoft with the subtables.
+func kernOT(subtables ...[]byte) []byte {
+	out := u16s(0, len(subtables))
+	for _, st := range subtables {
+		out = append(out, st...)
+	}
+	return out
+}
+
+// withLength gives the chain of morx or the subtable with the length at
+// the byte offset at in place of its length.
+func withLength(data []byte, at, length int) []byte {
+	out := slices.Clone(data)
+	copy(out[at:], u32s(uint32(length)))
+	return out
+}
+
+// withCoverage gives the chain of morx with a glyph coverage of version 3
+// after its subtables, which holds the offsets and room for one bitfield,
+// and with its length.
+func withCoverage(chain []byte, offsets ...uint32) []byte {
+	out := append(slices.Clone(chain), u32s(offsets...)...)
+	out = append(out, make([]byte, 4096)...)
+	return withLength(out, 4, len(out))
+}
+
+// TestAATTableErrors shapes ab or ac with tables kern, kerx and morx with
+// an error, or with a subtable that HarfBuzz 15.1.0 does not apply. A
+// subtable kerns a, b by -300, or replaces a with b or c with x. As in
+// HarfBuzz:
+//   - A table kern or kerx is refused when a subtable that is not the last
+//     has more pairs than its length holds. The length of the last subtable
+//     is ignored.
+//   - A table kerx or morx is refused when a subtable or a chain after the
+//     first one is longer than the table, when a chain or a subtable is
+//     shorter than its header, or when the glyph coverage of version 3 is
+//     not in the table. go-text kept the subtables or the chains before
+//     the error.
+//   - A subtable of an unknown format or type does not apply, and the
+//     subtables after it apply. go-text refused it and the subtables after
+//     it.
+//   - The next chain of morx starts at the length of a chain. go-text read
+//     it after the subtables.
+//
+// (D73)
+func TestAATTableErrors(t *testing.T) {
+	kerned := []shapedText{{"ab", []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoB, 1, 999, -150, 0}}}}
+	plain := []shapedText{{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}}}
+	for _, test := range []struct {
+		kern []byte
+		want []shapedText
+	}{
+		{kernOT(kernPairs(14, int(robotoA), int(robotoB), -300)), kerned},
+		{kernOT(u16s(0, 14, 1, 2, 12, 1, 0), kernPairs(20, int(robotoA), int(robotoB), -300)), plain},
+		{kernOT(kernPairs(0), kernPairs(20, int(robotoA), int(robotoB), -300)), plain},
+		{kernOT(u16s(0, 8, 5<<8|1, 0), kernPairs(20, int(robotoA), int(robotoB), -300)), kerned},
+	} {
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": test.kern}), test.want)
+	}
+
+	pairs := kerxPairs(int(robotoA), int(robotoB), -300)
+	version3 := func(kerx []byte, offsets ...uint32) []byte {
+		out := append(slices.Clone(kerx), u32s(offsets...)...)
+		out = append(out, make([]byte, 4096)...)
+		out[1] = 3
+		return out
+	}
+	for _, test := range []struct {
+		kerx []byte
+		want []shapedText
+	}{
+		{kerxTable(pairs, kerxSubtable{data: u32s(0, 0, 0, 0), length: 1000}), plain},
+		{kerxTable(kerxSubtable{coverage: 3, data: u32s(0)}, pairs), kerned},
+		{kerxTable(kerxSubtable{data: u32s(1, 6, 0, 0)}, pairs), plain},
+		{version3(kerxTable(kerxPairs(), pairs), 0, 8), kerned},
+		{version3(kerxTable(kerxPairs(), pairs), 0, 4096), plain},
+	} {
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": test.kerx}), test.want)
+	}
+
+	ab := morxChain(morxSubtable{morxNoncontextual, lookup8(robotoA, int(robotoB))})
+	cx := morxChain(morxSubtable{morxNoncontextual, lookup8(robotoC, int(robotoX))})
+	padded := withLength(append(slices.Clone(ab), 0, 0, 0, 0), 4, len(ab)+4)
+	for _, test := range []struct {
+		version int
+		chains  [][]byte
+		want    []shapedGlyph
+	}{
+		{2, [][]byte{ab, withLength(cx, 4, 1000)}, []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+		{2, [][]byte{cx, withLength(ab, 4, 8)}, []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+		{2, [][]byte{morxChain(morxSubtable{0x20000003, u32s(0)}, morxSubtable{morxNoncontextual, lookup8(robotoA, int(robotoB))})},
+			[]shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+		{2, [][]byte{padded, cx}, []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoX, 1, 1015, 0, 0}}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 4)}, []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoX, 1, 1015, 0, 0}}},
+		{3, [][]byte{withCoverage(ab, 0), withCoverage(cx, 4096)}, []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+	} {
+		morx := morxTable(test.chains...)
+		morx[1] = byte(test.version)
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{{"ac", test.want}})
+	}
+}

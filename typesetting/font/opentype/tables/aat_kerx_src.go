@@ -33,6 +33,11 @@ func (ks *KerxSubtable) parseEnd(src []byte, _ int) (int, error) {
 	if L := len(src); L < int(ks.length) {
 		return 0, fmt.Errorf("EOF: expected length: %d, got %d", ks.length, L)
 	}
+	// okage: HarfBuzz 15.1.0 refuses a subtable shorter than its header
+	// (D73).
+	if ks.length < 12 {
+		return 0, fmt.Errorf("invalid kerx subtable length: %d", ks.length)
+	}
 	ks.readKerx1Values(src[:ks.length])
 	return int(ks.length), nil
 }

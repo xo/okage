@@ -47,10 +47,58 @@ type MorxChainSubtable struct {
 	Data MorxSubtable `unionField:"version"`
 }
 
+// checkGlyphCoverage checks the glyph coverage of the subtables of a chain
+// of morx of version 3, which follows the subtables. src starts at the
+// chain.
+//
+// okage: HarfBuzz 15.1.0 refuses the table when the check fails (D73).
+func (mc *MorxChain) checkGlyphCoverage(src []byte, nGlyphs int) error {
+	end := 16 + 12*len(mc.Features)
+	for _, st := range mc.Subtables {
+		end += int(st.length)
+	}
+	if end > len(src) {
+		return errors.New("invalid morx glyph coverage offset")
+	}
+	return checkSubtableGlyphCoverage(src[end:], len(mc.Subtables), nGlyphs)
+}
+
+// checkSubtableGlyphCoverage checks the glyph coverage of count subtables
+// at the start of src, which a table morx of version 3 has after the
+// subtables of each chain, and a table kerx of version 3 or more after its
+// subtables. It is an offset for each subtable, from the start of src to
+// a bitfield of nGlyphs bits. An offset of 0 or 0xFFFFFFFF gives no
+// bitfield.
+//
+// okage: this is the sanitizer of SubtableGlyphCoverage of HarfBuzz
+// 15.1.0, which refuses the table when a bitfield is not in the table.
+// go-text did not read the glyph coverage (D73).
+func checkSubtableGlyphCoverage(src []byte, count, nGlyphs int) error {
+	if uint64(len(src)) < 4*uint64(count) {
+		return fmt.Errorf("EOF: expected length: %d, got %d", 4*uint64(count), len(src))
+	}
+	size := uint64(nGlyphs+7) / 8
+	for i := range count {
+		offset := binary.BigEndian.Uint32(src[4*i:])
+		if offset == 0 || offset == 0xFFFFFFFF {
+			continue
+		}
+		if uint64(offset)+size > uint64(len(src)) {
+			return fmt.Errorf("invalid glyph coverage offset: %d", offset)
+		}
+	}
+	return nil
+}
+
 // check and return the subtable length
 func (mc *MorxChainSubtable) parseEnd(src []byte, _ int) (int, error) {
 	if L := len(src); L < int(mc.length) {
 		return 0, fmt.Errorf("EOF: expected length: %d, got %d", mc.length, L)
+	}
+	// okage: HarfBuzz 15.1.0 refuses a subtable shorter than its header
+	// (D73).
+	if mc.length < 12 {
+		return 0, fmt.Errorf("invalid morx subtable length: %d", mc.length)
 	}
 	return int(mc.length), nil
 }

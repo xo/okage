@@ -294,7 +294,17 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 
 		offset := 8
 		for i := 0; i < arrayLength; i++ {
-			elem, read, err := ParseKerxSubtable(src[offset:], valuesCount)
+			// okage: the data of a subtable must be in its length, except
+			// for the last subtable, whose length HarfBuzz 15.1.0 ignores.
+			// go-text read the data of each subtable up to the end of the
+			// table (D73).
+			sub := src[offset:]
+			if i < arrayLength-1 && len(sub) >= 4 {
+				if length := binary.BigEndian.Uint32(sub); uint64(length) <= uint64(len(sub)) {
+					sub = sub[:length]
+				}
+			}
+			elem, read, err := ParseKerxSubtable(sub, valuesCount)
 			if err != nil {
 				return item, 0, fmt.Errorf("reading Kerx: %s", err)
 			}
@@ -307,6 +317,13 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 			offset += read
 		}
 		n = offset
+		// okage: in version 3 or more, the glyph coverage of the
+		// subtables follows the subtables (D73).
+		if item.version >= 3 {
+			if err := checkSubtableGlyphCoverage(src[offset:], arrayLength, valuesCount); err != nil {
+				return item, 0, fmt.Errorf("reading Kerx: %s", err)
+			}
+		}
 	}
 	return item, n, nil
 }
@@ -585,7 +602,8 @@ func ParseKerxSubtable(src []byte, valuesCount int) (KerxSubtable, int, error) {
 		case kerxSTVersion6:
 			item.Data, read, err = ParseKerxData6(src[12:], src, int(item.TupleCount), int(valuesCount))
 		default:
-			err = fmt.Errorf("unsupported KerxDataVersion %d", item.version)
+			// okage: HarfBuzz 15.1.0 accepts a subtable of another format, and
+			// does not apply it (D73).
 		}
 		if err != nil {
 			return item, 0, fmt.Errorf("reading KerxSubtable: %s", err)
