@@ -248,3 +248,45 @@ func TestFontWeight(t *testing.T) {
 		}
 	}
 }
+
+// fixedShaper is a textSink that gives each character a cluster of two
+// glyphs with the advances 30 and 20, and the ascent 40.
+type fixedShaper struct{}
+
+func (fixedShaper) shapeText(_, _, _ string, text []rune, _ float64) ([]shapedCluster, float64, bool) {
+	var clusters []shapedCluster
+	for _, c := range text {
+		clusters = append(clusters, shapedCluster{text: string(c), advance: 50, glyphs: []shapedGlyph{
+			{scale: 1, dx: 2, pen: 0},
+			{scale: 1, dx: 33, pen: 30},
+		}})
+	}
+	return clusters, 40, true
+}
+
+// TestShapedTracking checks the tracking of a text that the sink shapes
+// (D82). As ThorVG does, it scales each advance by 1 plus the tracking over
+// the ascent, and keeps the factor 1 when that factor is negative. At the
+// size 100, the tracking 200 is 20 pixels, and so the factor is 1.5.
+func TestShapedTracking(t *testing.T) {
+	for _, c := range []struct {
+		tracking, advance, dx float64
+	}{
+		{0, 50, 33},
+		{200, 75, 48},
+		{-100, 37.5, 25.5},
+		{-500, 50, 33},
+	} {
+		doc := &TextDocument{Font: "Shaped", Size: 100, Tracking: c.tracking}
+		units, ascent := textUnits("ab", nil, doc, 1, c.tracking*0.1, fixedShaper{})
+		if len(units) != 2 || ascent != 40 {
+			t.Fatalf("tracking %v: %d units and the ascent %v", c.tracking, len(units), ascent)
+		}
+		for _, u := range units {
+			if u.advance != c.advance || u.shaped[0].dx != 2 || u.shaped[1].dx != c.dx {
+				t.Errorf("tracking %v: the advance %v and the offsets %v and %v, want %v, 2 and %v",
+					c.tracking, u.advance, u.shaped[0].dx, u.shaped[1].dx, c.advance, c.dx)
+			}
+		}
+	}
+}

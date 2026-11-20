@@ -63,6 +63,27 @@ func TestGaussianBlurEffect(t *testing.T) {
 	}
 }
 
+// TestGaussianBlurCanvasEdge checks that the Gaussian blur repeats the
+// pixels at the edge of the canvas outside it, as ThorVG does (D82). A
+// rectangle that covers the left half of the canvas stays opaque at the left
+// edge, and the blur still spreads its right edge.
+func TestGaussianBlurCanvasEdge(t *testing.T) {
+	data := fmt.Appendf(nil, `{"v": "5.7.0", "fr": 30, "ip": 0, "op": 10, "w": 100, "h": 100, "layers": [
+		{"ty": 4, "ind": 1, "ip": 0, "op": 10, "st": 0, "ks": {"p": {"a": 0, "k": [0, 0]}},
+		 "ef": [{"ty": 29, "ef": [{"v": {"a": 0, "k": 30}}, {"v": {"a": 0, "k": 1}}, {"v": {"a": 0, "k": 0}}]}],
+		 "shapes": [%s, %s]}
+	]}`, rect(10, 50, 100, 140), red)
+	pm := render(t, data, 0)
+	for _, y := range []uint32{0, 50, 99} {
+		if a := pixel(t, pm, 0, y)[3]; a < 250 {
+			t.Errorf("the pixel (0, %d) has the alpha %d", y, a)
+		}
+	}
+	if a := pixel(t, pm, 60, 50)[3]; a == 0 || a == 255 {
+		t.Errorf("the pixel (60, 50) has the alpha %d", a)
+	}
+}
+
 // TestDropShadowEffect checks the drop shadow of a layer: at the angle 180
 // and the distance 15, the shadow lies 15 pixels below the square, in its
 // color and its opacity, and the square stays above it.

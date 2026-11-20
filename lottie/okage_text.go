@@ -30,7 +30,9 @@ type TextDocument struct {
 	// Justify is the share of the free space of a line on the left of the
 	// line: 0 for the left, 0.5 for the center and 1 for the right.
 	Justify float64
-	// Tracking is the space after each glyph, in thousandths of an em.
+	// Tracking is the space after each glyph of the list chars, in
+	// thousandths of an em. For a glyph that the sink shapes, it scales the
+	// advance instead, as ThorVG does (D82).
 	Tracking float64
 	// LineHeight is the distance from one baseline to the next, in pixels.
 	LineHeight float64
@@ -215,11 +217,13 @@ type textUnit struct {
 
 // shapedGlyph is a glyph that a textSink shaped: its outline in font units
 // with y up, the pixels per font unit, and its offset from the origin of its
-// cluster, in pixels with y down.
+// cluster, in pixels with y down. pen is the part of dx that the advances of
+// the glyphs before it in its cluster give.
 type shapedGlyph struct {
 	path   []kurbo.PathEl
 	scale  float64
 	dx, dy float64
+	pen    float64
 }
 
 // shapedCluster is a cluster of characters that a textSink shaped.
@@ -358,10 +362,25 @@ func textUnits(text string, font *Font, doc *TextDocument, scale, tracking float
 				units = append(units, textUnit{space: c == ' '})
 			}
 		}
+		// ThorVG multiplies each advance of a font that it shapes by the
+		// factor 1 plus the tracking over the ascent of the font, and does
+		// not add the tracking (D82). It keeps the factor 1 when the factor
+		// is negative.
+		spacing := 1.0
+		if ascent > 0 {
+			spacing = 1 + tracking/ascent
+		}
+		if spacing < 0 {
+			spacing = 1
+		}
 		for _, c := range clusters {
 			u := textUnit{space: c.text == " ", drawn: len(c.glyphs) > 0, shaped: c.glyphs}
 			if u.drawn {
-				u.advance = c.advance + tracking
+				u.advance = c.advance * spacing
+				for i := range u.shaped {
+					g := &u.shaped[i]
+					g.dx += float64(g.pen * (spacing - 1))
+				}
 			}
 			units = append(units, u)
 		}

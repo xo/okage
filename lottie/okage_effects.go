@@ -69,13 +69,18 @@ func (s *PixmapSink) applyFilter(l *sinkLayer) pixRect {
 	case EffectGaussianBlur:
 		sx, ex := thorvgBlur(f.StdDeviation.X * scale)
 		sy, ey := thorvgBlur(f.StdDeviation.Y * scale)
-		if ex == 0 && ey == 0 {
+		if (ex == 0 && ey == 0) || l.dirty.empty() {
 			return l.dirty
 		}
-		region := s.grow(l.dirty, blurPad(sx), blurPad(sy))
-		buf := copyRegion(l.pixmap, region)
-		boxblur.Apply(sx, sy, buf, uint32(region.x1-region.x0), uint32(region.y1-region.y0))
-		pasteRegion(l.pixmap, region, buf)
+		// ThorVG blurs the pixels of the layer that the canvas holds, and
+		// repeats the pixels at the edge of that region outside it (D82).
+		// So the blur reads the pixels around the canvas from a copy that
+		// repeats the edge of the canvas.
+		outer := pixRect{l.dirty.x0 - blurPad(sx), l.dirty.y0 - blurPad(sy), l.dirty.x1 + blurPad(sx), l.dirty.y1 + blurPad(sy)}
+		buf := copyRegionClamped(l.pixmap, outer)
+		boxblur.Apply(sx, sy, buf, uint32(outer.x1-outer.x0), uint32(outer.y1-outer.y0))
+		region := outer.intersect(s.canvas())
+		pasteRegionFrom(l.pixmap, region, buf, outer)
 		return region
 	case EffectDropShadow:
 		return s.dropShadow(l, scale)
@@ -94,30 +99,42 @@ func blurPad(sigma float64) int {
 	return int(math.Ceil(4*sigma)) + 2
 }
 
-// grow returns r grown by dx and dy pixels on each side, within the canvas.
-func (s *PixmapSink) grow(r pixRect, dx, dy int) pixRect {
-	return pixRect{r.x0 - dx, r.y0 - dy, r.x1 + dx, r.y1 + dy}.intersect(s.canvas())
-}
-
-// copyRegion returns the RGBA bytes of the pixels of p in r.
-func copyRegion(p *okage.Pixmap, r pixRect) []byte {
+// copyRegionClamped returns the RGBA bytes of the pixels of p in r, where r
+// can reach outside p. A pixel outside p repeats the nearest pixel at the
+// edge of p, as _gaussianEdgeExtend of ThorVG reads it (D82).
+func copyRegionClamped(p *okage.Pixmap, r pixRect) []byte {
 	w := r.x1 - r.x0
+	pw, ph := int(p.Width()), int(p.Height())
 	data := p.Data()
-	stride := int(p.Width()) * 4
+	stride := pw * 4
 	buf := make([]byte, w*(r.y1-r.y0)*4)
 	for y := r.y0; y < r.y1; y++ {
-		copy(buf[(y-r.y0)*w*4:], data[y*stride+r.x0*4:y*stride+r.x1*4])
+		row := data[min(max(y, 0), ph-1)*stride:]
+		out := buf[(y-r.y0)*w*4:]
+		x := r.x0
+		for ; x < min(0, r.x1); x++ {
+			copy(out[(x-r.x0)*4:(x-r.x0+1)*4], row[:4])
+		}
+		if x0, x1 := max(r.x0, 0), min(r.x1, pw); x0 < x1 {
+			copy(out[(x0-r.x0)*4:], row[x0*4:x1*4])
+			x = x1
+		}
+		for x = max(x, pw); x < r.x1; x++ {
+			copy(out[(x-r.x0)*4:(x-r.x0+1)*4], row[(pw-1)*4:pw*4])
+		}
 	}
 	return buf
 }
 
-// pasteRegion writes the RGBA bytes of buf to the pixels of p in r.
-func pasteRegion(p *okage.Pixmap, r pixRect, buf []byte) {
-	w := r.x1 - r.x0
+// pasteRegionFrom writes the pixels of r from buf, which holds the RGBA
+// bytes of the pixels of outer, to the pixels of p. outer holds r.
+func pasteRegionFrom(p *okage.Pixmap, r pixRect, buf []byte, outer pixRect) {
+	w := outer.x1 - outer.x0
 	data := p.DataMut()
 	stride := int(p.Width()) * 4
 	for y := r.y0; y < r.y1; y++ {
-		copy(data[y*stride+r.x0*4:y*stride+r.x1*4], buf[(y-r.y0)*w*4:(y-r.y0+1)*w*4])
+		i := ((y-outer.y0)*w + r.x0 - outer.x0) * 4
+		copy(data[y*stride+r.x0*4:y*stride+r.x1*4], buf[i:i+(r.x1-r.x0)*4])
 	}
 }
 
@@ -145,28 +162,31 @@ func (s *PixmapSink) dropShadow(l *sinkLayer, scale float64) pixRect {
 	oy := int(scale * (f.Offset.X*sin + f.Offset.Y*cos))
 	sigma, extends := thorvgBlur(f.ShadowStdDeviation * scale)
 
-	// The alpha of the layer, blurred, in the pixels of blurred.
+	// The alpha of the layer, blurred, in the pixels of blurred. The blur
+	// repeats the pixels at the edge of the canvas outside it, as ThorVG
+	// does (D82). The shadow moves only the pixels of the canvas.
 	pad := blurPad(sigma)
-	blurred := s.grow(l.dirty, pad, pad)
+	blurred := pixRect{l.dirty.x0 - pad, l.dirty.y0 - pad, l.dirty.x1 + pad, l.dirty.y1 + pad}
+	inside := blurred.intersect(s.canvas())
 	bw, bh := blurred.x1-blurred.x0, blurred.y1-blurred.y0
-	alpha := copyRegion(l.pixmap, blurred)
+	alpha := copyRegionClamped(l.pixmap, blurred)
 	for i := 0; i < len(alpha); i += 4 {
 		alpha[i], alpha[i+1], alpha[i+2] = 0, 0, 0
 	}
 	if extends > 0 {
 		boxblur.Apply(sigma, sigma, alpha, uint32(bw), uint32(bh))
 	}
-	moved := pixRect{blurred.x0 + ox, blurred.y0 + oy, blurred.x1 + ox, blurred.y1 + oy}
+	moved := pixRect{inside.x0 + ox, inside.y0 + oy, inside.x1 + ox, inside.y1 + oy}
 	region := l.dirty.union(moved).intersect(s.canvas())
 	data := l.pixmap.DataMut()
 	stride := int(s.width) * 4
 	for y := region.y0; y < region.y1; y++ {
-		sy := y - oy - blurred.y0
+		py := y - oy
 		for x := region.x0; x < region.x1; x++ {
-			sx := x - ox - blurred.x0
+			px := x - ox
 			sa := 0
-			if sx >= 0 && sy >= 0 && sx < bw && sy < bh {
-				sa = div255(int(alpha[(sy*bw+sx)*4+3]) * a8)
+			if px >= inside.x0 && py >= inside.y0 && px < inside.x1 && py < inside.y1 {
+				sa = div255(int(alpha[((py-blurred.y0)*bw+px-blurred.x0)*4+3]) * a8)
 			}
 			if sa == 0 {
 				continue

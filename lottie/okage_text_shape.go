@@ -183,6 +183,7 @@ func (s *PixmapSink) shapeText(name, family, style string, text []rune, size flo
 				scale: k,
 				dx:    (x + fromFixed(g.XOffset) - pen) * k,
 				dy:    -fromFixed(g.YOffset) * k,
+				pen:   (x - pen) * k,
 			})
 			x += fromFixed(g.Advance)
 		}

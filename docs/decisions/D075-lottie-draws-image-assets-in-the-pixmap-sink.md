@@ -1,6 +1,6 @@
 # D75. lottie draws image assets in the pixmap sink
 
-Status: Decided, amends D41.
+Status: Decided, amends D41, amended by D82.
 
 velato parses the image assets and the image layers of a Lottie file, and
 gives each image to the sink with `DrawImage`. velato leaves the decoding of

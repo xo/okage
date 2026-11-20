@@ -17,5 +17,6 @@
 // archive with a PNG file, and needs no corpus, because it makes them itself
 // (D75). TestThorVGText and TestThorVGEffects compare text layers, Gaussian
 // blurs and drop shadows in the same way, with files that they make too
-// (D79). The package has no code of its own.
+// (D79). The tests of compat_test.go compare the prototypes of D82 in the
+// same way, with files that they make. The package has no code of its own.
 package lottie

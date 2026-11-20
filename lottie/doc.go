@@ -1,5 +1,5 @@
 // Package lottie renders Lottie animations with okage. It is a port of the
-// crate velato, with the changes of D42, D43 and D79 (D41).
+// crate velato, with the changes of D42, D43, D79 and D82 (D41).
 //
 // Parse reads a Lottie file into a Composition. RenderFrame draws a frame of
 // it onto an okage pixmap:

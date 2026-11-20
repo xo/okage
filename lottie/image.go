@@ -220,6 +220,11 @@ func (s *PixmapSink) DrawImage(asset *ImageAsset, transform kurbo.Affine, alpha 
 	if !ok {
 		return
 	}
+	// ThorVG fades the edge of an image that turns by an angle that is not
+	// a multiple of 90 degrees over one pixel of the image (D82).
+	if s.drawTurnedImage(target, p, ts, alpha) {
+		return
+	}
 	s.touch(s.bounds(ts, kurbo.NewRect(0, 0, iw, ih).PathElements(0.1), 0))
 	// ThorVG samples a scaled image with a bilinear filter.
 	paint := okage.DefaultPaint()
