@@ -345,11 +345,16 @@ func (pp *PairPos) Sanitize() error {
 			return fmt.Errorf("GPOS: invalid PairPos1 sets count (%d > %d)", exp, got)
 		}
 	} else if f2, isFormat2 := pp.Data.(PairPosData2); isFormat2 {
-		if exp, got := f2.ClassDef1.Extent(), int(f2.class1Count); exp != got {
-			return fmt.Errorf("GPOS: invalid PairPos2 class1 count (%d != %d)", exp, got)
-		}
-		if exp, got := f2.ClassDef2.Extent(), int(f2.class2Count); exp != got {
-			return fmt.Errorf("GPOS: invalid PairPos2 class2 count (%d != %d)", exp, got)
+		// okage: the class counts can differ from the classes of the class
+		// definitions, as in HarfBuzz. HarfBuzz makes sure that the
+		// subtable holds the records of the counts, and the lookup does not
+		// apply to a class outside the counts. Lookup 74 of
+		// Amiri-Regular.ttf of perf_reference has a class1Count of 80 with
+		// 79 classes, and go-text dropped the whole table GPOS (D73).
+		const headerSize = 16
+		recordSize := (f2.ValueFormat1.size() + f2.ValueFormat2.size()) * 2
+		if exp, got := headerSize+int(f2.class1Count)*int(f2.class2Count)*recordSize, len(f2.classData); got < exp {
+			return fmt.Errorf("GPOS: invalid PairPos2 class records (EOF: expected length: %d, got %d)", exp, got)
 		}
 	}
 	return nil

@@ -57,6 +57,13 @@ func positionStartGPOS(buffer *Buffer) {
 }
 
 func propagateAttachmentOffsets(pos []GlyphPosition, i int, direction Direction) {
+	propagateAttachmentOffsetsNested(pos, i, direction, maxNestingLevel)
+}
+
+// okage: HarfBuzz 15.1.0 follows a chain of attachments to at most
+// HB_MAX_NESTING_LEVEL glyphs, and the glyph at that depth does not take
+// the offset of its parent. go-text followed the whole chain (D73).
+func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Direction, nestingLevel int) {
 	/* Adjusts offsets of attached glyphs (both cursive and mark) to accumulate
 	 * offset of glyph they are attached to. */
 	chain, type_ := pos[i].attachChain, pos[i].attachType
@@ -69,8 +76,12 @@ func propagateAttachmentOffsets(pos []GlyphPosition, i int, direction Direction)
 		return
 	}
 
+	if nestingLevel == 0 {
+		return
+	}
+
 	if pos[j].attachChain != 0 {
-		propagateAttachmentOffsets(pos, j, direction)
+		propagateAttachmentOffsetsNested(pos, j, direction, nestingLevel-1)
 	}
 
 	//   assert (!!(type_ & attachTypeMark) ^ !!(type_ & attachTypeCursive));
@@ -376,6 +387,12 @@ func (c *otApplyContext) applyGPOSPair2(inner tables.PairPosData2) bool {
 	}
 
 	class1, _ := inner.ClassDef1.Class(gID(glyphID))
+	// okage: a class outside the class counts does not apply, as in
+	// HarfBuzz. The sanitizer no longer refuses such a class (D73).
+	if class1 >= inner.Class1Count() || class2 >= inner.Class2Count() {
+		buffer.unsafeToConcat(buffer.idx, skippyIter.idx+1)
+		return false
+	}
 	vals := inner.Record(class1, class2)
 
 	ap1 := c.applyGPOSValueRecord(inner.ValueFormat1, vals.ValueRecord1, buffer.curPos(0))

@@ -369,7 +369,11 @@ func (b *Buffer) skipGlyph() { b.idx++ }
 // The start index will be from out-buffer if [fromOutBuffer] is true.
 // If [interior] is true, then the cluster having the minimum value is skipped.
 func (b *Buffer) setGlyphFlags(mask GlyphMask, start, end int, interior, fromOutBuffer bool) {
-	if end != maxInt && end-start > 255 {
+	// okage: HarfBuzz computes end - start without a sign, so it also
+	// returns when end is before start. This happens when start is in the
+	// output buffer and the output buffer is longer than idx. go-text then
+	// set the flags and took the operations for them (D73).
+	if end != maxInt && uint(end-start) > 255 {
 		return
 	}
 
@@ -428,35 +432,42 @@ func (b *Buffer) setMasks(value, mask GlyphMask, clusterStart, clusterEnd int) {
 
 // performs the merge without checks
 func (b *Buffer) mergeClustersImpl(start, end int) {
-	b.maxOps -= end - start
-
 	cluster := b.Info[start].Cluster
 
 	for i := start + 1; i < end; i++ {
 		cluster = min(cluster, b.Info[i].Cluster)
 	}
 
-	// Extend end
-	if cluster != b.Info[end-1].Cluster {
-		for end < len(b.Info) && b.Info[end-1].Cluster == b.Info[end].Cluster {
-			end++
+	// okage: the operations include the glyphs of the extension, and the
+	// extension stops when the buffer has no operations left, as in
+	// HarfBuzz 15.1.0. go-text took only end - start (D73).
+	if b.maxOps >= 0 {
+		// Extend end
+		if cluster != b.Info[end-1].Cluster {
+			for end < len(b.Info) && b.Info[end-1].Cluster == b.Info[end].Cluster {
+				end++
+			}
+		}
+
+		// Extend start
+		if cluster != b.Info[start].Cluster {
+			for b.idx < start && b.Info[start-1].Cluster == b.Info[start].Cluster {
+				start--
+			}
+		}
+
+		// If we hit the start of buffer, continue in out-buffer.
+		if b.idx == start && b.Info[start].Cluster != cluster {
+			startC := b.Info[start].Cluster
+			i := len(b.outInfo)
+			for ; i != 0 && b.outInfo[i-1].Cluster == startC; i-- {
+				b.outInfo[i-1].setCluster(cluster, 0)
+			}
+			b.maxOps -= len(b.outInfo) - i
 		}
 	}
 
-	// Extend start
-	if cluster != b.Info[start].Cluster {
-		for b.idx < start && b.Info[start-1].Cluster == b.Info[start].Cluster {
-			start--
-		}
-	}
-
-	// If we hit the start of buffer, continue in out-buffer.
-	if b.idx == start && b.Info[start].Cluster != cluster {
-		startC := b.Info[start].Cluster
-		for i := len(b.outInfo); i != 0 && b.outInfo[i-1].Cluster == startC; i-- {
-			b.outInfo[i-1].setCluster(cluster, 0)
-		}
-	}
+	b.maxOps -= end - start
 
 	for i := start; i < end; i++ {
 		b.Info[i].setCluster(cluster, 0)
@@ -498,12 +509,16 @@ func (b *Buffer) deleteGlyph() {
 
 	if L := len(b.outInfo); L != 0 {
 		/* Merge cluster backward. */
-		if cluster < b.outInfo[L-1].Cluster {
+		// okage: the merge takes operations, and stops when the buffer
+		// has no operations left, as in HarfBuzz 15.1.0 (D73).
+		if cluster < b.outInfo[L-1].Cluster && b.maxOps >= 0 {
 			mask := b.Info[b.idx].Mask
 			oldCluster := b.outInfo[L-1].Cluster
-			for i := L; i != 0 && b.outInfo[i-1].Cluster == oldCluster; i-- {
+			i := L
+			for ; i != 0 && b.outInfo[i-1].Cluster == oldCluster; i-- {
 				b.outInfo[i-1].setCluster(cluster, mask)
 			}
+			b.maxOps -= L - i
 		}
 		goto done
 	}
@@ -539,12 +554,16 @@ func (b *Buffer) deleteGlyphsInplace(filter func(*GlyphInfo) bool) {
 
 			if j != 0 {
 				// Merge cluster backward.
-				if cluster < info[j-1].Cluster {
+				// okage: the merge takes operations, as in HarfBuzz
+				// 15.1.0 (D73).
+				if cluster < info[j-1].Cluster && b.maxOps >= 0 {
 					mask := info[i].Mask
 					oldCluster := info[j-1].Cluster
-					for k := j; k != 0 && info[k-1].Cluster == oldCluster; k-- {
+					k := j
+					for ; k != 0 && info[k-1].Cluster == oldCluster; k-- {
 						info[k-1].setCluster(cluster, mask)
 					}
+					b.maxOps -= j - k
 				}
 				continue
 			}
@@ -917,23 +936,37 @@ func (b *Buffer) mergeOutClustersImpl(start, end int) {
 		cluster = min(cluster, b.outInfo[i].Cluster)
 	}
 
-	/* Extend start */
-	for start != 0 && b.outInfo[start-1].Cluster == b.outInfo[start].Cluster {
-		start--
-	}
+	// okage: the merge takes operations, and the extension stops when the
+	// buffer has no operations left, as in HarfBuzz 15.1.0. HarfBuzz also
+	// extends only when the cluster changes, which gives the same clusters
+	// (D73).
+	if b.maxOps >= 0 {
+		/* Extend start */
+		if cluster != b.outInfo[start].Cluster {
+			for start != 0 && b.outInfo[start-1].Cluster == b.outInfo[start].Cluster {
+				start--
+			}
+		}
 
-	/* Extend end */
-	for end < len(b.outInfo) && b.outInfo[end-1].Cluster == b.outInfo[end].Cluster {
-		end++
-	}
+		/* Extend end */
+		if cluster != b.outInfo[end-1].Cluster {
+			for end < len(b.outInfo) && b.outInfo[end-1].Cluster == b.outInfo[end].Cluster {
+				end++
+			}
+		}
 
-	/* If we hit the end of out-buffer, continue in buffer. */
-	if end == len(b.outInfo) {
-		endC := b.outInfo[end-1].Cluster
-		for i := b.idx; i < len(b.Info) && b.Info[i].Cluster == endC; i++ {
-			b.Info[i].setCluster(cluster, 0)
+		/* If we hit the end of out-buffer, continue in buffer. */
+		if end == len(b.outInfo) && b.outInfo[end-1].Cluster != cluster {
+			endC := b.outInfo[end-1].Cluster
+			i := b.idx
+			for ; i < len(b.Info) && b.Info[i].Cluster == endC; i++ {
+				b.Info[i].setCluster(cluster, 0)
+			}
+			b.maxOps -= i - b.idx
 		}
 	}
+
+	b.maxOps -= end - start
 
 	for i := start; i < end; i++ {
 		b.outInfo[i].setCluster(cluster, 0)

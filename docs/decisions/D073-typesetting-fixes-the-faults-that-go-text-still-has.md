@@ -19,6 +19,16 @@ them:
 
 The maintainers want these faults fixed in okage.
 
+On 2026-11-20 the maintainers added two faults that the work on the first
+four found:
+
+5. `typesetting` drops the whole table GSUB or GPOS when one subtable of a
+   lookup has an error. HarfBuzz sets the offset that fails to null, up to
+   32 offsets for each table, and keeps the rest of the table.
+6. `BenchmarkShaping` of `harfbuzz` does not end on the text
+   `perf_reference/texts/duployan.txt` in the font
+   `NotoSansDuployan-Regular.otf`, in okage and in go-text `bafa8730`.
+
 On 2026-11-20 faults 2 and 3 turned out to be faults of the fuzz tests of
 go-text, not of the library. For fault 2, UAX #14 allows a line break after
 a space before a combining mark, and UAX #29 keeps the space and the mark in
@@ -69,6 +79,107 @@ code of the library.
    `TestNotoSansVariableGPOS` and `TestMarkWithoutRecord` test it, and
    `TestTextGoVariable` of `test/krilla` compares the font with krilla
    again.
+3. Fault 6: `NotoSansDuployan-Regular.otf` makes about 60 glyphs of each
+   character. go-text gave the buffer 1024 operations for each character,
+   at least 16,384. HarfBuzz 15.1.0 gives 4096, at least 65,536, in
+   `hb-limits.hh`. The limit of the length of the buffer was 64 times the
+   text, at least 16,384, and HarfBuzz gives 256 times, at least 65,536.
+   Each line of `duployan.txt` used all its operations in go-text. A
+   context lookup then applied without a move in the buffer, and the loop
+   of the lookup did not end. HarfBuzz stops that loop when the buffer is
+   not `successful`. `harfbuzz` now has the limits of HarfBuzz 15.1.0, and
+   it stops the loop when the buffer has no operations left.
+4. The comparison of fault 6 with HarfBuzz found one more fault. A reverse
+   chaining lookup of GSUB works in place, without an output buffer.
+   go-text read the glyphs before the current glyph from the output
+   buffer, which still held the glyphs from before the last lookup.
+   HarfBuzz reads the glyphs of the buffer, and `harfbuzz` now does the
+   same. After these fixes, each of the 14 lines of `duployan.txt` gives
+   the same glyphs, clusters, advances and offsets in `harfbuzz` and in
+   HarfBuzz 15.1.0. The first 200 lines with text of
+   `fa-thelittleprince.txt` give the same output in
+   `NotoNastaliqUrdu-Regular.ttf` and `Gulzar-Regular.ttf`.
+   `BenchmarkShaping` shapes all of `duployan.txt` in one buffer in 5.2
+   seconds, and HarfBuzz takes 1.1 seconds. `TestShapeDuployan` and
+   `TestShapeWithoutOperations` test the fixes. go-text counts some
+   operations in other ways than HarfBuzz. So a text can still use all its
+   operations in `harfbuzz` and not in HarfBuzz. 5 of 20,000 random texts
+   of 2 to 15 characters of the Duployan block do, and their glyphs differ
+   from HarfBuzz.
+5. okage did not change the code for fault 5. HarfBuzz stopped setting an
+   offset that fails to null in its commits `83dc4d1d` and `665afc08` of
+   November 2025. Since then, HarfBuzz drops the whole table when a
+   subtable has an error, as `typesetting` does. A test set the offset of
+   the subtable of lookup 199 of GSUB in `Amiri-Regular.ttf` to a place
+   after the end of the table. HarfBuzz 15.1.0 then reads no script of
+   GSUB, and `harfbuzz` gives the same glyphs as HarfBuzz for two Arabic
+   texts. The maintainers then decided fault 5, as the end of this part
+   says.
+
+On 2026-11-20 the maintainers added two more faults:
+
+7. `harfbuzz` places the glyphs of `perf_reference/texts/fa-thelittleprince.txt`
+   in the font `Amiri-Regular.ttf` of `perf_reference` in another place than
+   HarfBuzz 15.1.0, on 115 of the first 200 lines. The glyphs and the
+   clusters are the same.
+8. `harfbuzz` counts the operations of a shaping in another way than
+   HarfBuzz, so that a few texts of Duployan run out of operations in okage
+   and not in HarfBuzz. `maxNestingLevel` is 6 in `harfbuzz` and 64 in
+   HarfBuzz.
+
+On 2026-11-20 the maintainers decided fault 5: when one subtable of GSUB or
+GPOS is bad, `typesetting` follows HarfBuzz. HarfBuzz 15.1.0 drops the whole
+table, as `typesetting` already does, so the code does not change. If
+HarfBuzz changes this logic again, okage follows it.
+
+On 2026-11-20 okage fixed faults 7 and 8:
+
+6. Fault 7: lookup 74 of GPOS in `Amiri-Regular.ttf` of `perf_reference`
+   holds a PairPos of format 2 with the class counts 80 and 67. Its two
+   class definitions have 79 and 66 classes. The sanitizer of go-text
+   required each count to be the number of classes of its class
+   definition. So it dropped the whole table GPOS of the font, and the
+   texts had no kerning. HarfBuzz
+   requires only that the subtable holds the records of the counts. Its
+   lookup does not apply to a class outside the counts. `typesetting` now
+   does the same, with the methods `Class1Count` and `Class2Count` of
+   `PairPosData2`. `TestPairPosClassCounts` of `font` and of `harfbuzz`
+   test it. After the fix, each of the 771 lines with text of
+   `fa-thelittleprince.txt` gives the same glyphs, clusters, advances and
+   offsets in `harfbuzz` and in HarfBuzz 15.1.0. The same is true for each
+   of the 7 fonts of `perf_reference` with each of the 7 texts, a line at
+   a time: 413,399 lines.
+7. Fault 8: `harfbuzz` now takes the operations where HarfBuzz 15.1.0
+   takes them, and has its nesting level of 64:
+   - `setGlyphFlags` returns at once for a range whose start, in the
+     output buffer, is after its end. HarfBuzz does the same, because it
+     computes the length of the range without a sign. go-text set the
+     flags and took operations for them. This was the main cause.
+   - Each nested lookup takes one operation. go-text took it only when the
+     lookup did not apply. A nesting deeper than 64 stops the shaping.
+   - A merge of clusters takes one operation for each glyph that it
+     changes or extends over, also in the output buffer and when a glyph
+     is deleted. It does not extend when the buffer has no operations
+     left.
+   - `maxNestingLevel` is 64. It also limits the chain of attachments that
+     the offsets follow, as in HarfBuzz. go-text followed the whole chain.
+   `TestShapeDuployanOperations`, `TestSetGlyphFlagsBeforeStart`,
+   `TestRecurseOperations`, `TestMergeClustersOperations` and
+   `TestAttachmentNesting` test the changes. A comparison shaped 20,000
+   random texts of 2 to 15 characters from the 147 characters of the
+   Duployan block, the format controls included. Before the fix, 3,119
+   texts gave another output than HarfBuzz, and 2,410 of them other
+   glyphs. After the fix, each text gives the same glyphs, clusters,
+   advances and offsets as HarfBuzz. 547 more texts added one or two
+   characters to the two texts that use the most operations. `harfbuzz`
+   and HarfBuzz run out of operations on the same 12 of them, and on no
+   other. `TestShapeWithoutOperations` now shapes one of the 12, because
+   its earlier text no longer runs out. Each nested lookup now costs an
+   operation, so a hostile font with deep nesting stops at the limit of
+   operations. Item 4 of "typesetting" in `docs/BACKLOG.md` lists the
+   differences from HarfBuzz that remain, which no test text shows. With
+   the flags of HarfBuzz, `FuzzParagraphLine` of `shaping` finds a
+   difference in the flag unsafe-to-break, which item 5 records.
 
 ## When upstream changes
 

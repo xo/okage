@@ -296,11 +296,14 @@ func (it *skippingIterator) next() (_ bool, unsafeTo int) {
 func (it *skippingIterator) prev() (_ bool, unsafeFrom int) {
 	stop := 0
 	outInfo, infoL := it.c.buffer.outInfo, it.c.buffer.Info
-	L := len(outInfo)
 	for it.idx > stop {
 		it.idx--
 		var info *GlyphInfo
-		if it.idx < L {
+		// okage: read outInfo only when the buffer has an output. A reverse
+		// chaining lookup of GSUB works in place, and outInfo then still
+		// holds the glyphs from before the last lookup. HarfBuzz reads
+		// out_info, which is info when there is no output (D73).
+		if it.c.buffer.haveOutput {
 			info = &outInfo[it.idx]
 		} else {
 			// we are in "position mode" : outInfo is not used anymore
@@ -908,8 +911,19 @@ func (c *otApplyContext) ligateInput(count, matchEnd int, ligGlyph gID, totalCom
 }
 
 func (c *otApplyContext) recurse(subLookupIndex uint16) bool {
-	if c.nestingLevelLeft == 0 || c.recurseFunc == nil || c.buffer.maxOps <= 0 {
-		c.buffer.maxOps--
+	// okage: each nested lookup costs one operation, as in HarfBuzz 15.1.0.
+	// go-text took the operation only when the lookup did not apply. When
+	// the nesting is too deep, HarfBuzz stops the shaping, as when the
+	// buffer has no operations left (D73).
+	if c.recurseFunc == nil {
+		return false
+	}
+	if c.nestingLevelLeft == 0 {
+		c.buffer.maxOps = min(c.buffer.maxOps, -1)
+		return false
+	}
+	c.buffer.maxOps--
+	if c.buffer.maxOps < 0 {
 		return false
 	}
 

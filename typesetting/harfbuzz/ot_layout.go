@@ -33,7 +33,9 @@ const (
 
 type otLayoutMappingCache = cache15_8_7
 
-const maxNestingLevel = 6
+// okage: HB_MAX_NESTING_LEVEL of hb-limits.hh of HarfBuzz 15.1.0. go-text
+// had 6 (D73).
+const maxNestingLevel = 64
 
 func (c *otApplyContext) applyString(proxy otProxyMeta, accel *otLayoutLookupAccelerator) {
 	buffer := c.buffer
@@ -67,7 +69,10 @@ func (c *otApplyContext) applyString(proxy otProxyMeta, accel *otLayoutLookupAcc
 func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 	buffer := c.buffer
 	ret := false
-	for {
+	// okage: stop when the buffer has no operations left, as HarfBuzz stops
+	// when buffer->successful is false. A context lookup can then apply
+	// without a move of buffer.idx, and the loop did not end (D73).
+	for buffer.maxOps >= 0 {
 		// nested lookups may reallocate buffer.Info, so read it again on every pass
 		info := buffer.Info
 		j := buffer.idx

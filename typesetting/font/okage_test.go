@@ -3,8 +3,8 @@
 package font
 
 // okage: this file is not in go-text. It tests the changes of D67 to
-// sanitizeLangSys and newCmap4, and the change of D73 to the anchors of a
-// MarkArray.
+// sanitizeLangSys and newCmap4, and the changes of D73 to the anchors of a
+// MarkArray and to the class counts of a PairPos of format 2.
 
 import (
 	"os"
@@ -128,5 +128,48 @@ func TestNotoSansVariableGPOS(t *testing.T) {
 	}
 	if got := len(lig.MarkArray.MarkAnchors); got != 281 {
 		t.Errorf("got %d mark anchors, want 281", got)
+	}
+}
+
+// TestPairPosClassCounts checks that the class counts of a PairPos of
+// format 2 can be larger than the classes of its class definitions, as in
+// HarfBuzz, and that the records of the counts must be in the subtable.
+// Lookup 74 of Amiri-Regular.ttf of perf_reference has 80 classes for the
+// first glyph and 79 in ClassDef1, and go-text dropped the whole table GPOS
+// (D73).
+func TestPairPosClassCounts(t *testing.T) {
+	src := []byte{
+		0, 2, // format 2
+		0, 28, // the coverage
+		0, 4, 0, 0, // an XAdvance for the first glyph
+		0, 34, 0, 42, // ClassDef1 and ClassDef2
+		0, 3, 0, 2, // three classes for the first glyph, but ClassDef1 has two
+		0, 0, 0, 0, 0, 0, 0xFE, 0x0C, 0, 0, 0, 0, // the records, with -500 for the classes 1 and 1
+		0, 1, 0, 1, 0, 5, // the coverage of the glyph 5
+		0, 1, 0, 5, 0, 1, 0, 1, // ClassDef1: the glyph 5 has the class 1
+		0, 1, 0, 6, 0, 1, 0, 1, // ClassDef2: the glyph 6 has the class 1
+	}
+	pp, _, err := tables.ParsePairPos(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := pp.Sanitize(); err != nil {
+		t.Fatalf("the counts larger than the classes give the error %q", err)
+	}
+	data := pp.Data.(tables.PairPosData2)
+	if data.Class1Count() != 3 || data.Class2Count() != 2 {
+		t.Errorf("got the counts %d and %d, want 3 and 2", data.Class1Count(), data.Class2Count())
+	}
+	if got := data.Record(1, 1).ValueRecord1.XAdvance; got != -500 {
+		t.Errorf("got the advance %d, want -500", got)
+	}
+
+	src[15] = 10 // the records of ten classes for the second glyph are not in the subtable
+	pp, _, err = tables.ParsePairPos(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := pp.Sanitize(); err == nil {
+		t.Error("the records outside the subtable give no error")
 	}
 }

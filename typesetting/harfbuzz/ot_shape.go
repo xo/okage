@@ -824,12 +824,20 @@ func (sp *shaperOpentype) shape(font *Font, buffer *Buffer, features []Feature) 
 	c := otContext{plan: &sp.plan, font: font, buffer: buffer, userFeatures: features}
 	c.buffer.scratchFlags = bsfDefault
 
-	const maxLenFactor = 64
-	const maxLenMin = 16384
-	const maxOpsFactor = 1024
-	const maxOpsMin = 16384
-	c.buffer.maxOps = max(len(c.buffer.Info)*maxOpsFactor, maxOpsMin)
-	c.buffer.maxLen = max(len(c.buffer.Info)*maxLenFactor, maxLenMin)
+	// okage: the limits of hb-limits.hh of HarfBuzz 15.1.0. go-text had 64,
+	// 16384, 1024 and 16384. NotoSansDuployan-Regular.otf makes about 60
+	// glyphs of each character, and the lower limits stopped its shaping
+	// before HarfBuzz stops. The default limits apply when a product does
+	// not fit, so that an int of 32 bits does not overflow (D73).
+	const maxLenFactor = 256
+	const maxLenMin = 65536
+	const maxOpsFactor = 4096
+	const maxOpsMin = 65536
+	c.buffer.maxOps, c.buffer.maxLen = maxOpsDefault, maxLenDefault
+	if n := len(c.buffer.Info); n <= maxOpsDefault/maxOpsFactor {
+		c.buffer.maxOps = max(n*maxOpsFactor, maxOpsMin)
+		c.buffer.maxLen = max(n*maxLenFactor, maxLenMin)
+	}
 
 	// save the original direction, we use it later.
 	c.targetDirection = c.buffer.Props.Direction

@@ -106,6 +106,20 @@ type PairPosData2 struct {
 	classData []byte `subsliceStart:"AtStart" arrayCount:"ToEnd"`
 }
 
+// Class1Count returns the number of classes of the first glyph that the
+// records cover, including the class 0.
+//
+// okage: harfbuzz needs the count, because the classes of ClassDef1 can
+// go past it (D73).
+func (pp *PairPosData2) Class1Count() uint16 { return pp.class1Count }
+
+// Class2Count returns the number of classes of the second glyph that the
+// records cover, including the class 0.
+//
+// okage: harfbuzz needs the count, because the classes of ClassDef2 can
+// go past it (D73).
+func (pp *PairPosData2) Class2Count() uint16 { return pp.class2Count }
+
 // Record returns the record for the given classes, which must come from ClassDef1
 // and ClassDef2
 func (pp *PairPosData2) Record(class1, class2 uint16) Class2Record {
