@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"image"
+	"math"
 	"regexp"
 	"strings"
 	"testing"
@@ -397,6 +398,32 @@ func TestDrawRaster(t *testing.T) {
 			t.Error("DrawRaster drew for a scale of 0")
 		}
 	})
+
+	// A scale that is NaN gives the largest pixmap, as f32::min of Rust
+	// does in krilla-svg.
+	_ = mustIvyFile(t, func(s *Surface) {
+		s.DrawRaster(r, float32(math.NaN()), func(pm *okage.Pixmap, _ okage.Transform) {
+			w, h = pm.Width(), pm.Height()
+		})
+	})
+	if w != 3750 || h != 5000 {
+		t.Errorf("the pixmap of a NaN scale is %dx%d, want 3750x5000", w, h)
+	}
+
+	// WithRasterArea gives the area on the page in place of the current
+	// transform.
+	area, _ := path.RectFromXYWH(0, 0, 120, 40)
+	_ = mustIvyFile(t, func(s *Surface) {
+		s.PushTransform(path.TransformFromScale(2, 2))
+		s.DrawRaster(r, 1, func(pm *okage.Pixmap, _ okage.Transform) {
+			w, h = pm.Width(), pm.Height()
+		}, WithRasterArea(area))
+		s.Pop()
+	})
+	// The area is 4 times as wide as r, and as high.
+	if w != 120 || h != 160 {
+		t.Errorf("the pixmap of the area is %dx%d, want 120x160", w, h)
+	}
 }
 
 func TestPaintFromShader(t *testing.T) {

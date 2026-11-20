@@ -6,10 +6,7 @@
 package pdfsvg
 
 import (
-	"math"
-
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/path"
 	"github.com/xo/okage/pdf"
 	"github.com/xo/okage/svg"
@@ -22,6 +19,10 @@ import (
 // renderFilter is render in krilla-svg src/filter.rs. It takes the suffix
 // of its module, because other modules have a function of the same name
 // (D10). It draws the group with svg, where upstream draws it with resvg.
+//
+// okage: Surface.DrawRaster holds the rest of render: the scale, the
+// pixmap, the limit of 5000 pixels and the image. The writer uses one code
+// for both (D62 item 10, D68).
 //
 // Render a filter into a surface by rasterizing it with svg and drawing the
 // image.
@@ -50,39 +51,6 @@ func renderFilter(group *svg.Group, surface *pdf.Surface, pc *processContext) bo
 	if !ok {
 		return false
 	}
-	// Calculate the necessary scale in the x/y direction, and take the
-	// maximum of that.
-	scale := maxF32(
-		actualBBox.Width()/layerBBox.Width(),
-		actualBBox.Height()/layerBBox.Height(),
-	) * pc.svgSettings.filterScale
-
-	// Let's try to avoid generating images that have more than 5000 pixels
-	// in either direction.
-	const pixelThreshold float32 = 5000.0
-	// Take the minimum of that.
-	maxScale := minF32(
-		pixelThreshold/layerBBox.Width(),
-		pixelThreshold/layerBBox.Height(),
-	)
-
-	// Take whichever is smaller.
-	rasterScale := minF32(scale, maxScale)
-
-	pixmapSize, ok := path.SizeFromWH(
-		layerBBox.Width()*rasterScale,
-		layerBBox.Height()*rasterScale,
-	)
-	if !ok {
-		return false
-	}
-	width := wide.TruncU32(roundF32(pixmapSize.Width()))
-	height := wide.TruncU32(roundF32(pixmapSize.Height()))
-
-	pixmap, ok := okage.NewPixmap(width, height)
-	if !ok {
-		return false
-	}
 
 	// okage: the absolute layer bounding box is not optional in usvg 0.47
 	// either (D62).
@@ -90,59 +58,24 @@ func renderFilter(group *svg.Group, surface *pdf.Surface, pc *processContext) bo
 	if !ok {
 		return false
 	}
-	initialTransform := path.TransformFromScale(rasterScale, rasterScale).
-		PreConcat(path.TransformFromTranslate(-layerBBox.X(), -layerBBox.Y())).
-		// This one is a hack because RenderNode will take the absolute layer
-		// bbox into consideration and translate by -layer_bbox.x() and
-		// -layer_bbox.y(), but we don't want that, so we inverse it.
-		PreConcat(path.TransformFromTranslate(absLayerBBox.X(), absLayerBBox.Y()))
 
-	pm := pixmap.AsMut()
-	svg.RenderNode(group, initialTransform, &pm)
+	return surface.DrawRaster(exactRect(layerBBox), pc.svgSettings.filterScale, func(pixmap *okage.Pixmap, t pdf.Transform) {
+		initialTransform := t.
+			// This one is a hack because RenderNode will take the absolute
+			// layer bbox into consideration and translate by
+			// -layer_bbox.x() and -layer_bbox.y(), but we don't want that,
+			// so we inverse it.
+			PreConcat(path.TransformFromTranslate(absLayerBBox.X(), absLayerBBox.Y()))
 
-	pixels := pixmap.Pixels()
-	demultiplied := make([]byte, 0, 4*pixels.Len())
-	for i := range pixels.Len() {
-		c := pixels.At(i).Demultiply()
-		demultiplied = append(demultiplied, c.Red(), c.Green(), c.Blue(), c.Alpha())
-	}
-
-	image := pdf.ImageFromRGBA8(demultiplied, width, height)
-	size, ok := path.SizeFromWH(layerBBox.Width(), layerBBox.Height())
-	if !ok {
-		return false
-	}
-
-	surface.PushTransform(path.TransformFromTranslate(layerBBox.X(), layerBBox.Y()))
-	surface.DrawImage(image, size)
-	surface.Pop()
-
-	return true
+		pm := pixmap.AsMut()
+		svg.RenderNode(group, initialTransform, &pm)
+	}, pdf.WithRasterArea(exactRect(actualBBox)))
 }
 
-// minF32 is f32::min of Rust, which returns the other value for a NaN.
-func minF32(a, b float32) float32 {
-	switch {
-	case a != a:
-		return b
-	case b != b:
-		return a
-	}
-	return min(a, b)
-}
-
-// maxF32 is f32::max of Rust, which returns the other value for a NaN.
-func maxF32(a, b float32) float32 {
-	switch {
-	case a != a:
-		return b
-	case b != b:
-		return a
-	}
-	return max(a, b)
-}
-
-// roundF32 is f32::round of Rust, which rounds half away from zero.
-func roundF32(f float32) float32 {
-	return float32(math.Round(float64(f)))
+// exactRect gives the Rect with the edges of r. NonZeroRect.ToRect makes the
+// right and the bottom edges from the width and the height, which can round
+// them to other values.
+func exactRect(r path.NonZeroRect) pdf.Rect {
+	rect, _ := path.RectFromLTRB(r.Left(), r.Top(), r.Right(), r.Bottom())
+	return rect
 }

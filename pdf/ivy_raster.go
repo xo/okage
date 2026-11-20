@@ -181,30 +181,63 @@ func (b *contentBuilder) drawImageMask(m imageMask, size Size, fill *Fill, sc *s
 // DrawRaster, PIXEL_THRESHOLD in krilla-svg src/filter.rs.
 const maxRasterPixels = 5000
 
+// RasterOption is an option of Surface.DrawRaster (D20).
+type RasterOption func(*rasterOptions)
+
+// rasterOptions holds the options of DrawRaster.
+type rasterOptions struct {
+	area    Rect
+	hasArea bool
+}
+
+// WithRasterArea gives DrawRaster the area of its rectangle on the page,
+// from which it takes the resolution of the pixmap. Without it, the area is
+// the rectangle under the current transform. pdfsvg gives the area that
+// render of krilla-svg src/filter.rs computes: the bounding box of a group
+// under the current transform, and then under the transform of the group.
+func WithRasterArea(area Rect) RasterOption {
+	return func(o *rasterOptions) {
+		o.area, o.hasArea = area, true
+	}
+}
+
 // DrawRaster draws a part of the surface with okage, and draws the pixmap as
 // an image in its place. It is the fallback of D62 item 10, for a part that
-// PDF cannot hold, such as a blend mode that PDF does not have. It follows
-// render in krilla-svg src/filter.rs, which draws a filter of SVG in this
-// way. It is not in krilla (D68).
+// PDF cannot hold, such as a blend mode that PDF does not have. It is render
+// in krilla-svg src/filter.rs, which draws a filter of SVG in this way, and
+// pdfsvg draws its filters with it. It is not in krilla (D68).
 //
 // rect is the area to draw, in the user space of the surface. The pixmap has
 // the resolution of rect on the page, as the current transform gives it, in
-// pixels for each unit of the page, times scale. A side of the pixmap has at
-// most 5000 pixels. draw gets a transparent pixmap and the transform from
-// the user space of the surface to the pixels of the pixmap. It draws onto
-// the pixmap, and the surface then draws the pixmap as an image into rect.
+// pixels for each unit of the page, times scale. WithRasterArea gives the
+// area on the page in place of the current transform. A side of the pixmap
+// has at most 5000 pixels. draw gets a transparent pixmap and the transform
+// from the user space of the surface to the pixels of the pixmap. It draws
+// onto the pixmap, and the surface then draws the pixmap as an image into
+// rect.
 //
-// DrawRaster returns false and draws nothing when rect or scale give no
-// pixel.
-func (s *Surface) DrawRaster(rect Rect, scale float32, draw func(pm *okage.Pixmap, t Transform)) bool {
-	actual, ok := rect.Transform(s.CTM())
-	if !ok {
-		return false
+// The scale and the limit of 5000 pixels compare as f32::min and f32::max of
+// Rust, which take the other value for a NaN, so a scale that is NaN gives
+// the largest pixmap, as in krilla-svg. DrawRaster returns false and draws
+// nothing when rect or scale give no pixel.
+func (s *Surface) DrawRaster(rect Rect, scale float32, draw func(pm *okage.Pixmap, t Transform), opts ...RasterOption) bool {
+	var o rasterOptions
+	for _, opt := range opts {
+		opt(&o)
 	}
-	// The scale in the x and y directions on the page, and the larger one.
-	rasterScale := max(actual.Width()/rect.Width(), actual.Height()/rect.Height()) * scale
-	// Do not make a pixmap with more than 5000 pixels on a side.
-	rasterScale = min(rasterScale, min(maxRasterPixels/rect.Width(), maxRasterPixels/rect.Height()))
+	actual := o.area
+	if !o.hasArea {
+		var ok bool
+		if actual, ok = rect.Transform(s.CTM()); !ok {
+			return false
+		}
+	}
+	// Calculate the necessary scale in the x/y direction, and take the
+	// maximum of that.
+	rasterScale := maxF32(actual.Width()/rect.Width(), actual.Height()/rect.Height()) * scale
+	// Let's try to avoid generating images that have more than 5000 pixels
+	// in either direction. Take whichever is smaller.
+	rasterScale = minF32(rasterScale, minF32(maxRasterPixels/rect.Width(), maxRasterPixels/rect.Height()))
 	size, ok := path.SizeFromWH(rect.Width()*rasterScale, rect.Height()*rasterScale)
 	if !ok {
 		return false
@@ -237,4 +270,26 @@ func (s *Surface) DrawRaster(rect Rect, scale float32, draw func(pm *okage.Pixma
 	s.DrawImage(img, imageSize)
 	s.Pop()
 	return true
+}
+
+// minF32 is f32::min of Rust, which returns the other value for a NaN.
+func minF32(a, b float32) float32 {
+	switch {
+	case a != a:
+		return b
+	case b != b:
+		return a
+	}
+	return min(a, b)
+}
+
+// maxF32 is f32::max of Rust, which returns the other value for a NaN.
+func maxF32(a, b float32) float32 {
+	switch {
+	case a != a:
+		return b
+	case b != b:
+		return a
+	}
+	return max(a, b)
 }

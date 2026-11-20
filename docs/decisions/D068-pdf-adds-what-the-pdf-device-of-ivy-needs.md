@@ -92,7 +92,15 @@ krilla.
    resolution of the rectangle on the page from the current transform,
    multiplies it by the scale, and makes a pixmap of at most 5000 pixels on
    a side. `draw` draws onto the pixmap with okage, and the surface draws
-   the pixmap as an image into the rectangle.
+   the pixmap as an image into the rectangle. `pdfsvg` draws its filters
+   with `DrawRaster`, so the writer has one code for both, as D62 item 10
+   says. krilla-svg finds the area on the page from the bounding box of the
+   group under the current transform, and then under the transform of the
+   group. That area can differ from the rectangle under the current
+   transform, for example when the transforms turn or skew. So `pdfsvg`
+   gives its area with the option `WithRasterArea`. The scale and the limit
+   compare as `f32::min` and `f32::max` of Rust, so a scale that is NaN
+   gives the largest pixmap, as in krilla-svg.
 
 ## The parameters of the shaders
 
