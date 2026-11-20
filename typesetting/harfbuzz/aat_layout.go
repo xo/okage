@@ -563,9 +563,16 @@ func (c *aatApplyContext) replaceGlyph(glyph GID) bool {
 	return c.buffer.replaceGlyphIndex(glyph)
 }
 
+// okage: deleteGlyph adds the deleted glyph to the glyph set of the buffer,
+// as the commit 5a1c0c4660 of HarfBuzz, in 15.1.0, does. go-text did not
+// add it, so a later subtable that only the deleted glyph starts did not
+// apply to a buffer of four glyphs or more (D73).
 func (c *aatApplyContext) deleteGlyph() bool {
 	c.buffer.scratchFlags |= bsfAatHasDeleted
 	c.buffer.cur(0).setAatDeleted()
+	if c.usingBufferGlyphSet {
+		c.bufferGlyphSet.addGlyph(deletedGlyph)
+	}
 	return c.buffer.replaceGlyphIndex(deletedGlyph)
 }
 
