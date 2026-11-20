@@ -290,7 +290,6 @@ func TestRectMaskBytes(t *testing.T) {
 					i, d.name, w, h, rect, paint.BlendMode, paint.ForceHQPipeline, paint.Colorspace)
 			}
 		}
-
 	}
 }
 
