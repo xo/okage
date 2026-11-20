@@ -136,12 +136,10 @@
 //     stack the entries that upstream skips. It gives the same glyphs in the
 //     same order, and its memory and time do not grow with the square of the
 //     number of components, as the closure of upstream can.
-//  3. skrifa computes the normalized coordinates of a location in the fixed
-//     point numbers of OpenType, and reads the avar table of version 2. The
-//     port computes them as typesetting does, in float32, and maps them with
-//     the avar table of version 1 only. Only a coordinate that is very near
-//     the default can give another choice between the subset of the default
-//     location and an instance.
+//  3. skrifa reads the avar table of version 2. The port computes the
+//     normalized coordinates of a location in the 16.16 fixed-point numbers
+//     of OpenType, as skrifa does, but maps them with the avar table of
+//     version 1 only (D84).
 //  4. GlyphRemapper.Hash writes the bytes of the glyphs in little-endian
 //     order on each machine, as internal/siphasher reads them. Upstream
 //     writes them in the order of the machine.

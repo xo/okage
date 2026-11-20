@@ -108,3 +108,70 @@ func (vr VariationRegion) EvaluateFixed(coords []Coord) Fixed {
 	}
 	return scalar
 }
+
+// MapFixed maps a normalized coordinate in the 16.16 format with the
+// segment map, as SegmentMaps::apply of read-fonts src/tables/avar.rs
+// does. skrifa normalizes a coordinate of the user in the 16.16 format,
+// maps it with avar, and only then rounds it to 2.14. Map takes and gives a
+// coordinate in 2.14, as HarfBuzz does.
+func (sm SegmentMaps) MapFixed(coord Fixed) Fixed {
+	maps := sm.AxisValueMaps
+	from := func(i int) Fixed { return maps[i].FromCoordinate.Fixed() }
+	to := func(i int) Fixed { return maps[i].ToCoordinate.Fixed() }
+	n := len(maps)
+	if n < 2 {
+		if n == 0 {
+			return coord
+		}
+		return coord - from(0) + to(0)
+	}
+	neg1, pos1 := FixedFromInt(-1), FixedFromInt(1)
+	start, end := 0, n
+	if from(start) == neg1 && to(start) == neg1 && from(start+1) == neg1 {
+		start++
+	}
+	if from(end-1) == pos1 && to(end-1) == pos1 && from(end-2) == pos1 {
+		end--
+	}
+	i := start
+	for i < end && coord != from(i) {
+		i++
+	}
+	if i < end {
+		j := i
+		for j+1 < end && coord == from(j+1) {
+			j++
+		}
+		switch {
+		case i == j:
+			return to(i)
+		case i+2 == j:
+			return to(i + 1)
+		case coord < 0:
+			return to(j)
+		case coord > 0:
+			return to(i)
+		}
+		ti, tj := to(i), to(j)
+		if absFixed(ti) < absFixed(tj) {
+			return ti
+		}
+		return tj
+	}
+	k := start
+	for k < end && coord >= from(k) {
+		k++
+	}
+	if k == 0 {
+		return coord - from(0) + to(0)
+	}
+	if k == end {
+		return coord - from(end-1) + to(end-1)
+	}
+	bf, bt, af, at := from(k-1), to(k-1), from(k), to(k)
+	return bt + (at-bt).MulDiv(coord-bf, af-bf)
+}
+
+// ToCoord rounds a coordinate in the 16.16 format to 2.14, as
+// Fixed::to_f2dot14 of font-types does.
+func (a Fixed) ToCoord() Coord { return Coord((a + 2) >> 2) }
