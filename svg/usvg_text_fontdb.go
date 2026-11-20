@@ -23,6 +23,7 @@ import (
 	"github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 
+	"github.com/xo/okage/internal/glyphoutline"
 	"github.com/xo/okage/webfont"
 )
 
@@ -204,10 +205,8 @@ type parsedFace struct {
 	ld   *opentype.Loader
 	font *font.Font
 
-	// glyf holds the table glyf, which glyfOnce parses on first use. It is
-	// nil when the face has none.
-	glyfOnce sync.Once
-	glyf     tables.Glyf
+	// outline draws the outlines of the face in the order of skrifa.
+	outline *glyphoutline.Font
 }
 
 // parsed returns the face of index i, parsed by go-text on first use, or
@@ -224,7 +223,7 @@ func (s *fontSource) parsed(i uint32) (*parsedFace, bool) {
 			if err != nil {
 				continue
 			}
-			s.faces[j] = &parsedFace{ld: ld, font: ft}
+			s.faces[j] = &parsedFace{ld: ld, font: ft, outline: glyphoutline.New(ld)}
 		}
 	})
 	if int(i) >= len(s.faces) || s.faces[i] == nil {

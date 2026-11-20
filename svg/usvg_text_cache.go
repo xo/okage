@@ -17,6 +17,7 @@ import (
 	"github.com/xo/okage/typesetting/harfbuzz"
 
 	colrpaint "github.com/xo/okage/internal/colr"
+	"github.com/xo/okage/internal/glyphoutline"
 	"github.com/xo/okage/internal/svgtypes"
 	"github.com/xo/okage/internal/xmlwriter"
 	"github.com/xo/okage/path"
@@ -378,204 +379,40 @@ type outlinePathBuilder struct {
 	builder *path.PathBuilder
 }
 
-// moveTo is OutlinePen::move_to for PathBuilder in usvg src/text/cache.rs.
-func (b *outlinePathBuilder) moveTo(x, y float32) {
+// MoveTo is OutlinePen::move_to for PathBuilder in usvg src/text/cache.rs.
+func (b *outlinePathBuilder) MoveTo(x, y float32) {
 	b.builder.MoveTo(x, y)
 }
 
-// lineTo is OutlinePen::line_to for PathBuilder in usvg src/text/cache.rs.
-func (b *outlinePathBuilder) lineTo(x, y float32) {
+// LineTo is OutlinePen::line_to for PathBuilder in usvg src/text/cache.rs.
+func (b *outlinePathBuilder) LineTo(x, y float32) {
 	b.builder.LineTo(x, y)
 }
 
-// quadTo is OutlinePen::quad_to for PathBuilder in usvg src/text/cache.rs.
-func (b *outlinePathBuilder) quadTo(cx0, cy0, x, y float32) {
+// QuadTo is OutlinePen::quad_to for PathBuilder in usvg src/text/cache.rs.
+func (b *outlinePathBuilder) QuadTo(cx0, cy0, x, y float32) {
 	b.builder.QuadTo(cx0, cy0, x, y)
 }
 
-// curveTo is OutlinePen::curve_to for PathBuilder in usvg
+// CurveTo is OutlinePen::curve_to for PathBuilder in usvg
 // src/text/cache.rs.
-func (b *outlinePathBuilder) curveTo(cx0, cy0, cx1, cy1, x, y float32) {
+func (b *outlinePathBuilder) CurveTo(cx0, cy0, cx1, cy1, x, y float32) {
 	b.builder.CubicTo(cx0, cy0, cx1, cy1, x, y)
 }
 
-// close is OutlinePen::close for PathBuilder in usvg src/text/cache.rs.
-func (b *outlinePathBuilder) close() {
+// Close is OutlinePen::close for PathBuilder in usvg src/text/cache.rs.
+func (b *outlinePathBuilder) Close() {
 	b.builder.Close()
-}
-
-// outlinePen is the trait skrifa::outline::OutlinePen, which usvg
-// implements.
-type outlinePen interface {
-	moveTo(x, y float32)
-	lineTo(x, y float32)
-	quadTo(cx0, cy0, x, y float32)
-	curveTo(cx0, cy0, cx1, cy1, x, y float32)
-	close()
 }
 
 // drawOutline is OutlineGlyph::draw of skrifa with unhinted settings, which
 // usvg calls. It draws the outline of glyph of face, a face of pf, into pen,
 // and returns false when the face has no outline for the glyph.
 //
-// Port: go-text gives the segments of each contour without its close. A
-// contour ends where the next one starts, so pen.close is called before each
-// move and after the last segment, as skrifa calls it at the end of each
-// contour. For a TrueType outline, skrifa starts a contour whose first point
-// is off the curve at its last point, or between its last and first points,
-// and draws no line back to the start, where go-text starts at the next point
-// on the curve and draws a line back. skrifaContour moves the segments of
-// go-text to the start of skrifa, so that the paths are the same.
-func drawOutline(pf *parsedFace, face *font.Face, glyph GlyphID, pen outlinePen) bool {
-	outline, ok := face.GlyphDataOutline(font.GID(glyph))
-	if !ok {
-		return false
-	}
-	segments := outline.Segments
-	if !pf.hasCFF() {
-		if flags, ok := pf.contourFlags(glyph); ok {
-			segments = skrifaSegments(segments, flags)
-		}
-	}
-	for i, seg := range segments {
-		a := seg.Args
-		switch seg.Op {
-		case ot.SegmentOpMoveTo:
-			if i != 0 {
-				pen.close()
-			}
-			pen.moveTo(a[0].X, a[0].Y)
-		case ot.SegmentOpLineTo:
-			pen.lineTo(a[0].X, a[0].Y)
-		case ot.SegmentOpQuadTo:
-			pen.quadTo(a[0].X, a[0].Y, a[1].X, a[1].Y)
-		case ot.SegmentOpCubeTo:
-			pen.curveTo(a[0].X, a[0].Y, a[1].X, a[1].Y, a[2].X, a[2].Y)
-		}
-	}
-	if len(segments) != 0 {
-		pen.close()
-	}
-	return true
-}
-
-// hasCFF reports whether the face has a table CFF or CFF2, which go-text
-// reads before the table glyf.
-func (f *parsedFace) hasCFF() bool {
-	return f.ld.HasTable(ot.MustNewTag("CFF ")) || f.ld.HasTable(ot.MustNewTag("CFF2"))
-}
-
-// contourFlags returns, for each contour of the TrueType outline of glyph in
-// the order of go-text, whether its first and its last points are on the
-// curve. It returns false when the face has no table glyf.
-func (f *parsedFace) contourFlags(glyph GlyphID) ([][2]bool, bool) {
-	f.glyfOnce.Do(func() {
-		head, loca, glyf := f.rawTable("head"), f.rawTable("loca"), f.rawTable("glyf")
-		maxp := f.rawTable("maxp")
-		if len(head) < headMinSize || loca == nil || glyf == nil || len(maxp) < 6 {
-			return
-		}
-		numGlyphs := int(binary.BigEndian.Uint16(maxp[4:]))
-		offsets, err := tables.ParseLoca(loca, numGlyphs, int16(binary.BigEndian.Uint16(head[50:])) == 1)
-		if err != nil || len(offsets) == 0 {
-			return
-		}
-		f.glyf, _ = tables.ParseGlyf(glyf, offsets)
-	})
-	if f.glyf == nil {
-		return nil, false
-	}
-	var flags [][2]bool
-	seen := map[tables.GlyphID]bool{}
-	var walk func(gid tables.GlyphID, depth int)
-	walk = func(gid tables.GlyphID, depth int) {
-		// The limit of nesting of go-text.
-		if depth > 20 || int(gid) >= len(f.glyf) {
-			return
-		}
-		switch data := f.glyf[gid].Data.(type) {
-		case tables.SimpleGlyph:
-			start := 0
-			for _, end := range data.EndPtsOfContours {
-				if int(end) >= len(data.Points) || int(end) < start {
-					return
-				}
-				flags = append(flags, [2]bool{data.Points[start].Flag&1 != 0, data.Points[end].Flag&1 != 0})
-				start = int(end) + 1
-			}
-		case tables.CompositeGlyph:
-			for _, item := range data.Glyphs {
-				if seen[item.GlyphIndex] {
-					continue
-				}
-				seen[item.GlyphIndex] = true
-				walk(item.GlyphIndex, depth+1)
-				delete(seen, item.GlyphIndex)
-			}
-		}
-	}
-	walk(tables.GlyphID(glyph), 0)
-	return flags, true
-}
-
-// skrifaSegments moves the segments of each contour of a TrueType outline of
-// go-text to the start that skrifa takes, and drops the line back to the
-// start that go-text draws and skrifa does not. flags holds, for each
-// contour, whether its first and its last points are on the curve. When the
-// contours do not match the flags, segments is returned as it is.
-func skrifaSegments(segments []font.Segment, flags [][2]bool) []font.Segment {
-	var contours [][]font.Segment
-	for i, seg := range segments {
-		if seg.Op == ot.SegmentOpMoveTo || i == 0 {
-			contours = append(contours, nil)
-		}
-		contours[len(contours)-1] = append(contours[len(contours)-1], seg)
-	}
-	if len(contours) != len(flags) {
-		return segments
-	}
-	end := func(s font.Segment) font.SegmentPoint {
-		switch s.Op {
-		case ot.SegmentOpQuadTo:
-			return s.Args[1]
-		case ot.SegmentOpCubeTo:
-			return s.Args[2]
-		}
-		return s.Args[0]
-	}
-	out := make([]font.Segment, 0, len(segments))
-	for i, c := range contours {
-		firstOn, lastOn := flags[i][0], flags[i][1]
-		n := len(c)
-		switch {
-		case n < 2 || c[0].Op != ot.SegmentOpMoveTo:
-			out = append(out, c...)
-		case firstOn:
-			// The line back to the start, when the last point is on the
-			// curve too.
-			if lastOn && c[n-1].Op == ot.SegmentOpLineTo && c[n-1].Args[0] == c[0].Args[0] {
-				c = c[:n-1]
-			}
-			out = append(out, c...)
-		case lastOn && n >= 3:
-			// skrifa starts at the last point, which ends the segment
-			// before the closing curve of go-text.
-			start := end(c[n-2])
-			out = append(out, font.Segment{Op: ot.SegmentOpMoveTo, Args: [3]font.SegmentPoint{start}})
-			out = append(out, c[n-1])
-			out = append(out, c[1:n-1]...)
-		case !lastOn && n >= 3:
-			// skrifa starts between the last and the first points, which
-			// ends the curve before the last curve of go-text.
-			start := end(c[n-2])
-			out = append(out, font.Segment{Op: ot.SegmentOpMoveTo, Args: [3]font.SegmentPoint{start}})
-			out = append(out, c[n-1])
-			out = append(out, c[1:n-1]...)
-		default:
-			out = append(out, c...)
-		}
-	}
-	return out
+// Port: the package glyphoutline puts the segments of go-text in the order
+// of skrifa, as it does for pdf.
+func drawOutline(pf *parsedFace, face *font.Face, glyph GlyphID, pen glyphoutline.Pen) bool {
+	return pf.outline.Draw(face, font.GID(glyph), pen)
 }
 
 // outline is outline in usvg src/text/cache.rs.

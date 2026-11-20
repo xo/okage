@@ -83,35 +83,35 @@ func (b *colrBuilder) writeCmd(cmd string, nums ...float32) {
 	}
 }
 
-// moveTo is OutlinePen::move_to for Builder in usvg src/text/colr.rs.
-func (b *colrBuilder) moveTo(x, y float32) {
+// MoveTo is OutlinePen::move_to for Builder in usvg src/text/colr.rs.
+func (b *colrBuilder) MoveTo(x, y float32) {
 	b.addPoint(x, y)
 	b.writeCmd("M", x, y)
 }
 
-// lineTo is OutlinePen::line_to for Builder in usvg src/text/colr.rs.
-func (b *colrBuilder) lineTo(x, y float32) {
+// LineTo is OutlinePen::line_to for Builder in usvg src/text/colr.rs.
+func (b *colrBuilder) LineTo(x, y float32) {
 	b.addPoint(x, y)
 	b.writeCmd("L", x, y)
 }
 
-// quadTo is OutlinePen::quad_to for Builder in usvg src/text/colr.rs.
-func (b *colrBuilder) quadTo(cx0, cy0, x, y float32) {
+// QuadTo is OutlinePen::quad_to for Builder in usvg src/text/colr.rs.
+func (b *colrBuilder) QuadTo(cx0, cy0, x, y float32) {
 	b.addPoint(cx0, cy0)
 	b.addPoint(x, y)
 	b.writeCmd("Q", cx0, cy0, x, y)
 }
 
-// curveTo is OutlinePen::curve_to for Builder in usvg src/text/colr.rs.
-func (b *colrBuilder) curveTo(cx0, cy0, cx1, cy1, x, y float32) {
+// CurveTo is OutlinePen::curve_to for Builder in usvg src/text/colr.rs.
+func (b *colrBuilder) CurveTo(cx0, cy0, cx1, cy1, x, y float32) {
 	b.addPoint(cx0, cy0)
 	b.addPoint(cx1, cy1)
 	b.addPoint(x, y)
 	b.writeCmd("C", cx0, cy0, cx1, cy1, x, y)
 }
 
-// close is OutlinePen::close for Builder in usvg src/text/colr.rs.
-func (b *colrBuilder) close() {
+// Close is OutlinePen::close for Builder in usvg src/text/colr.rs.
+func (b *colrBuilder) Close() {
 	*b.path = append(*b.path, "Z "...)
 }
 

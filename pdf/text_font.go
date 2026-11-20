@@ -16,6 +16,7 @@ import (
 	"unicode/utf16"
 
 	"github.com/xo/okage"
+	"github.com/xo/okage/internal/glyphoutline"
 	"github.com/xo/okage/internal/siphasher"
 	"github.com/xo/okage/path"
 	tsfont "github.com/xo/okage/typesetting/font"
@@ -94,15 +95,13 @@ type Font struct {
 	ld *ot.Loader
 	ft *tsfont.Font
 
-	// mu guards face, hb and glyf, which typesetting does not let two
-	// goroutines use at once.
+	// mu guards face and hb, which typesetting does not let two goroutines
+	// use at once.
 	mu   sync.Mutex
 	face *tsfont.Face
 	hb   *harfbuzz.Font
-	// glyf holds the table glyf, parsed on its first use, for the order of
-	// the outlines of skrifa. glyfDone is true after the first use.
-	glyf     tables.Glyf
-	glyfDone bool
+	// outline draws the outlines of face in the order of skrifa.
+	outline *glyphoutline.Font
 
 	// svg is the table SVG, which svgOnce reads on its first use. It is
 	// nil for a font without a valid table SVG.
@@ -140,7 +139,7 @@ func NewFont(data []byte, index int, opts ...FontOption) (*Font, error) {
 	if !ok {
 		return nil, fmt.Errorf("%w: the font with the index %d cannot be read", okage.ErrPDFInvalidFont, index)
 	}
-	f := &Font{data: data, ld: ld}
+	f := &Font{data: data, ld: ld, outline: glyphoutline.New(ld)}
 	ft, err := tsfont.NewFont(ld)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", okage.ErrPDFInvalidFont, err)
