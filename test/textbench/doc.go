@@ -48,13 +48,20 @@
 // segmenter for its line breaks, and finds the first line. Then it takes the
 // glyphs of the line from the short text when the cut is safe to break, and
 // splits the line again to make sure of its runs, as ivy does. Else it
-// shapes the line again. BenchmarkEndToEndWrap is the path of go-text
-// itself: Split, Shape and LineWrapper, once for each paragraph.
+// shapes the line again. BenchmarkEndToEndOnce is the same path with
+// shaping.Paragraph (D77). It shapes each paragraph once, takes the glyphs
+// of each short text and each line from Paragraph.Line, and asks
+// Paragraph.LineBreak for the line breaks. It ends each short text at the
+// next line break, which does not change the lines. TestEndToEndOnce makes
+// sure that it gives the lines of BenchmarkEndToEnd, and TestParagraphLine
+// compares the glyphs of Paragraph.Line with a new shaping.
+// BenchmarkEndToEndWrap is the path of go-text itself: Split, Shape and
+// LineWrapper, once for each paragraph.
 //
 // Each benchmark reports its allocations and ns/char, the time for each
-// character of the workload. BenchmarkEndToEnd also reports shaped/char,
-// the number of characters that it shapes for each character of the
-// workload.
+// character of the workload. BenchmarkEndToEnd and BenchmarkEndToEndOnce
+// also report shaped/char, the number of characters that they shape for
+// each character of the workload.
 //
 // # How to measure
 //

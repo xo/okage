@@ -20,6 +20,12 @@ type HarfbuzzShaper struct {
 	fonts fontLRU
 
 	features []harfbuzz.Feature
+
+	// concat makes the shaper set the flag unsafe-to-concat of HarfBuzz in
+	// the masks of the glyphs. Only the shaper of a Paragraph sets it.
+	//
+	// okage: go-text has no concat (D77).
+	concat bool
 }
 
 // SetFontCacheSize adjusts the size of the font cache within the shaper.
@@ -69,6 +75,10 @@ func (t *HarfbuzzShaper) shape(input Input, skipExtents bool, buf []Glyph) Outpu
 		t.buf = harfbuzz.NewBuffer()
 	} else {
 		t.buf.Clear()
+	}
+	// okage: a Paragraph reads the flag unsafe-to-concat (D77).
+	if t.concat {
+		t.buf.Flags |= harfbuzz.ProduceUnsafeToConcat
 	}
 
 	runes, start, end := input.Text, input.RunStart, input.RunEnd

@@ -1,6 +1,6 @@
 # D70. shaping gives the flags of HarfBuzz and reuses its glyphs
 
-Status: Decided.
+Status: Decided, amended by D77.
 
 ivy lays out its documents with `typesetting/shaping`, the copy of go-text
 in okage (D52). On 2026-11-19 the layout of
