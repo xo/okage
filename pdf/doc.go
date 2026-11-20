@@ -83,8 +83,8 @@
 //     there (D66).
 //     - ErrPDFMixedColorSpaces for a gradient whose stops have colors with
 //     different numbers of components, such as RGB and CMYK (D66).
-//     - ErrPDFInvalidGradient for a gradient with no stop, or with a
-//     transform that cannot be inverted where krilla needs its inverse.
+//     - ErrPDFInvalidGradient for a gradient with a transform that cannot
+//     be inverted where krilla needs its inverse.
 //     - ErrPDFImage for an image that does not decode, or a nil image, and
 //     ErrPDFSixteenBitImage for an image of 16 bits in PDF 1.4.
 //     - ErrPDFDuplicateNamedDestination for a name with two different

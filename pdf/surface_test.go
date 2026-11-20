@@ -339,6 +339,73 @@ func TestDrawPathZeroSize(t *testing.T) {
 	}
 }
 
+// TestEmptyGradient checks that draw_path and draw_glyphs of krilla
+// src/content.rs paint nothing for a gradient with no stop, as
+// Paint::is_empty_gradient of src/graphics/paint.rs finds it.
+func TestEmptyGradient(t *testing.T) {
+	id := path.IdentityTransform()
+	for _, tt := range []struct {
+		paint Paint
+		empty bool
+	}{
+		{LinearGradient{X2: 10, Transform: id}, true},
+		{RadialGradient{Cr: 10, Transform: id}, true},
+		{SweepGradient{EndAngle: 90, Transform: id}, true},
+		{LinearGradient{X2: 10, Transform: id, Stops: []Stop{{Color: NewColorRGB(255, 0, 0), Opacity: 1}}}, false},
+		{NewColorRGB(0, 0, 0), false},
+		{Pattern{}, false},
+		{MeshGradient{}, false},
+	} {
+		if got := paintIsEmptyGradient(tt.paint); got != tt.empty {
+			t.Errorf("paintIsEmptyGradient of %T is %v", tt.paint, got)
+		}
+	}
+
+	empty := LinearGradient{X2: 10, Transform: id}
+	draw := func(s *Surface) {
+		s.DrawPath(rectToPath(t, 0, 0, 10, 10))
+		s.DrawGlyphs(path.PointFromXY(0, 50), []Glyph{{GlyphID: 36, TextRange: TextRange{0, 1}, XAdvance: 0.5}},
+			testFont(t, "LibertinusSerif-Regular.otf"), "A", 12, false)
+	}
+
+	// A fill and a stroke with no stop paint nothing.
+	content, err := pageContent(t, func(s *Surface) {
+		s.SetFill(&Fill{Paint: empty, Opacity: 1})
+		s.SetStroke(&Stroke{Paint: empty, Width: 1, MiterLimit: 10, Opacity: 1})
+		draw(s)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if content != "" {
+		t.Errorf("the content is %q, want nothing", content)
+	}
+
+	// The fill still paints when only the stroke has no stop, and the stroke
+	// when only the fill has no stop.
+	for _, tt := range []struct {
+		name          string
+		fill          *Fill
+		stroke        *Stroke
+		want, notWant string
+	}{
+		{"fill", redFill(t, 1), &Stroke{Paint: empty, Width: 1, MiterLimit: 10, Opacity: 1}, "\nf", "\nS"},
+		{"stroke", &Fill{Paint: empty, Opacity: 1}, redStroke(t, 1, 10), "\nS", "\nf"},
+	} {
+		content, err := pageContent(t, func(s *Surface) {
+			s.SetFill(tt.fill)
+			s.SetStroke(tt.stroke)
+			s.DrawPath(rectToPath(t, 0, 0, 10, 10))
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(content, tt.want) || strings.Contains(content, tt.notWant) {
+			t.Errorf("the %s gives the content %q", tt.name, content)
+		}
+	}
+}
+
 // TestDrawPathOperators checks the operators of the fills and the strokes of
 // draw_path of krilla src/content.rs, and the conversion of a quadratic curve
 // into a cubic curve.
@@ -558,7 +625,11 @@ func TestPaintErrors(t *testing.T) {
 		{"no stop", func(s *Surface) {
 			s.SetFill(&Fill{Paint: RadialGradient{Cr: 10, Transform: path.IdentityTransform()}, Opacity: 1})
 			s.DrawPath(rectToPath(t, 0, 0, 10, 10))
-		}, okage.ErrPDFInvalidGradient},
+		}, nil},
+		{"no stop with a singular transform", func(s *Surface) {
+			s.SetFill(&Fill{Paint: LinearGradient{X2: 10, Transform: singular, SpreadMethod: SpreadMethodReflect}, Opacity: 1})
+			s.DrawPath(rectToPath(t, 0, 0, 10, 10))
+		}, nil},
 		{"singular transform", func(s *Surface) {
 			s.SetFill(&Fill{Paint: LinearGradient{
 				X2: 10, Transform: singular, SpreadMethod: SpreadMethodReflect, Stops: rgbStops,

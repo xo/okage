@@ -566,8 +566,8 @@ const (
 	ErrPDFMixedColorSpaces Error = "writing pdf: the stops of a gradient are in different color spaces"
 
 	// ErrPDFInvalidGradient is the error of Document.Finish for a gradient
-	// with no stop, or with a transform that cannot be inverted where the
-	// gradient needs the inverse. krilla panics in these cases.
+	// with a transform that cannot be inverted where the gradient needs the
+	// inverse. krilla panics in this case.
 	ErrPDFInvalidGradient Error = "writing pdf: a gradient is not valid"
 
 	// ErrPDFDuplicateNamedDestination is

@@ -52,7 +52,8 @@ type LinearGradient struct {
 	SpreadMethod SpreadMethod
 	// Stops holds the color stops of the linear gradient.
 	//
-	// Note that all stops need to be in the same color space.
+	// Note that all stops need to be in the same color space. A gradient
+	// without stops paints nothing.
 	Stops []Stop
 	// AntiAlias is whether the gradient should be anti-aliased.
 	AntiAlias bool
@@ -109,7 +110,8 @@ type RadialGradient struct {
 	SpreadMethod SpreadMethod
 	// Stops holds the color stops of the radial gradient.
 	//
-	// Note that all stops need to be in the same color space.
+	// Note that all stops need to be in the same color space. A gradient
+	// without stops paints nothing.
 	Stops []Stop
 	// AntiAlias is whether the gradient should be anti-aliased.
 	AntiAlias bool
@@ -163,7 +165,8 @@ type SweepGradient struct {
 	SpreadMethod SpreadMethod
 	// Stops holds the color stops of the sweep gradient.
 	//
-	// Note that all stops need to be in the same color space.
+	// Note that all stops need to be in the same color space. A gradient
+	// without stops paints nothing.
 	Stops []Stop
 	// AntiAlias is whether the gradient should be anti-aliased.
 	AntiAlias bool
@@ -253,6 +256,22 @@ func paintAsRGB(p Paint) (ColorRGB, bool) {
 		return c.asRGB()
 	}
 	return ColorRGB{}, false
+}
+
+// paintIsEmptyGradient is Paint::is_empty_gradient in krilla
+// src/graphics/paint.rs. It returns true for a linear, radial or sweep
+// gradient with no stop. A MeshGradient, which is not in krilla (D68), is
+// never an empty gradient here.
+func paintIsEmptyGradient(p Paint) bool {
+	switch g := p.(type) {
+	case LinearGradient:
+		return len(g.Stops) == 0
+	case RadialGradient:
+		return len(g.Stops) == 0
+	case SweepGradient:
+		return len(g.Stops) == 0
+	}
+	return false
 }
 
 // SpreadMethod is SpreadMethod in krilla src/graphics/paint.rs. The zero

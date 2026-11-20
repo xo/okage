@@ -41,3 +41,8 @@ D62 already covers the other panics of krilla for a gradient that a program
 can cause: a gradient with no stop, and a transform that cannot be inverted
 where krilla needs its inverse. `pdf` records `ErrPDFInvalidGradient` for
 them.
+
+The commit `daaac940` of krilla, on 2026-11-19, makes a gradient with no
+stop paint nothing, so krilla no longer panics for it. `pdf` ports that
+commit. It paints nothing too, and records `ErrPDFInvalidGradient` only for
+the transform.

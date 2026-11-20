@@ -645,6 +645,12 @@ func surfaceCases() []documentCase {
 		drawPath(rect(20, 20, 160, 160)))
 	add("one stop with an opacity", setFill(linearAt(0, 0, 10, 0, "repeat", []map[string]any{stop(0.5, cmyk(1, 2, 3, 4), 0.25)}), 1, "nonzero"),
 		drawPath(rect(20, 20, 160, 160)))
+	noStops := []map[string]any{}
+	add("no stop", setFill(linearAt(0, 0, 10, 0, "reflect", noStops), 1, "nonzero"), drawPath(rect(20, 20, 160, 160)))
+	add("no stop in the stroke", setFill(rgb(0, 0, 255), 1, "nonzero"),
+		setStroke(stroke("paint", sweepAt(100, 100, 0, 360, "pad", noStops), "width", 8)), drawPath(star))
+	add("no stop in the fill", setFill(radialAt(100, 100, 0, 100, 100, 90, nil, noStops), 1, "nonzero"),
+		setStroke(stroke("paint", rgb(255, 0, 0), "width", 4)), drawPath(curve))
 	add("gradient stroke", noFill(), setStroke(stroke("paint", linearAt(0, 0, 200, 0, "pad", rgbStops), "width", 12)), drawPath(curve))
 	add("gradient stroke with opacities", noFill(),
 		setStroke(stroke("paint", sweepAt(100, 100, 0, 360, "pad", lumaStops), "width", 8, "line_join", "round")), drawPath(star))

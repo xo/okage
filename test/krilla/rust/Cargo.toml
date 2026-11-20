@@ -12,8 +12,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-krilla = { git = "https://github.com/LaurenzV/krilla", rev = "c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883", default-features = false, features = ["raster-images", "simple-text"] }
-krilla-svg = { git = "https://github.com/LaurenzV/krilla", rev = "c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883" }
+krilla = { git = "https://github.com/LaurenzV/krilla", rev = "daaac940f69ad55599c38c7fcf7a68a8d4576083", default-features = false, features = ["raster-images", "simple-text"] }
+krilla-svg = { git = "https://github.com/LaurenzV/krilla", rev = "daaac940f69ad55599c38c7fcf7a68a8d4576083" }
 pdf-writer = { git = "https://github.com/typst/pdf-writer", rev = "fdf090125f1e7209fa630c4ca1f5f29910c87c93" }
 subsetter = { version = "=0.2.6", features = ["variable-fonts"] }
 siphasher = "1.0.1"

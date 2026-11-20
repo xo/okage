@@ -180,8 +180,8 @@ okage differs from upstream only where a decision says so:
     `compress/zlib`, so the bytes of a compressed stream differ from krilla,
     and its data does not. It returns an error where krilla panics, such as
     for a box of a page that does not fit the coordinates of PDF, for a
-    pop of a surface without a push, for a gradient with no stop, or for
-    the stops of a gradient in two color spaces. It also returns an error
+    pop of a surface without a push, for a gradient with a transform that
+    cannot be inverted, or for the stops of a gradient in two color spaces. It also returns an error
     for a path to stroke with a point that is NaN or a coordinate above
     2^60, where krilla can panic or not end. `Document.StartPage` and
     `Document.Finish` finish the page that is open, and `Page.Finish`

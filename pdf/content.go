@@ -166,6 +166,13 @@ func (b *contentBuilder) expandBBox(newBBox Rect) {
 // drawPath is ContentBuilder::draw_path in krilla src/content.rs. A nil fill
 // or stroke is None.
 func (b *contentBuilder) drawPath(p *Path, fill *Fill, stroke *Stroke, sc *serializeContext, cc *chunkContainer) {
+	if fill != nil && paintIsEmptyGradient(fill.Paint) {
+		fill = nil
+	}
+	if stroke != nil && paintIsEmptyGradient(stroke.Paint) {
+		stroke = nil
+	}
+
 	if fill == nil && stroke == nil {
 		return
 	}
@@ -344,18 +351,6 @@ func strokeFits(p *Path, width float32) bool {
 	return true
 }
 
-// gradientStopCount gives the number of stops of a gradient. It is not in
-// krilla.
-func gradientStopCount(gp gradientProperties) int {
-	switch g := gp.(type) {
-	case radialAxialGradient:
-		return len(g.stops)
-	case postScriptGradient:
-		return len(g.stops)
-	}
-	return 0
-}
-
 // pushClipPath is ContentBuilder::push_clip_path in krilla src/content.rs.
 // krilla panics when the current transform makes the path invalid, which a
 // transform with large values does. The port then records
@@ -399,6 +394,13 @@ func (b *contentBuilder) drawGlyphs(
 	text string,
 	fontSize float32,
 ) {
+	if fill != nil && paintIsEmptyGradient(fill.Paint) {
+		fill = nil
+	}
+	if stroke != nil && paintIsEmptyGradient(stroke.Paint) {
+		stroke = nil
+	}
+
 	if fill == nil && stroke == nil {
 		return
 	}
@@ -971,17 +973,14 @@ func (b *contentBuilder) contentSetFillStrokeProperties(
 	}
 
 	// paintGradient writes a gradient, from the result of its method
-	// gradientProperties. krilla panics for a gradient with no stop, and for
-	// a transform of a gradient that cannot be inverted where the gradient
-	// needs its inverse. pdf records ErrPDFInvalidGradient, which
-	// Document.Finish returns, and sets no paint (D62).
+	// gradientProperties. krilla panics for a transform of a gradient that
+	// cannot be inverted where the gradient needs its inverse. pdf records
+	// ErrPDFInvalidGradient, which Document.Finish returns, and sets no
+	// paint (D62). drawPath and drawGlyphs drop a gradient with no stop
+	// before they come here, as upstream does.
 	paintGradient := func(gradientProps gradientProperties, transform Transform, ok bool, gradientTransform Transform) {
 		if !ok {
 			sc.setError(fmt.Errorf("%w: the transform %v cannot be inverted for the bounds %s", okage.ErrPDFInvalidGradient, gradientTransform, bounds))
-			return
-		}
-		if gradientStopCount(gradientProps) == 0 {
-			sc.setError(fmt.Errorf("%w: the gradient has no stop", okage.ErrPDFInvalidGradient))
 			return
 		}
 		writeGradient(gradientProps, sc, cc, transform, b)
