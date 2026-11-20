@@ -33,8 +33,10 @@ the policy `copy` (D52). Its base commit is `v0.3.5`, and its column
 `matched` stays empty until okage applies its pending commits. krilla,
 pdf-writer and subsetter came on 2026-11-18, for the PDF writer (D62). The
 row of krilla covers the crates `krilla` and `krilla-svg`, which are folders
-of one repository. Their column `matched` stays empty until the base port of
-phases 11 to 18 of [`PLAN.md`](PLAN.md) is done. siphasher came on 2026-11-18, in phase 12. Its
+of one repository. Their column `matched` stayed empty until the base port of
+phases 11 to 18 of [`PLAN.md`](PLAN.md) was done, on 2026-11-19. Since
+then it holds the last commit of the ledger of krilla that okage matches.
+siphasher came on 2026-11-18, in phase 12. Its
 base commit is `1.0.2`, the version in the `Cargo.lock` of krilla. The port
 of `sip128` at the base commit is done, but the column `matched` stays empty
 until okage ports the pending commit of its ledger. write-fonts came on
@@ -597,6 +599,10 @@ On 2026-11-18 eighteen ledgers exist:
    `ported` and 74 are `pending`.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
+   On 2026-11-20 okage starts to port the commits of krilla after the base
+   port, from `cc194f14` on. The column `matched` of krilla moves with each
+   one, and the Rust oracle of `test/krilla` links krilla and krilla-svg at
+   that commit.
    pdf-writer has two commits after `fdf09012`. `a10fe0a3` changes only a
    comment of the forms, which the base port leaves out, so it is
    `not-applicable`. `12549ecf` reserves the capacity of a stream in

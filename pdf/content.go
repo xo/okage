@@ -46,6 +46,10 @@ type contentBuilder struct {
 	bboxImportant bool
 	// scratch is a temporary buffer that's reused across the builder.
 	scratch []byte
+	// activeVariableText is true between start_variable_text and
+	// end_variable_text of upstream. The port leaves out those methods of
+	// the forms, so it stays false (D62).
+	activeVariableText bool
 }
 
 // contentColorSpace is ContentColorSpace in krilla src/content.rs. It stores
@@ -942,7 +946,7 @@ func (b *contentBuilder) contentSetFillStrokeProperties(
 		if color, opacity, ok := gradientProps.singleStopColor(); ok {
 			// Write gradients with one stop as a solid color fill.
 			contentBuilder.setFillOpacity(opacity)
-			cs := color.colorSpace(sc)
+			cs := contentBuilder.getColorSpace(sc, color)
 			colorSpaceResource := contentColorSpaceFromColorSpace(sc, cc, contentBuilder.rdBuilder, cs)
 			setSolidFn(contentBuilder.content, colorSpaceResource, color)
 		} else {
@@ -985,7 +989,7 @@ func (b *contentBuilder) contentSetFillStrokeProperties(
 
 	switch p := paint.(type) {
 	case Color:
-		cs := p.colorSpace(sc)
+		cs := b.getColorSpace(sc, p)
 		colorSpaceResource := contentColorSpaceFromColorSpace(sc, cc, b.rdBuilder, cs)
 		setSolidFn(b.content, colorSpaceResource, p)
 	case LinearGradient:
@@ -1151,6 +1155,22 @@ func (b *contentBuilder) contentDrawPath(pathData path.PathSegmentsIter) {
 			b.content.ClosePath()
 		}
 	}
+}
+
+// getColorSpace is ContentBuilder::get_color_space in krilla
+// src/content.rs.
+func (b *contentBuilder) getColorSpace(sc *serializeContext, color Color) colorSpace {
+	// Adobe Acrobat does not render the appearance stream of textboxes and
+	// choice fields in interactive mode if they use a non-device color space.
+	// In read-only/print mode, non-device color spaces are rendered correctly.
+	// Therefore, we provide a best-effort workaround by preferring device color spaces
+	// even when no_device_cs is true in `SerializeSettings`.
+	// This is still PDF/A compliant due to the sRGB OutputIntent.
+	// NOTE: this needs to be revisited once CMYK or custom RBG output intents are supported.
+	if b.activeVariableText {
+		return color.colorSpacePreferDevice(sc)
+	}
+	return color.colorSpace(sc)
 }
 
 // setSolidFill is set_solid_fill in krilla src/content.rs.

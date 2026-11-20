@@ -7,8 +7,9 @@
 //
 // # The oracle
 //
-// The oracle is a Rust program that links krilla and krilla-svg at the base
-// commit of the row krilla of docs/upstream/upstreams.tsv, pdf-writer at the
+// The oracle is a Rust program that links krilla and krilla-svg at the
+// matched commit of the row krilla of docs/upstream/upstreams.tsv, or at its
+// base commit when the column matched is empty, pdf-writer at the
 // commit that krilla pins, and subsetter at the version that krilla
 // requires. TestMain builds it with cargo into .cache/krilla in the root of
 // the repository, with the scalar code of tiny-skia, as test/oracle builds

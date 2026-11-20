@@ -56,6 +56,10 @@ type Color interface {
 	toPDFColor() []float32
 	// colorSpace is Color::color_space and RegularColor::color_space.
 	colorSpace(sc *serializeContext) colorSpace
+	// colorSpacePreferDevice is Color::color_space_prefer_device and
+	// RegularColor::color_space_prefer_device. Same as colorSpace, but it
+	// always returns a device color space for RGB and luma colors.
+	colorSpacePreferDevice(sc *serializeContext) colorSpace
 	// asRGB is RegularColor::as_rgb. It returns the color as RGB, for the
 	// colored glyphs of SVG and COLR, and false for a CMYK color.
 	asRGB() (ColorRGB, bool)
@@ -120,7 +124,19 @@ func (c ColorLuma) toPDFColor() []float32 {
 // colorSpace is the case Luma of RegularColor::color_space in krilla
 // src/graphics/color.rs.
 func (c ColorLuma) colorSpace(sc *serializeContext) colorSpace {
-	return colorSpaceLuma(sc.serializeSettings().noDeviceCS)
+	return c.colorSpaceInner(sc, false)
+}
+
+// colorSpacePreferDevice is the case Luma of
+// RegularColor::color_space_prefer_device in krilla src/graphics/color.rs.
+func (c ColorLuma) colorSpacePreferDevice(sc *serializeContext) colorSpace {
+	return c.colorSpaceInner(sc, true)
+}
+
+// colorSpaceInner is the case Luma of RegularColor::color_space_inner in
+// krilla src/graphics/color.rs.
+func (c ColorLuma) colorSpaceInner(sc *serializeContext, preferDevice bool) colorSpace {
+	return colorSpaceLuma(!preferDevice && sc.serializeSettings().noDeviceCS)
 }
 
 // asRGB is the case Luma of RegularColor::as_rgb in krilla
@@ -188,10 +204,23 @@ func (c ColorCMYK) toPDFColor() []float32 {
 }
 
 // colorSpace is the case Cmyk of RegularColor::color_space in krilla
-// src/graphics/color.rs. Without a CMYK profile, when the colors must be
-// device-independent, it records the error MissingCMYKProfile and gives the
-// device CMYK color space.
+// src/graphics/color.rs.
 func (c ColorCMYK) colorSpace(sc *serializeContext) colorSpace {
+	return c.colorSpaceInner(sc, false)
+}
+
+// colorSpacePreferDevice is the case Cmyk of
+// RegularColor::color_space_prefer_device in krilla src/graphics/color.rs.
+// It gives the same color space as colorSpace.
+func (c ColorCMYK) colorSpacePreferDevice(sc *serializeContext) colorSpace {
+	return c.colorSpaceInner(sc, true)
+}
+
+// colorSpaceInner is the case Cmyk of RegularColor::color_space_inner in
+// krilla src/graphics/color.rs. It does not read preferDevice. Without a
+// CMYK profile, when the colors must be device-independent, it records the
+// error MissingCMYKProfile and gives the device CMYK color space.
+func (c ColorCMYK) colorSpaceInner(sc *serializeContext, _ bool) colorSpace {
 	cs, ok := colorSpaceCMYK(sc.serializeSettings())
 	if !ok {
 		sc.registerValidationError(validationError{kind: validationMissingCMYKProfile})
@@ -309,9 +338,22 @@ func (c ColorRGB) toPDFColor() []float32 {
 	}
 }
 
-// colorSpace is rgb::Color::color_space in krilla src/graphics/color.rs.
+// colorSpace is the case Rgb of RegularColor::color_space in krilla
+// src/graphics/color.rs.
 func (c ColorRGB) colorSpace(sc *serializeContext) colorSpace {
-	return colorSpaceRGB(sc.serializeSettings().noDeviceCS)
+	return c.colorSpaceInner(sc, false)
+}
+
+// colorSpacePreferDevice is the case Rgb of
+// RegularColor::color_space_prefer_device in krilla src/graphics/color.rs.
+func (c ColorRGB) colorSpacePreferDevice(sc *serializeContext) colorSpace {
+	return c.colorSpaceInner(sc, true)
+}
+
+// colorSpaceInner is the case Rgb of RegularColor::color_space_inner in
+// krilla src/graphics/color.rs, with rgb::Color::color_space.
+func (c ColorRGB) colorSpaceInner(sc *serializeContext, preferDevice bool) colorSpace {
+	return colorSpaceRGB(!preferDevice && sc.serializeSettings().noDeviceCS)
 }
 
 // asRGB is the case Rgb of RegularColor::as_rgb in krilla

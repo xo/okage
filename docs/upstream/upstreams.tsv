@@ -12,7 +12,7 @@ tinyhtml5	https://github.com/CourtBouillon/tinyhtml5	upstream/tinyhtml5	tinyhtml
 tinycss2	https://github.com/Kozea/tinycss2	upstream/tinycss2	tinycss2 1.5.1	tinycss2	port	2cab2705158e2b9131e0e8537b8c62b4fb5619f5	2cab2705158e2b9131e0e8537b8c62b4fb5619f5
 cssselect2	https://github.com/Kozea/cssselect2	upstream/cssselect2	cssselect2 0.10.1	cssselect2	port	fc22accd5fdba764d95263fa8e6c97ce24f75f3e	fc22accd5fdba764d95263fa8e6c97ce24f75f3e
 typesetting	https://github.com/go-text/typesetting	upstream/typesetting	github.com/go-text/typesetting v0.3.5	typesetting	copy	19482bd51f2338e34bacd8cfd3288a04bbadc598	
-krilla	https://github.com/LaurenzV/krilla	upstream/krilla	krilla 0.8.2, krilla-svg 0.8.1	pdf, pdfsvg	port	e3459d0650682441894feec76603d92487d8510b	
+krilla	https://github.com/LaurenzV/krilla	upstream/krilla	krilla 0.8.2, krilla-svg 0.8.1	pdf, pdfsvg	port	e3459d0650682441894feec76603d92487d8510b	cc194f14613ab5535bcb7919378f9fe524235cd0
 pdf-writer	https://github.com/typst/pdf-writer	upstream/pdf-writer	pdf-writer 0.15.0	internal/pdfwriter	subset	fdf090125f1e7209fa630c4ca1f5f29910c87c93	
 subsetter	https://github.com/typst/subsetter	upstream/subsetter	subsetter 0.2.6	internal/subsetter	port	c3f23c67bc0190587f639bda84dc0005ca3f54d5	
 siphasher	https://github.com/jedisct1/rust-siphash	upstream/siphasher	siphasher 1.0.2	internal/siphasher	subset	db8172048a1c9bdef0dcec782d965c236161af13	

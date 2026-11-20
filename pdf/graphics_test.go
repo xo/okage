@@ -125,6 +125,49 @@ func TestColorSpaces(t *testing.T) {
 	}
 }
 
+// TestColorSpacePreferDevice checks color_space_prefer_device in krilla
+// src/graphics/color.rs, and ContentBuilder::get_color_space in
+// src/content.rs, which calls it for variable text.
+func TestColorSpacePreferDevice(t *testing.T) {
+	d := NewDocument(WithNoDeviceCS(true))
+	for _, tt := range []struct {
+		color  Color
+		device colorSpaceKind
+		other  colorSpaceKind
+	}{
+		{NewColorRGB(1, 2, 3), colorSpaceDeviceRGB, colorSpaceCIESRGB},
+		{NewColorLuma(4), colorSpaceDeviceGray, colorSpaceCIELuma},
+		// Without a CMYK profile, both fall back to the device CMYK color
+		// space.
+		{NewColorCMYK(1, 2, 3, 4), colorSpaceDeviceCMYK, colorSpaceDeviceCMYK},
+	} {
+		if cs := tt.color.colorSpacePreferDevice(d.sc); cs.kind != tt.device {
+			t.Errorf("%T prefers the color space %d, want %d", tt.color, cs.kind, tt.device)
+		}
+		if cs := tt.color.colorSpace(d.sc); cs.kind != tt.other {
+			t.Errorf("%T has the color space %d, want %d", tt.color, cs.kind, tt.other)
+		}
+		b := newContentBuilder(path.IdentityTransform(), false, d.sc)
+		if cs := b.getColorSpace(d.sc, tt.color); cs.kind != tt.other {
+			t.Errorf("%T outside variable text has the color space %d, want %d", tt.color, cs.kind, tt.other)
+		}
+		b.activeVariableText = true
+		if cs := b.getColorSpace(d.sc, tt.color); cs.kind != tt.device {
+			t.Errorf("%T in variable text has the color space %d, want %d", tt.color, cs.kind, tt.device)
+		}
+	}
+
+	// A CMYK color with a profile keeps its profile in variable text.
+	profile, ok := NewICCProfile(testCMYKProfile(), 4)
+	if !ok {
+		t.Fatal("the CMYK profile is not valid")
+	}
+	d = NewDocument(WithNoDeviceCS(true), WithCMYKProfile(profile))
+	if cs := NewColorCMYK(0, 0, 0, 0).colorSpacePreferDevice(d.sc); cs.kind != colorSpaceCIECMYK {
+		t.Errorf("the CMYK color with a profile prefers the color space %d", cs.kind)
+	}
+}
+
 // testCMYKProfile is the header of an ICC profile of version 2.1 of the
 // color space CMYK. The port reads only the header.
 func testCMYKProfile() []byte {

@@ -1,11 +1,10 @@
 # The PDF oracle of okage (D22, D62). It links krilla and krilla-svg at the
-# base commit of the row krilla of docs/upstream/upstreams.tsv, pdf-writer at
-# the commit that krilla pins, and subsetter at the version that krilla
+# matched commit of the row krilla of docs/upstream/upstreams.tsv, pdf-writer
+# at the commit that krilla pins, and subsetter at the version that krilla
 # requires. It writes the PDF files and the font subsets that the Go tests of
 # test/krilla compare with the port. The revs move with the column matched of
-# each row, when the base port is done. Cargo.lock starts from the Cargo.lock
-# of krilla at that commit, so that each crate has the version that krilla
-# tests with.
+# each row. Cargo.lock starts from the Cargo.lock of krilla at the base
+# commit, so that each crate has the version that krilla tests with.
 [package]
 name = "okage-pdf-oracle"
 version = "0.0.0"
@@ -13,8 +12,8 @@ edition = "2021"
 publish = false
 
 [dependencies]
-krilla = { git = "https://github.com/LaurenzV/krilla", rev = "e3459d0650682441894feec76603d92487d8510b", default-features = false, features = ["raster-images", "simple-text"] }
-krilla-svg = { git = "https://github.com/LaurenzV/krilla", rev = "e3459d0650682441894feec76603d92487d8510b" }
+krilla = { git = "https://github.com/LaurenzV/krilla", rev = "cc194f14613ab5535bcb7919378f9fe524235cd0", default-features = false, features = ["raster-images", "simple-text"] }
+krilla-svg = { git = "https://github.com/LaurenzV/krilla", rev = "cc194f14613ab5535bcb7919378f9fe524235cd0" }
 pdf-writer = { git = "https://github.com/typst/pdf-writer", rev = "fdf090125f1e7209fa630c4ca1f5f29910c87c93" }
 subsetter = { version = "=0.2.6", features = ["variable-fonts"] }
 siphasher = "1.0.1"
