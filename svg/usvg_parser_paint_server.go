@@ -79,7 +79,8 @@ func convertLinear(node svgNode, state *converterState) (serverOrColor, bool) {
 	}
 
 	units := convertUnits(node, AIdGradientUnits, unitsObjectBoundingBox)
-	transform := resolveAttr(node, AIdGradientTransform).resolveTransform(AIdGradientTransform, state)
+	transform := resolveAttr(node, AIdGradientTransform, fromValueTransform).
+		resolveTransform(AIdGradientTransform, state)
 
 	gradient := &LinearGradient{
 		x1: resolveNumber(node, AIdX1, units, state, svgtypes.LengthZero()),
@@ -152,7 +153,8 @@ func convertRadial(node svgNode, state *converterState) (serverOrColor, bool) {
 	)
 	fx := resolveNumber(node, AIdFx, units, state, svgtypes.NewLengthNumber(float64(cx)))
 	fy := resolveNumber(node, AIdFy, units, state, svgtypes.NewLengthNumber(float64(cy)))
-	transform := resolveAttr(node, AIdGradientTransform).resolveTransform(AIdGradientTransform, state)
+	transform := resolveAttr(node, AIdGradientTransform, fromValueTransform).
+		resolveTransform(AIdGradientTransform, state)
 
 	rPositive, ok := path.NewPositiveF32(r)
 	if !ok {
@@ -198,8 +200,8 @@ func convertPattern(
 
 	var vb *viewBox
 	{
-		n1 := resolveAttr(node, AIdViewBox)
-		n2 := resolveAttr(node, AIdPreserveAspectRatio)
+		n1 := resolveAttr(node, AIdViewBox, fromValueViewBox)
+		n2 := resolveAttr(node, AIdPreserveAspectRatio, fromValueAspectRatio)
 		if r, ok := n1.parseViewbox(); ok {
 			aspect, ok := nodeAttribute(n2, AIdPreserveAspectRatio, fromValueAspectRatio)
 			if !ok {
@@ -215,7 +217,8 @@ func convertPattern(
 	units := convertUnits(node, AIdPatternUnits, unitsObjectBoundingBox)
 	contentUnits := convertUnits(node, AIdPatternContentUnits, unitsUserSpaceOnUse)
 
-	transform := resolveAttr(node, AIdPatternTransform).resolveTransform(AIdPatternTransform, state)
+	transform := resolveAttr(node, AIdPatternTransform, fromValueTransform).
+		resolveTransform(AIdPatternTransform, state)
 
 	rect, ok := path.NonZeroRectFromXYWH(
 		resolveNumber(node, AIdX, units, state, svgtypes.LengthZero()),
@@ -282,14 +285,14 @@ func convertColorInterpolation(node svgNode) ColorInterpolationFilter {
 // convertSpreadMethod is convert_spread_method in usvg
 // src/parser/paint_server.rs.
 func convertSpreadMethod(node svgNode) SpreadMethod {
-	node = resolveAttr(node, AIdSpreadMethod)
+	node = resolveAttr(node, AIdSpreadMethod, fromValueSpreadMethod)
 	m, _ := nodeAttribute(node, AIdSpreadMethod, fromValueSpreadMethod)
 	return m
 }
 
 // convertUnits is convert_units in usvg src/parser/paint_server.rs.
 func convertUnits(node svgNode, name AId, def units) units {
-	node = resolveAttr(node, name)
+	node = resolveAttr(node, name, fromValueUnits)
 	u, ok := nodeAttribute(node, name, fromValueUnits)
 	if !ok {
 		return def
@@ -497,12 +500,18 @@ func resolveNumber(
 	state *converterState,
 	def svgtypes.Length,
 ) float32 {
-	return resolveAttr(node, name).convertLength(name, units, state, def)
+	return resolveAttr(node, name, fromValueLength).convertLength(name, units, state, def)
 }
 
 // resolveAttr is resolve_attr in usvg src/parser/paint_server.rs.
-func resolveAttr(node svgNode, name AId) svgNode {
-	if node.hasAttribute(name) {
+//
+// An attribute with an invalid value counts as not specified, so it is resolved
+// from the template instead.
+//
+// Port: the type parameter T of upstream comes with parse, its impl
+// FromValue.
+func resolveAttr[T any](node svgNode, name AId, parse fromValue[T]) svgNode {
+	if _, ok := nodeTryAttribute(node, name, parse); ok {
 		return node
 	}
 
@@ -512,19 +521,19 @@ func resolveAttr(node svgNode, name AId) svgNode {
 	}
 	switch tagName {
 	case EIdLinearGradient:
-		return resolveLgAttr(node, name)
+		return resolveLgAttr(node, name, parse)
 	case EIdRadialGradient:
-		return resolveRgAttr(node, name)
+		return resolveRgAttr(node, name, parse)
 	case EIdPattern:
-		return resolvePatternAttr(node, name)
+		return resolvePatternAttr(node, name, parse)
 	case EIdFilter:
-		return resolveFilterAttr(node, name)
+		return resolveFilterAttr(node, name, parse)
 	}
 	return node
 }
 
 // resolveLgAttr is resolve_lg_attr in usvg src/parser/paint_server.rs.
-func resolveLgAttr(node svgNode, name AId) svgNode {
+func resolveLgAttr[T any](node svgNode, name AId, parse fromValue[T]) svgNode {
 	for link := range node.hrefIter() {
 		tagName, ok := link.tagName()
 		if !ok {
@@ -540,7 +549,7 @@ func resolveLgAttr(node svgNode, name AId) svgNode {
 			// Other attributes can be resolved
 			// from any kind of gradient.
 			(name == AIdGradientUnits || name == AIdSpreadMethod || name == AIdGradientTransform) && isGradient:
-			if link.hasAttribute(name) {
+			if _, ok := nodeTryAttribute(link, name, parse); ok {
 				return link
 			}
 		default:
@@ -552,7 +561,7 @@ func resolveLgAttr(node svgNode, name AId) svgNode {
 }
 
 // resolveRgAttr is resolve_rg_attr in usvg src/parser/paint_server.rs.
-func resolveRgAttr(node svgNode, name AId) svgNode {
+func resolveRgAttr[T any](node svgNode, name AId, parse fromValue[T]) svgNode {
 	for link := range node.hrefIter() {
 		tagName, ok := link.tagName()
 		if !ok {
@@ -568,7 +577,7 @@ func resolveRgAttr(node svgNode, name AId) svgNode {
 			// Other attributes can be resolved
 			// from any kind of gradient.
 			(name == AIdGradientUnits || name == AIdSpreadMethod || name == AIdGradientTransform) && isGradient:
-			if link.hasAttribute(name) {
+			if _, ok := nodeTryAttribute(link, name, parse); ok {
 				return link
 			}
 		default:
@@ -581,7 +590,7 @@ func resolveRgAttr(node svgNode, name AId) svgNode {
 
 // resolvePatternAttr is resolve_pattern_attr in usvg
 // src/parser/paint_server.rs.
-func resolvePatternAttr(node svgNode, name AId) svgNode {
+func resolvePatternAttr[T any](node svgNode, name AId, parse fromValue[T]) svgNode {
 	for link := range node.hrefIter() {
 		tagName, ok := link.tagName()
 		if !ok {
@@ -592,7 +601,7 @@ func resolvePatternAttr(node svgNode, name AId) svgNode {
 			break
 		}
 
-		if link.hasAttribute(name) {
+		if _, ok := nodeTryAttribute(link, name, parse); ok {
 			return link
 		}
 	}
@@ -602,7 +611,7 @@ func resolvePatternAttr(node svgNode, name AId) svgNode {
 
 // resolveFilterAttr is resolve_filter_attr in usvg
 // src/parser/paint_server.rs.
-func resolveFilterAttr(node svgNode, aid AId) svgNode {
+func resolveFilterAttr[T any](node svgNode, aid AId, parse fromValue[T]) svgNode {
 	for link := range node.hrefIter() {
 		tagName, ok := link.tagName()
 		if !ok {
@@ -613,7 +622,7 @@ func resolveFilterAttr(node svgNode, aid AId) svgNode {
 			break
 		}
 
-		if link.hasAttribute(aid) {
+		if _, ok := nodeTryAttribute(link, aid, parse); ok {
 			return link
 		}
 	}

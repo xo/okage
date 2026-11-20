@@ -17,8 +17,8 @@ publish = false
 tiny-skia = { version = "=0.12.0", default-features = false, features = ["std"] }
 roxmltree = "=0.21.1"
 svgtypes = "=0.16.2"
-usvg = { git = "https://github.com/linebender/resvg", rev = "57f9de457d8b65ba33e2502d896c3d4ac5d94594", default-features = false, features = ["svgz", "writer"] }
-resvg = { git = "https://github.com/linebender/resvg", rev = "57f9de457d8b65ba33e2502d896c3d4ac5d94594", default-features = false, features = ["raster-images"] }
+usvg = { git = "https://github.com/linebender/resvg", rev = "555b81578bfc07bf9816a5e6e81952423f3aaacc", default-features = false, features = ["svgz", "writer"] }
+resvg = { git = "https://github.com/linebender/resvg", rev = "555b81578bfc07bf9816a5e6e81952423f3aaacc", default-features = false, features = ["raster-images"] }
 velato = { git = "https://github.com/linebender/velato", rev = "83336b6519ac7289beea53fcc2ec1e9603f25124", default-features = false }
 kurbo = "0.13"
 peniko = "0.6"

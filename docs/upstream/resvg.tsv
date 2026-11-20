@@ -35,3 +35,4 @@ d448e0262d71cd063f5a6515430b8989118cce19	2026-11-14	ported		Support `color-inter
 ae32c3ab8b07c61f9fe222836054043e4d36cf2f	2026-11-14	ported		Follow the SVG 2 path direction rules for marker orientation (#1173). Port: usvg, tests
 d45af96e2991ef4f5465a8cd1e506f739374621e	2026-11-14	ported		Support `x`, `y`, `width` and `height` on `symbol` (#1236). Port: usvg, tests
 57f9de457d8b65ba33e2502d896c3d4ac5d94594	2026-11-14	ported		Reuse the key buffer when looking up variable font instances (#1237). Port: usvg text
+555b81578bfc07bf9816a5e6e81952423f3aaacc	2026-11-14	ported		Inherit paint server transforms through an empty or invalid attribute (#1226). Port: usvg, tests
