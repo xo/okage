@@ -335,7 +335,8 @@ func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver
 // saturateAdd adds two positions, and clamps the sum to the range of a
 // Position, as hb_saturate_add of HarfBuzz 15.1.0.
 //
-// okage: a subtable of format 1 of kerx adds its values with it (D73).
+// okage: a subtable of format 1 of kerx adds its values with it, and so do
+// the attachments of GPOS (D73).
 func saturateAdd(a, b Position) Position {
 	return Position(min(max(int64(a)+int64(b), math.MinInt32), math.MaxInt32))
 }
@@ -343,48 +344,10 @@ func saturateAdd(a, b Position) Position {
 // saturateSub subtracts b from a, and clamps the difference to the range of
 // a Position, as hb_saturate_sub of HarfBuzz 15.1.0.
 //
-// okage: a subtable of format 4 of kerx computes its offsets with it (D73).
+// okage: a subtable of format 4 of kerx computes its offsets with it, and
+// so do the attachments of GPOS (D73).
 func saturateSub(a, b Position) Position {
 	return Position(min(max(int64(a)-int64(b), math.MinInt32), math.MaxInt32))
-}
-
-// resolveCrossOffsetKerx gives the offset across the line of the glyph at
-// glyphPos, plus the offsets of the glyphs that it is attached to by a
-// cursive attachment. It follows at most len(pos) - 1 attachments, and
-// clamps each sum to the range of a Position. When reversed is true, the
-// buffer is reversed, and the attachments are in the order of the buffer
-// before the reverse.
-//
-// okage: this is resolve_cross_offset of HarfBuzz 15.1.0, which a subtable
-// of format 4 of kerx calls since the merge 436f067b20. resolveCrossOffset
-// of GPOS is the function of go-text, without the limit and the clamp
-// (D73).
-func resolveCrossOffsetKerx(pos []GlyphPosition, glyphPos int, direction Direction, reversed bool) Position {
-	horizontal := direction.isHorizontal()
-	offset := pos[glyphPos].XOffset
-	if horizontal {
-		offset = pos[glyphPos].YOffset
-	}
-	for count := 1; count < len(pos) && pos[glyphPos].attachType&attachTypeCursive != 0; count++ {
-		chain := int(pos[glyphPos].attachChain)
-		if chain == 0 {
-			break
-		}
-		if reversed {
-			chain = -chain
-		}
-		parent := glyphPos + chain
-		if parent < 0 || parent >= len(pos) {
-			break
-		}
-		glyphPos = parent
-		shift := pos[glyphPos].XOffset
-		if horizontal {
-			shift = pos[glyphPos].YOffset
-		}
-		offset = saturateAdd(offset, shift)
-	}
-	return offset
 }
 
 type kern2Accelerator struct {
@@ -458,7 +421,7 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 		}
 		// okage: the mark takes the offset of its base across the line, as
 		// in the merge 436f067b20 of HarfBuzz 15.1.0 (D73).
-		baseOffset := resolveCrossOffsetKerx(buffer.Pos, dc.mark, buffer.Props.Direction, dc.c.bufferIsReversed)
+		baseOffset := resolveCrossOffset(buffer.Pos, dc.mark, buffer.Props.Direction, dc.c.bufferIsReversed)
 		if buffer.Props.Direction.isHorizontal() {
 			o.YOffset = saturateAdd(o.YOffset, baseOffset)
 		} else {

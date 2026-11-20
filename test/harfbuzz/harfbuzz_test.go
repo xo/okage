@@ -382,6 +382,53 @@ func TestPairPosClassZero(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"GPOS": gpos}), false, "ab", "ac", "abcab")
 }
 
+// anchor1 builds an Anchor table of format 1.
+func anchor1(x, y int) []byte {
+	return u16s(1, x, y)
+}
+
+// gposCursiveCycle builds a table GDEF that makes b a mark, and a table
+// GPOS whose feature kern has two cursive lookups, and whose feature mark
+// attaches d to c. The first cursive lookup has the flag RightToLeft, and
+// attaches a to b and b to c. The second has the flag IgnoreMarks, skips
+// b, and attaches c to a. So the cursive attachments of a, b and c form a
+// cycle.
+func gposCursiveCycle(t *testing.T) (gdef, gpos []byte) {
+	t.Helper()
+	gdef = u16s(1, 0, 12, 0, 0, 0)
+	gdef = append(gdef, u16s(2, 1, robotoB, robotoB, 3)...)
+	rtl := u16s(1, 18, 3, 0, 28, 34, 40, 46, 0)
+	rtl = append(rtl, coverage1(robotoA, robotoB, robotoC)...)
+	rtl = append(rtl, anchor1(500, 100)...)
+	rtl = append(rtl, anchor1(0, 0)...)
+	rtl = append(rtl, anchor1(300, 200)...)
+	rtl = append(rtl, anchor1(0, 50)...)
+	skip := u16s(1, 14, 2, 0, 22, 28, 0)
+	skip = append(skip, coverage1(robotoA, robotoC)...)
+	skip = append(skip, anchor1(500, 300)...)
+	skip = append(skip, anchor1(0, 0)...)
+	markBase := u16s(1, 12, 18, 1, 24, 36)
+	markBase = append(markBase, coverage1(robotoD)...)
+	markBase = append(markBase, coverage1(robotoC)...)
+	markBase = append(markBase, u16s(1, 0, 6)...)
+	markBase = append(markBase, anchor1(0, 0)...)
+	markBase = append(markBase, u16s(1, 4)...)
+	markBase = append(markBase, anchor1(200, 400)...)
+	gpos = layoutTable(t, []string{"DFLT", "latn"},
+		[]layoutFeature{{"kern", []int{0, 1}}, {"mark", []int{2}}},
+		[][]byte{lookupTable(t, 3, 1, rtl), lookupTable(t, 3, 8, skip), lookupTable(t, 4, 0, markBase)})
+	return gdef, gpos
+}
+
+// TestCursiveCycle: the cursive attachments of a, b and c form a cycle,
+// and d attaches to c. The walk of the attachments of c for the offset of
+// d stops after 3 attachments, one less than the number of glyphs, as in
+// HarfBuzz 15.1.0. go-text did not stop.
+func TestCursiveCycle(t *testing.T) {
+	gdef, gpos := gposCursiveCycle(t)
+	testCase(t, robotoWith(t, map[string][]byte{"GDEF": gdef, "GPOS": gpos}), false, "abcd", "abcdabcd", "dcba")
+}
+
 // TestDropOutputWithoutOperations: a context of one glyph calls a
 // MultipleSubst once for x and 20,000 times for a. The MultipleSubst
 // replaces a with b, b with a, and x with z, y. The buffer has no

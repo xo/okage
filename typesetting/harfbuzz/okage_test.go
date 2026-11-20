@@ -535,6 +535,128 @@ func TestPairPosClassZero(t *testing.T) {
 	})
 }
 
+// anchor1 builds an Anchor table of format 1.
+func anchor1(x, y int) []byte {
+	return u16s(1, x, y)
+}
+
+// gposCursiveCycle builds a table GDEF that makes b a mark, and a table
+// GPOS whose feature kern has two cursive lookups, and whose feature mark
+// attaches d to c. The first cursive lookup has the flag RightToLeft, and
+// attaches a to b and b to c. The second has the flag IgnoreMarks, skips
+// b, and attaches c to a. So the cursive attachments of a, b and c form a
+// cycle.
+func gposCursiveCycle(t testing.TB) (gdef, gpos []byte) {
+	t.Helper()
+	gdef = u16s(1, 0, 12, 0, 0, 0)
+	gdef = append(gdef, u16s(2, 1, int(robotoB), int(robotoB), 3)...)
+	rtl := u16s(1, 18, 3, 0, 28, 34, 40, 46, 0)
+	rtl = append(rtl, coverage1(robotoA, robotoB, robotoC)...)
+	rtl = append(rtl, anchor1(500, 100)...)
+	rtl = append(rtl, anchor1(0, 0)...)
+	rtl = append(rtl, anchor1(300, 200)...)
+	rtl = append(rtl, anchor1(0, 50)...)
+	skip := u16s(1, 14, 2, 0, 22, 28, 0)
+	skip = append(skip, coverage1(robotoA, robotoC)...)
+	skip = append(skip, anchor1(500, 300)...)
+	skip = append(skip, anchor1(0, 0)...)
+	markBase := u16s(1, 12, 18, 1, 24, 36)
+	markBase = append(markBase, coverage1(robotoD)...)
+	markBase = append(markBase, coverage1(robotoC)...)
+	markBase = append(markBase, u16s(1, 0, 6)...)
+	markBase = append(markBase, anchor1(0, 0)...)
+	markBase = append(markBase, u16s(1, 4)...)
+	markBase = append(markBase, anchor1(200, 400)...)
+	gpos = layoutTable(t, []string{"DFLT", "latn"},
+		[]layoutFeature{{"kern", []int{0, 1}}, {"mark", []int{2}}},
+		[][]byte{lookupTable(t, 3, 1, rtl), lookupTable(t, 3, 8, skip), lookupTable(t, 4, 0, markBase)})
+	return gdef, gpos
+}
+
+// TestCursiveCycle shapes abcd with gposCursiveCycle. The cursive
+// attachments of a, b and c form a cycle, and d attaches to c. As in
+// HarfBuzz 15.1.0, the walk of the attachments of c for the offset of d
+// stops after 3 attachments, one less than the number of glyphs, and
+// test/harfbuzz gives the same glyphs. go-text did not stop (D73).
+func TestCursiveCycle(t *testing.T) {
+	gdef, gpos := gposCursiveCycle(t)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"GDEF": gdef, "GPOS": gpos}), []shapedText{
+		{"abcd", []shapedGlyph{
+			{robotoA, 0, 500, 0, -50}, {robotoB, 1, 0, 0, 50},
+			{robotoC, 2, 1072, 0, 200}, {robotoD, 3, 1155, -872, 750},
+		}},
+	})
+}
+
+// TestCrossOffsetBounds checks two bounds of resolveCrossOffset, as in
+// HarfBuzz 15.1.0. A parent before the start of the buffer ends the walk,
+// where go-text read the glyph at a negative index. A sum of the offsets
+// is clamped to the range of a position, where go-text let it wrap (D73).
+func TestCrossOffsetBounds(t *testing.T) {
+	pos := make([]GlyphPosition, 2)
+	pos[1].YOffset = 7
+	pos[1].attachChain = -2
+	pos[1].attachType = attachTypeCursive
+	if got := resolveCrossOffset(pos, 1, LeftToRight, false); got != 7 {
+		t.Errorf("a parent before the start: got the offset %d, want 7", got)
+	}
+	pos[0].YOffset = math.MaxInt32
+	pos[1].YOffset = math.MaxInt32
+	pos[1].attachChain = -1
+	if got := resolveCrossOffset(pos, 1, LeftToRight, false); got != math.MaxInt32 {
+		t.Errorf("a sum past the range: got the offset %d, want %d", got, math.MaxInt32)
+	}
+}
+
+// TestReverseCursiveBounds checks reverseCursiveMinorOffset, as in
+// HarfBuzz 15.1.0. The negated offset of a glyph is clamped to the range
+// of a position, where go-text let -MinInt32 wrap. A chain of -32,768,
+// whose reverse does not fit in 16 bits, leaves the parent detached, where
+// go-text stored a chain that wrapped (D73).
+func TestReverseCursiveBounds(t *testing.T) {
+	pos := make([]GlyphPosition, 2)
+	pos[1].YOffset = math.MinInt32
+	pos[1].attachChain = -1
+	pos[1].attachType = attachTypeCursive
+	reverseCursiveMinorOffset(pos, 1, LeftToRight, len(pos), 0)
+	if pos[0].YOffset != math.MaxInt32 || pos[0].attachChain != 1 || pos[1].attachChain != 0 {
+		t.Errorf("negated offset: got the offset %d and the chains %d, %d, want %d, 1 and 0",
+			pos[0].YOffset, pos[0].attachChain, pos[1].attachChain, math.MaxInt32)
+	}
+	pos = make([]GlyphPosition, 32769)
+	pos[32768].attachChain = math.MinInt16
+	pos[32768].attachType = attachTypeCursive
+	reverseCursiveMinorOffset(pos, 32768, LeftToRight, len(pos), 0)
+	if pos[0].attachChain != 0 || pos[0].attachType != 0 || pos[32768].attachChain != 0 {
+		t.Errorf("reversed chain: got the chains %d and %d, want 0 and 0", pos[0].attachChain, pos[32768].attachChain)
+	}
+}
+
+// TestAttachmentClamp checks that propagateAttachmentOffsets clamps each
+// sum to the range of a position, as HarfBuzz 15.1.0 does. A cursive
+// glyph adds the offset of its parent, and a mark subtracts the advances
+// of the glyphs from its base. go-text let each sum wrap (D73).
+func TestAttachmentClamp(t *testing.T) {
+	pos := make([]GlyphPosition, 2)
+	pos[0].YOffset = math.MaxInt32
+	pos[1].YOffset = math.MaxInt32
+	pos[1].attachChain = -1
+	pos[1].attachType = attachTypeCursive
+	propagateAttachmentOffsets(pos, 1, LeftToRight)
+	if got := pos[1].YOffset; got != math.MaxInt32 {
+		t.Errorf("cursive: got the offset %d, want %d", got, math.MaxInt32)
+	}
+	pos = make([]GlyphPosition, 3)
+	pos[0].XAdvance = math.MaxInt32
+	pos[1].XAdvance = math.MaxInt32
+	pos[2].attachChain = -2
+	pos[2].attachType = attachTypeMark
+	propagateAttachmentOffsets(pos, 2, LeftToRight)
+	if got := pos[2].XOffset; got != math.MinInt32 {
+		t.Errorf("mark: got the offset %d, want %d", got, math.MinInt32)
+	}
+}
+
 // gsubNestedRecords builds a table GSUB with two lookups. The feature ccmp
 // has lookup 1, a context of one glyph. For x, it calls lookup 0 once, and
 // for a, it calls lookup 0 the given number of times. Lookup 0, a

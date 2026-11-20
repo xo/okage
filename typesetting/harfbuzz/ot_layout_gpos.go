@@ -69,7 +69,9 @@ func propagateAttachmentOffsets(pos []GlyphPosition, i int, direction Direction)
 
 // okage: HarfBuzz 15.1.0 follows a chain of attachments to at most
 // HB_MAX_NESTING_LEVEL glyphs, and the glyph at that depth does not take
-// the offset of its parent. go-text followed the whole chain (D73).
+// the offset of its parent. go-text followed the whole chain. HarfBuzz
+// also clamps each sum to the range of a position, from bcce9d4f55 and
+// the fix of its issue 6151, and go-text let a sum wrap (D73).
 func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Direction, nestingLevel int) {
 	/* Adjusts offsets of attached glyphs (both cursive and mark) to accumulate
 	 * offset of glyph they are attached to. */
@@ -95,15 +97,15 @@ func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Dire
 
 	if (type_ & attachTypeCursive) != 0 {
 		if direction.isHorizontal() {
-			pos[i].YOffset += pos[j].YOffset
+			pos[i].YOffset = saturateAdd(pos[i].YOffset, pos[j].YOffset)
 		} else {
-			pos[i].XOffset += pos[j].XOffset
+			pos[i].XOffset = saturateAdd(pos[i].XOffset, pos[j].XOffset)
 		}
 	} else /*if (type_ & attachTypeMark)*/ {
 		if direction.isHorizontal() {
-			pos[i].XOffset += pos[j].XOffset
+			pos[i].XOffset = saturateAdd(pos[i].XOffset, pos[j].XOffset)
 		} else {
-			pos[i].YOffset += pos[j].YOffset
+			pos[i].YOffset = saturateAdd(pos[i].YOffset, pos[j].YOffset)
 		}
 
 		// i is the position of the mark; j is the base.
@@ -112,13 +114,13 @@ func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Dire
 			 * And currently the only way in OpenType. */
 			if direction.isForward() {
 				for _, p := range pos[j:i] {
-					pos[i].XOffset -= p.XAdvance
-					pos[i].YOffset -= p.YAdvance
+					pos[i].XOffset = saturateSub(pos[i].XOffset, p.XAdvance)
+					pos[i].YOffset = saturateSub(pos[i].YOffset, p.YAdvance)
 				}
 			} else {
 				for _, p := range pos[j+1 : i+1] {
-					pos[i].XOffset += p.XAdvance
-					pos[i].YOffset += p.YAdvance
+					pos[i].XOffset = saturateAdd(pos[i].XOffset, p.XAdvance)
+					pos[i].YOffset = saturateAdd(pos[i].YOffset, p.YAdvance)
 				}
 			}
 		} else { // j > i
@@ -126,13 +128,13 @@ func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Dire
 			 * to a base after it in the logical order. */
 			if direction.isForward() {
 				for k := i; k < j; k++ {
-					pos[i].XOffset += pos[k].XAdvance
-					pos[i].YOffset += pos[k].YAdvance
+					pos[i].XOffset = saturateAdd(pos[i].XOffset, pos[k].XAdvance)
+					pos[i].YOffset = saturateAdd(pos[i].YOffset, pos[k].YAdvance)
 				}
 			} else {
 				for k := i + 1; k < j+1; k++ {
-					pos[i].XOffset -= pos[k].XAdvance
-					pos[i].YOffset -= pos[k].YAdvance
+					pos[i].XOffset = saturateSub(pos[i].XOffset, pos[k].XAdvance)
+					pos[i].YOffset = saturateSub(pos[i].YOffset, pos[k].YAdvance)
 				}
 			}
 		}
@@ -318,6 +320,11 @@ func (c *otApplyContext) applyGPOSValueRecord(format tables.ValueFormat, v table
 	return ret
 }
 
+// okage: as in HarfBuzz 15.1.0, a parent before the start of the buffer
+// ends the walk, a reversed chain that does not fit in 16 bits leaves the
+// glyph detached, and the negated offset is clamped to the range of a
+// position, from the fix of its issue 6151. go-text read a negative index,
+// stored the chain that wrapped, and let the offset wrap (D73).
 func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, newParent, nestingLevel int) {
 	if nestingLevel > maxNestingLevel {
 		return
@@ -332,7 +339,7 @@ func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, 
 
 	j := i + int(chain)
 
-	if j >= len(pos) {
+	if j < 0 || j >= len(pos) {
 		return
 	}
 
@@ -341,15 +348,20 @@ func reverseCursiveMinorOffset(pos []GlyphPosition, i int, direction Direction, 
 		return
 	}
 
+	reversedChain := -chain
+	if int(reversedChain) != -int(chain) {
+		return
+	}
+
 	reverseCursiveMinorOffset(pos, j, direction, newParent, nestingLevel+1)
 
 	if direction.isHorizontal() {
-		pos[j].YOffset = -pos[i].YOffset
+		pos[j].YOffset = saturateSub(0, pos[i].YOffset)
 	} else {
-		pos[j].XOffset = -pos[i].XOffset
+		pos[j].XOffset = saturateSub(0, pos[i].XOffset)
 	}
 
-	pos[j].attachChain = -chain
+	pos[j].attachChain = reversedChain
 	pos[j].attachType = type_
 }
 
@@ -459,31 +471,34 @@ func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) 
 
 	pos := buffer.Pos
 
+	// okage: as in HarfBuzz 15.1.0, each sum is clamped to the range of a
+	// position, from the fix of its issue 6151. go-text let a sum wrap
+	// (D73).
 	var d Position
 	/* Main-direction adjustment */
 	switch c.direction {
 	case LeftToRight:
-		pos[i].XAdvance = roundf(exitX) + pos[i].XOffset
+		pos[i].XAdvance = saturateAdd(roundf(exitX), pos[i].XOffset)
 
-		d = roundf(entryX) + pos[j].XOffset
-		pos[j].XAdvance -= d
-		pos[j].XOffset -= d
+		d = saturateAdd(roundf(entryX), pos[j].XOffset)
+		pos[j].XAdvance = saturateSub(pos[j].XAdvance, d)
+		pos[j].XOffset = saturateSub(pos[j].XOffset, d)
 	case RightToLeft:
-		d = roundf(exitX) + pos[i].XOffset
-		pos[i].XAdvance -= d
-		pos[i].XOffset -= d
+		d = saturateAdd(roundf(exitX), pos[i].XOffset)
+		pos[i].XAdvance = saturateSub(pos[i].XAdvance, d)
+		pos[i].XOffset = saturateSub(pos[i].XOffset, d)
 
-		pos[j].XAdvance = roundf(entryX) + pos[j].XOffset
+		pos[j].XAdvance = saturateAdd(roundf(entryX), pos[j].XOffset)
 	case TopToBottom:
-		pos[i].YAdvance = roundf(exitY) + pos[i].YOffset
+		pos[i].YAdvance = saturateAdd(roundf(exitY), pos[i].YOffset)
 
-		d = roundf(entryY) + pos[j].YOffset
-		pos[j].YAdvance -= d
-		pos[j].YOffset -= d
+		d = saturateAdd(roundf(entryY), pos[j].YOffset)
+		pos[j].YAdvance = saturateSub(pos[j].YAdvance, d)
+		pos[j].YOffset = saturateSub(pos[j].YOffset, d)
 	case BottomToTop:
-		d = roundf(exitY) + pos[i].YOffset
-		pos[i].YAdvance -= d
-		pos[i].YOffset -= d
+		d = saturateAdd(roundf(exitY), pos[i].YOffset)
+		pos[i].YAdvance = saturateSub(pos[i].YAdvance, d)
+		pos[i].YOffset = saturateSub(pos[i].YOffset, d)
 
 		pos[j].YAdvance = roundf(entryY)
 	}
@@ -629,22 +644,35 @@ func (c *otApplyContext) getAnchor3(anchor tables.AnchorFormat3) (x, y float32) 
 	return x, y
 }
 
-func resolveCrossOffset(pos []GlyphPosition,
-	glyphPos int,
-	direction Direction,
-) Position {
+// resolveCrossOffset gives the offset across the line of the glyph at
+// glyphPos, plus the offsets of the glyphs that it is attached to by a
+// cursive attachment. It follows at most len(pos) - 1 attachments, and
+// clamps each sum to the range of a Position. When reversed is true, the
+// buffer is reversed, and the attachments are in the order of the buffer
+// before the reverse.
+//
+// okage: this is resolve_cross_offset of HarfBuzz 15.1.0, with the limit
+// of 703509a9d9 and the clamp of bcce9d4f55. Cursive lookups with other
+// flags can attach glyphs in a cycle, and the loop of go-text did not end
+// on a cycle. go-text also did not stop at a parent before the start of
+// the buffer. A mark of GPOS and a mark of a subtable of format 4 of kerx
+// call it (D73).
+func resolveCrossOffset(pos []GlyphPosition, glyphPos int, direction Direction, reversed bool) Position {
 	horizontal := direction.isHorizontal()
 	offset := pos[glyphPos].XOffset
 	if horizontal {
 		offset = pos[glyphPos].YOffset
 	}
-	for pos[glyphPos].attachType&attachTypeCursive != 0 {
-		chain := pos[glyphPos].attachChain
+	for count := 1; count < len(pos) && pos[glyphPos].attachType&attachTypeCursive != 0; count++ {
+		chain := int(pos[glyphPos].attachChain)
 		if chain == 0 {
 			break
 		}
-		parent := glyphPos + int(chain)
-		if parent >= len(pos) {
+		if reversed {
+			chain = -chain
+		}
+		parent := glyphPos + chain
+		if parent < 0 || parent >= len(pos) {
 			break
 		}
 		glyphPos = parent
@@ -652,7 +680,7 @@ func resolveCrossOffset(pos []GlyphPosition,
 		if horizontal {
 			shift = pos[glyphPos].YOffset
 		}
-		offset += shift
+		offset = saturateAdd(offset, shift)
 	}
 	return offset
 }
@@ -680,7 +708,7 @@ func (c *otApplyContext) applyGPOSMarks(marks tables.MarkArray, markIndex, glyph
 	buffer.unsafeToBreak(glyphPos, buffer.idx+1)
 	markX, markY := c.getAnchor(markAnchor, buffer.cur(0).Glyph)
 
-	baseOffset := resolveCrossOffset(buffer.Pos, glyphPos, buffer.Props.Direction)
+	baseOffset := resolveCrossOffset(buffer.Pos, glyphPos, buffer.Props.Direction, false)
 
 	mark := buffer.curPos(0)
 	chain := glyphPos - buffer.idx
