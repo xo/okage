@@ -380,7 +380,8 @@ func layoutSubstituteStart(font *Font, buffer *Buffer) {
 	hasClass := gdef.GlyphClassDef != nil
 	for i := range buffer.Info {
 		if hasClass {
-			buffer.Info[i].glyphProps = gdef.GlyphProps(gID(buffer.Info[i].Glyph))
+			// okage: from the cache of the font (D83).
+			buffer.Info[i].glyphProps = font.glyphProps(gID(buffer.Info[i].Glyph))
 		}
 		buffer.Info[i].ligProps = 0
 		buffer.Info[i].syllable = 0

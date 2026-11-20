@@ -24,6 +24,11 @@ type Font struct {
 
 	faceUpem int32 // cached value of Face.Upem()
 
+	// glyphPropsCache holds the glyph properties of GDEF of some glyphs.
+	//
+	// okage: as glyph_props_cache of HarfBuzz (D83).
+	glyphPropsCache mappingCache
+
 	// Point size of the font. Set to zero to unset.
 	// This is used in AAT layout, when applying 'trak' table.
 	Ptem float32
@@ -99,6 +104,7 @@ func NewFont(face Face) *Font {
 	font.faceUpem = Position(font.face.Upem())
 	font.XScale = font.faceUpem
 	font.YScale = font.faceUpem
+	font.glyphPropsCache.clear() // okage: D83.
 
 	// accelerators
 	font.gsubAccels = make([]otLayoutLookupAccelerator, len(face.GSUB.Lookups))

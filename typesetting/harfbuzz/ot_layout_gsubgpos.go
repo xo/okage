@@ -529,7 +529,8 @@ func (c *otApplyContext) setGlyphClassExt(glyphIndex_ GID, classGuess uint16, li
 	}
 	if c.hasGlyphClasses {
 		props &= preserve
-		c.buffer.cur(0).glyphProps = props | c.gdef.GlyphProps(glyphIndex)
+		// okage: from the cache of the font (D83).
+		c.buffer.cur(0).glyphProps = props | c.font.glyphProps(glyphIndex)
 	} else if classGuess != 0 {
 		props &= preserve
 		c.buffer.cur(0).glyphProps = props | classGuess

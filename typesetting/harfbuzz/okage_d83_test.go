@@ -5,6 +5,7 @@ package harfbuzz
 import (
 	"testing"
 
+	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 )
 
@@ -71,5 +72,25 @@ func TestPairPosCache(t *testing.T) {
 	}
 	if subtables == 0 {
 		t.Fatal("found no PairPos subtable of format 2")
+	}
+}
+
+// TestGlyphPropsCache compares Font.glyphProps with GDEF.GlyphProps for
+// each glyph of some fonts, twice, so that the second pass reads the
+// cache.
+func TestGlyphPropsCache(t *testing.T) {
+	for _, name := range []string{"common/Roboto-BoldItalic.ttf", "common/mplus-1p-regular.ttf", "common/NotoSansArabic.ttf", "common/DejaVuSans.ttf"} {
+		ft := openFontFileTT(t, name)
+		if ft.GDEF.GlyphClassDef == nil {
+			t.Fatalf("%s has no glyph classes", name)
+		}
+		f := NewFont(&font.Face{Font: ft})
+		for pass := range 2 {
+			for g := range 1 << 16 {
+				if got, want := f.glyphProps(gID(g)), ft.GDEF.GlyphProps(gID(g)); got != want {
+					t.Fatalf("%s, pass %d: glyphProps(%d) = %d, want %d", name, pass, g, got, want)
+				}
+			}
+		}
 	}
 }
