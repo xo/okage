@@ -44,7 +44,14 @@ jobs:
       with:
         go-version-file: go.mod
     - name: Install wasmtime
-      run: curl -sSf https://wasmtime.dev/install.sh | bash
+      # the version is pinned, because the installer asks the API of GitHub
+      # for the latest version, and that request can fail on a shared
+      # runner. The installer then exits with 0, so the last command makes
+      # sure that wasmtime runs
+      run: |
+        set -o pipefail
+        curl -sSf https://wasmtime.dev/install.sh | bash -s -- --version v50.0.3
+        "$HOME/.wasmtime/bin/wasmtime" --version
     - name: Test
       run: |
         export PATH="$HOME/.wasmtime/bin:$(go env GOROOT)/lib/wasm:$PATH"
@@ -68,7 +75,14 @@ jobs:
       # TinyGo 0.44.0 is the lowest version that okage supports (D25)
       run: tinygo test ./...
     - name: Install wasmtime
-      run: curl -sSf https://wasmtime.dev/install.sh | bash
+      # the version is pinned, because the installer asks the API of GitHub
+      # for the latest version, and that request can fail on a shared
+      # runner. The installer then exits with 0, so the last command makes
+      # sure that wasmtime runs
+      run: |
+        set -o pipefail
+        curl -sSf https://wasmtime.dev/install.sh | bash -s -- --version v50.0.3
+        "$HOME/.wasmtime/bin/wasmtime" --version
     - name: Test texmath for wasip1
       # a goroutine of TinyGo for wasip1 has a stack of 64 KiB that does not
       # grow. The deepest formula that the limits of D78 allow must parse and
