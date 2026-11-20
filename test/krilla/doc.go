@@ -49,12 +49,10 @@
 //
 // The tests of subsetter_vf_test.go make the instances of the variable fonts
 // of subsetter and of the tests of okage at many locations. A subset at the
-// default location must be the same, byte for byte. In an instance, each
-// coordinate, advance and left side bearing must be within 1 unit of the
-// instance of subsetter (D65). typesetting computes the deltas in fixed
-// point, as skrifa does (D84), so the instances are the same, byte for byte,
-// in each case of 2026-11-20. The tests count the values that differ, and
-// log the counts for each font.
+// default location must be the same, byte for byte. typesetting computes
+// the deltas in fixed point, as skrifa does, so each instance must be the
+// same, byte for byte, too (D84). When an instance differs, the tests log
+// how its points, advances and left side bearings differ.
 //
 // # The question "pdf_writer"
 //
@@ -327,7 +325,7 @@
 // the snapshots of text and fonts of krilla, the COLR glyphs of Noto Color
 // Emoji, the bitmap glyphs of the tables sbix and CBDT, and random runs of
 // glyphs. The font files of their subsets must be the bytes of krilla,
-// except for an instance of a variable font (D65). The tests of
+// also for an instance of a variable font (D84). The tests of
 // interchange_test.go do the same for the metadata, the outlines and the
 // links, for fixed and for random scenes, and compare the errors where
 // krilla panics. The test of fallback_test.go draws text with a font whose

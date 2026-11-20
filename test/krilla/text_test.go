@@ -366,13 +366,10 @@ func subsetterFont(t *testing.T, name string, coords ...coord) fontSpec {
 // krilla, as the test text_variable_font of krilla does with
 // NotoSans_variable.ttf, and with RobotoFlex of the tests of svg, which has
 // more axes. NotoSans-Regular_var.ttf of the tests of internal/subsetter is
-// the same file as NotoSans_variable.ttf. The glyphs of an instance can
-// differ by 1 unit, which D65 accepts, so the font files of the subsets can
-// differ. Each other object must be the
-// same, with the widths, the bounding boxes and the tags of the names. The
-// coordinates are the ends and the default of each axis. At other
-// coordinates, typesetting computes the deltas of HVAR in float32 and skrifa
-// in fixed point, so a width can differ by 1 unit too (D65).
+// the same file as NotoSans_variable.ttf. typesetting computes the deltas
+// of the variations as skrifa does, so each object must be the same, with
+// the font files, the widths, the bounding boxes and the tags of the names
+// (D84). The coordinates are the ends and the default of each axis.
 func TestTextGoVariable(t *testing.T) {
 	text := "I love variable fonts!"
 	for _, c := range []struct {
@@ -413,23 +410,9 @@ func TestTextGoVariable(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			fontFiles := map[string]bool{}
-			for _, o := range wantFile.Objects {
-				if d, ok := o.Value.(*pdfDict); ok && d.get("Type") == pdfName("FontDescriptor") {
-					if r, ok := d.get("FontFile2").(pdfRef); ok {
-						fontFiles[fmt.Sprintf("object %d %d:", r.Num, r.Gen)] = true
-					}
-				}
-			}
-			files := 0
 			for _, d := range comparePDF(gotFile, wantFile) {
-				if fontFiles[d[:strings.Index(d, ":")+1]] {
-					files++
-					continue
-				}
 				t.Error(d)
 			}
-			t.Logf("%d of %d font files differ by the rounding of D65", files, len(fontFiles))
 		})
 	}
 }

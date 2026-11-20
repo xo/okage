@@ -18,9 +18,9 @@ import (
 // docs/PLAN.md). subsetter draws each glyph of an instance with skrifa, and
 // internal/subsetter draws it with typesetting. Before D84, typesetting
 // computed the deltas of the variations in float32 where skrifa computes them
-// in fixed point, and a point of an instance could differ by 1 unit. The
-// tests still count such points. At the default location, a subset of a CFF2
-// font is still an instance, and it must be the same, byte for byte.
+// in fixed point, and a point of an instance could differ by 1 unit. Now
+// typesetting computes them as skrifa does, and each instance must be the
+// same, byte for byte.
 
 // vfFont is a variable font of the comparison.
 type vfFont struct {
@@ -154,25 +154,10 @@ func vfCases(t *testing.T, font vfFont) []subsetCase {
 	return cases
 }
 
-// vfMaxBeyond is the largest share of the glyphs of all the instances of a
-// font that can differ by more than 1 unit from the glyphs of subsetter.
-// The maintainers accepted this tolerance on 2026-11-18 (item 5 of
-// "Testing" under "The PDF writer" in docs/PLAN.md). skrifa computes
-// the deltas in fixed point, and rounds each step, so a coordinate that is
-// very near half a unit can round the other way. A point of a component and
-// the offset of the component can both round the other way, and give a
-// point that differs by 2 units. In a CFF2 font, a point of a cubic curve
-// that differs by 1 unit can change the number of quadratic curves of the
-// curve.
-const vfMaxBeyond = 0.001
-
 // TestSubsetterVariable compares the instances of the variable fonts with
-// the oracle. A subset at the default location must be the same, byte for
-// byte. In an instance, each coordinate, advance and left side bearing must
-// be within 1 unit of the instance of subsetter. An on-curve point that one
-// instance implies and the other does not counts as within 1 unit when the
-// points are within 1 unit. The test counts the values that differ, and
-// fails when more than vfMaxBeyond of the glyphs differ by more than 1 unit.
+// the oracle. Each subset and each instance must be the same, byte for byte
+// (D84). When an instance differs, the test logs how its points, advances
+// and left side bearings differ, to help find the cause.
 func TestSubsetterVariable(t *testing.T) {
 	needOracle(t)
 	var cases []subsetCase
@@ -217,9 +202,10 @@ func TestSubsetterVariable(t *testing.T) {
 			sameResult(t, c.name, a, tag, got, err)
 			continue
 		}
+		t.Errorf("%s: the instance is not the instance of subsetter", c.name)
 		d, err := vfCompare(got, a.Data[6:])
 		if err != nil {
-			t.Errorf("%s: %v", c.name, err)
+			t.Logf("%s: %v", c.name, err)
 			continue
 		}
 		for _, msg := range d.messages {
@@ -234,9 +220,6 @@ func TestSubsetterVariable(t *testing.T) {
 			name, d.cases, d.same, d.allGlyphs, d.points, d.pointsOff, d.glyphs, d.implied, d.beyond, d.advancesOff, d.lsbsOff)
 		if d.same == 0 {
 			t.Errorf("%s: no subset is the same as the subset of subsetter", name)
-		}
-		if float64(d.beyond) > vfMaxBeyond*float64(d.allGlyphs) {
-			t.Errorf("%s: %d of the %d glyphs of the instances differ by more than 1 unit", name, d.beyond, d.allGlyphs)
 		}
 	}
 }
