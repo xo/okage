@@ -336,6 +336,53 @@ func saturateAdd(a, b Position) Position {
 	return Position(min(max(int64(a)+int64(b), math.MinInt32), math.MaxInt32))
 }
 
+// saturateSub subtracts b from a, and clamps the difference to the range of
+// a Position, as hb_saturate_sub of HarfBuzz 15.1.0.
+//
+// okage: a subtable of format 4 of kerx computes its offsets with it (D73).
+func saturateSub(a, b Position) Position {
+	return Position(min(max(int64(a)-int64(b), math.MinInt32), math.MaxInt32))
+}
+
+// resolveCrossOffsetKerx gives the offset across the line of the glyph at
+// glyphPos, plus the offsets of the glyphs that it is attached to by a
+// cursive attachment. It follows at most len(pos) - 1 attachments, and
+// clamps each sum to the range of a Position. When reversed is true, the
+// buffer is reversed, and the attachments are in the order of the buffer
+// before the reverse.
+//
+// okage: this is resolve_cross_offset of HarfBuzz 15.1.0, which a subtable
+// of format 4 of kerx calls since the merge 436f067b20. resolveCrossOffset
+// of GPOS is the function of go-text, without the limit and the clamp
+// (D73).
+func resolveCrossOffsetKerx(pos []GlyphPosition, glyphPos int, direction Direction, reversed bool) Position {
+	horizontal := direction.isHorizontal()
+	offset := pos[glyphPos].XOffset
+	if horizontal {
+		offset = pos[glyphPos].YOffset
+	}
+	for count := 1; count < len(pos) && pos[glyphPos].attachType&attachTypeCursive != 0; count++ {
+		chain := int(pos[glyphPos].attachChain)
+		if chain == 0 {
+			break
+		}
+		if reversed {
+			chain = -chain
+		}
+		parent := glyphPos + chain
+		if parent < 0 || parent >= len(pos) {
+			break
+		}
+		glyphPos = parent
+		shift := pos[glyphPos].XOffset
+		if horizontal {
+			shift = pos[glyphPos].YOffset
+		}
+		offset = saturateAdd(offset, shift)
+	}
+	return offset
+}
+
 type kern2Accelerator struct {
 	table   font.Kern2
 	context *aatApplyContext
@@ -385,8 +432,10 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 				return
 			}
 
-			o.XOffset = markX - currX
-			o.YOffset = markY - currY
+			// okage: the offsets are clamped to the range of a position,
+			// as in HarfBuzz 15.1.0 (D73).
+			o.XOffset = saturateSub(markX, currX)
+			o.YOffset = saturateSub(markY, currY)
 
 		case 1: /* Anchor Point Actions. */
 			/* Indexed into 'ankr' table. */
@@ -395,13 +444,21 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 			markAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.Info[dc.mark].Glyph), int(action.Mark))
 			currAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.cur(0).Glyph), int(action.Current))
 
-			o.XOffset = dc.c.font.emScaleX(markAnchor.X) - dc.c.font.emScaleX(currAnchor.X)
-			o.YOffset = dc.c.font.emScaleY(markAnchor.Y) - dc.c.font.emScaleY(currAnchor.Y)
+			o.XOffset = saturateSub(dc.c.font.emScaleX(markAnchor.X), dc.c.font.emScaleX(currAnchor.X))
+			o.YOffset = saturateSub(dc.c.font.emScaleY(markAnchor.Y), dc.c.font.emScaleY(currAnchor.Y))
 
 		case 2: /* Control Point Coordinate Actions. */
 			action := dc.table.Anchors.(tables.KerxAnchorCoordinates).Anchors[ankrActionIndex]
-			o.XOffset = dc.c.font.emScaleX(action.MarkX) - dc.c.font.emScaleX(action.CurrentX)
-			o.YOffset = dc.c.font.emScaleY(action.MarkY) - dc.c.font.emScaleY(action.CurrentY)
+			o.XOffset = saturateSub(dc.c.font.emScaleX(action.MarkX), dc.c.font.emScaleX(action.CurrentX))
+			o.YOffset = saturateSub(dc.c.font.emScaleY(action.MarkY), dc.c.font.emScaleY(action.CurrentY))
+		}
+		// okage: the mark takes the offset of its base across the line, as
+		// in the merge 436f067b20 of HarfBuzz 15.1.0 (D73).
+		baseOffset := resolveCrossOffsetKerx(buffer.Pos, dc.mark, buffer.Props.Direction, dc.c.bufferIsReversed)
+		if buffer.Props.Direction.isHorizontal() {
+			o.YOffset = saturateAdd(o.YOffset, baseOffset)
+		} else {
+			o.XOffset = saturateAdd(o.XOffset, baseOffset)
 		}
 		o.attachType = attachTypeMark
 		o.attachChain = int16(dc.mark - buffer.idx)

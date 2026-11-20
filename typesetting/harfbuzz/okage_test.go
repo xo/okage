@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/fnv"
+	"math"
 	"os"
 	"slices"
 	"strings"
@@ -1180,4 +1181,71 @@ func TestAATInitialGlyphs(t *testing.T) {
 		{"ax", []shapedGlyph{{robotoX, 0, 1015, 0, 0}, {robotoB, 0, 1149, 0, 0}}},
 		{"xa", []shapedGlyph{{robotoX, 0, 1015, 0, 0}}},
 	})
+}
+
+// kerxMarks builds a table kerx with two subtables. The first is of format
+// 1 and cross-stream: a pushes itself and applies the list of values. The
+// second is of format 4, with the coverage: a marks itself, and b attaches
+// to the marked glyph with the coordinates of the anchors.
+func kerxMarks(coverage uint32, values, anchors []int) []byte {
+	cross := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 0}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxPush, 0}},
+	}
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 2}, {0, 0, 0, 0, 1, 2}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxMark, kerxEnd}, {0, 0, 0}},
+	}
+	return kerxTable(
+		kerxSubtable{coverage: kerxCrossStream | 1, data: cross.bytes([]uint32{0}, u16s(append(values, kerxEnd)...))},
+		kerxSubtable{coverage: coverage, data: marks.bytes([]uint32{kerx4Coordinates}, u16s(anchors...))},
+	)
+}
+
+// TestKerxFormat4CrossOffset shapes texts with kerxMarks, which moves each
+// a by 100 across the line, and attaches b to the last a with the anchors
+// (50, 60) and (10, 20). As in HarfBuzz 15.1.0, the offset of b across the
+// line takes the offsets of the a, which are attached to each other by the
+// cross-stream subtable. It does so also when the subtable of format 4
+// goes backwards, which reverses the buffer. go-text gave b the offset 40
+// (D73).
+func TestKerxFormat4CrossOffset(t *testing.T) {
+	kerx := kerxMarks(kerxFormat4, []int{100}, []int{50, 60, 10, 20})
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"aab", []shapedGlyph{{robotoA, 0, 1114, 0, 100}, {robotoA, 1, 1114, 0, 200}, {robotoB, 2, 1149, -1074, 240}}},
+	})
+	kerx = kerxMarks(kerxFormat4|kerxBackwards, []int{100}, []int{50, 60, 10, 20})
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"aaba", []shapedGlyph{
+			{robotoA, 0, 1114, 0, 100}, {robotoA, 1, 1114, 0, 200},
+			{robotoB, 2, 1149, 1189, 380}, {robotoA, 3, 1114, 0, 480},
+		}},
+	})
+}
+
+// TestKerxFormat4Clamp shapes a text with kerxMarks, which moves a across
+// the line by 65,537 times 32,767, and attaches b to a with anchors 65,535
+// apart. As in HarfBuzz 15.1.0, the offset of b is clamped to the range of
+// a position. The glyphs x give the buffer the operations that the actions
+// take (D73).
+func TestKerxFormat4Clamp(t *testing.T) {
+	values := make([]int, 65537)
+	for i := range values {
+		values[i] = 32767
+	}
+	kerx := kerxMarks(kerxFormat4, values, []int{0, 32767, 0, -32768})
+	buf := shapeWithin(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}).Font, "ab"+strings.Repeat("x", 38))
+	if buf.inError {
+		t.Fatal("the buffer is in error")
+	}
+	if got, want := buf.Pos[0].YOffset, Position(65537*32767); got != want {
+		t.Errorf("a: got the offset %d, want %d", got, want)
+	}
+	if got, want := buf.Pos[1].YOffset, Position(math.MaxInt32); got != want {
+		t.Errorf("b: got the offset %d, want %d", got, want)
+	}
 }

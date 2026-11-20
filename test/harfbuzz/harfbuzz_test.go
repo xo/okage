@@ -807,3 +807,52 @@ func TestAATInitialGlyphs(t *testing.T) {
 	))
 	testFlags(t, robotoWith(t, map[string][]byte{"morx": morx}), false, true, "ax", "axx", "xax", "aaxa", "x", "cx")
 }
+
+// kerxMarks builds a table kerx with two subtables. The first is of format
+// 1 and cross-stream: a pushes itself and applies the list of values. The
+// second is of format 4, with the coverage: a marks itself, and b attaches
+// to the marked glyph with the coordinates of the anchors.
+func kerxMarks(coverage uint32, values, anchors []int) []byte {
+	cross := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 0}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxPush, 0}},
+	}
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 2}, {0, 0, 0, 0, 1, 2}},
+		entries:  [][]int{{0, 0, kerx4NoActionData}, {0, kerxMark, kerx4NoActionData}, {0, 0, 0}},
+	}
+	return kerxTable(
+		kerxSubtable{coverage: kerxCrossStream | 1, data: cross.bytes([]uint32{0}, u16s(append(values, kerxEnd)...))},
+		kerxSubtable{coverage: coverage, data: marks.bytes([]uint32{kerx4Coordinates}, u16s(anchors...))},
+	)
+}
+
+// TestKerxFormat4CrossOffset: a subtable of format 1 of kerx moves each a
+// by 100 across the line, and a subtable of format 4 attaches b to the
+// last a. HarfBuzz adds to the offset of b across the line the offsets of
+// the a and of the glyphs that the a are attached to. It also does so when
+// the subtable of format 4 goes backwards, which reverses the buffer.
+func TestKerxFormat4CrossOffset(t *testing.T) {
+	for _, coverage := range []uint32{kerxFormat4, kerxFormat4 | kerxBackwards} {
+		kerx := kerxMarks(coverage, []int{100}, []int{50, 60, 10, 20})
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "aab", "abb", "ba", "bab", "abab", "aaba")
+	}
+}
+
+// TestKerxFormat4Clamp: a subtable of format 1 of kerx moves a across the
+// line by 65,537 times 32,767, and a subtable of format 4 attaches b to a
+// with anchors 65,535 apart. HarfBuzz clamps the offset of b to the range
+// of a position. The glyphs x give the buffer the operations that the
+// actions take.
+func TestKerxFormat4Clamp(t *testing.T) {
+	values := make([]int, 65537)
+	for i := range values {
+		values[i] = 32767
+	}
+	kerx := kerxMarks(kerxFormat4, values, []int{0, 32767, 0, -32768})
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab"+strings.Repeat("x", 38))
+}
