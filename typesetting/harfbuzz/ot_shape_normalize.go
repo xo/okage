@@ -62,11 +62,13 @@ const (
 )
 
 type otNormalizeContext struct {
-	plan      *otShapePlan
-	buffer    *Buffer
-	font      *Font
-	decompose func(c *otNormalizeContext, ab rune) (a, b rune, ok bool)
-	compose   func(c *otNormalizeContext, a, b rune) (ab rune, ok bool)
+	plan   *otShapePlan
+	buffer *Buffer
+	font   *Font
+	// okage: D72. shaper gives decompose and compose. go-text keeps the
+	// two methods as method values, which allocate for each call of
+	// otShapeNormalize.
+	shaper otComplexShaper
 }
 
 func setGlyph(info *GlyphInfo, font *Font) {
@@ -89,7 +91,7 @@ func decompose(c *otNormalizeContext, shortest bool, ab rune) int {
 	var aGlyph, bGlyph GID
 	buffer := c.buffer
 	font := c.font
-	a, b, ok := c.decompose(c, ab)
+	a, b, ok := c.shaper.decompose(c, ab)
 	if !ok {
 		return 0
 	}
@@ -260,12 +262,14 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 			mode = nmComposedDiacritics
 		}
 	}
-	c := otNormalizeContext{
+	// okage: D72. The context is in the buffer, so that it is not
+	// allocated for each call.
+	c := &buffer.normalizeContext
+	*c = otNormalizeContext{
 		plan,
 		buffer,
 		font,
-		plan.shaper.decompose,
-		plan.shaper.compose,
+		plan.shaper,
 	}
 
 	alwaysShortCircuit := mode == nmNone
@@ -408,7 +412,7 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 				if starter == len(buffer.outInfo)-1 ||
 					buffer.prev().getModifiedCombiningClass() < buffer.cur(0).getModifiedCombiningClass() {
 					/* And compose. */
-					composed, ok := c.compose(&c, buffer.outInfo[starter].codepoint, buffer.cur(0).codepoint)
+					composed, ok := c.shaper.compose(c, buffer.outInfo[starter].codepoint, buffer.cur(0).codepoint)
 					if ok { // And the font has glyph for the composite.
 						glyph, ok := font.face.NominalGlyph(composed) /* Composes. */
 						if ok {
@@ -434,4 +438,7 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 		}
 		buffer.swapBuffers()
 	}
+
+	// okage: D72. The buffer does not keep the plan and the font.
+	*c = otNormalizeContext{}
 }

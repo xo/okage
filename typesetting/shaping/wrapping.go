@@ -285,9 +285,13 @@ func (option breakOption) isValid(runeToGlyph []int, out Output) bool {
 }
 
 // breaker generates line breaking candidates for a text.
+//
+// okage: D72. The iterators are values, and newBreaker returns a value, so
+// that a LineWrapper does not allocate a breaker and its iterators for each
+// paragraph.
 type breaker struct {
-	wordSegmenter     *segmenter.LineIterator
-	graphemeSegmenter *segmenter.GraphemeIterator
+	wordSegmenter     segmenter.LineIterator
+	graphemeSegmenter segmenter.GraphemeIterator
 	totalRunes        int
 	// unusedWordBreak is a break requested from the breaker in a previous iteration
 	// but which was not chosen as the line ending. Subsequent invocations of
@@ -305,10 +309,11 @@ type breaker struct {
 
 // newBreaker returns a breaker for the text seg has been initialized with.
 // It does not modify seg.
-func newBreaker(seg *segmenter.Segmenter) *breaker {
-	br := &breaker{
-		wordSegmenter:     seg.LineIterator(),
-		graphemeSegmenter: seg.GraphemeIterator(),
+func newBreaker(seg *segmenter.Segmenter) breaker {
+	// okage: D72.
+	br := breaker{
+		wordSegmenter:     *seg.LineIterator(),
+		graphemeSegmenter: *seg.GraphemeIterator(),
 		totalRunes:        seg.Len(),
 	}
 	return br
@@ -747,7 +752,7 @@ type LineWrapper struct {
 	seg segmenter.Segmenter
 
 	// breaker provides line-breaking candidates.
-	breaker *breaker
+	breaker breaker // okage: D72.
 
 	// scratch holds wrapping algorithm storage buffers for reuse.
 	scratch wrapBuffer

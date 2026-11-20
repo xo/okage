@@ -14,7 +14,22 @@ type GeneralCategory uint8
 
 // LookupGeneralCategory returns the unicode general categorie of the rune,
 // or [Unassigned] if not found.
-func LookupGeneralCategory(r rune) GeneralCategory { return GeneralCategory(gcLookup(r)) }
+func LookupGeneralCategory(r rune) GeneralCategory {
+	// okage: D72.
+	if uint32(r) < uint32(len(latin1GeneralCategory)) {
+		return latin1GeneralCategory[r]
+	}
+	return GeneralCategory(gcLookup(r))
+}
+
+// okage: D72. latin1GeneralCategory is the general category of each rune
+// below U+0100, from the general lookup.
+var latin1GeneralCategory = func() (t [0x100]GeneralCategory) {
+	for r := range t {
+		t[r] = GeneralCategory(gcLookup(rune(r)))
+	}
+	return t
+}()
 
 // IsMark returns true for Spacing_Mark, Enclosing_Mark, Nonspacing_Mark
 func (gc GeneralCategory) IsMark() bool {
@@ -58,6 +73,24 @@ type GraphemeBreak uint16
 
 // LookupGraphemeBreak returns the grapheme break property for the rune, or 0.
 func LookupGraphemeBreak(ch rune) GraphemeBreak {
+	// okage: D72.
+	if uint32(ch) < uint32(len(latin1GraphemeBreak)) {
+		return latin1GraphemeBreak[ch]
+	}
+	return lookupGraphemeBreak(ch)
+}
+
+// okage: D72. latin1GraphemeBreak is the grapheme break property of each
+// rune below U+0100, from the general lookup.
+var latin1GraphemeBreak = func() (t [0x100]GraphemeBreak) {
+	for r := range t {
+		t[r] = lookupGraphemeBreak(rune(r))
+	}
+	return t
+}()
+
+// lookupGraphemeBreak is the general lookup of [LookupGraphemeBreak].
+func lookupGraphemeBreak(ch rune) GraphemeBreak {
 	i := gbLookup(ch)
 	if i == 0 {
 		return 0
@@ -342,6 +375,24 @@ var bidiClassDefaults = [...]struct {
 // Unassigned code points get the default of their block from
 // DerivedBidiClass.txt.
 func LookupBidiClass(r rune) (BidiClass, BidiBracket) {
+	// okage: D72.
+	if uint32(r) < uint32(len(latin1BidiClass)) {
+		return latin1BidiClass[r], latin1BidiBracket[r]
+	}
+	return lookupBidiClass(r)
+}
+
+// okage: D72. latin1BidiClass and latin1BidiBracket are the bidi class and
+// the bracket of each rune below U+0100, from the general lookup.
+var latin1BidiClass, latin1BidiBracket = func() (c [0x100]BidiClass, b [0x100]BidiBracket) {
+	for r := range c {
+		c[r], b[r] = lookupBidiClass(rune(r))
+	}
+	return c, b
+}()
+
+// lookupBidiClass is the general lookup of [LookupBidiClass].
+func lookupBidiClass(r rune) (BidiClass, BidiBracket) {
 	i := bidiLookup(r)
 	if i == 0 {
 		if r&0xFFFE == 0xFFFE { // noncharacter U+xxFFFE, U+xxFFFF

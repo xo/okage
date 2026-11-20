@@ -27,6 +27,24 @@ func ParseScript(script string) (Script, error) {
 // LookupScript looks up the script for a particular character (as defined by
 // Unicode Standard Annex #24), and returns Unknown if not found.
 func LookupScript(r rune) Script {
+	// okage: D72.
+	if uint32(r) < uint32(len(latin1Scripts)) {
+		return latin1Scripts[r]
+	}
+	return lookupScript(r)
+}
+
+// okage: D72. latin1Scripts is the script of each rune below U+0100, from
+// the general lookup.
+var latin1Scripts = func() (t [0x100]Script) {
+	for r := range t {
+		t[r] = lookupScript(rune(r))
+	}
+	return t
+}()
+
+// lookupScript is the general lookup of [LookupScript].
+func lookupScript(r rune) Script {
 	// binary search
 	for i, j := 0, len(ScriptRanges); i < j; {
 		h := i + (j-i)/2

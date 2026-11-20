@@ -245,6 +245,16 @@ func (seg *Segmenter) splitByBidi(text Input) {
 
 	// apply BIDI on each paragraph
 	for _, inputRun := range seg.input {
+		// okage: D72. The bidi algorithm gives one run at level 0 for a
+		// paragraph that needsBidi rejects, unless the direction is
+		// right to left.
+		if def != bidi.RightToLeft && !needsBidi(inputRun.Text[inputRun.RunStart:inputRun.RunEnd]) {
+			inputRun.Level = 0
+			inputRun.Direction.SetProgression(di.FromTopLeft)
+			seg.output = append(seg.output, inputRun)
+			continue
+		}
+
 		out := seg.bidiParagraph.Segment(inputRun.Text[inputRun.RunStart:inputRun.RunEnd], def)
 		if out.NumRuns() == 0 {
 			seg.output = append(seg.output, inputRun)
@@ -270,6 +280,27 @@ func (seg *Segmenter) splitByBidi(text Input) {
 			input.RunStart = currentInput.RunEnd
 		}
 	}
+}
+
+// okage: D72. bidiClassesRTL are the bidi classes that can give a level
+// other than 0 in a paragraph of the direction left to right: the
+// right-to-left letters, the Arabic numbers and the bidi controls.
+const bidiClassesRTL = ucd.BD_R | ucd.BD_AL | ucd.BD_AN |
+	ucd.BD_LRE | ucd.BD_RLE | ucd.BD_LRO | ucd.BD_RLO | ucd.BD_PDF |
+	ucd.BD_LRI | ucd.BD_RLI | ucd.BD_FSI | ucd.BD_PDI
+
+// needsBidi reports whether text holds a character of bidiClassesRTL, or
+// a paragraph separator before its end. If not, the bidi algorithm gives
+// level 0 to each character of text when the paragraph is left to right
+// or neutral (D72).
+func needsBidi(text []rune) bool {
+	for i, r := range text {
+		class, _ := ucd.LookupBidiClass(r)
+		if class&bidiClassesRTL != 0 || (class == ucd.BD_B && i != len(text)-1) {
+			return true
+		}
+	}
+	return false
 }
 
 // lookupDelimIndex binary searches in the list of the paired delimiters,

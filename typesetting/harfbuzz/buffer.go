@@ -109,6 +109,10 @@ type Buffer struct {
 	planCache map[Face][]*shapePlan
 
 	digest setDigest
+
+	// okage: D72. normalizeContext is the context of otShapeNormalize,
+	// kept here so that it is not allocated for each call.
+	normalizeContext otNormalizeContext
 }
 
 // NewBuffer allocate a storage with default options.
