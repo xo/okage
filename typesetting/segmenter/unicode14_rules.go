@@ -407,25 +407,31 @@ func (cr *cursor) startIteration(text []rune, i int) {
 	}
 
 	// query general unicode properties for the current rune
+	//
+	// okage: the rune r of this iteration is the rune next of the last
+	// one, so nextProps holds its properties, and one lookup gives the
+	// properties of next (D83).
+	props := cr.nextProps
 	cr.prevGeneralCategory = cr.generalCategory
-	cr.generalCategory = ucd.LookupGeneralCategory(cr.r)
+	cr.generalCategory = props.GeneralCategory
 
-	cr.isExtentedPic = ucd.IsExtendedPictographic(cr.r)
-	cr.indicConjunctBreak = ucd.LookupIndicConjunctBreak(cr.r)
+	cr.isExtentedPic = props.ExtendedPictographic
+	cr.indicConjunctBreak = props.IndicConjunctBreak
 
 	// prevPrevLine and prevLine are handled in endIteration
 	cr.line = cr.nextLine
-	cr.nextLine = ucd.LookupLineBreak(cr.next)
+	cr.nextProps = ucd.LookupSegmentProperties(cr.next)
+	cr.nextLine = cr.nextProps.LineBreak
 
 	cr.prevGrapheme = cr.grapheme
-	cr.grapheme = ucd.LookupGraphemeBreak(cr.r)
+	cr.grapheme = props.GraphemeBreak
 
 	if cr.word != ucd.WB_ExtendFormat {
 		cr.prevPrevWord = cr.prevWord
 		cr.prevWord = cr.word
 		cr.prevWordNoExtend = i - 1
 	}
-	cr.word = ucd.LookupWordBreak(cr.r)
+	cr.word = props.WordBreak
 }
 
 // end the current iteration, computing some of the properties

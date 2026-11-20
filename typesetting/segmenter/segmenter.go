@@ -107,6 +107,12 @@ type cursor struct {
 	// cached value of ucd.LookupIndicConjunctBreak(cr.r)
 	indicConjunctBreak ucd.IndicConjunctBreak
 
+	// nextProps holds the properties of the rune that is r in the next
+	// iteration.
+	//
+	// okage: one lookup gives the properties of a rune (D83).
+	nextProps *ucd.SegmentProperties
+
 	// are we in a numeric sequence, as defined in Example 7 of customisation for LB25
 	numSequence numSequenceState
 
@@ -129,8 +135,12 @@ func newCursor(text []rune) cursor {
 
 	// `startIteration` set `breakCl` from `nextBreakCl`
 	// so we need to init this field before the first iteration
+	// okage: the properties of r come from nextProps (D83).
 	if len(text) != 0 {
-		cr.nextLine = ucd.LookupLineBreak(text[0])
+		cr.nextProps = ucd.LookupSegmentProperties(text[0])
+		cr.nextLine = cr.nextProps.LineBreak
+	} else {
+		cr.nextProps = ucd.LookupSegmentProperties(paragraphSeparator)
 	}
 	return cr
 }
