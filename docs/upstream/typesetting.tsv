@@ -3,9 +3,9 @@ upstream	date	status	okage	note
 a0d4802591a51a717c612532238de59dd860b844	2026-09-21	ported		[shaping] expose and document Level fields. It changes shaping
 65027726747f49e63ab76c1d7677cceac654391f	2026-09-21	ported		[opentype] expose flavor when writting a font file. It changes font/opentype
 740c56de5fe91e5778cf8715119b09be35ea9e9a	2026-09-22	ported		[bidi,shaping] better handle input containing multiple paragraphs (#275). It changes bidi, internal/unicodedata, shaping
-0e62b2a5f51dbc83b325c9cf8c1d6d7dd97bcc37	2026-09-22	pending		[shaping] use BIDI level to properly compute visual ordering. It changes shaping
-ecb1fc75cb1803b489f42f7fe7d2d7e14d3d170d	2026-09-22	pending		[shaping] expose and document Level fields. It changes shaping
-9e91f9d54cfd218c1085bca26e807588eb83a2d3	2026-09-22	pending		fix rebase. It changes shaping
+0e62b2a5f51dbc83b325c9cf8c1d6d7dd97bcc37	2026-09-22	not-applicable		[shaping] use BIDI level to properly compute visual ordering. It changes shaping. It is 2922c6bc again, rebased on 740c56de. okage applied both, so the copy already has the change
+ecb1fc75cb1803b489f42f7fe7d2d7e14d3d170d	2026-09-22	not-applicable		[shaping] expose and document Level fields. It changes shaping. It is a0d48025 again, rebased on 740c56de. okage applied both, so the copy already has the change
+9e91f9d54cfd218c1085bca26e807588eb83a2d3	2026-09-22	not-applicable		fix rebase. It changes shaping. It fixes the level of a run in splitByBidi after the rebase. okage applied 740c56de by hand with the same line, so the copy already has the change
 662ba5319a81c6732f28d405e73daad224e72fac	2026-09-22	not-applicable		Merge branch 'bidi-ordering' of github.com:go-text/typesetting into bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
 e8da365e472d830d11183cbe53fcee3b537292e2	2026-09-22	ported		[harfbuzz] setDigest: add a range to each sub-digest on its own (#279). It changes go.mod, harfbuzz. Applied out of order for the kerning of Calibri (D59). The go.mod change and the two tests that read typesetting-utils are left out
 35e0e433b186e301839e7bf0210b107ac0188948	2026-09-28	not-applicable		Merge pull request #276 from go-text/bidi-ordering. It is a merge commit, and the commits that it merges are in this ledger
