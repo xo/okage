@@ -3802,8 +3802,7 @@ func TestPrepareSegmented(t *testing.T) {
 	}
 }
 
-// TestWrapParagraphSegmentedInit checks that WrapParagraph, which now finds the
-// break opportunities once for its fast path check and its wrapping, gives the
+// TestWrapParagraphSegmentedInit checks that WrapParagraph gives the
 // same lines as Prepare and WrapNextLine.
 func TestWrapParagraphSegmentedInit(t *testing.T) {
 	text := append([]rune(benchParagraphLatin)[:300], []rune("\nend")...)
