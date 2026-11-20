@@ -8,7 +8,9 @@ package font
 import (
 	"testing"
 
+	ot "github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
+	td "github.com/xo/okage/typesetting/internal/testfonts/opentype"
 )
 
 // TestInferDeltaFixed is the test interpolate of skrifa
@@ -29,5 +31,61 @@ func TestInferDeltaFixed(t *testing.T) {
 	// no delta.
 	if got := inferDelta(10, 20, 20, fx(1), fx(2)); got != 0 {
 		t.Errorf("the delta is %d, want 0", got)
+	}
+}
+
+// TestGlyphVariationDeltas checks that the deltas of GlyphVariationDeltas
+// are the deltas that move the points of the outline. It skips when
+// typesetting/testdata is not there (D76).
+func TestGlyphVariationDeltas(t *testing.T) {
+	data, err := td.Files.ReadFile("common/Selawik-VF.ttf")
+	if err != nil {
+		t.Skip(err)
+	}
+	ld, err := ot.NewLoader(ot.NewSlicedResource(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := NewFont(ld)
+	if err != nil {
+		t.Fatal(err)
+	}
+	face := NewFace(f)
+	for gid := range GID(len(f.glyf)) {
+		if face.GlyphVariationDeltas(gid) != nil {
+			t.Fatalf("the glyph %d has deltas at the default location", gid)
+		}
+	}
+	face.SetVariations([]Variation{{Tag: ot.MustNewTag("wght"), Value: 650}})
+	n := 0
+	for gid := range GID(len(f.glyf)) {
+		sg, ok := f.glyf[gid].Data.(tables.SimpleGlyph)
+		if !ok {
+			continue
+		}
+		deltas := face.GlyphVariationDeltas(gid)
+		if len(deltas) != len(sg.Points)+phantomCount {
+			t.Fatalf("the glyph %d has %d deltas, want %d", gid, len(deltas), len(sg.Points)+phantomCount)
+		}
+		points := face.getPointsForGlyph(tables.GlyphID(gid))
+		left := deltas[len(sg.Points)+phantomLeft]
+		for i, p := range sg.Points {
+			// getPointsForGlyph shifts the points by the first phantom
+			// point.
+			d := deltas[i]
+			x := float64(p.X) + float64(d[0]-left[0])/(1<<16) - float64(f.glyf[gid].XMin-f.hmtx.SideBearing(tables.GlyphID(gid)))
+			y := float64(p.Y) + float64(d[1])/(1<<16)
+			if dx, dy := float64(points[i].X)-x, float64(points[i].Y)-y; dx > 1e-3 || dx < -1e-3 || dy > 1e-3 || dy < -1e-3 {
+				t.Fatalf("the point %d of the glyph %d is (%g, %g), and the deltas give (%g, %g)", i, gid, points[i].X, points[i].Y, x, y)
+			}
+		}
+		for _, d := range deltas {
+			if d != [2]tables.Fixed{} {
+				n++
+			}
+		}
+	}
+	if n == 0 {
+		t.Fatal("no point has a delta")
 	}
 }

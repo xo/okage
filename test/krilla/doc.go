@@ -51,9 +51,10 @@
 // of subsetter and of the tests of okage at many locations. A subset at the
 // default location must be the same, byte for byte. In an instance, each
 // coordinate, advance and left side bearing must be within 1 unit of the
-// instance of subsetter, because typesetting computes the deltas in float32
-// and skrifa in fixed point. The tests count the values that differ, and log
-// the counts for each font.
+// instance of subsetter (D65). typesetting computes the deltas in fixed
+// point, as skrifa does (D84), so the instances are the same, byte for byte,
+// in each case of 2026-11-20. The tests count the values that differ, and
+// log the counts for each font.
 //
 // # The question "pdf_writer"
 //

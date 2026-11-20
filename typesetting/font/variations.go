@@ -507,6 +507,42 @@ func (gvar gvar) computeDeltas(glyph gID, coords []VarCoord, points []contourPoi
 	return total
 }
 
+// GlyphVariationDeltas returns the deltas of the table gvar for the glyph
+// at the coordinates of the face, in the 16.16 format, as skrifa computes
+// them: one delta for each point of a simple glyph, or for each component of
+// a composite glyph, and then one for each of the four phantom points. It
+// returns nil when the face has no coordinates, or when the table gvar has
+// no entry for the glyph. A glyph without a tuple gets deltas of 0.
+//
+// skrifa rounds each delta to an integer when it draws an outline without a
+// scale. The outline of GlyphDataOutline keeps the fraction, and its
+// coordinates in float32 cannot always hold the exact delta, so a caller
+// that must give the points of skrifa reads the deltas here.
+//
+// okage: this method is not in go-text (D84).
+func (f *Face) GlyphVariationDeltas(gid GID) [][2]tables.Fixed {
+	if !f.isVar() || int(gid) >= len(f.glyf) {
+		return nil
+	}
+	g := f.glyf[gid]
+	var points []contourPoint
+	if data, ok := g.Data.(tables.SimpleGlyph); ok {
+		points = getContourPoints(data)
+	} else {
+		points = make([]contourPoint, pointNumbersCount(g))
+	}
+	points = append(points, make([]contourPoint, phantomCount)...)
+	total := f.gvar.computeDeltas(gID(gid), f.coords, points)
+	if total == nil {
+		return nil
+	}
+	out := make([][2]tables.Fixed, len(total))
+	for i, d := range total {
+		out[i] = [2]tables.Fixed{d.X, d.Y}
+	}
+	return out
+}
+
 // fixedDelta is the delta of a point in the 16.16 format, and whether the
 // tuple gives it.
 //

@@ -27,24 +27,27 @@ import (
 // skrifa. The port reads the glyph with typesetting, which applies the
 // variations (D52, D62):
 //
-//   - A TrueType glyph comes from Face.GlyphDataOutline, with the deltas of
-//     gvar. The port finds the point of the glyph behind each point of the
-//     outline, rounds the points to integers as skrifa does, and draws them
-//     as skrifa draws a TrueType outline in the style of FreeType.
+//   - A TrueType glyph comes from Face.GlyphDataOutline. The port finds the
+//     point of the glyph behind each point of the outline, and takes the
+//     deltas of gvar from Face.GlyphVariationDeltas. It adds each delta,
+//     rounded to an integer, to its point, puts the components in their
+//     place, and draws the points as skrifa draws a TrueType outline in the
+//     style of FreeType.
 //   - A CFF2 glyph comes from CFF2.LoadGlyph, with the blends at the
 //     location. The port gives its commands to the pen as skrifa does for an
 //     outline without a scale: it truncates each point to an integer, and it
 //     drops a move without a line and a line of length 0.
-//   - The advance comes from Face.HorizontalAdvance, with the delta of HVAR,
-//     or the deltas of gvar of the phantom points. The port rounds the delta
-//     to an integer, as skrifa does.
+//   - The advance comes from the delta of HVAR, or from the deltas of gvar of
+//     the phantom points. The port rounds the delta to an integer, as skrifa
+//     does.
 //
-// typesetting computes the deltas in float32, where skrifa computes them in
-// the fixed-point numbers of OpenType. A point whose delta is very near half
-// a unit can round to the other integer, so a point of an instance can differ
-// by 1 unit from the point of upstream. At the default location, the outlines
-// have no delta, and the subsets are the same, byte for byte. Item 5 of
-// "Differences from upstream" in doc.go says more.
+// typesetting computes the deltas in the 16.16 fixed-point numbers of
+// OpenType, as skrifa does (D84). The outline of Face.GlyphDataOutline holds
+// its coordinates in float32, which cannot always hold a coordinate with the
+// exact fraction of its delta, so the port reads the deltas in 16.16 from
+// Face.GlyphVariationDeltas. The instances are then the same as the
+// instances of upstream, byte for byte, for the fonts of test/krilla. Item 8
+// of "Differences from upstream" in doc.go says more.
 
 func init() {
 	interjectGlyph = interject
@@ -202,10 +205,9 @@ type glyphInstance struct {
 	glyphs tables.Glyf
 	cff2   *tscff.CFF2
 
-	// face draws the glyphs and gives the advances at the location, and
-	// base gives the advances at the default location. They are nil when
-	// typesetting cannot read the font.
-	face, base *tsfont.Face
+	// face draws the glyphs and gives the deltas at the location. It is nil
+	// when typesetting cannot read the font.
+	face *tsfont.Face
 	// coords holds the normalized coordinates, or nil at the default
 	// location, as LocationRef::effective_coords of skrifa gives them.
 	coords []tables.Coord
@@ -214,7 +216,12 @@ type glyphInstance struct {
 	glyphCount          uint32
 	hMetrics            []uint16
 	defaultAdvanceWidth uint16
-	hasHVAR, hasGvar    bool
+	hvar                *tables.HVAR
+	hasGvar             bool
+
+	// sideBearings holds the left side bearing of each glyph, as
+	// Hmtx::side_bearing of read-fonts gives it, with 0 for none.
+	sideBearings []int16
 
 	// floats and rounded hold the results of floatPoints and glyfPoints
 	// for each glyph.
@@ -262,11 +269,21 @@ func newGlyphInstance(s *skrifaInterjector) *glyphInstance {
 			if n > 0 {
 				inst.defaultAdvanceWidth = inst.hMetrics[n-1]
 			}
+			inst.sideBearings = make([]int16, inst.glyphCount)
+			for i := range inst.sideBearings {
+				at := 4*i + 2
+				if i >= n {
+					at = 4*n + 2*(i-n)
+				}
+				if at+2 <= len(hmtx) {
+					inst.sideBearings[i] = int16(binary.BigEndian.Uint16(hmtx[at:]))
+				}
+			}
 		}
 	}
 	if raw, ok := ref.table(tagHVARInst); ok {
-		if _, _, err := tables.ParseHVAR(raw); err == nil {
-			inst.hasHVAR = true
+		if hvar, _, err := tables.ParseHVAR(raw); err == nil {
+			inst.hvar = &hvar
 		}
 	}
 	if raw, ok := ref.table(tagGVARInst); ok {
@@ -320,7 +337,6 @@ func newGlyphInstance(s *skrifaInterjector) *glyphInstance {
 	}
 	inst.face = tsfont.NewFace(fnt)
 	inst.face.SetCoords(inst.coords)
-	inst.base = tsfont.NewFace(fnt)
 	return inst
 }
 
@@ -364,15 +380,52 @@ func (inst *glyphInstance) advanceWidth(glyph uint16) (float32, bool) {
 	if int(glyph) < len(inst.hMetrics) {
 		advance = int32(inst.hMetrics[glyph])
 	}
-	if inst.coords != nil && inst.face != nil && (inst.hasHVAR || inst.hasGvar) {
+	switch {
+	case inst.coords == nil || inst.face == nil:
+	case inst.hvar != nil:
 		// skrifa rounds the delta of HVAR to an integer in
 		// ItemVariationStore::compute_delta of read-fonts, and then
-		// truncates it, as FreeType truncates metric deltas. It rounds the
-		// delta of the phantom points of gvar to an integer.
-		delta := float64(inst.face.HorizontalAdvance(tsfont.GID(glyph)) - inst.base.HorizontalAdvance(tsfont.GID(glyph)))
+		// truncates it, as FreeType truncates metric deltas. typesetting
+		// gives the delta in float32, which holds it exactly when it is
+		// less than 256 units.
+		delta := float64(inst.hvar.AdvanceDelta(tables.GlyphID(glyph), inst.coords))
 		advance += int32(math.Floor(delta + 0.5))
+	case inst.hasGvar:
+		// GlyphMetrics::metric_deltas_from_gvar of skrifa src/metrics.rs
+		// rounds the difference of the deltas of the first two phantom
+		// points of the glyph that gives the metrics.
+		if d := inst.face.GlyphVariationDeltas(tsfont.GID(inst.metricsGlyph(glyph, 0))); len(d) >= 4 {
+			n := len(d) - 4
+			advance += fixedToI32(d[n+1][0] - d[n][0])
+		}
 	}
 	return float32(advance), true
+}
+
+// metricsGlyph is find_glyph_and_point_count of read-fonts
+// src/tables/gvar.rs: the glyph whose phantom points give the metrics of a
+// glyph. A composite glyph takes the metrics of the glyph of its last
+// component with the flag USE_MY_METRICS, and of itself without one.
+func (inst *glyphInstance) metricsGlyph(glyph uint16, depth int) uint16 {
+	// Matches HB's nesting limit
+	const recursionLimit = 64
+	if depth > recursionLimit || int(glyph) >= len(inst.glyphs) {
+		return glyph
+	}
+	composite, ok := inst.glyphs[glyph].Data.(tables.CompositeGlyph)
+	if !ok {
+		return glyph
+	}
+	inherit, found := uint16(0), false
+	for i := range composite.Glyphs {
+		if composite.Glyphs[i].HasUseMyMetrics() {
+			inherit, found = uint16(composite.Glyphs[i].GlyphIndex), true
+		}
+	}
+	if !found {
+		return glyph
+	}
+	return inst.metricsGlyph(inherit, depth+1)
 }
 
 // flatPoint is a point of the outline of a TrueType glyph, after its
@@ -419,6 +472,15 @@ func (inst *glyphInstance) drawGlyf(glyph uint16, pen *outlinePath) bool {
 	if !ok || len(points)+4 > math.MaxUint16 {
 		return false
 	}
+	if inst.coords != nil {
+		// ScaledOutline::new of skrifa src/outline/glyf/outline.rs shifts
+		// the points by the first phantom point.
+		points = slices.Clone(points)
+		shift := inst.phantomX(tables.GlyphID(glyph), 0) << 6
+		for i := range points {
+			points[i].x -= shift
+		}
+	}
 	start := 0
 	for i, p := range points {
 		if !p.endPoint {
@@ -428,6 +490,38 @@ func (inst *glyphInstance) drawGlyf(glyph uint16, pen *outlinePath) bool {
 		start = i + 1
 	}
 	return true
+}
+
+// phantomX returns the x coordinate of the first phantom point of a glyph,
+// as FreeTypeScaler of skrifa src/outline/glyf/mod.rs computes it for an
+// outline without a scale: the xMin of the glyph less its left side
+// bearing, with the delta of the point rounded to an integer. A composite
+// glyph takes the point of its last component with the flag
+// USE_MY_METRICS.
+func (inst *glyphInstance) phantomX(gid tables.GlyphID, depth int) int32 {
+	if depth > maxCompositeNesting || int(gid) >= len(inst.glyphs) {
+		return 0
+	}
+	g := inst.glyphs[gid]
+	var xMin, lsb int32
+	if g.Data != nil {
+		xMin = int32(g.XMin)
+	}
+	if int(gid) < len(inst.sideBearings) {
+		lsb = int32(inst.sideBearings[gid])
+	}
+	x := xMin - lsb
+	if d := inst.face.GlyphVariationDeltas(tsfont.GID(gid)); len(d) >= 4 {
+		x += fixedToI32(d[len(d)-4][0])
+	}
+	if composite, ok := g.Data.(tables.CompositeGlyph); ok {
+		for _, item := range composite.Glyphs {
+			if item.HasUseMyMetrics() {
+				x = inst.phantomX(item.GlyphIndex, depth+1)
+			}
+		}
+	}
+	return x
 }
 
 // floatPoints returns the points of the outline of a glyph that
@@ -455,6 +549,13 @@ func (inst *glyphInstance) floatPoints(gid tables.GlyphID) ([]flatPoint, bool) {
 	}
 	inst.floats[gid] = glyfPointsResult{points, ok}
 	return points, ok
+}
+
+// fixedToI32 is Fixed::to_i32 of font-types src/fixed.rs: it rounds a
+// number in the 16.16 format to the nearest integer, with ties up. The
+// addition wraps.
+func fixedToI32(v tables.Fixed) int32 {
+	return int32(uint32(v)+0x8000) >> 16
 }
 
 // round26Dot6 rounds a coordinate to an integer, half up, as Fixed::to_i32
@@ -530,12 +631,28 @@ func (inst *glyphInstance) glyfPointsOnce(gid tables.GlyphID, depth int) ([]flat
 		}
 		return out, true
 	}
+	// The deltas of gvar in the 16.16 format, as skrifa computes them, or
+	// nil at the default location.
+	deltas := inst.face.GlyphVariationDeltas(tsfont.GID(gid))
+	if simple, ok := inst.glyphs[gid].Data.(tables.SimpleGlyph); ok && len(simple.Points) == len(out) {
+		// FreeTypeScaler::load_simple adds the delta of each point, rounded
+		// to an integer, to the point.
+		for i, p := range simple.Points {
+			x, y := int32(p.X), int32(p.Y)
+			if i < len(deltas) {
+				x += fixedToI32(deltas[i][0])
+				y += fixedToI32(deltas[i][1])
+			}
+			out[i].x, out[i].y = x<<6, y<<6
+		}
+		return out, true
+	}
 	composite, isComposite := inst.glyphs[gid].Data.(tables.CompositeGlyph)
 	if !isComposite || depth >= maxCompositeNesting {
 		return rounded()
 	}
 	at := 0
-	for _, item := range composite.Glyphs {
+	for compIndex, item := range composite.Glyphs {
 		child, ok := inst.glyfPoints(item.GlyphIndex, depth+1)
 		if !ok {
 			return nil, false
@@ -591,6 +708,16 @@ func (inst *glyphInstance) glyfPointsOnce(gid tables.GlyphID, depth int) ([]flat
 				// FreeType uses a fixed point multiplication here.
 				x = mulFixed(x, hypot(xx, xy))
 				y = mulFixed(y, hypot(yy, yx))
+			}
+			if deltas != nil {
+				// skrifa rounds off the fractional parts of the delta of
+				// the component, as FreeType does.
+				if compIndex < len(deltas) {
+					x += fixedToI32(deltas[compIndex][0])
+					y += fixedToI32(deltas[compIndex][1])
+				}
+				offX, offY = x<<6, y<<6
+				break
 			}
 			// The offset of typesetting holds the translation, the delta of
 			// the component, and the shift of the phantom points of the

@@ -160,19 +160,13 @@
 //     DICTs in a usize, which has 64 bits on the machines that the oracle
 //     runs on. The port holds them in a uint64, so that a machine of 32
 //     bits gives the same result.
-//  8. An instance of a variable font at a location other than the default
-//     can differ from the instance of upstream by 1 unit in a coordinate,
-//     an advance or a left side bearing. skrifa computes the deltas of the
-//     variations in fixed point, and rounds each step. typesetting computes
-//     them in float32, so a value that is very near half a unit can round
-//     to the other integer. An on-curve point at the middle of two
-//     off-curve points can then be implied in one instance and not in the
-//     other. A point of a component and the offset of the component can
-//     both round the other way, and give a point that differs by 2 units.
-//     In a CFF2 font, a point of a cubic curve that differs by 1 unit can
-//     change the number of quadratic curves of the curve. test/krilla
-//     counts these differences, and the maintainers accept them when at
-//     most 0.1% of the glyphs differ by more than 1 unit (D65).
+//  8. skrifa computes the deltas of the variations in the 16.16
+//     fixed-point numbers of OpenType, and rounds each step. typesetting
+//     computes them in the same way (D84), so an instance of a variable
+//     font is the same as the instance of upstream. The delta of HVAR comes
+//     from typesetting in float32, which holds it exactly when it is less
+//     than 256 units. test/krilla requires the instances of upstream, byte
+//     for byte.
 //  9. skrifa reads a CFF2 table with the FontMatrix of its dictionaries, and
 //     typesetting does not read it. A CFF2 font with a FontMatrix gives
 //     other outlines.

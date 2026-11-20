@@ -16,11 +16,11 @@ import (
 // internal/subsetter with the instances of subsetter, which the oracle gives
 // with the question "subset" (item 5 of "Testing" under "The PDF writer" in
 // docs/PLAN.md). subsetter draws each glyph of an instance with skrifa, and
-// internal/subsetter draws it with typesetting, which computes the deltas of
-// the variations in float32 where skrifa computes them in fixed point. So a
-// point of an instance can differ by 1 unit, and the tests count such
-// points. At the default location, a subset of a CFF2 font is still an
-// instance, and it must be the same, byte for byte.
+// internal/subsetter draws it with typesetting. Before D84, typesetting
+// computed the deltas of the variations in float32 where skrifa computes them
+// in fixed point, and a point of an instance could differ by 1 unit. The
+// tests still count such points. At the default location, a subset of a CFF2
+// font is still an instance, and it must be the same, byte for byte.
 
 // vfFont is a variable font of the comparison.
 type vfFont struct {
