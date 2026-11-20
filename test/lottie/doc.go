@@ -12,6 +12,8 @@
 //
 // The corpus is in testdata/emoji, which git ignores. fetch-corpus.sh
 // downloads it, or the variable OKAGE_LOTTIE_CORPUS names another folder.
-// The test skips when the folder holds no file. The package has no code of
-// its own.
+// The test skips when the folder holds no file. TestThorVGImage compares
+// two image assets in the same way, an embedded PNG image and a dotLottie
+// archive with a PNG file, and needs no corpus, because it makes them itself
+// (D75). The package has no code of its own.
 package lottie

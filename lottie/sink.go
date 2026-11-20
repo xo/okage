@@ -10,6 +10,8 @@ package lottie
 // okage that svg uses for a group.
 
 import (
+	"io/fs"
+	"log/slog"
 	"math"
 	"sync"
 
@@ -28,6 +30,13 @@ type PixmapSink struct {
 	width  uint32
 	height uint32
 	stack  []*sinkLayer
+
+	// fsys holds the files of the image assets that name a path, or nil.
+	fsys fs.FS
+	// logger logs the image assets that do not decode, or nil.
+	logger *slog.Logger
+	// images holds the decoded image assets.
+	images *imageCache
 }
 
 // pixRect is a rectangle of pixels, from (x0, y0) to (x1, y1), exclusive. It
@@ -73,9 +82,14 @@ type sinkLayer struct {
 	filter *FilterEffect
 }
 
-// NewPixmapSink returns a sink that draws onto target.
-func NewPixmapSink(target *okage.PixmapMut) *PixmapSink {
-	return &PixmapSink{target: target, width: target.Width(), height: target.Height()}
+// NewPixmapSink returns a sink that draws onto target, with the options
+// opts.
+func NewPixmapSink(target *okage.PixmapMut, opts ...SinkOption) *PixmapSink {
+	s := &PixmapSink{target: target, width: target.Width(), height: target.Height(), images: newImageCache()}
+	for _, o := range opts {
+		o(s)
+	}
+	return s
 }
 
 // canvas returns the rectangle of the target.
@@ -565,9 +579,6 @@ func (s *PixmapSink) Draw(stroke *Stroke, transform kurbo.Affine, brush *Brush, 
 	target.StrokePath(p, &paint, &st, ts, nil)
 }
 
-// DrawImage does nothing: the sink does not load image assets.
-func (s *PixmapSink) DrawImage(*ImageAsset, kurbo.Affine, float64) {}
-
 // BeginLayerGroup does nothing.
 func (s *PixmapSink) BeginLayerGroup(string, int) {}
 
@@ -716,7 +727,9 @@ func okageBlendMode(b BlendMode) okage.BlendMode {
 }
 
 // RenderFrame renders the frame of c onto pixmap under transform, with a
-// new Renderer and a PixmapSink.
+// new Renderer and a PixmapSink. The sink reads the image files of a
+// composition that DotLottie.Parse or Load returns from its archive, and
+// keeps the decoded images in c for the next frames (D75).
 func RenderFrame(c *Composition, frame float64, transform kurbo.Affine, pixmap *okage.PixmapMut) error {
-	return NewRenderer().Append(c, frame, transform, 1.0, NewPixmapSink(pixmap))
+	return NewRenderer().Append(c, frame, transform, 1.0, NewPixmapSink(pixmap, WithFS(c.fsys), withImageCache(c.images)))
 }

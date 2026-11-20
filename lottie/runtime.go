@@ -9,6 +9,7 @@ package lottie
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/xo/okage"
 )
@@ -30,6 +31,12 @@ type Composition struct {
 	Images map[string]ImageAsset
 	// Collection of layers.
 	Layers []Layer
+
+	// Port: velato has no such fields. fsys holds the files of the image
+	// assets, such as the files of a dotLottie archive, or nil. images holds
+	// the decoded images for RenderFrame, or nil (D75).
+	fsys   fs.FS
+	images *imageCache
 }
 
 // Parse is Composition::from_slice in velato src/runtime/mod.rs: the
@@ -39,5 +46,12 @@ func Parse(data []byte) (*Composition, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", okage.ErrLottieParse, err)
 	}
-	return convAnimation(source)
+	c, err := convAnimation(source)
+	if err != nil {
+		return nil, err
+	}
+	// Port: velato keeps no decoded image. okage keeps them for the frames
+	// of RenderFrame (D75).
+	c.images = newImageCache()
+	return c, nil
 }

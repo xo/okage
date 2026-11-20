@@ -26,7 +26,10 @@
 //	img, err := c.Image(c.FrameCount()/2, 512, 512)
 //
 // A Renderer draws onto any Sink, the interface of velato for a renderer.
-// PixmapSink is the Sink that draws with okage.
+// PixmapSink is the Sink that draws with okage. It draws the image assets
+// that a file embeds as data URLs, and the image files of the fs.FS of
+// WithFS. RenderFrame and Composition.Image read the image files of a
+// dotLottie archive from the archive (D75).
 //
 // The package draws as ThorVG does where velato differs, as D43 lists. The
 // test module compares it with velato and with ThorVG on the Noto animated

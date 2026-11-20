@@ -85,13 +85,19 @@ func (d *DotLottie) Data(name string) ([]byte, error) {
 }
 
 // Parse returns the composition of the document name of the archive, such as
-// one of Animations.
+// one of Animations. RenderFrame and Composition.Image read the image files
+// of the composition from the archive (D75).
 func (d *DotLottie) Parse(name string) (*Composition, error) {
 	buf, err := d.Data(name)
 	if err != nil {
 		return nil, err
 	}
-	return Parse(buf)
+	c, err := Parse(buf)
+	if err != nil {
+		return nil, err
+	}
+	c.fsys = d.zr
+	return c, nil
 }
 
 // Load returns the composition of data, which is a Lottie document or a

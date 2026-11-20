@@ -156,6 +156,12 @@ func compareFile(ctx context.Context, r *lottie.Renderer, file string) []result 
 	if err != nil {
 		return []result{{name: name, err: "okage: " + err.Error()}}
 	}
+	return compareFrames(ctx, r, name, c, data)
+}
+
+// compareFrames compares five frames of the composition c of okage with the
+// frames of ThorVG for the Lottie document data.
+func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okagelottie.Composition, data []byte) []result {
 	a, err := r.Load(ctx, data, lottie.Options{})
 	if err != nil {
 		return []result{{name: name, err: "thorvg: " + err.Error()}}
