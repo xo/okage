@@ -1104,8 +1104,9 @@ list. The numbers do not repeat. The maintainers answered question 19 with
 D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
 D68 answers question 28, on 2026-11-19. D69 answers question 29, and
 D70 answers question 30, on 2026-11-19. D71 answers question 31, on
-2026-11-20. D78 answers question 32 with answer 1, on 2026-11-20. No
-question is open. The next question is question 33.
+2026-11-20. D78 answers question 32 with answer 1, D81 answers question 33 with
+answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. No
+question is open. The next question is question 35.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -1300,3 +1301,46 @@ not Latin Modern Math. The limits of section 5 of D78 apply. The test
 module requires `github.com/go-tex/math` and
 `github.com/go-opentype/opentype` for the source oracle, and runs KaTeX
 with Node. The two helpers for a TeX engine wait until ivy measures a need.
+
+### Question 33: the changes of D81 to the shaper of typesetting
+
+Asked on 2026-11-20, from D81. A profile of `test/textbench` after D72 and
+D77 found work that the shaper of `typesetting` repeats for each glyph or
+for each run. D81 proposes six changes, each a commit of its own, that
+remove it and keep the glyphs the same. Five of them change the copy of
+go-text, which needs the approval of the maintainers (D52). Together they
+make the path of ivy with `Paragraph` 17% faster on `pg24264` and 12%
+faster on `pg1342`. The maintainers can choose one of these answers:
+
+1. Accept all six changes of D81.
+2. Accept the changes 1, 2, 3 and 6, which each gave 3% or more on one of
+   the books, and leave out the cmap cache and the kerning record. The
+   cmap cache makes each `Face` 15 KiB larger, and the kerning record gave
+   less than 3%.
+3. Accept none of them.
+
+The recommendation is answer 1. Each change is a few lines with a test or
+an equal hash of the output, the cmap cache gave 5% on the Chinese book,
+and the kerning record gave 1.6% to 2.6% on the English book.
+
+### Question 34: the parts of D82 that lottie takes from ThorVG
+
+Asked on 2026-11-20, from D82. ThorVG, the second oracle of `lottie` (D43),
+repeats the pixels at the edge of the canvas when it blurs a layer,
+multiplies the advances of a text that it shapes by a factor of the
+tracking, and fades the edge of a turned image over one pixel of the image.
+The `PixmapSink` does none of these. ThorVG and velato both skip the effect
+Set Matte, which lottie-web draws. D82 has a prototype of each, with a test
+against ThorVG. The maintainers can choose one of these answers:
+
+1. Accept all four parts of D82: the blur, the tracking, the turned image
+   and Set Matte.
+2. Accept the blur, the tracking and the turned image, which follow ThorVG.
+   Remove the prototype of Set Matte, and delete item 2 of "lottie" in
+   `BACKLOG.md`, because both oracles skip the effect.
+3. Accept none of them, and keep the backlog items.
+
+The recommendation is answer 2. The first three parts each make a test
+against ThorVG pass that fails without them, and they follow the reference
+of D43. Set Matte has no oracle that draws it, and it changes only the
+antialiasing of a few edges in the two files of the corpus that use it.

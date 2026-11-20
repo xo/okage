@@ -69,12 +69,17 @@ From D52.
    U+0100, or most of their lines are in one run. The lines are the same.
    After these changes, a profile of `BenchmarkEndToEndOnce` puts 53% of
    the time of `pg24264` and 67% of `pg1342` in the shaper. The line
-   breaks take 20% and 13%, and the split takes 12% and 5%. Try this next,
-   and keep the output of each test and the hashes of ivy the same:
-   - Decode the UTF-8 of a text once. D72 and D77 do not do this.
+   breaks take 20% and 13%, and the split takes 12% and 5%.
+   D81 makes six changes to the shaper, which the maintainers accepted on
+   2026-11-20. Together they make `BenchmarkEndToEndOnce` 17% faster on
+   `pg24264` and 12% on `pg1342`, with the same output. The text is not
+   decoded from UTF-8 in `typesetting`, whose API takes runes, so a decode
+   once is work for ivy. After D81, try the candidates of "What remains" in
+   D81: the Unicode lookups of the line breaks and a cache for the coverage
+   of GPOS. Keep the output of each test and the hashes of ivy the same.
    A change to the copy of go-text needs a decision first, as D65, D67, D70,
-   D72 and D77 had. A change at the calls in `shaping` keeps the copy closer
-   to go-text. Source: D72, D77, `test/textbench`, 2026-11-20.
+   D72, D77 and D81 had. A change at the calls in `shaping` keeps the copy
+   closer to go-text. Source: D72, D77, D81, `test/textbench`, 2026-11-20.
 2. Use SIMD in `typesetting` where the work is a scan or a loop over an array
    (D17, D28). Most of the text code is a table lookup or a state machine for
    each rune, and SIMD does not help there. These places can use it:
@@ -90,22 +95,17 @@ From D52.
    shaper inside `shaping.Paragraph` sets `ProduceUnsafeToConcat`, and
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
-4. Make `harfbuzz` follow HarfBuzz 15.1.0 where the fix of faults 7 and 8
-   of D73 found it different, but no test text shows it:
-   - When the buffer has no operations left in the middle of a lookup,
-     HarfBuzz drops the output of that lookup. `harfbuzz` keeps it.
-   - HarfBuzz stops the shaping when the buffer grows past its limit
-     of length. `harfbuzz` compares the length with the limit only before
-     each lookup.
-   - The AAT code takes the operations in other ways than HarfBuzz. For
-     example, HarfBuzz takes the length of the buffer for each pass of a
-     subtable of `morx`.
-   - HarfBuzz takes operations for the rules that it tests when the
-     Indic shaper asks whether a lookup substitutes glyphs. `harfbuzz` takes
-     none.
-   - In HarfBuzz, a PairPos of format 2 gives the class 0 to a second
-     glyph that its ClassDef2 does not hold, and the subtable applies.
-     `harfbuzz` does not apply the subtable, and tries the next one.
+4. Make `harfbuzz` follow HarfBuzz 15.1.0 at two more places, which
+   the work on fixes 8 to 12 of D73 found. No text of `perf_reference`
+   shows them:
+   - HarfBuzz refuses a table kern, kerx, mort or morx with more than 1,024
+     subtables, `HB_AAT_MAX_SUBTABLES` of `hb-limits.hh`. `typesetting`
+     reads such a table.
+   - A subtable of format 1 of kerx in HarfBuzz keeps a history of eight
+     glyphs, which each list of actions walks again, ends a list with
+     0xFFFF, marks the glyphs unsafe to break, and takes one operation for
+     each action. `harfbuzz` has the older code of go-text, which pops a
+     stack, and it takes no operation for an action.
    Source: D73, 2026-11-20.
 5. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
@@ -117,40 +117,23 @@ From D52.
 
 ## lottie
 
-From D41, D42, D43, D44, D75 and D79. The port of velato draws each sampled
-frame of the 879 Noto animated emoji within the tolerance of ThorVG. These
-parts of Lottie are not done:
+From D41, D42, D43, D44, D75, D79 and D82. The port of velato draws each
+sampled frame of the 879 Noto animated emoji within the tolerance of
+ThorVG. These parts of Lottie are not done:
 
 1. Expressions. velato and okage ignore them. 29 files of the corpus have
    expressions, and they still pass, because their values are close to the
    values that the keyframes give.
-2. The effect Set Matte in the `PixmapSink`. 21 layers use it, which velato
-   does not convert, and they still pass.
-3. The text animators of a text layer, its key `a`, and the alignment of
+2. The text animators of a text layer, its key `a`, and the alignment of
    their groups, its key `m` (D79). A text layer draws as if it had none.
    The capitals of the key `ca` of a text document are not drawn either.
-4. The text on a path of a text layer, its key `p` (D79). The text draws on
+3. The text on a path of a text layer, its key `p` (D79). The text draws on
    its lines, as if it had no path.
-5. The geometric boolean operations of merge paths, for a stroke or a trim
+4. The geometric boolean operations of merge paths, for a stroke or a trim
    after a merge path of mode 2 to 5 (D42).
-6. The edges of an image that is scaled up and turned (D75). ThorVG fades
-   the edge of such an image into the background over the width of one
-   pixel of the image. The `PixmapSink` antialiases the edge over one pixel
-   of the target. An image of 16 by 12 pixels that is scaled by 3.3 and
-   turned on a canvas of 100 by 100 differs from ThorVG in 4% of the pixels,
-   all at its edges. A turned image at about its own size, and a scaled
-   image that is not turned, are within the tolerance of D43.
-7. The tracking of a text that the `PixmapSink` shapes with the fonts of
-   `WithFontDatabase` (D79). The sink adds the tracking to each advance, as
-   for the glyphs of the list `chars`. ThorVG multiplies each advance of a
-   font that it shapes itself by a factor. So a line with tracking has
-   another width than in ThorVG, and the test compares such a font only
-   without tracking.
-8. The edge mode wrap of the Gaussian blur (D79). The `PixmapSink` blurs
-   the layer as if the pixels outside it were transparent. ThorVG tiles
-   the pixels of the layer outside it. The sink draws a blur and a shadow
-   as ThorVG does at its default quality, 50. It has no option for another
-   quality.
+5. The quality of the Gaussian blur and the drop shadow (D79). The sink
+   draws them as ThorVG does at its default quality, 50. It has no option
+   for another quality.
 
 ## Math
 
@@ -172,6 +155,11 @@ parts of Lottie are not done:
    - Phase 27, the commits of go-tex/math after the base commit.
    - The helpers `KernPair` and `LigaturePair` of D78 section 8, if ivy asks
      for them.
+   - `\phase`, the angle mark of electrical engineering, which KaTeX
+     draws as an enclosure. zuzu asked for it on 2026-11-20, after the
+     symbols `\omicron`, `\impliedby`, `\eth`, `\Finv`, `\Game` and
+     `\notni`, which `texmath` now has. It is the last of the seven
+     commands that the formulas of the corpus of mermaid-go-renderer need.
    - `\underrightarrow`, `\sideset` and the environments `align`,
      `equation` and `gather`, which wait for a request. The other commands
      of `katex_parse.txt`, most of them symbols and operators of AMS and
@@ -189,15 +177,6 @@ From D45. `webfont` (D51) does not read an EOT file that uses MicroType
 Express compression, and returns `okage.ErrFontUnsupported` for it. Such files
 are rare. They come from old versions of Internet Explorer.
 
-## Phase 3
-
-### Make the f64 functions of crmath faster
-
-From D26. `crmath.Acos64`, `crmath.Ln64` and `crmath.Log2_64` compute with
-`math/big` only, about 9 microseconds for each call. Give them the fast path
-in double-double precision that `Sin64`, `Cos64`, `Tan64`, `Atan2_64` and
-`Pow64` have. Only the clipping of a cubic calls `Acos64`.
-
 ## Phase 4
 
 ### Make the pipeline faster
@@ -210,42 +189,54 @@ test:
 
 1. The forms of D17 that are not measured: one loop with a `switch` on the
    stage, and the color channels in local variables. The call of each stage
-   through a function value is now a large part of a fill.
-2. Lane functions that are just over the budget of the inliner, the calls of
-   `blendFn3` through a function value, and bounds checks in the stages
-   (`go build -gcflags='-m -d=ssa/check_bce'`).
+   through a function value is now a large part of a fill. On 2026-11-20 a
+   simpler form was measured and not kept: `nextStage` only marked that the
+   next stage runs, and one loop called the stages through their function
+   values, so that the stages did not nest on the stack. It was slower in
+   both builds, by 1.6 percent on the geometric mean of 15 benchmarks and by
+   12 percent on `BenchmarkGradientsTwoStopsLinearPadHQ`.
+2. Lane functions that are just over the budget of the inliner, and bounds
+   checks in the stages (`go build -gcflags='-m -d=ssa/check_bce'`). On
+   2026-11-20, `colorBurnHighpLane` and `colorDodgeHighpLane` fit the budget
+   of 80, and `BenchmarkBlendColorDodge` went from 4.84 ms to 4.65 ms (D35).
+   `setSat` (cost 114), `exclusiveReflect` (91) and `gatherIxLane` (127) are
+   still over the budget. The bounds checks that remain in the stages are
+   one for each stage, on the index of the next stage or on the slice of its
+   pixels, and the checks in the loops on `p.tail` of the mask stages.
 3. A copy of the stages that keeps its values in `archsimd` registers through
    a run of stages, written by a tool, for the SIMD build (D17, D28).
 4. The stages of sRGB and `Powf`, which D33 did not change, because no
    benchmark covers them.
 5. The bilinear sampling of highp is still the largest cost of a raster
-   page of ivy that okage scales up. Each time in items 5 to 8 is the median
-   CPU time of one operation, in the scalar build. On 2026-11-20,
-   `sampler2x2` and `sampler4x4` tile and clamp each coordinate once for its
-   column or its row, in one loop on the lanes (D35).
-   `BenchmarkDrawPixmapUpscale` scales an image up by 8 onto a page of 1600
-   by 893 pixels. It went from 62 ms to 36 ms with the bilinear filter, and
-   from 182 ms to 92 ms with the bicubic filter. The image is not turned, so the 8 lanes of a group
-   share their row. A stage for such a transform can find the row once for
-   each group. Source: the measurement of ivy, 2026-11-18, and
-   `bench_ivy_test.go`, 2026-11-20.
-6. The blend modes of highp. On 2026-11-20, each stage of `blend_fn!` and
-   `blend_fn2!` calls its function directly, so that the Go compiler inlines
-   it, and `store` rounds a channel with `LaneRoundIntByte` (D35). The
+   page of ivy that okage scales up. Each time in items 5 to 7 is the median
+   CPU time of one operation, with 10 runs of the old and the new code in
+   turn. On 2026-11-20, `sampler2x2` and `sampler4x4` tile and clamp each
+   coordinate once for its column or its row, in one loop on the lanes. If
+   the 8 lanes of a group share their row, as they do when the image is not
+   turned, `bilinear` and `bicubic` find the row and its weights once for the
+   group. A pixel loads without a call, and its bytes become floats from a
+   table (D35). `BenchmarkDrawPixmapUpscale` scales an image up by 8 onto a
+   page of 1600 by 893 pixels. In the scalar build it went from 62 ms to
+   36 ms and then to 27 ms with the bilinear filter, and from 182 ms to
+   92 ms and then to 55 ms with the bicubic filter. In the SIMD build it went
+   from 36 ms to 28 ms with the bilinear filter, and from 93 ms to 56 ms with
+   the bicubic filter. The lanes of a group of an image that is scaled up
+   often share a column too, but each lane still finds its columns. Source:
+   the measurement of ivy, 2026-11-18, and `bench_ivy_test.go`, 2026-11-20.
+6. The blend modes of highp. On 2026-11-20, each stage of `blend_fn!`,
+   `blend_fn2!` and `blend_fn3!` calls its function directly, `store` rounds
+   a channel with `LaneRoundIntByte`, and `load_8888`, `mask_u8` and the
+   fast path of D53 read the value of a byte from a table (D35). The
    composite of a group of 1600 by 893 pixels in `BenchmarkCompositeBlend`
-   went from 22 ms to 15 ms with Multiply, and from 23 ms to 18 ms with
-   Overlay. The stages of `blend_fn3!`, `loadDst` and `gatherAligned` remain.
-   Source: the measurement of ivy, 2026-11-18, and `bench_ivy_test.go`,
-   2026-11-20.
-7. `callHLineBlitter` of `scan_hairline_aa.go` gives its runs to the blitter
-   through an interface, so they escape to the heap on each call, about 300
-   bytes for each horizontal hairline. Since 2026-11-20, `blitAntiH` and
-   `blitMask` skip the rows and the chunks where the mask is 0 (D60), and
-   `rectClipBlitter` no longer allocates on each call of `blitAntiH2` and
-   `blitAntiV2`. `BenchmarkFillMaskZeroRowsDense` went from 8.8 ms to
-   3.7 ms, and from 66000 to 265 allocations. Source: `bench_ivy_test.go`,
-   2026-11-20.
-8. Make a clip cheaper. Since 2026-11-20, a `Mask` holds only the rows that
+   went from 22 ms to 15 ms and then to 14.2 ms with Multiply, and from
+   23 ms to 18 ms and then to 17.0 ms with Overlay. With Hue it went from
+   24.1 ms to 21.6 ms, and with Color from 18.9 ms to 16.4 ms. The SIMD build
+   is slower than the scalar build on the fast path of D53, which is plain
+   Go. The composite with SourceOver took 11.9 ms there and 6.6 ms in the
+   scalar build. With the tables, which remove the conversion of a byte to a
+   float, it takes 9.2 ms and 6.4 ms. Source: the measurement of ivy,
+   2026-11-18, and `bench_ivy_test.go`, 2026-11-20.
+7. Make a clip cheaper. Since 2026-11-20, a `Mask` holds only the rows that
    its paths cover, `NewMask` allocates nothing, and `Clone` shares the rows
    until the first write (D35). A page of a spreadsheet in
    `BenchmarkClipSpreadsheet`, with 496 cells that each clone a clip and
@@ -269,7 +260,11 @@ From D18 and D28. In Go 1.27.3 the plain functions are slower in a build with
 of "A new release of Go" in `docs/SIMD.md` say, and turn the SIMD paths of
 `internal/wide/internal/widegen` on or off again from the measurements.
 Also measure whether `GODEBUG=simd` changes what `archsimd` runs, or what
-`archsimd.X86` reports (D15, D17).
+`archsimd.X86` reports (D15, D17). In Go 1.27.4, a conversion of a byte to a
+float32 is much slower in the SIMD build. On 2026-11-20 a table in place of
+the conversion made `sourceOverAligned` 23 percent faster in the SIMD build
+and 3 percent faster in the scalar build (item 6 of "Make the pipeline
+faster"). The SIMD build is still 1.4 times slower there.
 
 ## Phase 6
 
@@ -319,19 +314,7 @@ From D62.
    maintainers accept this within the tolerance of D65. To give the
    instances of subsetter, `typesetting` must compute the deltas in fixed
    point, as skrifa does. Source: phase 13, unit 4.
-2. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
-   copy of the code that draws an outline of typesetting in the order of
-   skrifa. The copy of `pdf` also drops the line back to the start of a
-   contour that skrifa starts at its last point, and follows the rules of
-   `NopFilterSink` of read-fonts for CFF. The tests of `svg` compare
-   images within a tolerance, so the copy of `svg` does not need them yet.
-   Move the code into one internal package for both. Source: phase 16.
-3. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
-   krilla-svg (phase 17), and `Surface.DrawRaster` follows the same code
-   (D68). D62 item 10 says that the writer uses one code for both. Make
-   `pdfsvg` call `Surface.DrawRaster` when both phases are merged. Source:
-   phase 18.
-4. Make a Type 3 font from images that the caller gives, each with its text.
+2. Make a Type 3 font from images that the caller gives, each with its text.
    The writer makes a Type 3 font only from the glyphs of a font file. ivy
    then writes the glyphs of a Type 3 font of bitmaps in a PDF file as image
    masks of the page, which each viewer scales down in another way, and it

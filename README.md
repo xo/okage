@@ -305,7 +305,11 @@ okage also adds APIs that upstream does not have:
    `lottie.WithFontDatabase`. Without that option, it logs the character
    and draws nothing. The size, the fill and the stroke, the justification,
    the line height, the tracking and the box of a text document apply. The
-   text animators and the text on a path do not (D79).
+   text animators and the text on a path do not (D79). As in ThorVG, the
+   blur and the shadow repeat the pixels at the edge of the canvas, the
+   tracking of a text that the sink shapes multiplies its advances, and an
+   image that turns by an angle fades its edge over one pixel of the image
+   (D82).
 6. `lottie.Detect` finds a Lottie document from the start of a file, and
    `lottie.OpenDotLottie` reads a dotLottie archive. `lottie.Load` parses
    either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
@@ -376,8 +380,9 @@ okage also adds APIs that upstream does not have:
     `Surface.PushStrokeAdjustment` for the entry `SA`,
     `Surface.PaintFromShader`, which converts a shader of okage, and
     `Surface.DrawRaster`, which draws a part of a page with okage as an
-    image. The shaders of okage give their parameters with the method
-    `Parameters` for that conversion (D68).
+    image, with the option `WithRasterArea`. `pdfsvg` draws the filters of
+    SVG with `Surface.DrawRaster` too. The shaders of okage give their
+    parameters with the method `Parameters` for that conversion (D68).
 18. `StrokeDash` gives its dash array and its dash offset with the methods
     `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
     with them (D69).

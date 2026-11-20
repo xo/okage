@@ -60,7 +60,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5, amended by D49 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
 | D40 | [Text falls back for an emoji that the font does not draw as an emoji](D040-text-falls-back-for-an-emoji-that-the-font-does-not-draw-as-emoji.md) | Decided, amends D39 |
-| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44, D75 and D79 |
+| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44, D75, D79 and D82 |
 | D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 |
 | D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
@@ -91,12 +91,14 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D69 | [Dashes, many stops and image masks for the PDF device of ivy](D069-dashes-many-stops-and-image-masks-for-the-pdf-device-of-ivy.md) | Decided, amends D68 |
 | D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided, amended by D77 |
 | D71 | [The copy of go-text does not fuse a multiply and an add](D071-the-copy-of-go-text-does-not-fuse-a-multiply-and-an-add.md) | Decided, amends D16 |
-| D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided |
+| D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided, amended by D81 |
 | D73 | [typesetting fixes the faults that go-text still has](D073-typesetting-fixes-the-faults-that-go-text-still-has.md) | Decided |
 | D74 | [pdf reuses its compressor, limits a subset, and a stroke ends on NaN](D074-pdf-reuses-its-compressor-limits-a-subset-and-a-stroke-ends-on-nan.md) | Decided, amends D16 |
-| D75 | [lottie draws image assets in the pixmap sink](D075-lottie-draws-image-assets-in-the-pixmap-sink.md) | Decided, amends D41 |
+| D75 | [lottie draws image assets in the pixmap sink](D075-lottie-draws-image-assets-in-the-pixmap-sink.md) | Decided, amends D41, amended by D82 |
 | D76 | [The test fonts of go-text are a module of their own](D076-the-test-fonts-of-go-text-are-a-module-of-their-own.md) | Decided, amends D63 |
 | D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70 |
 | D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13 |
-| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41 |
+| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82 |
 | D80 | [pdf draws a font as paths when its subset fails](D080-pdf-draws-a-font-as-paths-when-its-subset-fails.md) | Decided, amends D62 |
+| D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72 |
+| D82 | [lottie follows ThorVG at the edges and in the tracking](D082-lottie-follows-thorvg-at-the-edges-and-in-the-tracking.md) | Decided, amends D41, D75 and D79 |

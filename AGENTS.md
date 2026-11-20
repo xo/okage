@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `433d0213` of resvg. The maintainers accepted the decisions D1
-to D80. The package `html` parses and lays out the HTML-like labels of
+to D82. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -75,10 +75,10 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76 and D77, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77 and D81, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
 | working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74 and D80, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the math layout of `texmath`, the table MATH, or applying a commit of go-tex/math | D78, then D52 for the reader of the table MATH in `typesetting` |
-| working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75 and D79 |
+| working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79 and D82 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -105,7 +105,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. Question 32 is open, and the next question is question 33.
+not repeat. No question is open, and the next question is question 35.
 
 ## Hard rules
 
@@ -237,6 +237,7 @@ When code exists, the code goes here:
 | `pdf/` | the package `pdf`, the port of the crate `krilla`, which writes PDF files. A file of a folder of `src` starts with the name of the folder, such as `configure_version.go` (D62) |
 | `pdfsvg/` | the package `pdfsvg`, the port of the crate `krilla-svg`, which draws a tree of `svg` onto a surface of `pdf`. A file has the name of its file in `src`, such as `clip_path.go` (D62) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
+| `internal/glyphoutline/` | the code that draws the outline of a glyph of `typesetting` in the order of skrifa, with the filter of read-fonts for CFF, which `svg` and `pdf` share |
 | `internal/boxblur/` | the box blur of the filters of resvg, the port of `src/filter/box_blur.rs`, which `svg` and `lottie` share (D79) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
@@ -256,7 +257,7 @@ When code exists, the code goes here:
 | `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
 | `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
 | `typesetting/testdata/` | a module of its own, with its own `go.mod` and no Go package, so the module `github.com/xo/okage` does not hold it (D76). It holds the fonts and the test files of `github.com/go-text/typesetting-utils` that the tests of `typesetting` read, byte for byte, with their licenses and a `readme.md` that lists them. The package `typesetting/internal/testfonts` reads them from the disk for the tests, and a test skips when the folder is not there (D63, D76) |
-| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62), the benchmarks of the speed of `typesetting` on the workloads of ivy in `test/textbench`, and the oracles of the math layout in `test/texmath` (D78) |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62), the benchmarks of the speed of `typesetting` on the workloads of ivy in `test/textbench`, the comparison of the shaper of `typesetting` with uharfbuzz 15.1.0 in `test/harfbuzz` (D73), and the oracles of the math layout in `test/texmath` (D78) |
 | `test/texmath/` | the oracles of `texmath` (D78): `mathtable.py`, which reads the MATH table of a font with fontTools for the test of the reader of `typesetting`, the corpus of formulas in `corpus.txt`, and the KaTeX script in `katex/`, with its `package.json` and `package-lock.json` at the version of KaTeX that Mermaid 12.3.0 bundles. `katex_parse.txt` lists the formulas that KaTeX parses and `texmath.Parse` does not, each with its missing command and its reason, for the parse gate of `katex_parse_test.go`. `katex_layout.txt` lists the formulas outside the gate of the height and the depth of `layout_test.go`, each with its reason. `report_test.go` writes a report of KaTeX and `texmath` side by side when Chromium is on the machine. `npm ci` in `test/texmath/katex` installs the packages into `test/texmath/katex/node_modules`, which git ignores |
 
 ## Before you stage
