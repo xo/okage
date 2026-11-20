@@ -69,8 +69,7 @@ func newGSUBApplicable(table tables.GSUBLookup) applicable {
 	return ap
 }
 
-// okage: cache is the cache of a PairPos subtable of format 2, or nil
-// (D83).
+// okage: cache is the cache of a PairPos subtable, or nil (D83).
 func newGPOSApplicable(table tables.GPOSLookup, cache *pairPosCache) applicable {
 	ap := applicable{objApply: func(c *otApplyContext) bool { return c.applyGPOS(table, cache) }}
 	ap.digest.collectCoverage(table.Cov())

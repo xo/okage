@@ -6,9 +6,9 @@ import "github.com/xo/okage/typesetting/font/opentype/tables"
 // subtables of a lookup can have a small cache of its own
 // (external_cache_create), which keeps the coverage or the classes of 256
 // glyphs (hb_ot_layout_mapping_cache_t). okage keeps such a cache for each
-// PairPos subtable of format 2, the kerning by classes: its coverage and
-// its classes. A cache only keeps the result of a lookup in a table of the
-// font, so the glyphs do not change.
+// PairPos subtable, the kerning: its coverage, and the classes of a
+// subtable of format 2. A cache only keeps the result of a lookup in a
+// table of the font, so the glyphs do not change.
 
 // maxCachedSubtables is the number of the first subtables of a lookup that
 // have a cache, as in HarfBuzz.
@@ -43,18 +43,23 @@ func (mc *mappingCache) set(g gID, v uint16) {
 // cache of a coverage. A coverage index of 0xFFFF or more is not kept.
 const notCovered = 0xFFFF
 
-// pairPosCache is the cache of a PairPos subtable of format 2: its
-// coverage, its first class definition and its second class definition.
+// pairPosCache is the cache of a PairPos subtable: its coverage, and for
+// format 2 its first class definition and its second class definition.
 type pairPosCache struct {
-	coverage, first, second mappingCache
+	coverage      mappingCache
+	first, second *mappingCache
 }
 
-// newPairPosCache returns an empty cache.
-func newPairPosCache() *pairPosCache {
+// newPairPosCache returns an empty cache for a subtable of format 2, or of
+// format 1 when classes is false.
+func newPairPosCache(classes bool) *pairPosCache {
 	pc := new(pairPosCache)
 	pc.coverage.clear()
-	pc.first.clear()
-	pc.second.clear()
+	if classes {
+		pc.first, pc.second = new(mappingCache), new(mappingCache)
+		pc.first.clear()
+		pc.second.clear()
+	}
 	return pc
 }
 
@@ -79,15 +84,15 @@ func (pc *pairPosCache) index(cov tables.Coverage, g gID) (int, bool) {
 
 // classes returns the class of g1 in inner.ClassDef1 and the class of g2
 // in inner.ClassDef2, from the cache when pc holds them. A nil pc does the
-// lookups. The class of a glyph that a class definition does not hold is
-// 0.
+// lookups, and so does a pc of format 1. The class of a glyph that a class
+// definition does not hold is 0.
 func (pc *pairPosCache) classes(inner *tables.PairPosData2, g1, g2 gID) (class1, class2 uint16) {
-	if pc == nil {
+	if pc == nil || pc.first == nil {
 		class1, _ = inner.ClassDef1.Class(g1)
 		class2, _ = inner.ClassDef2.Class(g2)
 		return class1, class2
 	}
-	return cachedClass(inner.ClassDef1, &pc.first, g1), cachedClass(inner.ClassDef2, &pc.second, g2)
+	return cachedClass(inner.ClassDef1, pc.first, g1), cachedClass(inner.ClassDef2, pc.second, g2)
 }
 
 // cachedClass returns the class of g in cd, from the cache when it holds

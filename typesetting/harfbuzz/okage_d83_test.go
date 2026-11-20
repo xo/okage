@@ -34,10 +34,10 @@ func TestMappingCache(t *testing.T) {
 
 // TestPairPosCache compares the coverage index and the classes of a
 // pairPosCache with the lookups in the tables, for each PairPos subtable
-// of format 2 of some fonts and for each glyph, twice, so that the second
-// pass reads the cache.
+// of some fonts and for each glyph, twice, so that the second pass reads
+// the cache.
 func TestPairPosCache(t *testing.T) {
-	subtables := 0
+	var formats [3]int
 	for _, name := range []string{"common/Roboto-BoldItalic.ttf", "common/DejaVuSans.ttf", "common/mplus-1p-regular.ttf", "common/SourceSans-VF.ttf"} {
 		ft := openFontFileTT(t, name)
 		for _, lookup := range ft.GPOS.Lookups {
@@ -46,18 +46,22 @@ func TestPairPosCache(t *testing.T) {
 				if !ok {
 					continue
 				}
-				inner, ok := pair.Data.(tables.PairPosData2)
-				if !ok {
-					continue
+				inner, classes := pair.Data.(tables.PairPosData2)
+				pc := newPairPosCache(classes)
+				if classes {
+					formats[2]++
+				} else {
+					formats[1]++
 				}
-				subtables++
-				pc := newPairPosCache()
 				for pass := range 2 {
 					for g := range 1 << 16 {
 						gotIndex, gotOK := pc.index(pair.Cov(), gID(g))
 						wantIndex, wantOK := pair.Cov().Index(gID(g))
 						if gotOK != wantOK || (gotOK && gotIndex != wantIndex) {
 							t.Fatalf("%s, pass %d: index(%d) = %d, %v, want %d, %v", name, pass, g, gotIndex, gotOK, wantIndex, wantOK)
+						}
+						if !classes {
+							continue
 						}
 						h := gID(g*31 + 7)
 						got1, got2 := pc.classes(&inner, gID(g), h)
@@ -70,8 +74,8 @@ func TestPairPosCache(t *testing.T) {
 			}
 		}
 	}
-	if subtables == 0 {
-		t.Fatal("found no PairPos subtable of format 2")
+	if formats[1] == 0 || formats[2] == 0 {
+		t.Fatalf("found %d PairPos subtables of format 1 and %d of format 2", formats[1], formats[2])
 	}
 }
 

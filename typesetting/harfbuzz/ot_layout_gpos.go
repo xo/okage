@@ -25,13 +25,12 @@ func (l lookupGPOS) collectCoverage(dst *setDigest) {
 
 func (l lookupGPOS) dispatchSubtables(ctx *getSubtablesContext) {
 	for i, table := range l.Subtables {
-		// okage: each of the first 8 PairPos subtables of format 2 has a
-		// cache, as in HarfBuzz (D83).
+		// okage: each of the first 8 PairPos subtables has a cache, as in
+		// HarfBuzz (D83).
 		var cache *pairPosCache
 		if pair, ok := table.(tables.PairPos); ok && i < maxCachedSubtables {
-			if _, ok := pair.Data.(tables.PairPosData2); ok {
-				cache = newPairPosCache()
-			}
+			_, classes := pair.Data.(tables.PairPosData2)
+			cache = newPairPosCache(classes)
 		}
 		*ctx = append(*ctx, newGPOSApplicable(table, cache))
 	}
@@ -187,7 +186,7 @@ func applyRecurseGPOS(c *otApplyContext, lookupIndex uint16) bool {
 
 // return `true` is the positionning found a match and was applied
 //
-// okage: cache is the cache of a PairPos subtable of format 2, or nil (D83).
+// okage: cache is the cache of a PairPos subtable, or nil (D83).
 func (c *otApplyContext) applyGPOS(table tables.GPOSLookup, cache *pairPosCache) bool {
 	buffer := c.buffer
 	glyphID := buffer.cur(0).Glyph
