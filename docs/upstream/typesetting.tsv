@@ -109,7 +109,7 @@ d6549ec3f91740bd8d302868ca682b228c796428	2026-10-26	ported		OT: Fuse mask initia
 725e00e81bf158a020b642eddb213664049ca5a6	2026-10-26	ported		[hangul] Apply 'calt' feature to non-Hangul characters in Hangul runs. It changes harfbuzz
 6ce328cb99286cb59c96db894e3124d03a456e82	2026-10-26	ported		[avar] Fix logic bug. It changes font/opentype
 2acb79986adad559987029a29ff8c34e7e0a9597	2026-10-26	ported		[unicode] Treat U+180F FVS4 as Default_Ignorable (#6229) U+180F MONGOLIAN FREE VARIATION SELECTOR FOUR was added in Unicode 14.0 and has Default_Ignorable_Code_Point=Yes, but is_default_ignorable() only covered U+180B..180E, so FVS4 was never hidden and leaked a .notdef into the output.. It changes harfbuzz
-5d47eb7cc1b97cbc246b09fc9d89af855f6e9683	2026-10-26	pending		[all] update to Unicode 18. It changes harfbuzz, internal/unicodedata, language, segmenter
+5d47eb7cc1b97cbc246b09fc9d89af855f6e9683	2026-10-26	ported		[all] update to Unicode 18. It changes harfbuzz, internal/unicodedata, language, segmenter
 82a95b9904006bab813514edec26d97d9b16d153	2026-10-26	ported		[aat] fix out of bounds. It changes harfbuzz. Applied out of order for the panics, loops and missing bounds of malformed input (D67).
 9356ea6071439837fd7588ca4aca04ed2eaa5013	2026-10-26	pending		[indic] Categorize U+1CF5 and U+1CF6 as CS (#5949). It changes harfbuzz
 a5737ca9c7ca0e90925052435d37289cc46303ea	2026-10-26	pending		fixes from tests. It changes harfbuzz
