@@ -1,5 +1,5 @@
 // Package lottie renders Lottie animations with okage. It is a port of the
-// crate velato, with the changes of D42, D43, D79 and D82 (D41).
+// crate velato, with the changes of D42, D43, D79, D82 and D85 (D41).
 //
 // Parse reads a Lottie file into a Composition. RenderFrame draws a frame of
 // it onto an okage pixmap:
@@ -33,7 +33,9 @@
 //
 // The package also draws the text layers, which velato does not parse. A
 // text layer draws the glyphs of the list chars of its file. A PixmapSink
-// shapes each other character with the fonts of WithFontDatabase. The
+// shapes each other character with the fonts of WithFontDatabase. A text
+// layer also draws its text animators, the capitals of its text and its
+// text on a path, as ThorVG does (D85). The
 // PixmapSink also draws the Gaussian blur and the drop shadow of a layer, as
 // ThorVG does (D79):
 //

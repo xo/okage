@@ -21,12 +21,83 @@ type TextLayer struct {
 	Text TextData `json:"t"`
 }
 
-// TextData is the text of a text layer, its key t. okage reads only the
-// text document. The text animators, the key a, the alignment of the
-// animators, the key m, and the path of the text, the key p, are not
-// drawn (D79).
+// TextData is the text of a text layer, its key t: the text document, the
+// text animators, the grouping of their glyphs and the path of the text
+// (D79, D85).
 type TextData struct {
-	Document TextDocumentProperty `json:"d"`
+	Document  TextDocumentProperty `json:"d"`
+	Animators []TextAnimatorSchema `json:"a"`
+	Alignment *TextAlignmentSchema `json:"m"`
+	Path      *TextPathSchema      `json:"p"`
+}
+
+// TextAnimatorSchema is a text animator of the key a of a text layer: a
+// range selector that chooses the glyphs, and the style that it gives them
+// (D85). The keys follow parseTextRange of ThorVG.
+type TextAnimatorSchema struct {
+	Selector TextSelectorSchema `json:"s"`
+	Style    TextStyleSchema    `json:"a"`
+}
+
+// TextSelectorSchema is the range selector of a text animator.
+type TextSelectorSchema struct {
+	// Start, End and Offset give the range, in percent of the text or in
+	// glyphs, as Units says.
+	Start  *FloatValue `json:"s"`
+	End    *FloatValue `json:"e"`
+	Offset *FloatValue `json:"o"`
+	// Amount is the share of the style that the range gives, in percent.
+	Amount *FloatValue `json:"a"`
+	// Smoothness softens the edge of the shape square, in percent.
+	Smoothness *FloatValue `json:"sm"`
+	// MaxEase and MinEase ease the share of each glyph, in percent.
+	MaxEase *FloatValue `json:"xe"`
+	MinEase *FloatValue `json:"ne"`
+	// Based is 1 for the characters, 2 for the characters without the
+	// spaces, 3 for the words and 4 for the lines.
+	Based *int `json:"b"`
+	// Shape is 1 for a square, 2 for a ramp up, 3 for a ramp down, 4 for a
+	// triangle, 5 for a round shape and 6 for a smooth shape.
+	Shape *int `json:"sh"`
+	// Units is 1 for percent and 2 for glyphs.
+	Units *int `json:"r"`
+	// Random is 1 when the range starts at a random place.
+	Random *int `json:"rn"`
+}
+
+// TextStyleSchema is the style that a text animator gives its glyphs.
+type TextStyleSchema struct {
+	Position      *MultiDimensional `json:"p"`
+	Scale         *MultiDimensional `json:"s"`
+	Rotation      *FloatValue       `json:"r"`
+	Opacity       *FloatValue       `json:"o"`
+	FillColor     *ColorValue       `json:"fc"`
+	FillOpacity   *FloatValue       `json:"fo"`
+	StrokeColor   *ColorValue       `json:"sc"`
+	StrokeOpacity *FloatValue       `json:"so"`
+	StrokeWidth   *FloatValue       `json:"sw"`
+	// Tracking is the space after each glyph, in the units of a glyph at
+	// the size 100.
+	Tracking *FloatValue `json:"t"`
+	// LineSpacing moves the next lines down, in pixels.
+	LineSpacing *FloatValue `json:"ls"`
+}
+
+// TextAlignmentSchema is the key m of a text layer: how the text animators
+// group the glyphs, and the anchor point of a group.
+type TextAlignmentSchema struct {
+	// Group is 1 for the characters, 2 for the words, 3 for the lines and 4
+	// for all the text.
+	Group  *int              `json:"g"`
+	Anchor *MultiDimensional `json:"a"`
+}
+
+// TextPathSchema is the key p of a text layer: the mask whose path the
+// text follows, and the margin before the first glyph. A text without a
+// path has an empty object or no mask.
+type TextPathSchema struct {
+	Mask        *int        `json:"m"`
+	FirstMargin *FloatValue `json:"f"`
 }
 
 // TextDocumentProperty is the animated text document of a text layer, its
@@ -65,6 +136,9 @@ type TextDocumentSchema struct {
 	Size float64 `json:"s"`
 	// Justify is 0 for the left, 1 for the right and 2 for the center.
 	Justify int `json:"j"`
+	// Caps is 0 for the text as it is, 1 for all capitals and 2 for small
+	// capitals (D85).
+	Caps int `json:"ca"`
 	// Tracking is the space after each glyph, in thousandths of an em.
 	Tracking float64 `json:"tr"`
 	// LineHeight is the distance from one baseline to the next, in pixels.

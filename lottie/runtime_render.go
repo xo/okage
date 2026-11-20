@@ -201,7 +201,7 @@ func (r *Renderer) renderLayer(animation *Composition, layerSet []EvaluatedLayer
 		sink.Draw(nil, transform, &brush, kurbo.NewRect(0, 0, layer.Content.Width, layer.Content.Height).PathElements(0.1))
 	case ContentText:
 		// Port: velato does not draw a text layer (D79).
-		renderText(animation, layer.Content.Text, frame, transform, alpha, sink)
+		renderText(animation, layer, frame, transform, alpha, sink)
 	case ContentShape:
 		r.batch.mergePaths = r.MergePaths
 		r.batch.evaluate(layer.Content.Shapes, transform, alpha, frame, true)

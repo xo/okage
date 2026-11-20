@@ -186,7 +186,7 @@ func (c *converter) convLayer(source *AnyLayer) layerEntry {
 	case source.Text != nil:
 		// Port: velato does not parse a text layer (D79).
 		e = c.setupLayerBase(visual, &layer, startTime(visual))
-		layer.Content = Content{Kind: ContentText, Text: convText(source.Text)}
+		layer.Content = Content{Kind: ContentText, Text: convText(source.Text), TextAnimation: c.convTextAnimation(&source.Text.Text)}
 	default:
 		// A null layer has no content.
 		e = c.setupLayerBase(visual, &layer, startTime(visual))

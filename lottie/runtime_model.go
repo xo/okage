@@ -432,6 +432,9 @@ type Content struct {
 	Width, Height float64
 	// Text holds the text documents of a text layer (D79).
 	Text []TextKeyframe
+	// TextAnimation holds the text animators and the path of a text
+	// layer, or nil (D85).
+	TextAnimation *TextAnimation
 }
 
 // TrimMode is TrimMode in velato src/runtime/model/mod.rs.
