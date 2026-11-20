@@ -120,13 +120,6 @@ From D52.
    - A lookup of format 4 in the class table of a state machine drops its
      last segment, also when that segment is not the segment 0xFFFF that
      ends the search. HarfBuzz drops only that segment.
-   - Outside these tables, `resolveCrossOffset` of GPOS has neither the
-     limit of HarfBuzz on the number of attachments that it follows, from
-     703509a9d9, nor its clamp, from bcce9d4f55.
-     `propagateAttachmentOffsets` also adds the offsets without the clamp
-     of HarfBuzz. If cursive attachments form a cycle, which HarfBuzz says
-     lookups with other flags can do, the loop of `resolveCrossOffset`
-     does not end.
    - A lookup of format 10: HarfBuzz 15.1.0 reads a value from it only for
      the row and column tables of kerx format 6, and reads each value with
      the size that the lookup gives. For a class table, a substitution of

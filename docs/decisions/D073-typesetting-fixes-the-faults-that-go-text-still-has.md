@@ -301,9 +301,9 @@ the first four places of item 4 of "typesetting" in `docs/BACKLOG.md`:
     which HarfBuzz added in its merge 436f067b20. When the subtable
     reverses the buffer, the attachments are in the order of the buffer
     before the reverse. The offsets are clamped to the range of a
-    position. `resolveCrossOffsetKerx` has the limit of HarfBuzz 15.1.0 on
-    the number of attachments, and its clamp. `resolveCrossOffset` of GPOS
-    does not change. `TestKerxFormat4CrossOffset` and
+    position. `resolveCrossOffset` has the limit of HarfBuzz 15.1.0 on
+    the number of attachments, and its clamp. Since fix 28, a mark of GPOS
+    calls the same function. `TestKerxFormat4CrossOffset` and
     `TestKerxFormat4Clamp` test it. At the scale of the font units, two
     anchors are at most 65,535 apart, so no test reaches the clamp of
     their difference.
@@ -419,6 +419,28 @@ The audit also found a panic, fixed on 2026-11-21:
     sanitizer. go-text panicked with an index out of range.
     `TestMorxLigatureNegativeComponent` tests it in `harfbuzz` and in
     `test/harfbuzz`.
+
+On 2026-11-21 okage also made the attachments of GPOS follow HarfBuzz
+15.1.0, as item 4 of "typesetting" in `docs/BACKLOG.md` asked:
+
+28. A mark of GPOS takes the offset of its base across the line with
+    `resolveCrossOffset`, the function of fix 17. The function follows at
+    most one attachment less than the number of glyphs, from 703509a9d9,
+    and clamps each sum to the range of a position, from bcce9d4f55. A
+    parent before the start of the buffer ends the walk. Two cursive
+    lookups with other flags can attach glyphs in a cycle, and the loop of
+    go-text then did not end. go-text also read a glyph at a negative
+    index. `propagateAttachmentOffsets`, the cursive attachment and
+    `reverseCursiveMinorOffset` clamp each sum to the range of a position
+    too, from the fix of issue 6151 of HarfBuzz. `reverseCursiveMinorOffset`
+    stops at a parent before the start of the buffer, and leaves a glyph
+    detached when its reversed chain does not fit in 16 bits. go-text let
+    each sum and the chain wrap. `TestCursiveCycle` shapes a cycle of
+    three glyphs and a mark in `harfbuzz` and in `test/harfbuzz`, and the
+    old code does not end. `TestCrossOffsetBounds`, `TestAttachmentClamp`
+    and `TestReverseCursiveBounds` test the bounds in `harfbuzz`. At the
+    scale of the font units, no test reaches the clamps of the cursive
+    attachment.
 
 ## When upstream changes
 
