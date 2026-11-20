@@ -37,10 +37,16 @@ skip the work that such text does not need, with the same results.
    `typesetting` does not use SIMD. Both stay in "typesetting" in
    `docs/BACKLOG.md`. The first changes too much
    of the copy, and the gain of the second is small.
-6. Each change has a comment that starts with `okage:` and names this
+6. On 2026-11-20 the maintainers added two changes, after D77:
+   `SplitByFace` and the split by script of `shaping` skip the work for a run
+   that one face and one script cover, and `language.LookupScript` finds the
+   script of a rune above U+00FF without a binary search over the whole
+   table, for example with a table of the blocks of Unicode. Both give the
+   same results, with a test that compares them with the old code.
+7. Each change has a comment that starts with `okage:` and names this
    decision. A change at the calls of `shaping` is preferred to a change
    inside a package of go-text.
-7. The output of every test of `typesetting`, `svg` and `pdf` stays the
+8. The output of every test of `typesetting`, `svg` and `pdf` stays the
    same.
 
 ## When upstream changes

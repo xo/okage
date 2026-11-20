@@ -31,7 +31,53 @@ func LookupScript(r rune) Script {
 	if uint32(r) < uint32(len(latin1Scripts)) {
 		return latin1Scripts[r]
 	}
-	return lookupScript(r)
+	return lookupScriptBlock(r)
+}
+
+// okage: D72. scriptBlockBits is the number of the low bits of a rune that
+// select the rune in its block of scriptBlocks. A block holds 256 runes.
+const scriptBlockBits = 8
+
+// okage: D72. scriptBlocks holds the index in [ScriptRanges] of the first
+// range that ends in each block of 256 runes or after it, up to the block
+// of the last range, and one more item for the block after it. The range
+// that holds a rune of the block b, if one does, is one of the ranges
+// scriptBlocks[b] to scriptBlocks[b+1], both included. In most blocks they
+// are one or two ranges.
+var scriptBlocks = func() []uint16 {
+	const _ = uint16(len(ScriptRanges)) // the indices fit in a uint16
+	n := int(ScriptRanges[len(ScriptRanges)-1].End>>scriptBlockBits) + 2
+	t := make([]uint16, n)
+	i := 0
+	for b := range t {
+		for i < len(ScriptRanges) && ScriptRanges[i].End < rune(b)<<scriptBlockBits {
+			i++
+		}
+		t[b] = uint16(i)
+	}
+	return t
+}()
+
+// okage: D72. lookupScriptBlock is lookupScript with a binary search over
+// the ranges of the block of r in scriptBlocks only, which gives the same
+// script.
+func lookupScriptBlock(r rune) Script {
+	b := uint32(r) >> scriptBlockBits
+	if b+1 >= uint32(len(scriptBlocks)) {
+		return Unknown
+	}
+	for i, j := int(scriptBlocks[b]), min(int(scriptBlocks[b+1])+1, len(ScriptRanges)); i < j; {
+		h := i + (j-i)/2
+		entry := &ScriptRanges[h]
+		if r < entry.Start {
+			j = h
+		} else if entry.End < r {
+			i = h + 1
+		} else {
+			return entry.Script
+		}
+	}
+	return Unknown
 }
 
 // okage: D72. latin1Scripts is the script of each rune below U+0100, from
@@ -43,7 +89,8 @@ var latin1Scripts = func() (t [0x100]Script) {
 	return t
 }()
 
-// lookupScript is the general lookup of [LookupScript].
+// lookupScript is the general lookup of [LookupScript]. okage: D72. Only
+// latin1Scripts and the tests call it.
 func lookupScript(r rune) Script {
 	// binary search
 	for i, j := 0, len(ScriptRanges); i < j; {
