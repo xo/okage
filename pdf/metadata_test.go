@@ -153,7 +153,8 @@ func TestMetadataCopies(t *testing.T) {
 
 // TestMetadataInfo checks the information dictionary for the other fields
 // and versions: the document ID, a date with few fields, a language that
-// is empty, a page layout that needs PDF 1.5, and text in UTF-16.
+// is empty and so ignored, a page layout that needs PDF 1.5, and text in
+// UTF-16.
 func TestMetadataInfo(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -178,8 +179,14 @@ func TestMetadataInfo(t *testing.T) {
 			name:    "empty language",
 			version: PDF17,
 			m:       NewMetadata().Language(""),
-			want:    []string{"/Lang ()"},
-			notWant: []string{"/Info"},
+			notWant: []string{"/Lang", "/Info"},
+		},
+		{
+			name:    "empty language after a language",
+			version: PDF17,
+			m:       NewMetadata().Language("en").Language(""),
+			want:    []string{"/Lang (en)"},
+			notWant: []string{"/Lang ()"},
 		},
 		{
 			name:    "two pages on PDF 1.4",

@@ -253,7 +253,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "krilla"
 version = "0.8.2"
-source = "git+https://github.com/LaurenzV/krilla?rev=cc194f14613ab5535bcb7919378f9fe524235cd0#cc194f14613ab5535bcb7919378f9fe524235cd0"
+source = "git+https://github.com/LaurenzV/krilla?rev=c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883#c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883"
 dependencies = [
  "base64",
  "bumpalo",
@@ -281,7 +281,7 @@ dependencies = [
 [[package]]
 name = "krilla-svg"
 version = "0.8.1"
-source = "git+https://github.com/LaurenzV/krilla?rev=cc194f14613ab5535bcb7919378f9fe524235cd0#cc194f14613ab5535bcb7919378f9fe524235cd0"
+source = "git+https://github.com/LaurenzV/krilla?rev=c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883#c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883"
 dependencies = [
  "flate2",
  "fontdb",

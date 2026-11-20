@@ -97,14 +97,16 @@ func (m Metadata) Keywords(keywords []string) Metadata {
 }
 
 // Language is Metadata::language in krilla src/interchange/metadata.rs. An
-// empty language is set too, as upstream does.
+// empty language leaves the language as it is.
 //
 // The main language of the document, as an RFC 3066 language tag.
 //
 // This property is required for some export modes, like for example
 // PDF/A-3a.
 func (m Metadata) Language(language string) Metadata {
-	m.language = new(language)
+	if language != "" {
+		m.language = new(language)
+	}
 	return m
 }
 

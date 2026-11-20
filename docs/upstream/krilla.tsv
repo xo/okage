@@ -1,3 +1,4 @@
 upstream	date	status	okage	note
 cc194f14613ab5535bcb7919378f9fe524235cd0	2026-11-18	ported		Prefer device color spaces for variable text (#475). Port: content.rs, graphics/color.rs, tests. The field active_variable_text stays false, because the base port leaves out start_variable_text and the forms (D62). The parts of interactive/form.rs, the comment of serialize.rs on the output intents and the snapshot forms_prefer_device_color are not ported
 5937b1bfc149422dd9080c4d69609b233f4808d3	2026-11-19	not-applicable		Prefer Option in setters for form fields and annotations (#480). It changes the setters of the form fields in interactive/form.rs and of the widget annotations in interactive/annotation.rs, with examples/forms.rs and the tests of the forms. The base port leaves out the forms and the widget annotations (D62)
+c1d8cfe392efe52b4fb28ac2eb9aad0d6b1dc883	2026-11-19	ported		Ignore empty document languages (#481). Port: interchange/metadata.rs
