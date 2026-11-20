@@ -478,15 +478,6 @@ func applyInner(
 		}
 		subregion := pr.ToIntRect()
 
-		// `feOffset` inherits its region from the input.
-		if fe, ok := primitive.Kind().(*OffsetFilter); ok {
-			if fe.Input().Kind == InputFilterReference {
-				if res, ok := findResult(results, fe.Input().Reference); ok {
-					subregion = res.image.region
-				}
-			}
-		}
-
 		cs := primitive.ColorInterpolation()
 
 		var result, input, input1, input2 imageFilter
@@ -598,16 +589,8 @@ func applyInner(
 		if region != subregion {
 			// Clip result.
 
-			// TODO: explain
-			var subregion2 path.IntRect
-			if _, ok := primitive.Kind().(*OffsetFilter); ok {
-				// We do not support clipping on feOffset.
-				subregion2, ok = region.TranslateTo(0, 0)
-				mustOK(ok)
-			} else {
-				subregion2, ok = subregion.Translate(-region.X(), -region.Y())
-				mustOK(ok)
-			}
+			subregion2, ok := subregion.Translate(-region.X(), -region.Y())
+			mustOK(ok)
 
 			colorSpace := result.colorSpace
 

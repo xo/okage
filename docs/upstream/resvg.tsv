@@ -38,3 +38,4 @@ d45af96e2991ef4f5465a8cd1e506f739374621e	2026-11-14	ported		Support `x`, `y`, `w
 555b81578bfc07bf9816a5e6e81952423f3aaacc	2026-11-14	ported		Inherit paint server transforms through an empty or invalid attribute (#1226). Port: usvg, tests
 17b78e217529b944da05635d010e2b2480d25155	2026-11-14	ported		Keep the layer size limit in layer coordinates for nested groups (#1238). Port: resvg, tests
 9e24e7b3ffa576ca07ed9be6a5ed16b6ecc69a7c	2026-11-14	ported		Limit layers without filters to the part of the canvas they contribute to (#1239). Port: resvg, tests
+deda5edb2d32e8810a3e6a13be289bed73097a62	2026-11-15	ported		Filters: Implement default primitive subregion (#1243). Port: usvg, resvg, tests

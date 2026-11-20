@@ -7,6 +7,7 @@ package svg
 
 import (
 	"math"
+	"slices"
 	"strconv"
 
 	"github.com/xo/okage/internal/svgtypes"
@@ -316,7 +317,8 @@ func collectChildren(
 			continue
 		}
 
-		filterSubregion, ok := resolvePrimitiveRegion(child, units, state, objectBBox, filterRegion)
+		defaultSubregion := defaultPrimitiveSubregion(child, primitives, filterRegion)
+		filterSubregion, ok := resolvePrimitiveRegion(child, units, state, objectBBox, defaultSubregion)
 		if !ok {
 			break
 		}
@@ -386,6 +388,74 @@ func collectChildren(
 	return primitives
 }
 
+// defaultPrimitiveSubregion is default_primitive_subregion in usvg
+// src/parser/filter.rs. It returns the subregion a primitive uses for its
+// omitted `x`, `y`, `width` and `height`.
+//
+// <https://www.w3.org/TR/filter-effects-1/#FilterPrimitiveSubRegion>
+//
+// Port: the chain of the iterators of the inputs becomes two loops, which
+// resolve each input in the same order, and stop at the same input.
+func defaultPrimitiveSubregion(
+	fe svgNode,
+	primitives []PrimitiveFilter,
+	filterRegion NonZeroRect,
+) NonZeroRect {
+	var inputAttrs []AId
+	tagName, hasTagName := fe.tagName()
+	if hasTagName {
+		switch tagName {
+		case EIdFeBlend, EIdFeComposite, EIdFeDisplacementMap:
+			inputAttrs = []AId{AIdIn, AIdIn2}
+		case EIdFeColorMatrix,
+			EIdFeComponentTransfer,
+			EIdFeConvolveMatrix,
+			EIdFeDiffuseLighting,
+			EIdFeDropShadow,
+			EIdFeGaussianBlur,
+			EIdFeMorphology,
+			EIdFeOffset,
+			EIdFeSpecularLighting:
+			inputAttrs = []AId{AIdIn}
+		}
+	}
+
+	union := defaultBBox()
+	// expand adds the rect of the primitive of input to union. It returns
+	// false when the input is not a reference to a primitive.
+	expand := func(input InputFilter) bool {
+		if input.Kind != InputFilterReference {
+			return false
+		}
+
+		for _, p := range slices.Backward(primitives) {
+			if p.result == input.Reference {
+				union = union.expand(bboxFromNonZeroRect(p.rect))
+				return true
+			}
+		}
+		return false
+	}
+
+	if hasTagName && tagName == EIdFeMerge {
+		for n := range fe.children() {
+			if !expand(resolveInput(n, AIdIn, primitives)) {
+				return filterRegion
+			}
+		}
+	}
+	for _, aid := range inputAttrs {
+		if !expand(resolveInput(fe, aid, primitives)) {
+			return filterRegion
+		}
+	}
+
+	if r, ok := union.toNonZeroRect(); ok {
+		return r
+	}
+	return filterRegion
+}
+
 // resolvePrimitiveRegion is resolve_primitive_region in usvg
 // src/parser/filter.rs.
 func resolvePrimitiveRegion(
@@ -393,7 +463,7 @@ func resolvePrimitiveRegion(
 	units units,
 	state *converterState,
 	bbox *NonZeroRect,
-	filterRegion NonZeroRect,
+	defaultRegion NonZeroRect,
 ) (NonZeroRect, bool) {
 	x, hasX := fe.tryConvertLength(AIdX, units, state)
 	y, hasY := fe.tryConvertLength(AIdY, units, state)
@@ -425,10 +495,10 @@ func resolvePrimitiveRegion(
 		return def
 	}
 	return path.NonZeroRectFromXYWH(
-		or(x, hasX, filterRegion.X()),
-		or(y, hasY, filterRegion.Y()),
-		or(width, hasWidth, filterRegion.Width()),
-		or(height, hasHeight, filterRegion.Height()),
+		or(x, hasX, defaultRegion.X()),
+		or(y, hasY, defaultRegion.Y()),
+		or(width, hasWidth, defaultRegion.Width()),
+		or(height, hasHeight, defaultRegion.Height()),
 	)
 }
 
