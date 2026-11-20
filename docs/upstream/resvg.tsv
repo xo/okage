@@ -29,14 +29,14 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 4bd3bebf2cf7c4029ecdaae53f6e35d76bf2716e	2026-11-09	ported	a237122	Resolve currentColor in flood-color (#1217). Port: usvg, tests
 500d8605a28ac092c1b146c06ec65c0e70e99ec4	2026-11-10	ported	27ab339	Properly recognize and reject recursive references (#1225). Port: usvg, tests
 5bdbae64eefadc4bf0caa56dcf91702037929086	2026-11-11	not-applicable		Prepare v0.50.0 release (#1230). It raises the versions in Cargo.toml, Cargo.lock and the headers of the C API, and changes CHANGELOG.md only
-121e1db8293dff33567d564e91f96bd0e2fadf3e	2026-11-14	ported		Support `color-interpolation` on gradients (#1229). Port: usvg, resvg, tests
+121e1db8293dff33567d564e91f96bd0e2fadf3e	2026-11-14	ported	4086a59	Support `color-interpolation` on gradients (#1229). Port: usvg, resvg, tests
 46de08c87c5be3faf64a5827b6ece0619c142ff1	2026-11-14	not-applicable		Update links and badges in the READMEs (#1214). It changes only the links and the badges of README.md and of the READMEs of the C API, svgtypes and usvg
-d448e0262d71cd063f5a6515430b8989118cce19	2026-11-14	ported		Support `color-interpolation` on luminance masks (#1235). Port: usvg, resvg, tests
-ae32c3ab8b07c61f9fe222836054043e4d36cf2f	2026-11-14	ported		Follow the SVG 2 path direction rules for marker orientation (#1173). Port: usvg, tests
-d45af96e2991ef4f5465a8cd1e506f739374621e	2026-11-14	ported		Support `x`, `y`, `width` and `height` on `symbol` (#1236). Port: usvg, tests
-57f9de457d8b65ba33e2502d896c3d4ac5d94594	2026-11-14	ported		Reuse the key buffer when looking up variable font instances (#1237). Port: usvg text
-555b81578bfc07bf9816a5e6e81952423f3aaacc	2026-11-14	ported		Inherit paint server transforms through an empty or invalid attribute (#1226). Port: usvg, tests
-17b78e217529b944da05635d010e2b2480d25155	2026-11-14	ported		Keep the layer size limit in layer coordinates for nested groups (#1238). Port: resvg, tests
-9e24e7b3ffa576ca07ed9be6a5ed16b6ecc69a7c	2026-11-14	ported		Limit layers without filters to the part of the canvas they contribute to (#1239). Port: resvg, tests
-deda5edb2d32e8810a3e6a13be289bed73097a62	2026-11-15	ported		Filters: Implement default primitive subregion (#1243). Port: usvg, resvg, tests
+d448e0262d71cd063f5a6515430b8989118cce19	2026-11-14	ported	4b6e208	Support `color-interpolation` on luminance masks (#1235). Port: usvg, resvg, tests
+ae32c3ab8b07c61f9fe222836054043e4d36cf2f	2026-11-14	ported	29c48d7	Follow the SVG 2 path direction rules for marker orientation (#1173). Port: usvg, tests
+d45af96e2991ef4f5465a8cd1e506f739374621e	2026-11-14	ported	fb7a357	Support `x`, `y`, `width` and `height` on `symbol` (#1236). Port: usvg, tests
+57f9de457d8b65ba33e2502d896c3d4ac5d94594	2026-11-14	ported	fd18763	Reuse the key buffer when looking up variable font instances (#1237). Port: usvg text
+555b81578bfc07bf9816a5e6e81952423f3aaacc	2026-11-14	ported	5ff3976	Inherit paint server transforms through an empty or invalid attribute (#1226). Port: usvg, tests
+17b78e217529b944da05635d010e2b2480d25155	2026-11-14	ported	3c1980a	Keep the layer size limit in layer coordinates for nested groups (#1238). Port: resvg, tests
+9e24e7b3ffa576ca07ed9be6a5ed16b6ecc69a7c	2026-11-14	ported	8658f7e	Limit layers without filters to the part of the canvas they contribute to (#1239). Port: resvg, tests
+deda5edb2d32e8810a3e6a13be289bed73097a62	2026-11-15	ported	3e1a5f4	Filters: Implement default primitive subregion (#1243). Port: usvg, resvg, tests
 433d0213a98d611793d105e08e141325e13720e3	2026-11-17	not-applicable		Use ubuntu-24.04 for linux-x86_64 release binaries (#1248). It changes only the runner of the release workflow in .github
