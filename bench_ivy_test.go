@@ -3,7 +3,8 @@ package okage_test
 // This file ports no upstream file. It holds benchmarks of the work that ivy
 // gives okage: the clips of a page of a spreadsheet, an image that a raster
 // page scales up, the composite of a group with each blend mode, and fills
-// through a mask whose rows are mostly 0 (D35).
+// through a mask whose rows are mostly 0 (D35), and the clips of cells on
+// the pixel grid with masks of pixels and with masks of a rectangle (D86).
 
 import (
 	"testing"
@@ -186,6 +187,15 @@ func BenchmarkClipGrid(b *testing.B) {
 		r := must(okage.RectFromXYWH(float32(x), float32(y), benchGridWidth, benchGridHeight))
 		mask.FillPath(okage.PathFromRect(r), okage.FillRuleWinding, false, okage.IdentityTransform())
 		return mask
+	})
+}
+
+// BenchmarkClipGridRect is BenchmarkClipGrid with a mask of NewRectMask for
+// each cell, which holds the rectangle and no pixels (D86).
+func BenchmarkClipGridRect(b *testing.B) {
+	clipGrid(b, func(x, y int) *okage.Mask {
+		r := must(okage.IntRectFromXYWH(int32(x), int32(y), benchGridWidth, benchGridHeight))
+		return must(okage.NewRectMask(benchPageWidth, benchPageHeight, r))
 	})
 }
 
