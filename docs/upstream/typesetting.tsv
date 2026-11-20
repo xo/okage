@@ -117,8 +117,8 @@ a5737ca9c7ca0e90925052435d37289cc46303ea	2026-10-26	ported		fixes from tests. It
 d47893403e12f29a4096fdcac9428e5e1ebd3cd7	2026-10-26	ported		[unicodedata] update test expectations to follow Unicode 18. It changes internal/unicodedata
 2ec09380504768bf1109faa5851bbc99186932e9	2026-10-26	ported		[segmenter] update rule LB12a. It changes segmenter
 04e0c82349f79ef143f6eabfbe0c6851b2211858	2026-10-26	ported		[segmenter/graphemes] update to follow Unicode 18 changes. It changes segmenter
-a599cf6eb7fe40cdda8e0d20ecafe21608c49bc3	2026-10-26	pending		[shaping] adjust a test now that Harfbuzz applies 'calt' feature (see 80ec6d612e9c4136a41df73d76a254e57948424a). It changes shaping
-b848cc9dcdac977e891a251613fc565a455f8474	2026-10-26	pending		[deps] use latest test utils version. It changes go.mod
+a599cf6eb7fe40cdda8e0d20ecafe21608c49bc3	2026-10-26	not-applicable		[shaping] adjust a test now that Harfbuzz applies 'calt' feature (see 80ec6d612e9c4136a41df73d76a254e57948424a). It changes shaping. It changes only shaping/shaping_test.go, which reads typesetting-utils, so the copy leaves it out (D52)
+b848cc9dcdac977e891a251613fc565a455f8474	2026-10-26	not-applicable		[deps] use latest test utils version. It changes go.mod. It raises the version of typesetting-utils in go.mod and go.sum. okage copies neither file and does not require typesetting-utils (D52)
 0f86ffd263930162ba1d5a62afc72e8747d4d008	2026-10-26	pending		[harfbuzz] fix staticcheck warning. It changes harfbuzz
 45369a0f7e1185c19ad9270d90f3985617e4741f	2026-10-26	pending		[harfbuzz] add upstream version. It changes harfbuzz
 d1c97ede1763503adac4cd65c0571cebaee6f405	2026-11-10	pending		[segmenter] document that iterators only read the Segmenter, add Len. It changes segmenter
