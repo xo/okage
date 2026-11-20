@@ -683,17 +683,17 @@ func (b *rasterPipelineBlitter) runRect(masked, inner *rasterPipeline, rect *scr
 	if in0 >= in1 {
 		return
 	}
-	chunkEnd := func(start int) int { return min(start+maskChunk, end) }
 	// first and last are the starts of the first and the last chunk with a
-	// pixel in the rectangle.
+	// pixel in the rectangle, and firstEnd and lastEnd their ends.
 	first := x + (in0-x)/maskChunk*maskChunk
 	last := x + (in1-1-x)/maskChunk*maskChunk
-	firstCut := first < b.mask.left || chunkEnd(first) > b.mask.right
-	lastCut := last != first && chunkEnd(last) > b.mask.right
+	firstEnd, lastEnd := min(first+maskChunk, end), min(last+maskChunk, end)
+	firstCut := first < b.mask.left || firstEnd > b.mask.right
+	lastCut := last != first && lastEnd > b.mask.right
 	// The pixels from lo to hi, without hi, run inner.
-	lo, hi := first, chunkEnd(last)
+	lo, hi := first, lastEnd
 	if firstCut {
-		lo = chunkEnd(first)
+		lo = firstEnd
 	}
 	if lastCut {
 		hi = last
@@ -707,13 +707,13 @@ func (b *rasterPipelineBlitter) runRect(masked, inner *rasterPipeline, rect *scr
 	// masked, for a pattern that reads the pixmap that it draws on.
 	for y := rect.Y(); y < rect.Bottom(); y++ {
 		if firstCut {
-			b.runRow(masked, first, chunkEnd(first), y, aa, ctx)
+			b.runRow(masked, first, firstEnd, y, aa, ctx)
 		}
 		if lo < hi {
 			b.runRow(inner, lo, hi, y, aa, ctx)
 		}
 		if lastCut {
-			b.runRow(masked, last, chunkEnd(last), y, aa, ctx)
+			b.runRow(masked, last, lastEnd, y, aa, ctx)
 		}
 	}
 }
