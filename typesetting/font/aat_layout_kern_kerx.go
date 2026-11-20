@@ -12,8 +12,19 @@ import (
 // It supports both Microsoft and Apple formats.
 type Kernx []KernSubtable
 
+// aatMaxSubtables is the largest number of subtables of a table kerx, and
+// of all the chains of a table morx, as HB_AAT_MAX_SUBTABLES of
+// hb-limits.hh of HarfBuzz 15.1.0. tables has the same limit for the table
+// kern.
+//
+// okage: HarfBuzz refuses a table with more subtables, and so does font
+// (D73).
+const aatMaxSubtables = 1024
+
 func newKernxFromKerx(kerx tables.Kerx) Kernx {
-	if len(kerx.Tables) == 0 {
+	// okage: a table with more than aatMaxSubtables subtables is refused,
+	// as in HarfBuzz 15.1.0 (D73).
+	if len(kerx.Tables) == 0 || len(kerx.Tables) > aatMaxSubtables {
 		return nil
 	}
 	out := make(Kernx, len(kerx.Tables))

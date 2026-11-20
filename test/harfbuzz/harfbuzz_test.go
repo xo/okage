@@ -481,3 +481,68 @@ func TestIndicFirstGlyphCoverage(t *testing.T) {
 	data = replaceLayout(t, data, map[string][]byte{"GSUB": gsub})
 	testCase(t, data, false, "क्कि", "क्क", "क्ककि", "कि")
 }
+
+// kerxSubtable is a subtable of a table kerx: its coverage, with the format
+// in the low byte, and its data after its header of 12 bytes. When length
+// is not 0, it is the length that the header gives, in place of the real
+// length.
+type kerxSubtable struct {
+	coverage uint32
+	data     []byte
+	length   int
+}
+
+// kerxTable builds a table kerx of version 2 with the subtables.
+func kerxTable(subtables ...kerxSubtable) []byte {
+	out := u16s(2, 0)
+	out = append(out, u32s(uint32(len(subtables)))...)
+	for _, st := range subtables {
+		length := 12 + len(st.data)
+		if st.length != 0 {
+			length = st.length
+		}
+		out = append(out, u32s(uint32(length), st.coverage, 0)...)
+		out = append(out, st.data...)
+	}
+	return out
+}
+
+// kerxPairs builds a subtable of format 0 of kerx with the pairs, each a
+// left glyph, a right glyph and a value. The pairs must be sorted.
+func kerxPairs(pairs ...int) kerxSubtable {
+	n := uint32(len(pairs) / 3)
+	data := u32s(n, 6*n, 0, 0)
+	data = append(data, u16s(pairs...)...)
+	return kerxSubtable{coverage: 0, data: data}
+}
+
+// TestAATSubtableLimit: tables kerx, kern and morx with 1,024 and 1,025
+// subtables. In kerx and kern, the last subtable kerns a, b, and the other
+// subtables are empty. In morx, one chain has subtables that each replace
+// a with b. HarfBuzz refuses each table with 1,025 subtables.
+func TestAATSubtableLimit(t *testing.T) {
+	for _, count := range []int{1024, 1025} {
+		subtables := make([]kerxSubtable, count)
+		for i := range count - 1 {
+			subtables[i] = kerxPairs()
+		}
+		subtables[count-1] = kerxPairs(robotoA, robotoB, -300)
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(subtables...)}), false, "ab", "aab")
+
+		kern := u16s(0, count)
+		for range count - 1 {
+			kern = append(kern, u16s(0, 14, 1, 0, 0, 0, 0)...)
+		}
+		kern = append(kern, u16s(0, 20, 1, 1, 6, 0, 0, robotoA, robotoB, -300)...)
+		testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab", "aab")
+
+		noncontextual := u16s(8, robotoA, 1, robotoB)
+		morx := u16s(2, 0)
+		morx = append(morx, u32s(1, 1, uint32(16+count*(12+len(noncontextual))), 0, uint32(count))...)
+		for range count {
+			morx = append(morx, u32s(uint32(12+len(noncontextual)), 0x20000004, 1)...)
+			morx = append(morx, noncontextual...)
+		}
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "a", "ab")
+	}
+}

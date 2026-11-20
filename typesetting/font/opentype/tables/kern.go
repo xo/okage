@@ -33,6 +33,13 @@ type Kern struct {
 	Tables  []KernSubtable
 }
 
+// aatMaxSubtables is the largest number of subtables of a table kern, as
+// HB_AAT_MAX_SUBTABLES of hb-limits.hh of HarfBuzz 15.1.0. font has the same
+// limit for the tables kerx and morx.
+//
+// okage: the limit of HarfBuzz (D73).
+const aatMaxSubtables = 1024
+
 // We apply the following logic:
 //   - read the first uint16 -> it's always the major version
 //   - if it's 0, we have a Miscrosoft table
@@ -67,6 +74,13 @@ func ParseKern(src []byte) (Kern, int, error) {
 
 	default:
 		return Kern{}, 0, fmt.Errorf("unsupported kern table version: %d", major)
+	}
+
+	// okage: HarfBuzz 15.1.0 refuses a table with more than 1,024
+	// subtables, HB_AAT_MAX_SUBTABLES of hb-limits.hh. The check also
+	// comes before the allocation of the subtables (D73).
+	if numTables > aatMaxSubtables {
+		return Kern{}, 0, fmt.Errorf("reading Kern: %d subtables, more than %d", numTables, aatMaxSubtables)
 	}
 
 	out := make([]KernSubtable, numTables)

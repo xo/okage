@@ -812,3 +812,101 @@ func TestIndicFirstGlyphCoverage(t *testing.T) {
 		{i, 0, 259, 0, 0}, {ka, 0, 762, 0, 0}, {virama, 0, 0, 0, 0}, {ka, 0, 762, 0, 0},
 	}}})
 }
+
+// kerxSubtable is a subtable of a table kerx: its coverage, with the format
+// in the low byte, and its data after its header of 12 bytes. When length
+// is not 0, it is the length that the header gives, in place of the real
+// length.
+type kerxSubtable struct {
+	coverage uint32
+	data     []byte
+	length   int
+}
+
+// kerxTable builds a table kerx of version 2 with the subtables.
+func kerxTable(subtables ...kerxSubtable) []byte {
+	out := u16s(2, 0)
+	out = append(out, u32s(uint32(len(subtables)))...)
+	for _, st := range subtables {
+		length := 12 + len(st.data)
+		if st.length != 0 {
+			length = st.length
+		}
+		out = append(out, u32s(uint32(length), st.coverage, 0)...)
+		out = append(out, st.data...)
+	}
+	return out
+}
+
+// kerxPairs builds a subtable of format 0 of kerx with the pairs, each a
+// left glyph, a right glyph and a value. The pairs must be sorted.
+func kerxPairs(pairs ...int) kerxSubtable {
+	n := uint32(len(pairs) / 3)
+	data := u32s(n, 6*n, 0, 0)
+	data = append(data, u16s(pairs...)...)
+	return kerxSubtable{coverage: 0, data: data}
+}
+
+// aatSubtables builds a table kerx, a table kern and a table morx with
+// count subtables. In kerx and kern, the last subtable kerns a, b by -300,
+// and the other subtables are empty. morx has one chain, whose subtables
+// each replace a with b.
+func aatSubtables(count int) (kerx, kern, morx []byte) {
+	subtables := make([]kerxSubtable, count)
+	for i := range count - 1 {
+		subtables[i] = kerxPairs()
+	}
+	subtables[count-1] = kerxPairs(int(robotoA), int(robotoB), -300)
+	kerx = kerxTable(subtables...)
+
+	kern = u16s(0, count)
+	for range count - 1 {
+		kern = append(kern, u16s(0, 14, 1, 0, 0, 0, 0)...)
+	}
+	kern = append(kern, u16s(0, 20, 1, 1, 6, 0, 0, int(robotoA), int(robotoB), -300)...)
+
+	noncontextual := u16s(8, int(robotoA), 1, int(robotoB))
+	morx = u16s(2, 0)
+	morx = append(morx, u32s(1, 1, uint32(16+count*(12+len(noncontextual))), 0, uint32(count))...)
+	for range count {
+		morx = append(morx, u32s(uint32(12+len(noncontextual)), 0x20000004, 1)...)
+		morx = append(morx, noncontextual...)
+	}
+	return kerx, kern, morx
+}
+
+// TestAATSubtableLimit shapes ab with the tables of aatSubtables. HarfBuzz
+// 15.1.0 refuses a table kern, kerx or morx with more than 1,024
+// subtables, HB_AAT_MAX_SUBTABLES of hb-limits.hh, and so does font.
+// go-text read the tables with 1,025 subtables (D73).
+func TestAATSubtableLimit(t *testing.T) {
+	kerned := []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoB, 1, 999, -150, 0}}
+	plain := []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}
+	for _, test := range []struct {
+		count        int
+		kerned, morx []shapedGlyph
+	}{
+		{1024, kerned, []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
+		{1025, plain, plain},
+	} {
+		want := test.count
+		if want > 1024 {
+			want = 0
+		}
+		kerx, kern, morx := aatSubtables(test.count)
+		kerxFace := fontWithLayout(t, map[string][]byte{"kerx": kerx})
+		kernFace := fontWithLayout(t, map[string][]byte{"kern": kern})
+		morxFace := fontWithLayout(t, map[string][]byte{"morx": morx})
+		morxCount := 0
+		for _, c := range morxFace.Morx {
+			morxCount += len(c.Subtables)
+		}
+		if len(kerxFace.Kerx) != want || len(kernFace.Kern) != want || morxCount != want {
+			t.Errorf("%d subtables: got %d subtables of kerx, %d of kern and %d of morx, want %d",
+				test.count, len(kerxFace.Kerx), len(kernFace.Kern), morxCount, want)
+		}
+		testShapedFace(t, kerxFace, []shapedText{{"ab", test.kerned}})
+		testShapedFace(t, kernFace, []shapedText{{"ab", test.kerned}})
+		testShapedFace(t, morxFace, []shapedText{{"ab", test.morx}})
+	}
+}

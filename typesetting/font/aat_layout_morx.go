@@ -10,6 +10,15 @@ func newMorx(table tables.Morx) Morx {
 	if len(table.Chains) == 0 {
 		return nil
 	}
+	// okage: a table whose chains have more than aatMaxSubtables
+	// subtables in all is refused, as in HarfBuzz 15.1.0 (D73).
+	count := 0
+	for _, c := range table.Chains {
+		count += len(c.Subtables)
+	}
+	if count > aatMaxSubtables {
+		return nil
+	}
 	out := make(Morx, len(table.Chains))
 	for i, c := range table.Chains {
 		out[i] = newMorxChain(c)
