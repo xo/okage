@@ -119,6 +119,7 @@ func prepareContext(data []byte, index uint32, variationCoordinates []Variation,
 		mapper:      gidRemapper,
 		interjector: interj,
 		flavor:      flavor,
+		maxGlyfSize: maxGlyfSize(len(data)),
 	}, nil
 }
 
@@ -363,6 +364,15 @@ type context struct {
 	customHmtxData []hmtxMetric
 	// longLoca tells whether the long loca format was chosen.
 	longLoca bool
+	// maxGlyfSize is the largest size of the glyph data of the subset, which
+	// upstream does not have (D74).
+	maxGlyfSize int
+}
+
+// maxGlyfSize gives the largest size of the glyph data of a subset of a font
+// of n bytes: 8 times n plus 1 MiB, and at most the largest int (D74).
+func maxGlyfSize(n int) int {
+	return int(min(8*int64(n)+1<<20, math.MaxInt))
 }
 
 // expectTable is Context::expect_table in subsetter src/lib.rs. It expects
@@ -690,6 +700,9 @@ const (
 	// errCFF is Error::CFFError. An error occurred while processing the CFF
 	// table.
 	errCFF = okage.ErrSubsetCFF
+	// errTooLarge is not a case of upstream. The glyph data of the subset is
+	// too large (D74).
+	errTooLarge = okage.ErrSubsetTooLarge
 )
 
 // The seams of the units of phase 13 that are not ported yet. A seam is nil

@@ -180,4 +180,9 @@
 //     other outlines.
 //  10. The port of write-fonts takes one path, where write-fonts takes the
 //     paths of many instances, so that they can be interpolated.
+//  11. The glyph data of a TrueType subset holds at most 8 times the size of
+//     the font data plus 1 MiB. Past that size, the subset returns
+//     okage.ErrSubsetTooLarge before it copies the glyphs. Upstream copies a
+//     glyph once for each glyph ID that points at it, so a hostile font can
+//     make a subset of some GB from a font of some hundred KB (D74).
 package subsetter

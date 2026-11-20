@@ -203,6 +203,85 @@ func TestClosure(t *testing.T) {
 	}
 }
 
+// TestSubsetTooLarge subsets hostile fonts whose loca table gives one glyph
+// of 60,000 bytes for each even glyph ID from 2. The range of each odd glyph
+// ID is reversed, and the subset leaves those IDs out. Upstream copies the
+// glyph for each of the 32,499 even IDs, which makes a table glyf of about
+// 1.9 GB. The port stops after some glyphs (D74).
+func TestSubsetTooLarge(t *testing.T) {
+	const (
+		numGlyphs = 65000
+		size      = 60000
+	)
+	large := simpleGlyph()
+	large = append(large, make([]byte, size-len(large))...)
+	// A composite glyph of the glyph 0, with instructions that the remap
+	// copies.
+	var composite []byte
+	for _, v := range []uint16{0xFFFF, 0, 0, 10, 10, weHaveInstructions, 0, 0, size - 16} {
+		composite = binary.BigEndian.AppendUint16(composite, v)
+	}
+	composite = append(composite, make([]byte, size-len(composite))...)
+
+	var even []uint16
+	for g := uint16(2); g < numGlyphs; g += 2 {
+		even = append(even, g)
+	}
+	for _, tc := range []struct {
+		name  string
+		glyph []byte
+	}{
+		{"simple", large},
+		{"composite", composite},
+	} {
+		font := buildRepeatedGlyph(numGlyphs, tc.glyph)
+		if _, err := Subset(font, 0, NewGlyphRemapperFromGlyphs(even)); !errors.Is(err, okage.ErrSubsetTooLarge) {
+			t.Errorf("%s: the subset gives %v, want %v", tc.name, err, okage.ErrSubsetTooLarge)
+		}
+		// A subset of some glyph IDs stays below the limit.
+		if _, err := Subset(font, 0, NewGlyphRemapperFromGlyphs(even[:20])); err != nil {
+			t.Errorf("%s: the subset of 20 glyphs gives %v", tc.name, err)
+		}
+	}
+}
+
+// buildRepeatedGlyph returns a TrueType font of numGlyphs glyphs, with the
+// tables of buildTrueType. The glyph 0 is simpleGlyph, and each even glyph
+// from 2 is glyph. The range of each odd glyph from 3 goes from the end of
+// glyph to its start.
+func buildRepeatedGlyph(numGlyphs int, glyph []byte) []byte {
+	small := simpleGlyph()
+	small = append(small, make([]byte, len(small)%2)...)
+	glyf := slices.Concat(small, glyph)
+	start, end := uint32(len(small)), uint32(len(glyf))
+	loca := binary.BigEndian.AppendUint32(nil, 0)
+	loca = binary.BigEndian.AppendUint32(loca, start)
+	for i := 2; i <= numGlyphs; i++ {
+		offset := start
+		if i%2 == 1 {
+			offset = end
+		}
+		loca = binary.BigEndian.AppendUint32(loca, offset)
+	}
+
+	f, err := parse(buildTrueType(make([][]byte, numGlyphs)), 0)
+	if err != nil {
+		panic(err)
+	}
+	var tbls []table
+	for _, r := range f.records {
+		data, _ := f.table(r.tag)
+		switch r.tag {
+		case tagGLYF:
+			data = glyf
+		case tagLOCA:
+			data = loca
+		}
+		tbls = append(tbls, table{r.tag, data})
+	}
+	return buildSfnt(tbls)
+}
+
 // checkClosure compares the order of the remapper after the closure of
 // glyf.go with the order after upstreamClosure.
 func checkClosure(t *testing.T, name string, font []byte, start []uint16) {

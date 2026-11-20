@@ -7,6 +7,7 @@ package pdf
 
 import (
 	"bytes"
+	"compress/zlib"
 	"errors"
 	"fmt"
 	"image"
@@ -1047,11 +1048,8 @@ func handleImage(data []byte, cs zuneColorSpace, bpc bitsPerComponent) (colorCha
 // src/graphics/image/mod.rs.
 type imageChannelEncoder struct {
 	out     bytes.Buffer
-	encoder interface {
-		Write(p []byte) (int, error)
-		Close() error
-	}
-	buffer []byte
+	encoder *zlib.Writer
+	buffer  []byte
 }
 
 // newImageChannelEncoder is ImageChannelEncoder::new in krilla
@@ -1074,6 +1072,8 @@ func (e *imageChannelEncoder) encodeBatch() {
 // src/graphics/image/mod.rs.
 func (e *imageChannelEncoder) finish() []byte {
 	_ = e.encoder.Close()
+	releaseDeflateEncoder(e.encoder)
+	e.encoder = nil
 	return e.out.Bytes()
 }
 

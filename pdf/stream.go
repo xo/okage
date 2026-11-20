@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"slices"
+	"sync"
 
 	"github.com/xo/okage/internal/pdfwriter"
 	"github.com/xo/okage/path"
@@ -366,15 +367,41 @@ func deflateEncode(data []byte) []byte {
 	// A write to a bytes.Buffer cannot fail.
 	_, _ = e.Write(data)
 	_ = e.Close()
+	releaseDeflateEncoder(e)
 	return buf.Bytes()
 }
 
-// deflateEncoder is deflate_encoder in krilla src/stream.rs.
+// deflateEncoders holds the zlib writers that deflateEncoder gives again.
+//
+// okage: krilla makes a new encoder for each stream, and a zlib writer
+// allocates about 700 KB. okage resets a writer and uses it again, which
+// gives the same bytes (D74). A program can make an image or an ICC profile
+// outside of a document and in many goroutines, so the writers are in a pool
+// and not in the document.
+var deflateEncoders = sync.Pool{
+	New: func() any {
+		const compressionLevel = 6
+		// The level is valid, so NewWriterLevel returns no error.
+		e, _ := zlib.NewWriterLevel(nil, compressionLevel)
+		return e
+	},
+}
+
+// deflateEncoder is deflate_encoder in krilla src/stream.rs. It gives a zlib
+// writer at the level 6 that writes to buf. After Close, the caller gives
+// the writer to releaseDeflateEncoder.
 func deflateEncoder(buf *bytes.Buffer) *zlib.Writer {
-	const compressionLevel = 6
-	// The level is valid, so NewWriterLevel returns no error.
-	e, _ := zlib.NewWriterLevel(buf, compressionLevel)
+	// The pool holds only zlib writers.
+	e, _ := deflateEncoders.Get().(*zlib.Writer)
+	e.Reset(buf)
 	return e
+}
+
+// releaseDeflateEncoder puts a closed writer of deflateEncoder back in the
+// pool.
+func releaseDeflateEncoder(e *zlib.Writer) {
+	e.Reset(nil)
+	deflateEncoders.Put(e)
 }
 
 // hexEncode is hex_encode in krilla src/stream.rs. It writes two capital hex

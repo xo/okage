@@ -257,6 +257,8 @@ const (
 // If you plan to stroke many paths, you can use a PathStroker. It keeps the
 // temporary allocations that a stroke needs, and this can make it a bit
 // faster.
+//
+// It returns false when a point of the path is NaN or infinite (D74).
 func (p *Path) Stroke(stroke *Stroke, resolutionScale float32) (*Path, bool) {
 	return NewPathStroker().Stroke(p, stroke, resolutionScale)
 }
@@ -367,10 +369,20 @@ func ComputeResolutionScale(ts Transform) float32 {
 // It can be called many times, to reuse the allocated buffers.
 //
 // ComputeResolutionScale gives resolutionScale.
+//
+// It returns false when a point of the path is NaN or infinite.
 func (s *PathStroker) Stroke(path *Path, stroke *Stroke, resolutionScale float32) (*Path, bool) {
 	width, ok := NewNonZeroPositiveF32(stroke.Width)
 	if !ok {
 		return nil, false
+	}
+	// okage: tiny-skia strokes each path, and does not end for some paths
+	// with a point that is NaN or infinite, because the bounds of the path
+	// leave such a point out. okage strokes no such path (D74).
+	for _, p := range path.points {
+		if !isFinite(p.X) || !isFinite(p.Y) {
+			return nil, false
+		}
 	}
 	return s.strokeInner(
 		path,

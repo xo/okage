@@ -308,6 +308,15 @@ func subsetGlyfEntries(ctx *context, glyphDataFn func(oldGid uint16, ctx *contex
 			return nil, errMalformedFont
 		}
 
+		// okage: upstream has no limit. Many glyph IDs can point at one
+		// large glyph, and subsetWith copies it once for each ID. Stop
+		// before the copy, and before the remap that copies a composite
+		// glyph, which makes the glyph no longer (D74). size is at most 1
+		// more than maxGlyfSize, so the subtraction cannot overflow.
+		if len(glyphData) > ctx.maxGlyfSize-size {
+			return nil, errTooLarge
+		}
+
 		if numContours < 0 {
 			if glyphData, err = remapComponentGlyph(ctx.mapper, glyphData); err != nil {
 				return nil, err

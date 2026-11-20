@@ -10,6 +10,7 @@ import (
 	"compress/zlib"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/xo/okage/internal/pdfwriter"
@@ -189,4 +190,40 @@ func TestStream(t *testing.T) {
 	if hash(other) == hash(&copied) {
 		t.Error("the hash of a stream does not hold usesMask")
 	}
+}
+
+// TestDeflateEncodeReuse checks that the reset writers of deflateEncode give
+// the bytes of a new zlib writer at the level 6, for inputs of other sizes
+// one after the other, and in several goroutines at once (D74).
+func TestDeflateEncodeReuse(t *testing.T) {
+	var inputs [][]byte
+	for _, n := range []int{0, 1, 100, 70000, 3, 1 << 18, 10} {
+		data := make([]byte, n)
+		for i := range data {
+			data[i] = byte(i * i / 7)
+		}
+		inputs = append(inputs, data)
+	}
+	want := make([][]byte, len(inputs))
+	for i, data := range inputs {
+		var buf bytes.Buffer
+		e, _ := zlib.NewWriterLevel(&buf, 6)
+		_, _ = e.Write(data)
+		_ = e.Close()
+		want[i] = buf.Bytes()
+	}
+
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Go(func() {
+			for range 3 {
+				for i, data := range inputs {
+					if got := deflateEncode(data); !bytes.Equal(got, want[i]) {
+						t.Errorf("the data of %d bytes gives other bytes than a new writer", len(data))
+					}
+				}
+			}
+		})
+	}
+	wg.Wait()
 }

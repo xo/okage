@@ -231,3 +231,34 @@ func TestQuadMaxCurvatureNaN(t *testing.T) {
 	stroke.Width = 2
 	NewPathStroker().Stroke(path, &stroke, 1.0)
 }
+
+// TestStrokeNotFinite is not in tiny-skia. The bounds of each path leave its
+// NaN out, so PathBuilder takes the path. tiny-skia does not end when it
+// strokes the first path. okage strokes no path with a point that is NaN or
+// infinite (D74). PathBuilder takes no path with an infinite point, because
+// its bounds are not finite.
+func TestStrokeNotFinite(t *testing.T) {
+	nan := float32(math.NaN())
+	stroke := DefaultStroke()
+	stroke.Width = 2
+	for _, pts := range [][3]Point{
+		{PointFromXY(nan, 1e38), PointFromXY(1, -1.7e38), PointFromXY(-3e38, -2e37)},
+		{PointFromXY(nan, 0), PointFromXY(1, 1), PointFromXY(2, 0)},
+	} {
+		pb := NewPathBuilder()
+		pb.MoveTo(pts[0].X, pts[0].Y)
+		pb.LineTo(pts[1].X, pts[1].Y)
+		pb.LineTo(pts[2].X, pts[2].Y)
+		pb.Close()
+		path, ok := pb.Finish()
+		if !ok {
+			t.Fatalf("the path of %v has no bounds", pts)
+		}
+		if got, ok := path.Stroke(&stroke, 1.0); ok || got != nil {
+			t.Errorf("the stroke of %v is %v, %v, want nil, false", pts, got, ok)
+		}
+		if got, ok := NewPathStroker().Stroke(path, &stroke, 1.0); ok || got != nil {
+			t.Errorf("the stroke of %v with a PathStroker is %v, %v, want nil, false", pts, got, ok)
+		}
+	}
+}

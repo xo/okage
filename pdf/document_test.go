@@ -190,10 +190,10 @@ func TestDocumentErrors(t *testing.T) {
 		t.Errorf("an art box that does not flip gives %v", err)
 	}
 
-	// A page tree with more kids than an array of PDF 1.4 can hold. The pages
-	// are not compressed. Each compressed stream makes a zlib writer of about
-	// 700 KB, and on wasip1 the 8192 writers filled the memory of 4 GB.
-	d = NewDocument(WithPDFVersion(PDF14), WithCompression(false))
+	// A page tree with more kids than an array of PDF 1.4 can hold. The
+	// streams of the pages are compressed. A new zlib writer for each stream
+	// allocated 5.8 GB, and the reset writers of D74 allocate about 50 MB.
+	d = NewDocument(WithPDFVersion(PDF14))
 	for range arrayLen + 1 {
 		d.StartPage(DefaultPageSettings())
 	}

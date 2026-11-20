@@ -452,8 +452,8 @@ const (
 )
 
 // The sentinel errors of the font subsets of the PDF writer, one for each case
-// of the enum Error of subsetter (D62). The text after "subsetting font: " is
-// the Display text of upstream.
+// of the enum Error of subsetter (D62), and one for the limit of D74. The text
+// after "subsetting font: " is the Display text of upstream.
 const (
 	// ErrSubsetUnknownKind is Error::UnknownKind of subsetter. The file
 	// contains an unknown kind of font.
@@ -481,6 +481,12 @@ const (
 	// ErrSubsetCFF is Error::CFFError of subsetter. An error occurred while
 	// the subsetter processed the CFF table.
 	ErrSubsetCFF Error = "subsetting font: processing CFF table failed"
+
+	// ErrSubsetTooLarge is not in subsetter. The data of the glyphs of the
+	// subset is larger than 8 times the size of the font data plus 1 MiB.
+	// A hostile font can point many glyph IDs at one large glyph, and
+	// subsetter copies that glyph for each ID (D74).
+	ErrSubsetTooLarge Error = "subsetting font: subset is too large"
 )
 
 // The sentinel errors of cssselect2 (D50).
