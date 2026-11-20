@@ -115,7 +115,7 @@ d6549ec3f91740bd8d302868ca682b228c796428	2026-10-26	ported		OT: Fuse mask initia
 a5737ca9c7ca0e90925052435d37289cc46303ea	2026-10-26	ported		fixes from tests. It changes harfbuzz
 66ccb03e7273f6a23487a34789cbfbc9e40f50df	2026-10-26	not-applicable		[test] support (but ignore) single-par flag. It changes harfbuzz. It changes only tests that read typesetting-utils, which the copy leaves out (D52)
 d47893403e12f29a4096fdcac9428e5e1ebd3cd7	2026-10-26	ported		[unicodedata] update test expectations to follow Unicode 18. It changes internal/unicodedata
-2ec09380504768bf1109faa5851bbc99186932e9	2026-10-26	pending		[segmenter] update rule LB12a. It changes segmenter
+2ec09380504768bf1109faa5851bbc99186932e9	2026-10-26	ported		[segmenter] update rule LB12a. It changes segmenter
 04e0c82349f79ef143f6eabfbe0c6851b2211858	2026-10-26	pending		[segmenter/graphemes] update to follow Unicode 18 changes. It changes segmenter
 a599cf6eb7fe40cdda8e0d20ecafe21608c49bc3	2026-10-26	pending		[shaping] adjust a test now that Harfbuzz applies 'calt' feature (see 80ec6d612e9c4136a41df73d76a254e57948424a). It changes shaping
 b848cc9dcdac977e891a251613fc565a455f8474	2026-10-26	pending		[deps] use latest test utils version. It changes go.mod
