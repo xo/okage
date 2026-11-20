@@ -6,3 +6,4 @@ b64a8609a0c20c9a7346a82e6d124996c439ddc2	2026-10-31	ported	bfdaacb	Return an err
 c0948449af2a709a18aac68678684d3d737912bf	2026-10-31	ported	7a6ffe5	Use the CSS non-ASCII ident code point ranges in identifiers (#71). Port: svgtypes
 cf6f6da3c40e8cd3cfa7c23e979fe8fb36551b0f	2026-10-31	ported	fcf0df3	Add support for hwb() (#63). Port: svgtypes
 90a7f12f898dc69cabe98f6c2fd105ae52747919	2026-11-04	not-applicable		Prepare v0.16.2 release (#72). It raises the version in Cargo.toml and changes CHANGELOG.md only
+723dad9c3cd9e12cd9c9e5c240a63114999934a1	2026-11-13	not-applicable		Add a notice that the repository has moved to resvg (#75). It adds a notice to README.md that the repository moved to resvg

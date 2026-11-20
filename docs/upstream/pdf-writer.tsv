@@ -1,3 +1,4 @@
 upstream	date	status	okage	note
 a10fe0a343fcbafb535c6fbbffd943272c14fb12	2026-10-16	not-applicable		Update comment of /I entry according to errata (#89). It changes a doc comment of src/forms.rs only, and the base port leaves out the forms (D62)
 12549ecf20d149bdeedcea565cbf29775f271136	2026-10-27	pending		Reserve stream data capacity before writing it (#90). It changes src/object.rs
+1aa52ae50f18a8a3d6b8b0048b7be4af07953cf1	2026-11-19	not-applicable		Add license check (#94). It changes the CI and adds .cargo/notices.toml only

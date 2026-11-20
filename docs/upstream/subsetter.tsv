@@ -1,2 +1,6 @@
 upstream	date	status	okage	note
 b0adcc1cdf5283d8a4014ff31c174f1ca5deced4	2026-07-23	pending		Sort table records when parsing so unsorted table directories remain searchable (#29). It changes src/lib.rs
+303831cf575d337adbd8261a0d919125762c1e91	2026-11-19	ported		Add license check and Typst NOTICE file (#43). It adds the file NOTICE, which okage copies to internal/subsetter/NOTICE, and changes the CI
+1976b0b9d11b0e2a910c30c6ba343fe9c328ba99	2026-11-19	ported		License fixes (#44). It changes NOTICE, which okage copies to internal/subsetter/NOTICE
+8dae86d1ba721c4d70102601cd8a81b32455307f	2026-11-19	ported		SIL formatting fix (#45). It changes NOTICE, which okage copies to internal/subsetter/NOTICE
+35c55a7f336c260eb99eff297f10513435573670	2026-11-19	ported		Ungarble LicenseRef-DejaVu-Fonts-License (#46). It changes NOTICE, which okage copies to internal/subsetter/NOTICE

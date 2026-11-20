@@ -858,3 +858,13 @@ c6de757213376945971098065ca9ee14784f0d09	2026-11-10	not-applicable		[skera] Walk
 35c20872fd37d7692a2defdf0f2a09979d3a2e54	2026-11-14	pending		[write-fonts] Preserve TrueType coordinate and instruction boundaries (#2435). It changes write-fonts/src/tables/glyf.rs, write-fonts/src/tables/glyf/simple.rs
 9b348ee5e4a869386e985de9b3e5e8e65db53a79	2026-11-16	not-applicable		[skera] Compute the repacker's distance weights in u64. It changes only skera
 6497fe6f533f5b8b6ed94538aac044dd5d1074e8	2026-11-17	not-applicable		Merge pull request #2467 from Lynth-KR/skera-distance-weight-u64. A merge commit. Each commit that it merges has a line of its own
+09894c52b7e4a2e6126bc7233a84c47b299e7219	2026-11-18	not-applicable		[skera] Preserve CFF1 width when dropping the notdef outline (#2470). It changes only skera
+f7529a2457642c300685569c9cf6174b73caf149	2026-11-18	not-applicable		[skera] Preserve MATH data on GSUB outputs (#2469). It changes only skera
+227ed03b80859e22d70f2acb09a6f59e12f90fe5	2026-11-18	not-applicable		[read-fonts] Match HarfBuzz closure stage allowance [ci skip] (#2471). It changes only read-fonts
+5a8763dcb6217c672ead37792b6522c5e718f605	2026-11-18	not-applicable		[skera] Retain Symbol cmaps and their requested low-byte aliases (#2472). It changes only skera
+4660c932a4d4d66f57533e45c10e89fa686d008f	2026-11-18	not-applicable		[read-fonts] Preserve pending outputs in contextual glyph closure (#2473). It changes only read-fonts
+e638bf45dad386b68b622ab3bf507ff287f68050	2026-11-18	not-applicable		[skera] Bound the bytes the layout feature walks read. It changes only skera
+0ae9aaaf765b1077ac2d28feabec001c3054949c	2026-11-18	not-applicable		[skera] Don't panic on a font without a maxp table. It changes only skera
+12cf8178b8872e04fa33988830af9330a0bd7888	2026-11-18	not-applicable		[skera] Bound what the lookup walks read through shared offsets. It changes only skera
+9b99e7255420c8dbf8d57567895511233108a641	2026-11-18	not-applicable		Merge pull request #2462 from googlefonts/fix_oss_scanner_issues_2. A merge commit. Each commit that it merges has a line of its own
+7eec1e18b6dcb2cbb77a805f280825c075a388c6	2026-11-18	not-applicable		Merge pull request #2468 from googlefonts/fix_oss_scanner_issues. A merge commit. Each commit that it merges has a line of its own

@@ -10,3 +10,4 @@ fd4b6bb80a297837ff9672dc22bbb29c7ecf2888	2026-11-04	not-applicable		Drop the cha
 66690b5d7cb7230f5fb50c3775288b563e9d8cc6	2026-11-06	pending		Check inherited namespaces only against the element's own declarations. It changes src/lib.rs, src/parse.rs and tests/api.rs
 f9e593987e009443aec2c5dfeaf0f79656c0fdde	2026-11-08	pending		Compare local names first when checking for duplicate attributes. It changes src/parse.rs and tests/api.rs
 d646f5040f6ca6abb604955bb9f03f9b273d45f4	2026-11-08	pending		Bound the initial node and attribute reservation (#171). It changes src/parse.rs
+6c9f2f6082e6164baafc34fcffb0d212478c5a09	2026-11-14	pending		Do not resolve general entity references to parameter entities.. It changes src/tokenizer.rs and tests/ast.rs, and adds the test files entity_015 and entity_err_011
