@@ -20,54 +20,88 @@ type AATStateTable struct {
 	Entries    []AATStateEntry `isOpaque:""` // entry data are empty
 }
 
+// parseStates reads the rows of the states and the entries. src starts at
+// the start of the state table.
+//
+// okage: parseStates follows the sanitizer of StateTable of HarfBuzz
+// 15.1.0, with the fix of its commit ec4a38c4ab. An entry gives its new
+// state as a byte offset, and a table kern can give an offset before the
+// state array, for an initial state that is not the first row. Such a
+// state is negative. HarfBuzz reads the rows of the states that the
+// entries reach from the state 0, up and down, and the entries that these
+// rows use. States holds the rows of the states 0 and up, then the rows of
+// the states -1 and down, and NewState is an index in States. go-text read
+// the rows between the state array and the entry table, and gave a negative
+// state an index out of range, so it ignored its entries. The rows must be
+// in the state table, after the header of the subtable (D73).
 func (state *AATStateTable) parseStates(src []byte) error {
-	if state.stateArray > state.entryTable {
-		return fmt.Errorf("invalid AAT state offsets (%d > %d)", state.stateArray, state.entryTable)
-	}
-	if L := len(src); L < int(state.entryTable) {
-		return fmt.Errorf("EOF: expected length: %d, got %d", state.entryTable, L)
-	}
-	states := src[state.stateArray:state.entryTable]
-
 	nC := int(state.StateSize)
 	// Ensure pre-defined classes fit.
 	if nC < 4 {
 		return fmt.Errorf("invalid number of classes in AAT state table: %d", nC)
 	}
-	state.States = make([][]uint8, len(states)/nC)
-	for i := range state.States {
-		state.States[i] = states[i*nC : (i+1)*nC]
-	}
+	stateArray, entryTable := int(state.stateArray), int(state.entryTable)
+	newState := func(offset uint16) int { return (int(offset) - stateArray) / nC }
 
-	return nil
-}
-
-func (state *AATStateTable) parseEntries(src []byte) (int, error) {
-	// find max index
-	var maxi uint8
-	for _, l := range state.States {
-		for _, stateIndex := range l {
-			if stateIndex > maxi {
-				maxi = stateIndex
+	var minState, maxState, statePos, stateNeg, numEntries, entry int
+	for minState < stateNeg || statePos <= maxState {
+		if minState < stateNeg {
+			start := stateArray + minState*nC
+			if start < 0 {
+				return fmt.Errorf("invalid AAT state %d", minState)
 			}
+			for _, e := range src[start : stateArray+stateNeg*nC] {
+				numEntries = max(numEntries, int(e)+1)
+			}
+			stateNeg = minState
+		}
+		if statePos <= maxState {
+			end := stateArray + (maxState+1)*nC
+			if L := len(src); L < end {
+				return fmt.Errorf("EOF: expected length: %d, got %d", end, L)
+			}
+			for _, e := range src[stateArray+statePos*nC : end] {
+				numEntries = max(numEntries, int(e)+1)
+			}
+			statePos = maxState + 1
+		}
+		if L, E := len(src), entryTable+4*numEntries; L < E {
+			return fmt.Errorf("EOF: expected length: %d, got %d", E, L)
+		}
+		for ; entry < numEntries; entry++ {
+			s := newState(binary.BigEndian.Uint16(src[entryTable+4*entry:]))
+			minState, maxState = min(minState, s), max(maxState, s)
 		}
 	}
 
-	src = src[state.entryTable:] // checked in parseStates
-	count := int(maxi) + 1
+	row := func(s int) []uint8 { return src[stateArray+s*nC : stateArray+(s+1)*nC] }
+	state.States = make([][]uint8, 0, maxState+1-minState)
+	for s := 0; s <= maxState; s++ {
+		state.States = append(state.States, row(s))
+	}
+	for s := -1; s >= minState; s-- {
+		state.States = append(state.States, row(s))
+	}
+
 	var err error
-	state.Entries, err = parseAATStateEntries(src, count, 0)
+	state.Entries, err = parseAATStateEntries(src[entryTable:], numEntries, 0)
 	if err != nil {
-		return 0, err
+		return err
 	}
-
-	// newState is an offset: convert back to index
-	for i, entry := range state.Entries {
-		state.Entries[i].NewState = uint16((int(entry.NewState) - int(state.stateArray)) / int(state.StateSize))
+	for i, e := range state.Entries {
+		s := newState(e.NewState)
+		if s < 0 {
+			s = maxState - s
+		}
+		state.Entries[i].NewState = uint16(s)
 	}
+	return nil
+}
 
+// okage: parseStates reads the entries (D73).
+func (state *AATStateTable) parseEntries(_ []byte) (int, error) {
 	// the own header data stop at the entryTable offset
-	return 8, err
+	return 8, nil
 }
 
 // src starts at the entryTable

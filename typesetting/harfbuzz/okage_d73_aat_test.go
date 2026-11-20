@@ -159,3 +159,31 @@ func TestLookupFormat10ValueSize(t *testing.T) {
 		testShapedFace(t, face, []shapedText{{"ab", test.want}})
 	}
 }
+
+// kernNegativeState builds a table kern of Apple with a subtable of format
+// 1, whose state array starts after the row of the state -1. The class of
+// a and b is 4. In the state 0, a or b pushes the glyph and goes to the
+// state -1. In the state -1, a or b pushes the glyph, applies the list -40,
+// -29 and goes to the state 0.
+func kernNegativeState() []byte {
+	data := u16s(5, 10, 21, 26, 38)
+	data = append(data, u16s(int(robotoA), 2)...)
+	data = append(data, 4, 4)
+	data = append(data, 0, 0, 0, 0, 2) // the state -1
+	data = append(data, 0, 0, 0, 0, 1) // the state 0
+	data = append(data, u16s(21, 0, 16, kerxPush, 21, kerxPush|38)...)
+	data = append(data, u16s(-40, -29)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00010000)
+	return append(kern, data...)
+}
+
+// TestKernNegativeState shapes ab and aab with kernNegativeState. As the
+// commit ec4a38c4ab of HarfBuzz, in 15.1.0, reads it, a state before the
+// state array is a negative state. go-text gave the state -1 an index out
+// of range, so its entries did nothing and the text had no kerning (D73).
+func TestKernNegativeState(t *testing.T) {
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernNegativeState()}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1084, -30, 0}, {robotoB, 1, 1109, -40, 0}}},
+		{"aab", []shapedGlyph{{robotoA, 0, 1084, -30, 0}, {robotoA, 1, 1074, -40, 0}, {robotoB, 2, 1149, 0, 0}}},
+	})
+}

@@ -138,3 +138,27 @@ func TestLookupFormat10ValueSize(t *testing.T) {
 		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "aab")
 	}
 }
+
+// kernNegativeState builds a table kern of Apple with a subtable of format
+// 1, whose state array starts after the row of the state -1. The class of
+// a and b is 4. In the state 0, a or b pushes the glyph and goes to the
+// state -1. In the state -1, a or b pushes the glyph, applies the list -40,
+// -29 and goes to the state 0.
+func kernNegativeState() []byte {
+	data := u16s(5, 10, 21, 26, 38)
+	data = append(data, u16s(robotoA, 2)...)
+	data = append(data, 4, 4)
+	data = append(data, 0, 0, 0, 0, 2) // the state -1
+	data = append(data, 0, 0, 0, 0, 1) // the state 0
+	data = append(data, u16s(21, 0, 16, kerxPush, 21, kerxPush|38)...)
+	data = append(data, u16s(-40, -29)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00010000)
+	return append(kern, data...)
+}
+
+// TestKernNegativeState: the subtable of kernNegativeState. HarfBuzz reads
+// a state before the state array as a negative state, from its commit
+// ec4a38c4ab. Before it, HarfBuzz refused the table.
+func TestKernNegativeState(t *testing.T) {
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kernNegativeState()}), false, "ab", "ba", "aab", "abab", "abc")
+}
