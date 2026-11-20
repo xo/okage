@@ -129,44 +129,10 @@ type KerxData1 struct {
 	Values           []int16 `isOpaque:""`
 }
 
-// From Apple 'kern' spec:
-// Each pops one glyph from the kerning stack and applies the kerning value to it.
-// The end of the list is marked by an odd value...
-//
-// okage: only a subtable of kern uses it. A list of kerx ends with the
-// value 0xFFFF, and KerxSubtable.readKerx1Values reads its values (D73).
-func parseKernx1Values(src []byte, entries []AATStateEntry, valueTableOffset, tupleCount int) ([]int16, error) {
-	// find the maximum index need in the values array
-	var maxi uint16
-	for _, entry := range entries {
-		if index := entry.AsKernxIndex(); index != 0xFFFF && index > maxi {
-			maxi = index
-		}
-	}
-
-	if tupleCount == 0 {
-		tupleCount = 1
-	}
-	nbUint16Min := tupleCount * int(maxi+1)
-	if L, E := len(src), valueTableOffset+2*nbUint16Min; L < E {
-		return nil, fmt.Errorf("EOF: expected length: %d, got %d", E, L)
-	}
-
-	src = src[valueTableOffset:]
-	out := make([]int16, 0, nbUint16Min)
-	for len(src) >= 2 { // gracefully handle missing odd value
-		v := int16(binary.BigEndian.Uint16(src))
-		out = append(out, v)
-		src = src[2:]
-		if len(out) >= nbUint16Min && v&1 != 0 {
-			break
-		}
-	}
-	return out, nil
-}
-
-// okage: KerxSubtable.readKerx1Values reads the values, once the length of
-// the subtable is known (D73).
+// okage: go-text read the values of format 1 of kern and kerx with
+// parseKernx1Values, up to the first odd value after the largest index of
+// an entry. KerxSubtable.readKerx1Values and readKern1Values replace it,
+// and read the values once the length of the subtable is known (D73).
 func (kx *KerxData1) parseValues(_ []byte, _, _ int) error {
 	return nil
 }

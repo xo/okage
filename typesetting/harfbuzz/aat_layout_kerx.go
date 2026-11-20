@@ -230,8 +230,12 @@ func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver
 		tupleCount = max(1, dc.tupleCount)
 	}
 
+	// okage: in kern, a list that starts before the value table has an
+	// index out of range, and empties the stack below, as in HarfBuzz
+	// 15.1.0 (D73).
 	var actions []int16
-	if kernIdx := int(entry.AsKernxIndex()); kernIdx < len(dc.table.Values) {
+	kernIdx := int(entry.AsKernxIndex())
+	if kernIdx < len(dc.table.Values) && (dc.extended || kernIdx != tables.Kern1OutOfRange) {
 		actions = dc.table.Values[kernIdx:]
 	}
 	if !dc.extended && len(actions) < tupleCount*dc.depth {

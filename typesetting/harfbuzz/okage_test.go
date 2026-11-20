@@ -1249,3 +1249,71 @@ func TestKerxFormat4Clamp(t *testing.T) {
 		t.Errorf("b: got the offset %d, want %d", got, want)
 	}
 }
+
+// kernFormat1 builds the data of a subtable of format 1 of kern, after its
+// header. Its class table gives the classes 4, 5 and 6 to a, b and c, and
+// its two states give them the entries 1, 2 and 3. Each entry stays in the
+// state 0 and has the flags of its index, which hold the byte offset of a
+// list of values from the start of the state table. The values start at
+// the byte offset valueTable, which is 48 or more.
+func kernFormat1(flags [4]int, valueTable int, values ...int) []byte {
+	data := u16s(7, 10, 18, 32, valueTable)
+	data = append(data, u16s(int(robotoA), 3)...)
+	data = append(data, 4, 5, 6, 0)
+	for range 2 {
+		data = append(data, 0, 0, 0, 0, 1, 2, 3)
+	}
+	for _, f := range flags {
+		data = append(data, u16s(18, f)...)
+	}
+	data = append(data, make([]byte, valueTable-len(data))...)
+	return append(data, u16s(values...)...)
+}
+
+// kernTable builds a table kern of Apple of version 1 with subtables of
+// format 1, each the data after its header.
+func kernTable(subtables ...[]byte) []byte {
+	out := u32s(0x00010000, uint32(len(subtables)))
+	for _, data := range subtables {
+		out = append(out, u32s(uint32(8+len(data)), 0x00010000)...)
+		out = append(out, data...)
+	}
+	return out
+}
+
+// TestKernFormat1ValueTable shapes texts with subtables of format 1 of
+// kern, where a pushes itself:
+//   - b has a list of values at the byte offset 2, before the value table,
+//     and c has the list -40, -29 at the start of the value table. As in
+//     HarfBuzz 15.1.0, b empties the stack. go-text gave b no list, and c
+//     kerned a in abc.
+//   - b and c push themselves too, and the list of c is 11, 20, 30. As in
+//     HarfBuzz, the values for the three glyphs of the stack are in the
+//     subtable, and the first value ends the list. go-text kept the values
+//     up to the first odd value, and did not apply the list.
+//   - The same subtable with the list 20, 30, which ends with the
+//     subtable, before a second subtable with no list. As in HarfBuzz, the
+//     list does not apply to a stack of three glyphs, and applies to a
+//     stack of two. go-text read the values of the second subtable after
+//     the end of the table, and refused the table.
+//
+// (D73)
+func TestKernFormat1ValueTable(t *testing.T) {
+	kern := kernTable(kernFormat1([4]int{0, kerxPush, 2, 48}, 48, -40, -29))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), []shapedText{
+		{"abc", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoC, 2, 1072, 0, 0}}},
+		{"ac", []shapedGlyph{{robotoA, 0, 1074, -40, 0}, {robotoC, 1, 1072, 0, 0}}},
+	})
+
+	push := [4]int{0, kerxPush, kerxPush, kerxPush | 48}
+	kern = kernTable(kernFormat1(push, 48, 11, 20, 30))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), []shapedText{
+		{"abc", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoC, 2, 1082, 10, 0}}},
+	})
+
+	kern = kernTable(kernFormat1(push, 48, 20, 30), kernFormat1([4]int{}, 48))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), []shapedText{
+		{"abc", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoC, 2, 1072, 0, 0}}},
+		{"ac", []shapedGlyph{{robotoA, 0, 1144, 30, 0}, {robotoC, 1, 1092, 20, 0}}},
+	})
+}

@@ -104,6 +104,20 @@ func ParseKern(src []byte) (Kern, int, error) {
 		}
 	}
 
+	// okage: the values of format 1 of the last subtable go up to the end
+	// of the table, as in HarfBuzz 15.1.0. src starts at the last subtable
+	// (D73).
+	if len(out) != 0 {
+		switch st := out[len(out)-1].(type) {
+		case OTKernSubtableHeader:
+			st.data = readKern1Values(st.data, src[6:])
+			out[len(out)-1] = st
+		case AATKernSubtableHeader:
+			st.data = readKern1Values(st.data, src[8:])
+			out[len(out)-1] = st
+		}
+	}
+
 	return Kern{
 		version: major,
 		Tables:  out,

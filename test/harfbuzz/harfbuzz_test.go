@@ -856,3 +856,58 @@ func TestKerxFormat4Clamp(t *testing.T) {
 	kerx := kerxMarks(kerxFormat4, values, []int{0, 32767, 0, -32768})
 	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab"+strings.Repeat("x", 38))
 }
+
+// kernFormat1 builds the data of a subtable of format 1 of kern, after its
+// header. Its class table gives the classes 4, 5 and 6 to a, b and c, and
+// its two states give them the entries 1, 2 and 3. Each entry stays in the
+// state 0 and has the flags of its index, which hold the byte offset of a
+// list of values from the start of the state table. The values start at
+// the byte offset valueTable, which is 48 or more.
+func kernFormat1(flags [4]int, valueTable int, values ...int) []byte {
+	data := u16s(7, 10, 18, 32, valueTable)
+	data = append(data, u16s(robotoA, 3)...)
+	data = append(data, 4, 5, 6, 0)
+	for range 2 {
+		data = append(data, 0, 0, 0, 0, 1, 2, 3)
+	}
+	for _, f := range flags {
+		data = append(data, u16s(18, f)...)
+	}
+	data = append(data, make([]byte, valueTable-len(data))...)
+	return append(data, u16s(values...)...)
+}
+
+// kernTable builds a table kern of Apple of version 1 with subtables of
+// format 1, each the data after its header.
+func kernTable(subtables ...[]byte) []byte {
+	out := u32s(0x00010000, uint32(len(subtables)))
+	for _, data := range subtables {
+		out = append(out, u32s(uint32(8+len(data)), 0x00010000)...)
+		out = append(out, data...)
+	}
+	return out
+}
+
+// TestKernFormat1ValueTable: subtables of format 1 of kern, where a pushes
+// itself:
+//   - b has a list of values at the byte offset 2, before the value table,
+//     and c has the list -40, -29 at the start of the value table.
+//     HarfBuzz applies the list of b with an index out of range, and
+//     empties the stack.
+//   - b and c push themselves too, and the list of c is 11, 20, 30. The
+//     first value is odd and ends the list, but HarfBuzz requires a value
+//     for each glyph of the stack.
+//   - The same subtable with the list 20, 30, which ends with the
+//     subtable, before a second subtable. HarfBuzz requires the values for
+//     the stack in the subtable.
+func TestKernFormat1ValueTable(t *testing.T) {
+	kern := kernTable(kernFormat1([4]int{0, kerxPush, 2, 48}, 48, -40, -29))
+	testFlags(t, robotoWith(t, map[string][]byte{"kern": kern}), false, true, "abc", "ac", "abac", "aabc", "acbc")
+
+	push := [4]int{0, kerxPush, kerxPush, kerxPush | 48}
+	kern = kernTable(kernFormat1(push, 48, 11, 20, 30))
+	testFlags(t, robotoWith(t, map[string][]byte{"kern": kern}), false, true, "abc", "ac", "c", "abcc", "aaaaac")
+
+	kern = kernTable(kernFormat1(push, 48, 20, 30), kernFormat1([4]int{}, 48))
+	testFlags(t, robotoWith(t, map[string][]byte{"kern": kern}), false, true, "abc", "ac", "c", "abcc")
+}
