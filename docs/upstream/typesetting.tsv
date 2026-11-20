@@ -28,7 +28,7 @@ f7b0a668071a4df82f4d29cd630f4914c7609f65	2026-09-29	ported		[font/opentype] chec
 32bac8a7b09d5c1d51e3840456bb68887a1ee85a	2026-09-29	ported		[bidi] BD16: sort bracket pairs once, drop container/list. It changes bidi
 af1525c14f3f34aab63a22a275abdd4786bffa46	2026-09-29	ported		[bidi] W2/W7: carry the last strong type forward. It changes bidi
 578ac9d0bd504dfc7d60c729abd24d2375a838e5	2026-09-29	ported		[bidi] BD9: match isolates in a single stack pass. It changes bidi
-55732d3715988db2b58b12262e263d63f49b6acf	2026-09-29	pending		[bidi] unicodedata: default Bidi_Class of unassigned code points. It changes bidi, internal/unicodedata
+55732d3715988db2b58b12262e263d63f49b6acf	2026-09-29	ported		[bidi] unicodedata: default Bidi_Class of unassigned code points. It changes bidi, internal/unicodedata
 352ddeaf93ade1de1f7f51fb2664a77247e4f9bd	2026-09-29	pending		[bidi] clean up stale comments and dead code. It changes bidi
 2df4ee58894f11a4c14ac7a470d84884d3508613	2026-09-30	pending		[font] preserve unsigned horizontal and vertical advances. It changes font, font/opentype
 5dea04be2df249f965ec054a1f5cba9775a58577	2026-09-30	not-applicable		[fontscan] use the OS/2 font page when parsing succeeds, not fails. It changes only fontscan, which okage does not copy
