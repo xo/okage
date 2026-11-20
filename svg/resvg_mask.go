@@ -61,6 +61,11 @@ func applyMask(
 		maskType = okage.MaskTypeAlpha
 	}
 
+	if mask.Kind() == MaskTypeLuminance &&
+		mask.ColorInterpolation() == ColorInterpolationFilterLinearRGB {
+		pixmapIntoLinearRGB(maskPixmap)
+	}
+
 	m := okage.MaskFromPixmap(maskPixmap.AsRef(), maskType, okage.WithLogger(ctx.opt.logger))
 	pixmap.ApplyMask(m)
 }

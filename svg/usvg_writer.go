@@ -605,6 +605,9 @@ func writeDefs(tree *Tree, opt *writeOptions, xml svgWriter, writeTextPaths bool
 		if mask.kind == MaskTypeAlpha {
 			xml.writeSvgAttribute(AIdMaskType, "alpha")
 		}
+		if mask.colorInterpolation == ColorInterpolationFilterLinearRGB {
+			xml.writeSvgAttribute(AIdColorInterpolation, "linearRGB")
+		}
 		xml.writeUnits(
 			AIdMaskUnits,
 			unitsUserSpaceOnUse,

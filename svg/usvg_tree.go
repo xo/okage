@@ -1071,11 +1071,12 @@ func (t MaskType) String() string {
 //
 // `mask` element in SVG.
 type Mask struct {
-	id   nonEmptyString
-	rect NonZeroRect
-	kind MaskType
-	mask *Mask
-	root Group
+	id                 nonEmptyString
+	rect               NonZeroRect
+	kind               MaskType
+	colorInterpolation ColorInterpolationFilter
+	mask               *Mask
+	root               Group
 }
 
 // ID is Mask::id in usvg src/tree/mod.rs. It returns the element's ID.
@@ -1098,6 +1099,13 @@ func (m *Mask) Rect() NonZeroRect {
 // `mask-type` in SVG.
 func (m *Mask) Kind() MaskType {
 	return m.kind
+}
+
+// ColorInterpolation is Mask::color_interpolation in usvg src/tree/mod.rs.
+// It returns the color space the luminance of a luminance mask is computed
+// in.
+func (m *Mask) ColorInterpolation() ColorInterpolationFilter {
+	return m.colorInterpolation
 }
 
 // Mask is Mask::mask in usvg src/tree/mod.rs. It returns the additional

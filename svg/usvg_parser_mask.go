@@ -85,11 +85,12 @@ func convertMask(
 
 	if maskAll {
 		mask := &Mask{
-			id:   id,
-			rect: rect,
-			kind: MaskTypeLuminance,
-			mask: nil,
-			root: emptyGroupValue(),
+			id:                 id,
+			rect:               rect,
+			kind:               MaskTypeLuminance,
+			colorInterpolation: ColorInterpolationFilterSRGB,
+			mask:               nil,
+			root:               emptyGroupValue(),
 		}
 		cache.masks[idCopy] = mask
 		return mask, true
@@ -112,11 +113,12 @@ func convertMask(
 	}
 
 	mask := &Mask{
-		id:   id,
-		rect: rect,
-		kind: kind,
-		mask: linked,
-		root: emptyGroupValue(),
+		id:                 id,
+		rect:               rect,
+		kind:               kind,
+		colorInterpolation: convertColorInterpolation(node),
+		mask:               linked,
+		root:               emptyGroupValue(),
 	}
 
 	// To emulate content `objectBoundingBox` units we have to put
