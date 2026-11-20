@@ -1,6 +1,6 @@
 # D81. typesetting skips repeated work in the shaper
 
-Status: Decided, amends D72.
+Status: Decided, amends D72, amended by D83.
 
 D72 and D77 made the text code of `typesetting`, the copy of go-text in
 okage (D52), faster for the books that ivy lays out. Item 1 of

@@ -37,4 +37,6 @@ the clip, not on the page. In ivy the image of the spreadsheet went from
 Rust oracle and the reference images of tiny-skia give the same bytes.
 `blitAntiH` and `blitMask` skip the rows of 0 in the same way since
 2026-11-20, under D35, with the same bytes. A `Mask` also holds only the
-rows that its paths cover, so a clip allocates less.
+rows and the columns that its paths cover, with a margin of 15 columns on
+each side, so a clip allocates less. Each chunk that `blitRect` keeps is
+then inside the columns that the mask holds.

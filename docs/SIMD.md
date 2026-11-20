@@ -126,8 +126,22 @@ build, a method with SIMD code runs it if `useSIMD` is true, and calls the
 plain function if it is false. `useSIMD` is set once, when the program
 starts, in `cpu_simd_amd64.go`, `cpu_simd_arm64.go` and `cpu_simd_wasm.go`.
 The helpers of the SIMD code, such as the loads and the minimum with the NaN
-rule of upstream, are in `wide_simd_amd64.go` and `wide_simd_128.go`. A
-person writes these five files.
+rule of upstream, are in `wide_simd_amd64.go` and `wide_simd_128.go`.
+`wide_scalar.go` holds the helpers of the other builds. A person writes these
+six files.
+
+## The upper bits of the vector registers
+
+A plain float operation of Go on amd64, such as `MULSS`, keeps the upper bits
+of its vector register. If those bits can be other than 0, the CPU waits for
+the last write to the whole register, and plain float code runs slower. Code
+with `archsimd` leaves the bits so, and so does the runtime of the SIMD build
+of Go 1.27 each time that it preempts a goroutine, because it restores the
+whole vector registers. `wide.ClearUpperBits` clears the bits with
+`VZEROUPPER` in the SIMD build on amd64, and does nothing in the other
+builds. The pipeline calls it once for each row of a rect, and the fast path
+of D53 once for each row of the image (D35). A new loop of plain float code
+that runs for a long time calls it in the same way.
 
 ## The operations
 

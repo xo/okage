@@ -238,6 +238,49 @@ glyph, as in HarfBuzz 15.1.0. go-text tested it, and its test
 of HarfBuzz. `TestIndicFirstGlyphCoverage` tests it, in `harfbuzz` and in
 `test/harfbuzz`.
 
+On 2026-11-20 okage made `harfbuzz` follow HarfBuzz 15.1.0 at the other
+two places of item 4:
+
+13. `typesetting` refuses a table kern, kerx or morx with more than 1,024
+    subtables, as `HB_AAT_MAX_SUBTABLES` of `hb-limits.hh`. In morx, the
+    limit counts the subtables of all the chains. `ParseKern` returns an
+    error before it allocates the subtables, so a table kern of Apple
+    that declares 4 billion subtables no longer allocates memory for
+    them. `font` drops a table kerx or morx with too many subtables.
+    `typesetting` reads no table mort. `TestAATSubtableLimit` tests it.
+14. A subtable of format 1 of kerx follows the code of HarfBuzz 15.1.0,
+    which follows CoreText. The stack is a history of the last eight
+    glyphs that the subtable pushed. Each list of actions walks it again
+    from the last glyph, and does not empty it. A slot that no glyph
+    filled holds the first glyph of the buffer. A list ends with the
+    value 0xFFFF, or at the end of the values. An odd value does not end
+    it. Each action takes one operation, and marks the glyphs from the
+    changed glyph to the current glyph unsafe to break. The sum of a
+    value and a position is clamped to the range of a position. The
+    values of a subtable go up to the end of the subtable, and up to the
+    end of the table for the last subtable, whose length HarfBuzz
+    ignores. An entry whose list starts after the end of the values is no
+    longer an error of the parse. As in HarfBuzz, such a list empties the
+    stack when the subtable reads it.
+15. A subtable of format 1 of kern keeps the stack of go-text, which a
+    list empties, and whose list ends with an odd value, as in HarfBuzz.
+    HarfBuzz ignores the flag Reset in kern and kerx. In kern, the bit
+    0x2000 of the flags is a bit of the offset of the list, and go-text
+    read it as Reset. `harfbuzz` now ignores the flag too.
+
+`TestKerxFormat1History`, `TestKerxFormat1Operations`,
+`TestKerxFormat1Bounds` and `TestKernFormat1Offset` test fixes 14 and 15,
+in `harfbuzz` and in `test/harfbuzz`. `shape.py` of `test/harfbuzz` also
+writes the flag unsafe-to-break when a test asks for it. A comparison
+shaped 60,000 random texts of a, b, c and x in 3,000 random subtables of
+format 1 of kerx, with the flags Push, Reset and DontAdvance, and lists
+of random values and ends. `harfbuzz` and HarfBuzz gave the same glyphs,
+clusters, advances, offsets and flags unsafe-to-break for each text. The
+comparison left out the subtables that HarfBuzz skips and `harfbuzz`
+does not, which item 4 of "typesetting" in `docs/BACKLOG.md` records. No
+workload of `test/textbench` uses a table kern, kerx or morx, so their
+times do not change.
+
 ## When upstream changes
 
 If go-text fixes one of these faults, follow these steps:

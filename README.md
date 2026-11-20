@@ -260,10 +260,10 @@ okage differs from upstream only where a decision says so:
     each one off. They set `\text` and its kin with a text face, shaped with
     `typesetting/shaping`, or with the math alphabets of the math face, and
     keep the spaces of `\text`. They add `\color`, `\textcolor`,
-    `\colorbox`, `\fcolorbox`, `\fbox`, `\cancel`, `\tag`, `\hline`,
-    `\cfrac`, `\kern`, `\hspace`, `\llap` and the other missing commands of
-    KaTeX that Mermaid labels use, `\newcommand`, and the macros of KaTeX
-    such as `\R`. `\overbrace` and `\underbrace` draw a brace that grows,
+    `\colorbox`, `\fcolorbox`, `\fbox`, `\cancel`, `\phase`, `\tag`,
+    `\hline`, `\cfrac`, `\kern`, `\hspace`, `\llap` and the other missing
+    commands of KaTeX that Mermaid labels use, `\newcommand`, and the macros
+    of KaTeX such as `\R`. `\overbrace` and `\underbrace` draw a brace that grows,
     the wide accents grow, `\middle` grows to its fence, `\smash` removes
     the extent, and the size commands such as `\large` change the size. The
     package comment of `texmath` lists each fault with its line in the
@@ -304,8 +304,9 @@ okage also adds APIs that upstream does not have:
    each other character with the fonts of the option
    `lottie.WithFontDatabase`. Without that option, it logs the character
    and draws nothing. The size, the fill and the stroke, the justification,
-   the line height, the tracking and the box of a text document apply. The
-   text animators and the text on a path do not (D79). As in ThorVG, the
+   the line height, the tracking and the box of a text document apply
+   (D79). So do the text animators with the alignment of their groups, the
+   capitals of the key `ca`, and the text on a path (D85). As in ThorVG, the
    blur and the shadow repeat the pixels at the edge of the canvas, the
    tracking of a text that the sink shapes multiplies its advances, and an
    image that turns by an angle fades its edge over one pixel of the image
@@ -369,8 +370,9 @@ okage also adds APIs that upstream does not have:
     more panics of the feature indexes of GSUB and GPOS and of the table
     cmap (D67).
     `internal/subsetter` makes the instances of variable fonts with
-    `typesetting`, and an instance can differ from the instance of
-    subsetter by 1 unit in a point (D62, D65).
+    `typesetting`. `typesetting` computes the deltas of the variations in
+    the 16.16 fixed-point numbers of OpenType, as skrifa does, so each
+    instance is the instance of subsetter, byte for byte (D62, D84).
 17. `pdf` adds what the PDF device of ivy needs and krilla does not have:
     `Surface.PushGroup` for the transparency groups with the flags `I` and
     `K`, `Mask.WithBackdrop` and `Mask.WithTransfer` for the entries `BC`

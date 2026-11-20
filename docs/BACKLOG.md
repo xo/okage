@@ -74,12 +74,17 @@ From D52.
    2026-11-20. Together they make `BenchmarkEndToEndOnce` 17% faster on
    `pg24264` and 12% on `pg1342`, with the same output. The text is not
    decoded from UTF-8 in `typesetting`, whose API takes runes, so a decode
-   once is work for ivy. After D81, try the candidates of "What remains" in
-   D81: the Unicode lookups of the line breaks and a cache for the coverage
-   of GPOS. Keep the output of each test and the hashes of ivy the same.
+   once is work for ivy. D83 makes five more changes, which the maintainers
+   accepted on 2026-11-21: one table for the Unicode properties that the
+   segmenter reads, and caches of the kerning and of the glyph properties
+   of GDEF. Together they make `BenchmarkEndToEndOnce` 10% faster on
+   `pg24264` and 17% on `pg1342`, with the same output. Next, try the
+   candidates of "What remains" in D83. Keep the output of each test and
+   the hashes of ivy the same.
    A change to the copy of go-text needs a decision first, as D65, D67, D70,
-   D72, D77 and D81 had. A change at the calls in `shaping` keeps the copy
-   closer to go-text. Source: D72, D77, D81, `test/textbench`, 2026-11-20.
+   D72, D77, D81 and D83 had. A change at the calls in `shaping` keeps the
+   copy closer to go-text. Source: D72, D77, D81, D83, `test/textbench`,
+   2026-11-20.
 2. Use SIMD in `typesetting` where the work is a scan or a loop over an array
    (D17, D28). Most of the text code is a table lookup or a state machine for
    each rune, and SIMD does not help there. These places can use it:
@@ -95,17 +100,42 @@ From D52.
    shaper inside `shaping.Paragraph` sets `ProduceUnsafeToConcat`, and
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
-4. Make `harfbuzz` follow HarfBuzz 15.1.0 at two more places, which
-   the work on fixes 8 to 12 of D73 found. No text of `perf_reference`
-   shows them:
-   - HarfBuzz refuses a table kern, kerx, mort or morx with more than 1,024
-     subtables, `HB_AAT_MAX_SUBTABLES` of `hb-limits.hh`. `typesetting`
-     reads such a table.
-   - A subtable of format 1 of kerx in HarfBuzz keeps a history of eight
-     glyphs, which each list of actions walks again, ends a list with
-     0xFFFF, marks the glyphs unsafe to break, and takes one operation for
-     each action. `harfbuzz` has the older code of go-text, which pops a
-     stack, and it takes no operation for an action.
+4. Make `harfbuzz` follow HarfBuzz 15.1.0 in the tables kern, kerx and
+   morx at the places that the work on fixes 13 to 15 of D73 found. No
+   text of `perf_reference` and no workload of `test/textbench` uses these
+   tables:
+   - For a subtable with a state machine in morx, and of format 1 or 4 in
+     kerx, HarfBuzz collects only the glyphs whose class can start an
+     action from the start state (`collect_initial_glyphs`), and skips the
+     subtable when the buffer holds none of them. A glyph outside the
+     class table is never collected. go-text collects each glyph of the
+     class table. So a subtable that HarfBuzz skips can apply in
+     `harfbuzz`, with an action at the end of the text in the start
+     state, or with a glyph outside the class table that starts an
+     action. A random comparison of kerx found both. HarfBuzz had this
+     code before 873dbc1e, the commit that go-text follows.
+   - In a subtable of format 4 of kerx, HarfBuzz 15.1.0 adds the offset of
+     the mark across the direction of the text, `resolve_cross_offset`,
+     from its merge 436f067b20, and clamps the offsets to the range of a
+     position. `harfbuzz` does neither.
+   - A subtable of format 1 of kern: when the offset of a list is not 0
+     and comes before the value table, HarfBuzz applies the list with an
+     index out of range, and empties the stack. go-text makes the entry
+     not actionable. go-text also keeps the values only up to the first
+     odd value after the largest index of an entry, and HarfBuzz makes
+     sure that the values for the whole stack are in the subtable.
+   - When a subtable of kerx or a chain of morx has an error, the parse
+     of `typesetting` keeps the subtables before it, and HarfBuzz refuses
+     the whole table. `typesetting` also refuses a table kern whose last
+     subtable is longer than the table, and HarfBuzz ignores the length
+     of the last subtable, for fonts such as some versions of Calibri.
+     These come from the code, and no test shows them yet.
+   - Other commits of HarfBuzz after 873dbc1e change the AAT code, and no
+     one compared them with `harfbuzz` yet: 5a1c0c4660, 88e5077a80,
+     a763a612d1, ec4a38c4ab, 77be62a733, cd570b6f54 and 370a0da5a1. For
+     example, 88e5077a80 reads the class values of a subtable of format 2
+     of kerx as byte offsets from the kerning array, and `typesetting`
+     reads them in another way.
    Source: D73, 2026-11-20.
 5. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
@@ -117,21 +147,16 @@ From D52.
 
 ## lottie
 
-From D41, D42, D43, D44, D75, D79 and D82. The port of velato draws each
+From D41, D42, D43, D44, D75, D79, D82 and D85. The port of velato draws each
 sampled frame of the 879 Noto animated emoji within the tolerance of
 ThorVG. These parts of Lottie are not done:
 
 1. Expressions. velato and okage ignore them. 29 files of the corpus have
    expressions, and they still pass, because their values are close to the
    values that the keyframes give.
-2. The text animators of a text layer, its key `a`, and the alignment of
-   their groups, its key `m` (D79). A text layer draws as if it had none.
-   The capitals of the key `ca` of a text document are not drawn either.
-3. The text on a path of a text layer, its key `p` (D79). The text draws on
-   its lines, as if it had no path.
-4. The geometric boolean operations of merge paths, for a stroke or a trim
+2. The geometric boolean operations of merge paths, for a stroke or a trim
    after a merge path of mode 2 to 5 (D42).
-5. The quality of the Gaussian blur and the drop shadow (D79). The sink
+3. The quality of the Gaussian blur and the drop shadow (D79). The sink
    draws them as ThorVG does at its default quality, 50. It has no option
    for another quality.
 
@@ -150,16 +175,13 @@ ThorVG. These parts of Lottie are not done:
    Phase 26 added the text face, the color commands, the italic correction,
    the top accent attachment and the math kerning, the brace and the wide
    accents that grow, and the cheap missing commands of D78 section 10.
-   This work is left:
+   It also added the commands that the formulas of the corpus of
+   mermaid-go-renderer need, the last of them `\phase`, at the request of
+   zuzu. This work is left:
 
    - Phase 27, the commits of go-tex/math after the base commit.
    - The helpers `KernPair` and `LigaturePair` of D78 section 8, if ivy asks
      for them.
-   - `\phase`, the angle mark of electrical engineering, which KaTeX
-     draws as an enclosure. zuzu asked for it on 2026-11-20, after the
-     symbols `\omicron`, `\impliedby`, `\eth`, `\Finv`, `\Game` and
-     `\notni`, which `texmath` now has. It is the last of the seven
-     commands that the formulas of the corpus of mermaid-go-renderer need.
    - `\underrightarrow`, `\sideset` and the environments `align`,
      `equation` and `gather`, which wait for a request. The other commands
      of `katex_parse.txt`, most of them symbols and operators of AMS and
@@ -200,7 +222,10 @@ test:
    2026-11-20, `colorBurnHighpLane` and `colorDodgeHighpLane` fit the budget
    of 80, and `BenchmarkBlendColorDodge` went from 4.84 ms to 4.65 ms (D35).
    `setSat` (cost 114), `exclusiveReflect` (91) and `gatherIxLane` (127) are
-   still over the budget. The bounds checks that remain in the stages are
+   still over the budget. On 2026-11-20 a version of `exclusiveReflect` that
+   takes `limit + limit` and `inv_limit * 0.5` from its caller still cost
+   86, because `wide.LaneFloor` alone costs 44, and it was not kept. The
+   bounds checks that remain in the stages are
    one for each stage, on the index of the next stage or on the slice of its
    pixels, and the checks in the loops on `p.tail` of the mask stages.
 3. A copy of the stages that keeps its values in `archsimd` registers through
@@ -220,9 +245,16 @@ test:
    36 ms and then to 27 ms with the bilinear filter, and from 182 ms to
    92 ms and then to 55 ms with the bicubic filter. In the SIMD build it went
    from 36 ms to 28 ms with the bilinear filter, and from 93 ms to 56 ms with
-   the bicubic filter. The lanes of a group of an image that is scaled up
-   often share a column too, but each lane still finds its columns. Source:
-   the measurement of ivy, 2026-11-18, and `bench_ivy_test.go`, 2026-11-20.
+   the bicubic filter. Then a lane whose columns are the columns of the lane
+   before it takes the pixels of that lane, which are already floats, when
+   the lanes share their row. In the scalar build it went from 28.1 ms to
+   26.2 ms with the bilinear filter, and from 57.8 ms to 53.8 ms with the
+   bicubic filter. In the SIMD build it went from 28.1 ms to 25.2 ms and
+   from 55.8 ms to 52.4 ms. Each lane still finds its columns, then
+   compares them with the columns of the lane before it. Most of the time
+   that is left is the multiplications and the additions of each lane.
+   Source: the measurement of ivy, 2026-11-18, and `bench_ivy_test.go`,
+   2026-11-20.
 6. The blend modes of highp. On 2026-11-20, each stage of `blend_fn!`,
    `blend_fn2!` and `blend_fn3!` calls its function directly, `store` rounds
    a channel with `LaneRoundIntByte`, and `load_8888`, `mask_u8` and the
@@ -231,20 +263,26 @@ test:
    went from 22 ms to 15 ms and then to 14.2 ms with Multiply, and from
    23 ms to 18 ms and then to 17.0 ms with Overlay. With Hue it went from
    24.1 ms to 21.6 ms, and with Color from 18.9 ms to 16.4 ms. The SIMD build
-   is slower than the scalar build on the fast path of D53, which is plain
-   Go. The composite with SourceOver took 11.9 ms there and 6.6 ms in the
-   scalar build. With the tables, which remove the conversion of a byte to a
-   float, it takes 9.2 ms and 6.4 ms. Source: the measurement of ivy,
+   was slower than the scalar build on the fast path of D53, which is plain
+   Go, because of the upper bits of the vector registers. "Measure the cost
+   of GOEXPERIMENT=simd" below gives the cause. Since 2026-11-20 the fast
+   path and the pipelines call `wide.ClearUpperBits` for each row. The
+   composite with SourceOver went from 9.4 ms to 6.8 ms in the SIMD build,
+   and it takes 6.6 ms in the scalar build. Source: the measurement of ivy,
    2026-11-18, and `bench_ivy_test.go`, 2026-11-20.
-7. Make a clip cheaper. Since 2026-11-20, a `Mask` holds only the rows that
-   its paths cover, `NewMask` allocates nothing, and `Clone` shares the rows
-   until the first write (D35). A page of a spreadsheet in
-   `BenchmarkClipSpreadsheet`, with 496 cells that each clone a clip and
-   intersect it with the rectangle of the cell, went from 121 ms to 81 ms,
-   and from 689 MiB to 38 MiB that it allocates. Two steps remain:
-   - A mask still holds each column of its rows. A mask that holds only the
-     columns of its path must give the stage `mask_u8` the chunks of 16
-     pixels that `maskBounds` keeps (D60).
+7. Make a clip cheaper. Since 2026-11-20, a `Mask` holds only the rows and
+   the columns that its paths cover, with a margin of 15 columns on each
+   side for the chunks of `maskBounds`. `NewMask` allocates nothing, and
+   `Clone` shares the pixels until the first write (D35, D60). A page of a
+   spreadsheet in `BenchmarkClipSpreadsheet`, with 496 cells that each
+   clone a clip and intersect it with the rectangle of the cell, went from
+   121 ms to 81 ms, and from 689 MiB to 38 MiB that it allocates, with the
+   rows. With the columns it allocates 14 MiB in place of 40 MiB. Its time
+   changed by less than the noise of the machine, from -6 to +2 percent in
+   the scalar build and from -4 to -2 percent in the SIMD build, because
+   the fills of the cells take most of it. `BenchmarkDrawPixmapLayer`,
+   whose mask is a circle in the middle of the page, went from 6.2 ms to
+   5.2 ms in the scalar build. One step remains:
    - A clip of a rectangle on the grid of the pixels still makes a mask. ivy
      can draw such a clip without a mask, as `PixmapSink` of `lottie` does,
      or the API of okage can take a clip rectangle. That is a decision of
@@ -260,11 +298,45 @@ From D18 and D28. In Go 1.27.3 the plain functions are slower in a build with
 of "A new release of Go" in `docs/SIMD.md` say, and turn the SIMD paths of
 `internal/wide/internal/widegen` on or off again from the measurements.
 Also measure whether `GODEBUG=simd` changes what `archsimd` runs, or what
-`archsimd.X86` reports (D15, D17). In Go 1.27.4, a conversion of a byte to a
-float32 is much slower in the SIMD build. On 2026-11-20 a table in place of
-the conversion made `sourceOverAligned` 23 percent faster in the SIMD build
-and 3 percent faster in the scalar build (item 6 of "Make the pipeline
-faster"). The SIMD build is still 1.4 times slower there.
+`archsimd.X86` reports (D15, D17).
+
+On 2026-11-20 the cause of the slow plain functions was found, on an AMD
+Ryzen 9 9950X with Go 1.27.4. In the SIMD build, `runtime.asyncPreempt`
+restores the whole vector registers, Z0 to Z31 and K0 to K7 with AVX-512,
+when it preempts a goroutine, and it does not run `VZEROUPPER` after. The
+code of `archsimd` does not run it either. A plain float operation of Go,
+such as `MULSS` or `CVTSI2SS`, keeps the upper bits of its register, so the
+CPU then waits for the last write to the whole register. The next signal,
+such as the one of the CPU profiler, clears the state, so a profile does
+not show the cause. `wide.ClearUpperBits` now clears the bits for each row
+of the pipelines and of the fast path of D53 (`docs/SIMD.md`). The fast path
+with SourceOver went from 9.4 ms to 6.8 ms in the SIMD build, against 6.6 ms
+in the scalar build. The calls in the pipelines made the root benchmarks of
+the SIMD build 1 to 3 percent faster on the geometric mean.
+
+The cause is in Go, and no report was posted. This program shows it:
+
+```go
+func work(x []float32, b []byte) {
+	for i := range x {
+		x[i] = float32(x[i]*0.5) + float32(b[i])
+	}
+}
+```
+
+With `x` and `b` of 4096 values, and 200,000 calls of `work` in a row, a call
+took 1.6 µs in the normal build and 6.3 µs in the SIMD build. With a call of
+`archsimd.ClearAVXUpperBits` for each 64 calls of `work`, it took 1.6 µs in
+the SIMD build. Two steps remain:
+
+- The SIMD code of `internal/wide` leaves the upper bits as they are after
+  each method, and the next plain float code of a stage waits. Clear the
+  bits at the end of each method on amd64, and measure the table of
+  `widegen` again. The rule of 1.2 times of that table was measured before
+  this cause was known.
+- Remove the calls of `wide.ClearUpperBits` if a release of Go clears the
+  bits itself, as the documentation of `archsimd.ClearAVXUpperBits` says
+  the compiler can do.
 
 ## Phase 6
 
@@ -304,17 +376,7 @@ differences stay:
 
 From D62.
 
-1. `typesetting` computes the deltas of gvar, HVAR and the blends of CFF2 in
-   float32, and skrifa in fixed point. In the instances of `test/krilla`
-   that are not the same as the instances of subsetter, between 1 point in
-   750 and 1 point in 150 differs by 1 unit. One glyph of
-   `NotoSans-Regular_var.ttf` differs by 2 units, and 21 of the 31,042
-   glyphs of the instances of `Cantarell-VF.otf` have another number of
-   quadratic curves. The
-   maintainers accept this within the tolerance of D65. To give the
-   instances of subsetter, `typesetting` must compute the deltas in fixed
-   point, as skrifa does. Source: phase 13, unit 4.
-2. Make a Type 3 font from images that the caller gives, each with its text.
+1. Make a Type 3 font from images that the caller gives, each with its text.
    The writer makes a Type 3 font only from the glyphs of a font file. ivy
    then writes the glyphs of a Type 3 font of bitmaps in a PDF file as image
    masks of the page, which each viewer scales down in another way, and it

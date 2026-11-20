@@ -84,7 +84,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32, amended by D66, D68 and D80 |
 | D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52, amended by D76 |
 | D64 | [Radial gradients with the extend rule of PDF](D064-radial-gradients-with-the-extend-rule-of-pdf.md) | Decided |
-| D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided, amended by D67 |
+| D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided, amended by D67 and D84 |
 | D66 | [`pdf` returns errors for large strokes and mixed stops](D066-pdf-returns-errors-for-large-strokes-and-mixed-stops.md) | Decided, amends D62 |
 | D67 | [typesetting applies the fixes of malformed input out of order](D067-typesetting-applies-the-fixes-of-malformed-input-out-of-order.md) | Decided, amends D65 |
 | D68 | [`pdf` adds what the PDF device of ivy needs](D068-pdf-adds-what-the-pdf-device-of-ivy-needs.md) | Decided, amends D62, amended by D69 |
@@ -98,7 +98,10 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D76 | [The test fonts of go-text are a module of their own](D076-the-test-fonts-of-go-text-are-a-module-of-their-own.md) | Decided, amends D63 |
 | D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70 |
 | D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13 |
-| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82 |
+| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82 and D85 |
 | D80 | [pdf draws a font as paths when its subset fails](D080-pdf-draws-a-font-as-paths-when-its-subset-fails.md) | Decided, amends D62 |
-| D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72 |
+| D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72, amended by D83 |
 | D82 | [lottie follows ThorVG at the edges and in the tracking](D082-lottie-follows-thorvg-at-the-edges-and-in-the-tracking.md) | Decided, amends D41, D75 and D79 |
+| D83 | [typesetting reads the Unicode tables and the layout tables faster](D083-typesetting-reads-the-unicode-tables-and-the-layout-tables-faster.md) | Decided, amends D81 |
+| D84 | [typesetting computes the deltas of variable fonts in fixed point](D084-typesetting-computes-the-deltas-of-variable-fonts-in-fixed-point.md) | Decided, amends D65 |
+| D85 | [lottie draws text animators, capitals and text on a path](D085-lottie-draws-text-animators-capitals-and-text-on-a-path.md) | Decided, amends D79 |

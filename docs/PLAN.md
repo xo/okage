@@ -951,7 +951,8 @@ okage with the sources (D22):
    because `typesetting` and skrifa compute them with other code. The
    comparison fails only when more than 0.1% of the glyphs of the instances
    of a font differ by more than 1 unit. The maintainers accepted this
-   tolerance on 2026-11-18 (D65).
+   tolerance on 2026-11-18 (D65). D84 removes it on 2026-11-21: each
+   instance must be the same, byte for byte.
 6. The Rust oracle gives the bytes of pdf-writer for a list of calls, which
    use no compression. The bytes of okage must be the same.
 7. `qpdf --check` reads each file that a test writes, and must find no
@@ -1105,8 +1106,10 @@ D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
 D68 answers question 28, on 2026-11-19. D69 answers question 29, and
 D70 answers question 30, on 2026-11-19. D71 answers question 31, on
 2026-11-20. D78 answers question 32 with answer 1, D81 answers question 33 with
-answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. No
-question is open. The next question is question 35.
+answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. D83
+answers question 35 with answer 1, D84 answers question 36 with answer 1,
+and D85 answers question 37 with answer 1, on 2026-11-21. No question is
+open. The next question is question 38.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -1344,3 +1347,90 @@ The recommendation is answer 2. The first three parts each make a test
 against ThorVG pass that fails without them, and they follow the reference
 of D43. Set Matte has no oracle that draws it, and it changes only the
 antialiasing of a few edges in the two files of the corpus that use it.
+
+### Question 35: the changes of D83 to the Unicode tables and the layout tables of typesetting
+
+Asked on 2026-11-20, from D83. After D81, a profile of `test/textbench`
+found two more costs in `typesetting`. The segmenter looks up six Unicode
+properties of each rune, each in a table of its own. The shaper searches
+the coverage and the classes of the kerning and the glyph classes of GDEF
+for each glyph. D83 proposes five changes, each a commit of its own, that
+keep the glyphs the same: one table for the six properties, a cache of
+the kerning by classes, a cache of the glyph properties of GDEF, a cache
+of the coverage of the kerning by pairs, and 4096 glyphs in the cache of
+GDEF. Each one changes the copy of go-text, which needs the approval of
+the maintainers (D52). Together they make the path of ivy with
+`Paragraph` 10% faster on `pg24264` and 17% faster on `pg1342`. The
+maintainers can choose one of these answers:
+
+1. Accept all five changes of D83.
+2. Accept the changes 1 to 4, and leave out change 5. Change 5 makes the
+   cache of GDEF larger than the cache of HarfBuzz, and takes 15 KiB more
+   for each `harfbuzz.Font`.
+3. Accept none of them.
+
+The recommendation is answer 1. Each change is a few lines with a test
+that compares it with the tables for each rune or each glyph, and the
+hashes of the output did not change. Change 1 adds a table of 53 KiB to
+the binary, and gave 4% to 7% on both books. Change 5 gave 2.7% on the
+Chinese book, for the same reason as the cmap cache of D81.
+
+### Question 36: whether typesetting computes the deltas of variable fonts in fixed point
+
+Asked on 2026-11-20, from D84. `typesetting` computes the deltas of gvar,
+of the item variation stores and of the blends of CFF2 in float32, as
+go-text and HarfBuzz do. skrifa computes them in 16.16 fixed point, so some
+points of the instances of `test/krilla` differ by 1 unit from the
+instances of subsetter. D65 accepts that within a tolerance. D84 has a
+prototype in three commits:
+
+1. `typesetting` computes the deltas in 16.16, as skrifa does.
+2. `internal/subsetter` computes the coordinates of a location in 16.16,
+   as skrifa does.
+3. `typesetting` gives the deltas of gvar of a glyph in 16.16 with the new
+   public method `Face.GlyphVariationDeltas`, and `internal/subsetter` reads
+   them.
+
+With the three commits, each of the 629 instances of `test/krilla` is the
+same as the instance of subsetter, byte for byte. No image of the tests of
+resvg changes, and the shaping of perf_reference still matches HarfBuzz.
+The shaping of a variable font gets about 25% faster, and the outline of a
+glyph of a variable font gets 7% to 18% slower. The maintainers can choose
+one of these answers:
+
+1. Accept the three commits. `TestSubsetterVariable` can then require the
+   same bytes, and the tolerance of D65 goes away.
+2. Accept commits 1 and 2. 95 points differ by 1 unit, and none by more.
+   The tolerance of D65 stays.
+3. Accept commit 2 alone, and move its map of avar into
+   `internal/subsetter`. The copy of go-text does not change, and 1,346
+   points differ by 1 unit. The tolerance of D65 stays.
+4. Accept none of them, and keep the tolerance of D65.
+
+The recommendation is answer 1. It gives the instances of the oracle, and
+the outlines and the shaping of `typesetting` do not change in a way that a
+test can see.
+
+### Question 37: the text animators, the capitals and the text on a path of D85
+
+Asked on 2026-11-20, from D85. velato does not parse the text animators of
+a text layer, the key `ca` of a text document, or the text on a path, and
+ThorVG draws all three. D85 has a prototype of each, with a test against
+ThorVG. The build of ThorVG draws no small letter when the key `ca` is not
+0, because of a fault in `_searchGlyph`. The prototype follows the source of
+ThorVG there, and draws the capitals. The maintainers can choose one of
+these answers:
+
+1. Accept all of D85: the text animators as ThorVG draws them, the capitals
+   as the source of ThorVG draws them, and the text on a path.
+2. Accept all of D85, and draw the text animators of a text that the sink
+   shapes glyph by glyph, as for a text of the list `chars`. ThorVG takes
+   the share of the first glyph for the whole text, so no test against
+   ThorVG can compare this.
+3. Accept the text animators and the capitals, and keep the text on a path
+   in the backlog, because ThorVG does not turn the glyphs on the path.
+4. Accept none of them, and keep items 2 and 3 of "lottie" in the backlog.
+
+The recommendation is answer 1. Each part makes a test against ThorVG pass
+that fails without it, and it follows the reference of D43. A file without
+these keys draws the same bytes as before.

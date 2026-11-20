@@ -809,6 +809,8 @@ On 2026-11-20, phase 26 also added the cheap missing commands: `\colorbox`,
 `\widetilde` and `\widecheck`. In `texmath`, `\underrightarrow`,
 `\sideset` and the environments `align`, `equation` and `gather` are still
 missing, and `\big` and its kin keep their fixed multiples of the em.
+On 2026-11-20, zuzu asked for `\phase`, the angle mark of electrical
+engineering, and phase 26 added it with the layout of KaTeX.
 
 ### 11. The deliberate differences
 

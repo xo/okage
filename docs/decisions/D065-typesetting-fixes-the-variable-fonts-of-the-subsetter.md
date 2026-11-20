@@ -1,6 +1,6 @@
 # D65. typesetting fixes the variable fonts of the subsetter
 
-Status: Decided, amended by D67.
+Status: Decided, amended by D67 and D84.
 
 `internal/subsetter` makes the instances of variable fonts with
 `typesetting`, where subsetter makes them with skrifa (D62). Unit 4 of phase

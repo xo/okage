@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `433d0213` of resvg. The maintainers accepted the decisions D1
-to D82. The package `html` parses and lays out the HTML-like labels of
+to D85. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -75,10 +75,10 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77 and D81, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74 and D80, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83 and D84, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80 and D84, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the math layout of `texmath`, the table MATH, or applying a commit of go-tex/math | D78, then D52 for the reader of the table MATH in `typesetting` |
-| working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79 and D82 |
+| working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79, D82 and D85 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -105,7 +105,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. No question is open, and the next question is question 35.
+not repeat. No question is open, and the next question is question 38.
 
 ## Hard rules
 
