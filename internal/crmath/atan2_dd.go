@@ -79,6 +79,22 @@ func atan2DD(y, x float64) (float64, bool) {
 	initDDAtan()
 
 	th, tl := ddDiv(ay, 0, ax, 0)
+	ah, al, abs := atanDD(th, tl)
+	if x < 0 {
+		ah, al = ddAdd(dda.pi[0], dda.pi[1], -ah, -al)
+		abs = ddAtanAbsErr
+	}
+	if y < 0 {
+		ah, al = -ah, -al
+	}
+	return ddRound(ah, al, float64(math.Abs(ah)*ddAtanRelErr)+abs)
+}
+
+// atanDD returns atan(t) as a double-double, for a double-double t with
+// 2^-500 <= t <= 2^500, with the bound abs of the absolute error that the
+// reductions add. The caller adds the relative error ddAtanRelErr. The caller
+// calls initDDAtan first.
+func atanDD(th, tl float64) (ah, al, abs float64) {
 	recip := th > 1
 	if recip {
 		th, tl = ddDiv(1, 0, th, tl)
@@ -94,10 +110,9 @@ func atan2DD(y, x float64) (float64, bool) {
 		uh, ul = ddDiv(nh, nl, dh, dl)
 	}
 	u2h, u2l := ddMul(uh, ul, uh, ul)
-	ah, al := ddHorner(dda.atanC[:], u2h, u2l)
+	ah, al = ddHorner(dda.atanC[:], u2h, u2l)
 	ah, al = ddMul(ah, al, uh, ul)
 
-	abs := 0.0
 	if k != 0 {
 		ah, al = ddAdd(dda.atanK[int(k)][0], dda.atanK[int(k)][1], ah, al)
 		abs = ddAtanAbsErr
@@ -106,12 +121,5 @@ func atan2DD(y, x float64) (float64, bool) {
 		ah, al = ddAdd(dda.halfPi[0], dda.halfPi[1], -ah, -al)
 		abs = ddAtanAbsErr
 	}
-	if x < 0 {
-		ah, al = ddAdd(dda.pi[0], dda.pi[1], -ah, -al)
-		abs = ddAtanAbsErr
-	}
-	if y < 0 {
-		ah, al = -ah, -al
-	}
-	return ddRound(ah, al, float64(math.Abs(ah)*ddAtanRelErr)+abs)
+	return ah, al, abs
 }

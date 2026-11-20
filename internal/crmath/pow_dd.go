@@ -39,12 +39,12 @@ const (
 	ddPowRelErr  = 0x1p-92
 )
 
-// ddp holds the constants of the fast path of Pow64. They are made on first
-// use.
+// ddp holds the constants of the fast paths of Pow64, Ln64 and Log2_64.
+// They are made on first use.
 var ddp struct {
 	once sync.Once
-	// ln2 is ln 2 as hi and lo.
-	ln2 [2]float64
+	// ln2 is ln 2, and invLn2 is 1 / ln 2, each as hi and lo.
+	ln2, invLn2 [2]float64
 	// atanhC[n] is 1 / (2n+1), and expC[n] is 1 / n!, each as hi and lo.
 	atanhC [ddLnTerms][2]float64
 	expC   [ddExpTerms][2]float64
@@ -57,12 +57,14 @@ func ddSplit(v *big.Float) [2]float64 {
 	return [2]float64{hi, lo}
 }
 
-// initDDPow makes the constants of the fast path of Pow64.
+// initDDPow makes the constants of the fast paths of Pow64, Ln64 and
+// Log2_64.
 func initDDPow() {
 	ddp.once.Do(func() {
 		initWide()
 		p := uint(wprec)
 		ddp.ln2 = ddSplit(wide.ln2)
+		ddp.invLn2 = ddSplit(quoP(fP(1, p), wide.ln2, p))
 		for n := range ddLnTerms {
 			ddp.atanhC[n] = ddSplit(quoP(fP(1, p), fP(float64(2*n+1), p), p))
 		}
@@ -101,22 +103,7 @@ func ddDiv(ah, al, bh, bl float64) (float64, float64) {
 func powDD(x, y float64) (float64, bool) {
 	initDDPow()
 
-	// ln x = e ln 2 + 2 atanh(t), with x = m 2^e, m in [sqrt(1/2), sqrt(2))
-	// and t = (m-1)/(m+1). m-1 is exact by the lemma of Sterbenz.
-	m, e := math.Frexp(x)
-	if m < math.Sqrt2/2 {
-		m *= 2
-		e--
-	}
-	dh, dl := twoSum(m, 1)
-	th, tl := ddDiv(m-1, 0, dh, dl)
-	t2h, t2l := ddMul(th, tl, th, tl)
-	sh, sl := ddHorner(ddp.atanhC[:], t2h, t2l)
-	sh, sl = ddMul(sh, sl, 2*th, 2*tl)
-	fe := float64(e)
-	eh, el := twoProd(fe, ddp.ln2[0])
-	el += float64(fe * ddp.ln2[1])
-	lh, ll := ddAdd(eh, el, sh, sl)
+	lh, ll := lnDD(x)
 
 	// z = y ln x.
 	zh, zl := ddMul(y, 0, lh, ll)
@@ -136,4 +123,36 @@ func powDD(x, y float64) (float64, bool) {
 
 	// An error d of z gives a relative error of about d in exp(z).
 	return ddRound(vh, vl, float64(math.Abs(vh)*(float64(zErr*1.01)+ddPowRelErr)))
+}
+
+// lnDD returns ln x as a double-double, for a finite positive x. Its relative
+// error is about 2^-100. The caller calls initDDPow first.
+func lnDD(x float64) (float64, float64) {
+	sh, sl, e := lnParts(x)
+	fe := float64(e)
+	eh, el := twoProd(fe, ddp.ln2[0])
+	el += float64(fe * ddp.ln2[1])
+	return ddAdd(eh, el, sh, sl)
+}
+
+// lnParts returns e and the double-double s = 2 atanh(t), with
+// ln x = e ln 2 + s, for a finite positive x. The caller calls initDDPow
+// first.
+//
+// It writes x = m 2^e, with m in [sqrt(1/2), sqrt(2)), and t = (m-1)/(m+1),
+// so |t| <= 0.1716 and |s| <= ln(2)/2. m-1 is exact by the lemma of
+// Sterbenz.
+func lnParts(x float64) (sh, sl float64, e int) {
+	var m float64
+	m, e = math.Frexp(x)
+	if m < math.Sqrt2/2 {
+		m *= 2
+		e--
+	}
+	dh, dl := twoSum(m, 1)
+	th, tl := ddDiv(m-1, 0, dh, dl)
+	t2h, t2l := ddMul(th, tl, th, tl)
+	sh, sl = ddHorner(ddp.atanhC[:], t2h, t2l)
+	sh, sl = ddMul(sh, sl, 2*th, 2*tl)
+	return sh, sl, e
 }

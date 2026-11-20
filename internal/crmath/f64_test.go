@@ -199,3 +199,15 @@ func BenchmarkAtan2_64(b *testing.B) {
 		Atan2_64(float64(i)*0.001, 1.5)
 	}
 }
+
+func BenchmarkLn64(b *testing.B) {
+	for i := range b.N {
+		Ln64(0.123 + float64(i%1000)*0.0137)
+	}
+}
+
+func BenchmarkLog2_64(b *testing.B) {
+	for i := range b.N {
+		Log2_64(0.123 + float64(i%1000)*0.0137)
+	}
+}

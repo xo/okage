@@ -3,6 +3,7 @@ package crmath
 import (
 	"flag"
 	"math"
+	"math/big"
 	"math/rand/v2"
 	"testing"
 )
@@ -228,5 +229,144 @@ func TestSinCos64(t *testing.T) {
 			math.Float64bits(c) != math.Float64bits(wc) && !(c != c && wc != wc) {
 			t.Errorf("SinCos64(%g) = %g, %g, want %g, %g", x, s, c, ws, wc)
 		}
+	}
+}
+
+// lnHardArgs returns the hard arguments of ln and log2: the f64 values next
+// to 1, the powers of two and their neighbors, sqrt(1/2) times a power of two
+// and its neighbors, where the fast path changes e, the subnormal values, and
+// the largest values.
+func lnHardArgs(rng *rand.Rand) []float64 {
+	args := []float64{5e-324, 0x1p-1022, math.Nextafter(0x1p-1022, 0), math.MaxFloat64, 0x1p1023}
+	up, down := 1.0, 1.0
+	for range 200 {
+		up = math.Nextafter(up, 2)
+		down = math.Nextafter(down, 0)
+		args = append(args, up, down)
+	}
+	for range *ddN {
+		// 1 + d with d from 2^-53 to 2^-1, and 1 - d/2.
+		d := math.Exp2(-1 - rng.Float64()*52)
+		args = append(args, 1+d, 1-d/2)
+		p := math.Exp2(float64(rng.IntN(2098) - 1074))
+		args = append(args, p, math.Nextafter(p, 0), math.Nextafter(p, math.Inf(1)))
+		s := math.Ldexp(math.Sqrt2/2, rng.IntN(2040)-1015)
+		args = append(args, s, math.Nextafter(s, 0), math.Nextafter(s, math.Inf(1)))
+		args = append(args, math.Float64frombits(1+rng.Uint64N(1<<52-1)))
+	}
+	return args
+}
+
+// TestLnDD checks that each result that the fast paths of Ln64 and Log2_64
+// accept is the result of math/big, on random arguments in the whole range of
+// an f64, on the hard arguments of lnHardArgs and on the rows of MPFR. It also
+// checks that Ln64 and Log2_64 give the result of math/big on each of these
+// arguments.
+func TestLnDD(t *testing.T) {
+	rng := rand.New(rand.NewPCG(9, 10))
+	args := lnHardArgs(rng)
+	for range 4 * *ddN {
+		args = append(args, math.Exp2(-1074+rng.Float64()*2098))
+	}
+	for _, v := range mpfrValues {
+		if v.fn == "ln" || v.fn == "log2" {
+			args = append(args, math.Float64frombits(v.x))
+		}
+	}
+	accepted, total := 0, 0
+	for _, x := range args {
+		if x <= 0 || math.IsInf(x, 0) || x == 1 {
+			continue
+		}
+		total += 2
+		want := ln64Big(x)
+		if got, ok := ln64DD(x); ok {
+			accepted++
+			if got != want {
+				t.Errorf("ln64DD(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+			}
+		}
+		if got := Ln64(x); got != want {
+			t.Errorf("Ln64(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+		}
+		want = log2_64Big(x)
+		if got, ok := log2DD(x); ok {
+			accepted++
+			if got != want {
+				t.Errorf("log2DD(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+			}
+		}
+		if got := Log2_64(x); got != want {
+			t.Errorf("Log2_64(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+		}
+	}
+	if accepted < total*9/10 {
+		t.Errorf("the fast paths of ln and log2 decided %d of %d roundings, want at least 90 percent", accepted, total)
+	}
+}
+
+// TestAcosDD checks that each result that the fast path of Acos64 accepts is
+// the result of math/big, on random arguments in [-1, 1], next to 1, -1 and
+// 0, on the subnormal values, and next to the values where pi/2 - x changes
+// its rounding. It also checks that Acos64 gives the result of math/big on
+// each of these arguments.
+func TestAcosDD(t *testing.T) {
+	rng := rand.New(rand.NewPCG(11, 12))
+	args := []float64{0, math.Copysign(0, -1), 0.5, -0.5, 5e-324, -5e-324, 0x1p-1022, -0x1p-1022, 0.9831809036248165}
+	up, down := -1.0, 1.0
+	for range 200 {
+		up = math.Nextafter(up, 0)
+		down = math.Nextafter(down, 0)
+		args = append(args, up, down)
+	}
+	// Near 0, acos(x) = pi/2 - x to within 2^-150. It is the middle of two
+	// f64 values when x = pi/2 - m, for m the middle of two f64 values next
+	// to pi/2. Such an x has a fine step, so some of its neighbors give a
+	// result too close to the middle for the fast path.
+	initWide()
+	halfPi := new(big.Float).SetPrec(wprec).SetMantExp(wide.pi, -1)
+	hi, _ := halfPi.Float64()
+	for _, j := range []float64{-3, -1, 1, 3} {
+		m := addP(fP(hi, wprec), fP(j*0x1p-53, wprec), wprec)
+		x, _ := subP(halfPi, m, wprec).Float64()
+		args = append(args, x)
+		up, down := x, x
+		for range 100 {
+			up = math.Nextafter(up, 1)
+			down = math.Nextafter(down, -1)
+			args = append(args, up, down)
+		}
+	}
+	for range *ddN {
+		args = append(args, rng.Float64()*2-1)
+		// 1 - d and -1 + d with d from 2^-53 to 2^-1.
+		d := math.Exp2(-1 - rng.Float64()*52)
+		args = append(args, 1-d, -1+d)
+		// A value near 0, the subnormal values too.
+		s := math.Exp2(-1074 + rng.Float64()*1073)
+		if rng.IntN(2) == 0 {
+			s = -s
+		}
+		args = append(args, s)
+	}
+	accepted, total := 0, 0
+	for _, x := range args {
+		if x <= -1 || x >= 1 {
+			continue
+		}
+		total++
+		want := acos64Big(x)
+		if got, ok := acosDD(x); ok {
+			accepted++
+			if got != want {
+				t.Errorf("acosDD(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+			}
+		}
+		if got := Acos64(x); got != want {
+			t.Errorf("Acos64(%#016x) = %#016x, want %#016x", math.Float64bits(x), math.Float64bits(got), math.Float64bits(want))
+		}
+	}
+	if accepted < total*9/10 {
+		t.Errorf("the fast path of acos decided %d of %d roundings, want at least 90 percent", accepted, total)
 	}
 }

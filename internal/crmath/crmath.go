@@ -13,10 +13,10 @@
 // The functions of an f32 compute the result for an f64 with the package math,
 // and round it to an f32. If that result is too close to the middle of two
 // f32 values to decide the rounding, they compute it again with math/big.
-// Sin64, Cos64, SinCos64, Tan64, Atan2_64 and Pow64 do the same in
-// double-double precision, in sincos_dd.go, atan2_dd.go and pow_dd.go, and
-// compute with math/big at 192 bits only when they cannot decide. Acos64
-// computes with math/big at 160 bits, and Ln64 and Log2_64 at 192 bits.
+// The functions of an f64 do the same in double-double precision, in
+// sincos_dd.go, atan2_dd.go, pow_dd.go, log_dd.go and acos_dd.go. When the
+// fast path cannot decide, Acos64 computes with math/big at 160 bits, and the
+// other functions at 192 bits.
 package crmath
 
 import (
@@ -58,6 +58,17 @@ func Acos64(x float64) float64 {
 	case x == 1:
 		return 0
 	}
+	// The fast path divides by 1+x, so it does not take x = -1.
+	if x != -1 {
+		if f, ok := acosDD(x); ok {
+			return f
+		}
+	}
+	return acos64Big(x)
+}
+
+// acos64Big is acos for an f64 with math/big only, for -1 <= x < 1.
+func acos64Big(x float64) float64 {
 	f, _ := acosBig(newFloat(x)).Float64()
 	return f
 }

@@ -44,9 +44,14 @@ under the LGPL, into a package under the BSD-3-Clause license.
    bound of its error, and computes again with `math/big` only when that
    result is too close to the middle of two `f64` values. A double-double
    value is the sum of two `f64` values, with about 106 bits of precision.
-   `Sin64`, `Cos64`, `SinCos64`, `Tan64`, `Atan2_64` and `Pow64` do this, and
-   each takes well under 1 microsecond. `Acos64`, `Ln64` and `Log2_64` compute
-   with `math/big` only, at about 9 microseconds.
+   `Sin64`, `Cos64`, `SinCos64`, `Tan64`, `Atan2_64`, `Pow64`, `Acos64`,
+   `Ln64` and `Log2_64` do this, and each takes well under 1 microsecond.
+   Until 2026-11-20, `Acos64`, `Ln64` and `Log2_64` computed with `math/big`
+   only. On 2026-11-20, with 11 runs of the old and the new code in pairs,
+   the median time for each call went from 9,759 ns to 168 ns for `Acos64`,
+   from 7,334 ns to 183 ns for `Ln64`, and from 7,576 ns to 186 ns for
+   `Log2_64`. None of 2,000,000 random inputs of each function computed
+   again with `math/big`.
 4. The tests that compare okage with the Rust oracle on Linux expect a
    difference only where glibc is not correctly rounded. A scene with no
    cubic curve must give the same bytes. A scene with a cubic curve can
@@ -58,5 +63,3 @@ under the LGPL, into a package under the BSD-3-Clause license.
 The results of `math.Acos` and `math.Cos` of Go are not used, because they
 miss the rounded result more often: by three units in the last place for
 `math.Acos(0.9831809036248165)`.
-
-The same path for `Acos64`, `Ln64` and `Log2_64` is in `docs/BACKLOG.md`.

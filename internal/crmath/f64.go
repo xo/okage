@@ -6,12 +6,14 @@ package crmath
 //
 // Each function handles the special values (zeros, infinities and NaN) as C99
 // Annex F says, and computes every other value with math/big at the precision
-// wprec. Sin64, Cos64 and Tan64 first try the fast path of sincos_dd.go,
-// and Pow64 the fast path of pow_dd.go. Each fast path gives the same result
-// without math/big for almost every argument. A correctly rounded f64 needs about 120 bits in the worst known
-// cases, so wprec leaves a wide margin. The argument of sin, cos and tan is
-// reduced with a value of pi that has enough bits for the exponent of the
-// argument, so that a large argument also gives the right result.
+// wprec. Each function first tries its fast path: Sin64, Cos64 and Tan64 in
+// sincos_dd.go, Atan2_64 in atan2_dd.go, Pow64 in pow_dd.go, and Ln64 and
+// Log2_64 in log_dd.go. Each fast path gives the same result without math/big
+// for almost every argument. A correctly rounded f64 needs about 120 bits in
+// the worst known cases, so wprec leaves a wide margin. The argument of sin,
+// cos and tan is reduced with a value of pi that has enough bits for the
+// exponent of the argument, so that a large argument also gives the right
+// result.
 
 import (
 	"math"
@@ -214,6 +216,15 @@ func Ln64(x float64) float64 {
 	case x == 1:
 		return 0
 	}
+	if f, ok := ln64DD(x); ok {
+		return f
+	}
+	return ln64Big(x)
+}
+
+// ln64Big is ln for an f64 with math/big only, for a finite positive x other
+// than 1.
+func ln64Big(x float64) float64 {
 	initWide()
 	f, _ := lnBigP(x).Float64()
 	return f
@@ -234,6 +245,14 @@ func Log2_64(x float64) float64 {
 	if frac == 0.5 {
 		return float64(exp - 1)
 	}
+	if f, ok := log2DD(x); ok {
+		return f
+	}
+	return log2_64Big(x)
+}
+
+// log2_64Big is log2 for an f64 with math/big only, for a finite positive x.
+func log2_64Big(x float64) float64 {
 	initWide()
 	f, _ := quoP(lnBigP(x), wide.ln2, wprec).Float64()
 	return f
