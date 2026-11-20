@@ -183,7 +183,13 @@ func recordKey(kp tables.Kernx0Record) uint32 { return uint32(kp.Left)<<16 | uin
 func (kd Kern0) KernPair(left, right GID) int16 { return kernPair(kd, left, right) }
 
 type Kern1 struct {
-	Values  []int16 // After successful parsing, may be safely indexed by AATStateEntry.AsKernxIndex() from `Machine`
+	// For a subtable of kern, AATStateEntry.AsKernxIndex() of an entry of
+	// Machine is a safe index of Values.
+	//
+	// okage: for a subtable of kerx, Values holds the values up to the end
+	// of the subtable, or up to the end of the table for the last subtable,
+	// as HarfBuzz 15.1.0 reads them. An index can be out of range (D73).
+	Values  []int16
 	Machine AATStateTable
 }
 

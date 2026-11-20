@@ -8,10 +8,11 @@
 //
 //   - The tests of D73 build fonts from Roboto-Regular.ttf of
 //     typesetting/font/testdata and from the fonts of perf_reference, with
-//     tables GSUB, GPOS or morx that they write by hand. Each font makes
-//     the buffer run out of operations or grow past its limit of length,
-//     or makes a subtable apply, at a place where harfbuzz differed from
-//     HarfBuzz.
+//     tables GSUB, GPOS, morx, kerx or kern that they write by hand. Each
+//     font makes the buffer run out of operations or grow past its limit
+//     of length, makes a subtable apply, or makes a table of too many
+//     subtables, at a place where harfbuzz differed from HarfBuzz. Some
+//     tests also compare the flag unsafe-to-break of each glyph.
 //   - TestPerfReference shapes the texts of perf_reference in its fonts, a
 //     line at a time, from typesetting/testdata. By default it shapes the
 //     first 200 lines of each text. With the flag -harfbuzz.all, it shapes

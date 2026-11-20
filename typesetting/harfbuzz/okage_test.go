@@ -910,3 +910,129 @@ func TestAATSubtableLimit(t *testing.T) {
 		testShapedFace(t, morxFace, []shapedText{{"ab", test.morx}})
 	}
 }
+
+// The flags of an entry of a subtable of format 1 of kerx.
+const (
+	kerxPush  = 0x8000
+	kerxReset = 0x2000
+	kerxEnd   = 0xFFFF // the index of no list of actions, and the end of a list
+)
+
+// kerxFormat1 builds a subtable of format 1 of kerx. Its class table gives
+// the classes 4, 5 and 6 to a, b and c. An entry is its flags and the index
+// of its list of actions in the values. entries[0] is the entry of the
+// classes 0 to 3, and entries[1], entries[2] and entries[3] are the
+// entries of a, b and c, in each of the two states.
+func kerxFormat1(entries [4][2]int, values ...int) kerxSubtable {
+	const classes = 7
+	classTable := u16s(8, int(robotoA), 3, 4, 5, 6)
+	var states []byte
+	for range 2 {
+		states = append(states, u16s(0, 0, 0, 0, 1, 2, 3)...)
+	}
+	var entryTable []byte
+	for _, e := range entries {
+		entryTable = append(entryTable, u16s(0, e[0], e[1])...)
+	}
+	data := u32s(classes, 20, uint32(20+len(classTable)), uint32(20+len(classTable)+len(states)),
+		uint32(20+len(classTable)+len(states)+len(entryTable)))
+	data = append(data, classTable...)
+	data = append(data, states...)
+	data = append(data, entryTable...)
+	data = append(data, u16s(values...)...)
+	return kerxSubtable{coverage: 1, data: data}
+}
+
+// TestKerxFormat1History shapes texts with a subtable of format 1 of kerx.
+// It pushes a, pushes b and applies the list 51, 41, -31 at b, and applies
+// a list of ten values at c, with the flag Reset and without a push. As in
+// HarfBuzz 15.1.0, the stack is a history of eight glyphs, which each list
+// walks again from the last glyph, and a slot that no glyph filled holds
+// the first glyph. A list ends with 0xFFFF, not with an odd value, the
+// flag Reset is ignored, and the glyphs before the current glyph that a
+// list changes are unsafe to break. go-text popped the stack, ended a list
+// with an odd value, and emptied the stack on the flag Reset (D73).
+func TestKerxFormat1History(t *testing.T) {
+	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {kerxReset, 4}},
+		51, 41, -31, kerxEnd,
+		-20, 15, 7, 3, 5, 9, 11, 13, 17, 19, kerxEnd))
+	face := fontWithLayout(t, map[string][]byte{"kerx": kerx})
+	testShapedFace(t, face, []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1124, 10, 0}, {robotoB, 1, 1200, 51, 0}}},
+		{"abc", []shapedGlyph{{robotoA, 0, 1206, 92, 0}, {robotoB, 1, 1197, 48, 0}, {robotoC, 2, 1072, 0, 0}}},
+		{"bc", []shapedGlyph{{robotoB, 0, 1289, 140, 0}, {robotoC, 1, 1072, 0, 0}}},
+		{"aaaaaaaaab", []shapedGlyph{
+			{robotoA, 0, 1114, 0, 0}, {robotoA, 1, 1114, 0, 0}, {robotoA, 2, 1114, 0, 0}, {robotoA, 3, 1114, 0, 0},
+			{robotoA, 4, 1114, 0, 0}, {robotoA, 5, 1114, 0, 0}, {robotoA, 6, 1114, 0, 0}, {robotoA, 7, 1083, -31, 0},
+			{robotoA, 8, 1155, 41, 0}, {robotoB, 9, 1200, 51, 0},
+		}},
+	})
+
+	// The list of b changes x at 0 with the slots that no glyph filled, so
+	// each glyph after it is unsafe to break.
+	buf := shapeWithin(t, face.Font, "xxxxab")
+	for i, info := range buf.Info {
+		if got, want := info.Mask&GlyphUnsafeToBreak != 0, i != 0; got != want {
+			t.Errorf("xxxxab, glyph %d: got unsafe to break %v, want %v", i, got, want)
+		}
+	}
+}
+
+// TestKerxFormat1Operations shapes aab and aa with a subtable of format 1
+// of kerx, which applies at b a list of 100,000 values 0 without an end,
+// then a subtable of format 0, which kerns a, a. As in HarfBuzz 15.1.0,
+// each action takes one operation, the buffer runs out of operations in
+// the first subtable, and the second subtable does not apply. go-text
+// took no operation for an action, and kerned a, a (D73).
+func TestKerxFormat1Operations(t *testing.T) {
+	values := make([]int, 100000)
+	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}, values...),
+		kerxPairs(int(robotoA), int(robotoA), -300))
+	face := fontWithLayout(t, map[string][]byte{"kerx": kerx})
+	testShapedFace(t, face, []shapedText{
+		{"aab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoA, 1, 1114, 0, 0}, {robotoB, 2, 1149, 0, 0}}},
+		{"aa", []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoA, 1, 964, -150, 0}}},
+	})
+	if buf := shapeWithin(t, face.Font, "aab"); !buf.inError {
+		t.Error("aab: the buffer is not in error")
+	}
+}
+
+// TestKerxFormat1Bounds shapes texts with two subtables of format 1 of
+// kerx. In the first, the list of b, 10, 20, has no end. The header of the
+// second subtable gives a length without its values, and its list of b is
+// 5. As in HarfBuzz 15.1.0, a list ends at the end of its subtable, and
+// the list of the last subtable ends at the end of the table (D73).
+func TestKerxFormat1Bounds(t *testing.T) {
+	entries := [4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}
+	last := kerxFormat1(entries, 5, kerxEnd)
+	last.length = 12 + len(last.data) - 4
+	kerx := kerxTable(kerxFormat1(entries, 10, 20), last)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1134, 20, 0}, {robotoB, 1, 1164, 15, 0}}},
+		{"aab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoA, 1, 1134, 20, 0}, {robotoB, 2, 1164, 15, 0}}},
+	})
+}
+
+// TestKernFormat1Offset shapes ab with a subtable of format 1 of a table
+// kern of Apple. It pushes a, and pushes b with a list of actions at the
+// byte offset 0x2000, which gives -40 to b and -30 to a. In kern, the bit
+// 0x2000 is a bit of the offset. go-text read it as the flag Reset of
+// kerx, emptied the stack, and kerned only b (D73).
+func TestKernFormat1Offset(t *testing.T) {
+	const values = 0x2000
+	data := u16s(7, 10, 18, 32, values)
+	data = append(data, u16s(int(robotoA), 3)...)
+	data = append(data, 4, 5, 6, 0)
+	for range 2 {
+		data = append(data, 0, 0, 0, 0, 1, 2, 0)
+	}
+	data = append(data, u16s(18, 0, 18, kerxPush, 18, kerxPush|values)...)
+	data = append(data, make([]byte, values-len(data))...)
+	data = append(data, u16s(-40, -29)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00010000)
+	kern = append(kern, data...)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1084, -30, 0}, {robotoB, 1, 1109, -40, 0}}},
+	})
+}

@@ -33,7 +33,35 @@ func (ks *KerxSubtable) parseEnd(src []byte, _ int) (int, error) {
 	if L := len(src); L < int(ks.length) {
 		return 0, fmt.Errorf("EOF: expected length: %d, got %d", ks.length, L)
 	}
+	ks.readKerx1Values(src[:ks.length])
 	return int(ks.length), nil
+}
+
+// readKerx1Values reads the values of a subtable of format 1, from its value
+// table to the end of src. src starts at the start of the subtable.
+//
+// okage: HarfBuzz 15.1.0 reads the values of a list of actions up to the
+// end of the subtable, and up to the end of the table for the last
+// subtable, as the length of the last subtable is ignored. It checks each
+// value when it reads it, so a value table that is too short is not an
+// error of the parse. ParseKerx reads the values of the last subtable
+// again, up to the end of the table (D73).
+func (ks *KerxSubtable) readKerx1Values(src []byte) {
+	kd, ok := ks.Data.(KerxData1)
+	if !ok {
+		return
+	}
+	kd.Values = nil
+	// The offset of the value table starts at the state table, after the
+	// header of 12 bytes.
+	if start := 12 + uint64(kd.valueTable); start < uint64(len(src)) {
+		values := src[start:]
+		kd.Values = make([]int16, len(values)/2)
+		for i := range kd.Values {
+			kd.Values[i] = int16(binary.BigEndian.Uint16(values[2*i:]))
+		}
+	}
+	ks.Data = kd
 }
 
 type kerxSTVersion byte
@@ -104,6 +132,9 @@ type KerxData1 struct {
 // From Apple 'kern' spec:
 // Each pops one glyph from the kerning stack and applies the kerning value to it.
 // The end of the list is marked by an odd value...
+//
+// okage: only a subtable of kern uses it. A list of kerx ends with the
+// value 0xFFFF, and KerxSubtable.readKerx1Values reads its values (D73).
 func parseKernx1Values(src []byte, entries []AATStateEntry, valueTableOffset, tupleCount int) ([]int16, error) {
 	// find the maximum index need in the values array
 	var maxi uint16
@@ -134,10 +165,10 @@ func parseKernx1Values(src []byte, entries []AATStateEntry, valueTableOffset, tu
 	return out, nil
 }
 
-func (kx *KerxData1) parseValues(src []byte, tupleCount, _ int) error {
-	var err error
-	kx.Values, err = parseKernx1Values(src, kx.Entries, int(kx.valueTable), tupleCount)
-	return err
+// okage: KerxSubtable.readKerx1Values reads the values, once the length of
+// the subtable is known (D73).
+func (kx *KerxData1) parseValues(_ []byte, _, _ int) error {
+	return nil
 }
 
 type KerxData2 struct {

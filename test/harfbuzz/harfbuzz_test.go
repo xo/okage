@@ -26,17 +26,17 @@ var all = flag.Bool("harfbuzz.all", false, "shape all the lines of the texts of 
 const perfReference = "../../typesetting/testdata/harfbuzz/perf_reference"
 
 // shaped is the output of a shaping: one line for each glyph, "glyph
-// cluster xAdvance yAdvance xOffset yOffset", and whether HarfBuzz ends
-// in error.
+// cluster xAdvance yAdvance xOffset yOffset", with the flag unsafe-to-break
+// at the end when the test asks for it, and whether HarfBuzz ends in error.
 type shaped struct {
 	glyphs  []string
 	inError bool
 }
 
-// shapeHarfBuzz shapes each text in the font of the file with shape.py.
-// It skips the test when python3 or uharfbuzz with HarfBuzz 15.1.0 is
-// missing.
-func shapeHarfBuzz(t *testing.T, path string, texts []string) []shaped {
+// shapeHarfBuzz shapes each text in the font of the file with shape.py,
+// with the flag unsafe-to-break of each glyph when flags is true. It skips
+// the test when python3 or uharfbuzz with HarfBuzz 15.1.0 is missing.
+func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool) []shaped {
 	t.Helper()
 	python, err := exec.LookPath("python3")
 	if err != nil {
@@ -60,7 +60,11 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string) []shaped {
 		stdin.WriteByte('\n')
 	}
 	var stderr bytes.Buffer
-	cmd := exec.CommandContext(t.Context(), python, "-I", "shape.py", path)
+	args := []string{"-I", "shape.py", path}
+	if flags {
+		args = append(args, "--flags")
+	}
+	cmd := exec.CommandContext(t.Context(), python, args...)
 	cmd.Stdin = &stdin
 	cmd.Stderr = &stderr
 	out, err := cmd.Output()
@@ -89,8 +93,9 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string) []shaped {
 	return results
 }
 
-// shapeOkage shapes each text in the font data with harfbuzz.
-func shapeOkage(t *testing.T, data []byte, texts []string) [][]string {
+// shapeOkage shapes each text in the font data with harfbuzz, with the
+// flag unsafe-to-break of each glyph when flags is true.
+func shapeOkage(t *testing.T, data []byte, texts []string, flags bool) [][]string {
 	t.Helper()
 	face, err := font.ParseTTF(bytes.NewReader(data))
 	if err != nil {
@@ -108,6 +113,13 @@ func shapeOkage(t *testing.T, data []byte, texts []string) [][]string {
 		for j, info := range buf.Info {
 			pos := buf.Pos[j]
 			glyphs[j] = fmt.Sprintf("%d %d %d %d %d %d", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset)
+			if flags {
+				unsafe := 0
+				if info.Mask&harfbuzz.GlyphUnsafeToBreak != 0 {
+					unsafe = 1
+				}
+				glyphs[j] += fmt.Sprintf(" %d", unsafe)
+			}
 		}
 		out[i] = glyphs
 	}
@@ -115,16 +127,17 @@ func shapeOkage(t *testing.T, data []byte, texts []string) [][]string {
 }
 
 // compareShaping shapes each text in the font data with harfbuzz and with
-// HarfBuzz, and fails the test for each difference. It gives the output of
-// HarfBuzz.
-func compareShaping(t *testing.T, data []byte, texts []string) []shaped {
+// HarfBuzz, and fails the test for each difference. When flags is true, it
+// also compares the flag unsafe-to-break of each glyph. It gives the output
+// of HarfBuzz.
+func compareShaping(t *testing.T, data []byte, texts []string, flags bool) []shaped {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "font.ttf")
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	want := shapeHarfBuzz(t, path, texts)
-	got := shapeOkage(t, data, texts)
+	want := shapeHarfBuzz(t, path, texts, flags)
+	got := shapeOkage(t, data, texts, flags)
 	for i, text := range texts {
 		if slices.Equal(got[i], want[i].glyphs) {
 			continue
@@ -185,7 +198,7 @@ func TestPerfReference(t *testing.T) {
 				if !*all && len(lines) > 200 {
 					lines = lines[:200]
 				}
-				compareShaping(t, data, lines)
+				compareShaping(t, data, lines, false)
 			})
 		}
 	}
@@ -339,7 +352,14 @@ func robotoWith(t *testing.T, layout map[string][]byte) []byte {
 // HarfBuzz, and checks whether HarfBuzz ends in error.
 func testCase(t *testing.T, data []byte, inError bool, texts ...string) {
 	t.Helper()
-	for i, out := range compareShaping(t, data, texts) {
+	testFlags(t, data, inError, false, texts...)
+}
+
+// testFlags is testCase, which also compares the flag unsafe-to-break of
+// each glyph when flags is true.
+func testFlags(t *testing.T, data []byte, inError, flags bool, texts ...string) {
+	t.Helper()
+	for i, out := range compareShaping(t, data, texts, flags) {
 		if out.inError != inError {
 			t.Errorf("%+q: HarfBuzz ends in error: %v, want %v", trim(texts[i]), out.inError, inError)
 		}
@@ -545,4 +565,99 @@ func TestAATSubtableLimit(t *testing.T) {
 		}
 		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "a", "ab")
 	}
+}
+
+// The flags of an entry of a subtable of format 1 of kerx.
+const (
+	kerxPush  = 0x8000
+	kerxReset = 0x2000
+	kerxEnd   = 0xFFFF // the index of no list of actions, and the end of a list
+)
+
+// kerxFormat1 builds a subtable of format 1 of kerx. Its class table gives
+// the classes 4, 5 and 6 to a, b and c. An entry is its flags and the index
+// of its list of actions in the values. entries[0] is the entry of the
+// classes 0 to 3, and entries[1], entries[2] and entries[3] are the
+// entries of a, b and c, in each of the two states.
+func kerxFormat1(entries [4][2]int, values ...int) kerxSubtable {
+	const classes = 7
+	classTable := u16s(8, robotoA, 3, 4, 5, 6)
+	var states []byte
+	for range 2 {
+		states = append(states, u16s(0, 0, 0, 0, 1, 2, 3)...)
+	}
+	var entryTable []byte
+	for _, e := range entries {
+		entryTable = append(entryTable, u16s(0, e[0], e[1])...)
+	}
+	data := u32s(classes, 20, uint32(20+len(classTable)), uint32(20+len(classTable)+len(states)),
+		uint32(20+len(classTable)+len(states)+len(entryTable)))
+	data = append(data, classTable...)
+	data = append(data, states...)
+	data = append(data, entryTable...)
+	data = append(data, u16s(values...)...)
+	return kerxSubtable{coverage: 1, data: data}
+}
+
+// TestKerxFormat1History: a subtable of format 1 of kerx pushes a, pushes b
+// and applies a list of three odd values, and applies a list of ten values
+// at c, with the flag Reset and without a push. HarfBuzz keeps a history of
+// eight glyphs, which each list walks again from the last glyph, and a slot
+// that no glyph filled holds the first glyph. A list ends with 0xFFFF, not
+// with an odd value, and HarfBuzz ignores the flag Reset. The glyphs that
+// a list changes are unsafe to break.
+func TestKerxFormat1History(t *testing.T) {
+	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {kerxReset, 4}},
+		51, 41, -31, kerxEnd,
+		-20, 15, 7, 3, 5, 9, 11, 13, 17, 19, kerxEnd))
+	testFlags(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, true,
+		"ab", "aab", "abab", "abc", "bc", "c", "xab", "abcabc", "aaaaaaaaab", "aaaaaaaaabc", "xxxxab")
+}
+
+// TestKerxFormat1Operations: a subtable of format 1 of kerx applies at b a
+// list of 100,000 values 0 without an end, then a subtable of format 0
+// kerns a, a. Each action takes one operation, and HarfBuzz runs out of
+// operations in the first subtable. The table then stops, and the second
+// subtable does not apply.
+func TestKerxFormat1Operations(t *testing.T) {
+	values := make([]int, 100000)
+	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}, values...),
+		kerxPairs(robotoA, robotoA, -300))
+	data := robotoWith(t, map[string][]byte{"kerx": kerx})
+	testCase(t, data, true, "aab")
+	testCase(t, data, false, "aa", "aaa")
+}
+
+// TestKernFormat1Offset: a subtable of format 1 of a table kern of Apple
+// pushes a, and pushes b with a list of actions at the byte offset 0x2000.
+// The list gives -40 to b and -30 to a, and its odd value ends it. In
+// kern, the bit 0x2000 is a bit of the offset, and HarfBuzz does not empty
+// the stack for it.
+func TestKernFormat1Offset(t *testing.T) {
+	const values = 0x2000
+	data := u16s(7, 10, 18, 32, values)
+	data = append(data, u16s(robotoA, 3)...)
+	data = append(data, 4, 5, 6, 0)
+	for range 2 {
+		data = append(data, 0, 0, 0, 0, 1, 2, 0)
+	}
+	data = append(data, u16s(18, 0, 18, kerxPush, 18, kerxPush|values)...)
+	data = append(data, make([]byte, values-len(data))...)
+	data = append(data, u16s(-40, -29)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00010000)
+	kern = append(kern, data...)
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab", "aab", "abab")
+}
+
+// TestKerxFormat1Bounds: two subtables of format 1 of kerx. In the first,
+// the list of b has no end, and HarfBuzz reads it up to the end of the
+// subtable. The header of the second subtable gives a length without its
+// values, and HarfBuzz reads the values of the last subtable up to the end
+// of the table.
+func TestKerxFormat1Bounds(t *testing.T) {
+	entries := [4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}
+	last := kerxFormat1(entries, 5, kerxEnd)
+	last.length = 12 + len(last.data) - 4
+	kerx := kerxTable(kerxFormat1(entries, 10, 20), last)
+	testFlags(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, true, "ab", "aab", "abab", "xab")
 }

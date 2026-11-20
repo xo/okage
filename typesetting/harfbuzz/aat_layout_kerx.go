@@ -2,6 +2,7 @@ package harfbuzz
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
@@ -106,7 +107,15 @@ func (c *aatApplyContext) applyKerxSubtable(st font.KernSubtable) bool {
 		if !c.plan.requestedKerning && !crossStream {
 			return false
 		}
-		dc := driverContextKerx1{c: c, table: data, crossStream: crossStream}
+		// okage: a subtable of kerx walks a history of glyphs, and reads
+		// its tuple count, as in HarfBuzz 15.1.0 (D73).
+		dc := driverContextKerx1{
+			c:           c,
+			table:       data,
+			tupleCount:  st.TupleCount,
+			extended:    st.IsExtended,
+			crossStream: crossStream,
+		}
 		driver := newStateTableDriver(data.Machine, c.face)
 		driver.drive(&dc, c)
 	case font.Kern2:
@@ -162,15 +171,22 @@ func (k0 kern0Accelerator) KernPair(left, right GID) int16 {
 const (
 	kerx1Push        = 0x8000 // If set, push this glyph on the kerning stack.
 	kerx1DontAdvance = 0x4000 // If set, don't advance to the next glyph before going to the new state.
-	kerx1Reset       = 0x2000 // If set, reset the kerning data (clear the stack)
-	kern1Offset      = 0x3FFF // Byte offset from beginning of subtable to the  value table for the glyphs on the kerning stack.
+	// okage: HarfBuzz 15.1.0 ignores the flag Reset, 0x2000, as CoreText
+	// does (D73).
+	kern1Offset = 0x3FFF // Byte offset from beginning of subtable to the  value table for the glyphs on the kerning stack.
 )
 
 type driverContextKerx1 struct {
-	c           *aatApplyContext
-	table       font.Kern1
-	stack       [8]int
-	depth       int
+	c     *aatApplyContext
+	table font.Kern1
+	stack [8]int
+	depth int
+	// okage: stackPos is the next slot of the history of a subtable of
+	// kerx, extended is true for a subtable of kerx, and tupleCount is
+	// the tuple count of a subtable of kerx, as in HarfBuzz 15.1.0 (D73).
+	stackPos    int
+	tupleCount  int
+	extended    bool
 	crossStream bool
 }
 
@@ -180,15 +196,24 @@ func (dc driverContextKerx1) isActionable(entry tables.AATStateEntry) bool {
 	return entry.AsKernxIndex() != 0xFFFF
 }
 
+// okage: transition follows HarfBuzz 15.1.0. For a subtable of kerx, the
+// stack is a history of the last eight glyphs, and each list of actions
+// walks it again from the last glyph. A slot that no glyph filled holds
+// the first glyph. A list ends with the value 0xFFFF, and each action takes
+// one operation and marks the glyphs unsafe to break. A subtable of kern
+// keeps the older stack, which a list empties, and whose list ends with an
+// odd value. go-text used the stack of kern for kerx too, and also
+// emptied the stack on the flag Reset (D73).
 func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver, entry tables.AATStateEntry) {
 	flags := entry.Flags
 
-	if flags&kerx1Reset != 0 {
-		dc.depth = 0
-	}
-
+	/* CoreText ignores the kerx Reset flag. */
 	if flags&kerx1Push != 0 {
-		if dc.depth < len(dc.stack) {
+		if dc.extended {
+			dc.stack[dc.stackPos] = buffer.idx
+			dc.stackPos = (dc.stackPos + 1) % len(dc.stack)
+			dc.depth = min(dc.depth+1, len(dc.stack))
+		} else if dc.depth < len(dc.stack) {
 			dc.stack[dc.depth] = buffer.idx
 			dc.depth++
 		} else {
@@ -196,72 +221,119 @@ func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver
 		}
 	}
 
-	if dc.isActionable(entry) && dc.depth != 0 {
-		tupleCount := 1 // we do not support tupleCount > 0
+	if !dc.isActionable(entry) || dc.depth == 0 {
+		return
+	}
 
-		kernIdx := entry.AsKernxIndex()
+	tupleCount := 1
+	if dc.extended {
+		tupleCount = max(1, dc.tupleCount)
+	}
 
-		actions := dc.table.Values[kernIdx:]
-		if len(actions) < tupleCount*dc.depth {
-			dc.depth = 0
-			return
+	var actions []int16
+	if kernIdx := int(entry.AsKernxIndex()); kernIdx < len(dc.table.Values) {
+		actions = dc.table.Values[kernIdx:]
+	}
+	if !dc.extended && len(actions) < tupleCount*dc.depth {
+		dc.depth = 0
+		return
+	}
+
+	kernMask := dc.c.plan.kernMask
+
+	/* Contrary to the kerx spec's destructive pops, CoreText retains an
+	 * eight-slot circular history and walks it anew for each action list. */
+	cursor := dc.stackPos
+	var last bool
+	for !last && dc.depth != 0 {
+		if dc.extended {
+			if buffer.maxOps <= 0 {
+				buffer.maxOps--
+				buffer.inError = true
+				return
+			}
+			buffer.maxOps--
+			if len(actions) == 0 {
+				dc.depth = 0
+				return
+			}
+			/* kerx ends a list with a single 0xFFFF, without popping a glyph. */
+			if actions[0] == -1 {
+				break
+			}
+			if len(actions) < tupleCount {
+				dc.depth = 0
+				return
+			}
 		}
 
-		kernMask := dc.c.plan.kernMask
-
-		/* From Apple 'kern' spec:
-		 * "Each pops one glyph from the kerning stack and applies the kerning value to it.
-		 * The end of the list is marked by an odd value... */
-		var last bool
-		for !last && dc.depth != 0 {
+		var idx int
+		if dc.extended {
+			cursor = (cursor + len(dc.stack) - 1) % len(dc.stack)
+			idx = dc.stack[cursor]
+		} else {
 			dc.depth--
-			idx := dc.stack[dc.depth]
-			v := actions[0]
-			actions = actions[tupleCount:]
-			if idx >= len(buffer.Pos) {
-				continue
-			}
+			idx = dc.stack[dc.depth]
+		}
+		v := actions[0]
+		actions = actions[tupleCount:]
+		if idx >= len(buffer.Pos) {
+			continue
+		}
+		if dc.extended {
+			buffer.unsafeToBreak(idx, buffer.idx+1)
+		}
 
-			/* "The end of the list is marked by an odd value..." */
+		/* kern uses the low bit of the final value as the list terminator. */
+		if !dc.extended {
 			last = v&1 != 0
 			v &= ^1
+		}
 
-			o := &buffer.Pos[idx]
-			if buffer.Props.Direction.isHorizontal() {
-				if dc.crossStream {
-					/* The following flag is undocumented in the spec, but described
-					 * in the 'kern' table example. */
-					if v == -0x8000 {
-						o.attachType = attachTypeNone
-						o.attachChain = 0
-						o.YOffset = 0
-					} else if o.attachType != 0 {
-						o.YOffset += dc.c.font.emScaleY(v)
-						buffer.scratchFlags |= bsfHasGPOSAttachment
-					}
-				} else if buffer.Info[idx].Mask&kernMask != 0 {
-					scaled := dc.c.font.emScaleX(v)
-					o.XAdvance += scaled
-					o.XOffset += scaled
+		o := &buffer.Pos[idx]
+		if buffer.Props.Direction.isHorizontal() {
+			if dc.crossStream {
+				/* The following flag is undocumented in the spec, but described
+				 * in the 'kern' table example. */
+				if v == -0x8000 {
+					o.attachType = attachTypeNone
+					o.attachChain = 0
+					o.YOffset = 0
+				} else if o.attachType != 0 {
+					o.YOffset = saturateAdd(o.YOffset, dc.c.font.emScaleY(v))
+					buffer.scratchFlags |= bsfHasGPOSAttachment
 				}
-			} else {
-				if dc.crossStream {
-					/* CoreText doesn't do crossStream kerning in vertical.  We do. */
-					if v == -0x8000 {
-						o.attachType = attachTypeNone
-						o.attachChain = 0
-						o.XOffset = 0
-					} else if o.attachType != 0 {
-						o.XOffset += dc.c.font.emScaleX(v)
-						buffer.scratchFlags |= bsfHasGPOSAttachment
-					}
-				} else if buffer.Info[idx].Mask&kernMask != 0 {
-					o.YAdvance += dc.c.font.emScaleY(v)
-					o.YOffset += dc.c.font.emScaleY(v)
+			} else if buffer.Info[idx].Mask&kernMask != 0 {
+				scaled := dc.c.font.emScaleX(v)
+				o.XAdvance = saturateAdd(o.XAdvance, scaled)
+				o.XOffset = saturateAdd(o.XOffset, scaled)
+			}
+		} else {
+			if dc.crossStream {
+				/* CoreText doesn't do crossStream kerning in vertical.  We do. */
+				if v == -0x8000 {
+					o.attachType = attachTypeNone
+					o.attachChain = 0
+					o.XOffset = 0
+				} else if o.attachType != 0 {
+					o.XOffset = saturateAdd(o.XOffset, dc.c.font.emScaleX(v))
+					buffer.scratchFlags |= bsfHasGPOSAttachment
 				}
+			} else if buffer.Info[idx].Mask&kernMask != 0 {
+				scaled := dc.c.font.emScaleY(v)
+				o.YAdvance = saturateAdd(o.YAdvance, scaled)
+				o.YOffset = saturateAdd(o.YOffset, scaled)
 			}
 		}
 	}
+}
+
+// saturateAdd adds two positions, and clamps the sum to the range of a
+// Position, as hb_saturate_add of HarfBuzz 15.1.0.
+//
+// okage: a subtable of format 1 of kerx adds its values with it (D73).
+func saturateAdd(a, b Position) Position {
+	return Position(min(max(int64(a)+int64(b), math.MinInt32), math.MaxInt32))
 }
 
 type kern2Accelerator struct {

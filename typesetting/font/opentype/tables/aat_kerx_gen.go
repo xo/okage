@@ -298,6 +298,11 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 			if err != nil {
 				return item, 0, fmt.Errorf("reading Kerx: %s", err)
 			}
+			// okage: the values of the last subtable of format 1 go up to
+			// the end of the table, as in HarfBuzz 15.1.0 (D73).
+			if i == arrayLength-1 {
+				elem.readKerx1Values(src[offset:])
+			}
 			item.Tables = append(item.Tables, elem)
 			offset += read
 		}
