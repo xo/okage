@@ -350,6 +350,76 @@ unsafe-to-break for each text. Each of the 413,399 lines of
 `perf_reference` still gives the same output as HarfBuzz. Item 4 of
 "typesetting" in `docs/BACKLOG.md` lists the differences that remain.
 
+On 2026-11-21 okage audited the seven commits of HarfBuzz after
+873dbc1e that change the AAT code, as item 4 of "typesetting" in
+`docs/BACKLOG.md` asked. The AAT code of go-text follows 873dbc1e, and
+HarfBuzz 15.1.0 holds the seven commits. Each commit changed the output or
+the cost of `harfbuzz`, so okage applied each one:
+
+20. 5a1c0c4660: when a ligature of morx deletes a component, the deleted
+    glyph goes into the set of glyphs of a buffer of four glyphs or more.
+    A later subtable that only the deleted glyph starts then applies.
+    `TestMorxDeletedGlyphSet` tests it. The font of the test of HarfBuzz
+    also needs the collection of only the glyphs that can start an
+    action, which item 4 of "typesetting" in `docs/BACKLOG.md` lists.
+21. 88e5077a80: in a subtable of format 2 of kerx, the sum of the classes
+    is a byte offset from the kerning array, rounded down to a value of
+    two bytes. A value is read up to the end of the subtable, and up to
+    the end of the table for the last subtable. go-text read the sum as an
+    offset from the end of the header of the subtable, so a font that
+    follows the specification had no kerning. `Kern2` of `font` is now a
+    struct with the exported fields of `tables.KerxData2`, and it records
+    whether it comes from kerx. A subtable of kern reads the sum as
+    before. `TestKerxFormat2` tests it.
+22. a763a612d1: a lookup of format 10 whose values have 0 bytes, or more
+    than 4 bytes, is an error of the parse. go-text ignored the size of the
+    values. `TestLookupFormat10ValueSize` tests it, with the lookup in the
+    first subtable. After an error in a later subtable, `typesetting`
+    still keeps the subtables before it, and HarfBuzz refuses the whole
+    table.
+23. ec4a38c4ab: an entry of a state table of kern can give a state before
+    the state array, which is a negative state. The parse now reads the
+    rows of the states that the entries reach from the state 0, up and
+    down, as the sanitizer of HarfBuzz does. go-text read the rows between
+    the state array and the entry table, and a negative state did nothing.
+    `TestKernNegativeState` tests it.
+24. 77be62a733: the glyphs of a lookup of format 2 go into the set of a
+    subtable in one pass. At the first segment out of order, one range
+    from the first to the last glyph of the rest of the segments takes
+    their place. `NewFont` of `harfbuzz` took 1.3 seconds for a chain of 20
+    subtables, each with 65,000 segments over all the glyphs, and now takes
+    5 ms. `TestLookupSegmentsOutOfOrder` and `TestLookupSegmentsCollect`
+    test it.
+25. cd570b6f54: a tag of the table ltag matches the language of the buffer
+    when its canonical form is the language, or the start of the language
+    up to a '-'. go-text matched the language as the start of the tag, and
+    it panicked for a tag that the table does not have. The new method
+    `MatchesLanguage` of `tables.Ltag` does the comparison of HarfBuzz.
+    `TestLtagLanguage` tests it.
+26. 370a0da5a1: the map of morx extends the last range of a chain when the
+    next range has the same flags. It also has the budget of HarfBuzz,
+    16,777,216, for the chains, the feature records and the ranges. When
+    the budget runs out, the last range goes to the end of the text.
+    go-text kept a range for each chain and each range of the text, a
+    product that neither the font nor the caller bounds.
+    `TestMorxMapBudget` tests it.
+
+Each of these tests is in `harfbuzz` and in `test/harfbuzz`, where
+HarfBuzz 15.1.0 gives the same glyphs, clusters, advances and offsets.
+`shape.py` takes the arguments `--language` and `--ranged` for the tests
+of fixes 25 and 26. Each of the 413,399 lines of `perf_reference` still
+gives the same output as HarfBuzz. The audit found more differences from
+HarfBuzz 15.1.0 in the AAT code, which none of the seven commits
+changes. Item 4 of "typesetting" in `docs/BACKLOG.md` lists them.
+
+The audit also found a panic, fixed on 2026-11-21:
+
+27. A ligature action of morx whose offset puts the component index below
+    0 stops, as in HarfBuzz 15.1.0, where the unsigned index fails the
+    sanitizer. go-text panicked with an index out of range.
+    `TestMorxLigatureNegativeComponent` tests it in `harfbuzz` and in
+    `test/harfbuzz`.
+
 ## When upstream changes
 
 If go-text fixes one of these faults, follow these steps:

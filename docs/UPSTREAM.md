@@ -263,6 +263,15 @@ that starts with `okage:`. Apply the hunk by hand, and keep the change of
 okage. Then run `gofmt` on `typesetting/`. The files keep the import groups
 of go-text, so the formatters of `golangci-lint` do not run on them.
 
+The code of go-text for the tables kern, kerx and morx follows HarfBuzz
+at its commit 873dbc1e, and D73 makes `harfbuzz` follow HarfBuzz 15.1.0
+at the places that it lists. On 2026-11-21 okage audited the seven
+commits of HarfBuzz after 873dbc1e that change this code: 5a1c0c4660,
+88e5077a80, a763a612d1, ec4a38c4ab, 77be62a733, cd570b6f54 and
+370a0da5a1. okage applied each one, as fixes 20 to 26 of D73. The ledger
+`typesetting.tsv` holds only the commits of go-text, so these commits of
+HarfBuzz are not in it.
+
 ### krilla
 
 The port is in the packages `pdf` and `pdfsvg` (D62).

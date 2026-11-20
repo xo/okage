@@ -101,7 +101,7 @@ From D52.
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
 4. Make `harfbuzz` follow HarfBuzz 15.1.0 in the tables kern, kerx and
-   morx at the places that the work on fixes 13 to 19 of D73 found. No
+   morx at the places that the work on fixes 13 to 27 of D73 found. No
    text of `perf_reference` and no workload of `test/textbench` uses these
    tables:
    - The parse of `typesetting` refuses some data of a subtable that
@@ -127,12 +127,24 @@ From D52.
      of HarfBuzz. If cursive attachments form a cycle, which HarfBuzz says
      lookups with other flags can do, the loop of `resolveCrossOffset`
      does not end.
-   - Other commits of HarfBuzz after 873dbc1e change the AAT code, and no
-     one compared them with `harfbuzz` yet: 5a1c0c4660, 88e5077a80,
-     a763a612d1, ec4a38c4ab, 77be62a733, cd570b6f54 and 370a0da5a1. For
-     example, 88e5077a80 reads the class values of a subtable of format 2
-     of kerx as byte offsets from the kerning array, and `typesetting`
-     reads them in another way.
+   - A lookup of format 10: HarfBuzz 15.1.0 reads a value from it only for
+     the row and column tables of kerx format 6, and reads each value with
+     the size that the lookup gives. For a class table, a substitution of
+     morx or the classes of kerx format 2, HarfBuzz finds no value.
+     `typesetting` reads each value as 2 bytes, or 4 bytes for long
+     values, and uses it in each place. So `TestLookupFormat10ValueSize`
+     of `test/harfbuzz` shapes only a, b.
+   - A subtable of kerx format 2 with a tuple count reads its value through
+     the offset of `kerxTupleKern` in HarfBuzz, and `font.Kern2` ignores
+     the tuple count. HarfBuzz also refuses the table when the kerning
+     array starts after the end of the subtable.
+   - In a subtable of kern format 2, HarfBuzz rounds the offset from the
+     kerning array down to a value of two bytes. go-text reads the value
+     at an odd offset.
+   - HarfBuzz refuses the whole table ltag when the range of a tag is
+     outside the table. `MatchesLanguage` refuses only that tag. HarfBuzz
+     also accepts rows of a state table of kern that start in the header
+     of the subtable, and `typesetting` requires them to start after it.
    Source: D73, 2026-11-20 and 2026-11-21.
 5. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
