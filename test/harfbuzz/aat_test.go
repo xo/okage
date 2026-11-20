@@ -89,3 +89,34 @@ func TestMorxDeletedGlyphSet(t *testing.T) {
 	morx := morxAuditTable(morxLigature(), morxContextual(u16s(8, 0xFFFE, 2, 1, 1), u16s(8, robotoC, 1, robotoD)))
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "abc", "abcc", "abccc", "cabc")
 }
+
+// kerxFormat2 builds a subtable of format 2 of kerx for a, b, c and d. The
+// rows of the left classes are 0, 6, 12 and 18 bytes from the kerning
+// array, and the right classes are 0, 3, 4 and 2 bytes. The array has three
+// rows: 0, 0, 0, then 0, -80, 30, then 0, -50, -20.
+func kerxFormat2() kerxSubtable {
+	left := u16s(8, robotoA, 4, 0, 6, 12, 18)
+	right := u16s(8, robotoA, 4, 0, 3, 4, 2)
+	array := u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)
+	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
+	data = append(data, left...)
+	data = append(data, right...)
+	data = append(data, array...)
+	return kerxSubtable{coverage: 2, data: data}
+}
+
+// TestKerxFormat2: a subtable of format 2 of kerx. HarfBuzz reads the sum
+// of the classes as a byte offset from the kerning array, rounded down to
+// a value of two bytes, from its commit 88e5077a80. It reads a value up to
+// the end of the subtable, and up to the end of the table for the last
+// subtable, whose length it ignores. In the first table, d, d reads after
+// the end of the first subtable, in the header of the second. In the
+// second table, the length of the subtable leaves out the last row.
+func TestKerxFormat2(t *testing.T) {
+	texts := []string{"ab", "ac", "bb", "bc", "cb", "cc", "bd", "dd", "xy", "abcd"}
+	kerx := kerxTable(kerxFormat2(), kerxPairs(robotoX, robotoY, -300))
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, texts...)
+	last := kerxFormat2()
+	last.length = 12 + len(last.data) - 6
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(last)}), false, texts...)
+}

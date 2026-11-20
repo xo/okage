@@ -102,7 +102,7 @@ func newKerxSubtable(table tables.KerxSubtable) (out KernSubtable) {
 	case tables.KerxData1:
 		out.Data = newKern1x(data)
 	case tables.KerxData2:
-		out.Data = Kern2(data)
+		out.Data = newKern2x(data)
 	case tables.KerxData4:
 		out.Data = newKern4(data)
 	case tables.KerxData6:
@@ -226,7 +226,19 @@ func newKern1x(k tables.KerxData1) Kern1 {
 	return Kern1{Values: k.Values, Machine: newAATStableTable(k.AATStateTableExt)}
 }
 
-type Kern2 tables.KerxData2
+// Kern2 is a subtable of format 2 of kern or kerx.
+//
+// okage: Kern2 has the exported fields of tables.KerxData2, and records
+// whether it comes from kerx, because the two tables read the class values
+// in other ways. KerningData starts at the start of the subtable (D73).
+type Kern2 struct {
+	Left         tables.AATLookup // The classes of the left glyphs.
+	Right        tables.AATLookup // The classes of the right glyphs.
+	KerningStart tables.Offset32  // Offset from beginning of this subtable to the start of the kerning array.
+	KerningData  []byte           // The data of the subtable, from its start.
+
+	extended bool // true for a subtable of kerx
+}
 
 // convert from non extended to extended
 func newKern2(k tables.KernData2) Kern2 {
@@ -238,11 +250,35 @@ func newKern2(k tables.KernData2) Kern2 {
 	}
 }
 
+func newKern2x(k tables.KerxData2) Kern2 {
+	return Kern2{
+		Left:         k.Left,
+		Right:        k.Right,
+		KerningStart: k.KerningStart,
+		KerningData:  k.KerningData,
+		extended:     true,
+	}
+}
+
+// KernPair returns the kern value for the given pair, or zero.
+//
+// okage: in kerx, the sum of the classes is a byte offset from the start of
+// the kerning array, rounded down to a value of two bytes, as the commit
+// 88e5077a80 of HarfBuzz, in 15.1.0, reads it. In kern, the sum is still a
+// byte offset from the start of the subtable. go-text read the sum in kerx
+// as an offset from the end of the header of the subtable, and required it
+// to be after the start of the kerning array (D73).
 func (kd Kern2) KernPair(left, right GID) int16 {
 	l, _ := kd.Left.Class(tables.GlyphID(left))
 	r, _ := kd.Right.Class(tables.GlyphID(right))
-	index := int(l) + int(r)
-	if len(kd.KerningData) < index+2 || index < int(kd.KerningStart) {
+	sum := uint64(l) + uint64(r)
+	index := sum
+	if kd.extended {
+		index = uint64(kd.KerningStart) + sum/2*2
+	} else if sum < uint64(kd.KerningStart) {
+		return 0
+	}
+	if uint64(len(kd.KerningData)) < index+2 {
 		return 0
 	}
 	kernVal := binary.BigEndian.Uint16(kd.KerningData[index:])

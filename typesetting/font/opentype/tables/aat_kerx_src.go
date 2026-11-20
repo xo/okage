@@ -39,7 +39,23 @@ func (ks *KerxSubtable) parseEnd(src []byte, _ int) (int, error) {
 		return 0, fmt.Errorf("invalid kerx subtable length: %d", ks.length)
 	}
 	ks.readKerx1Values(src[:ks.length])
+	ks.readKerx2Data(src[:ks.length])
 	return int(ks.length), nil
+}
+
+// readKerx2Data sets the kerning data of a subtable of format 2 to src,
+// which starts at the start of the subtable.
+//
+// okage: HarfBuzz 15.1.0 reads a value of the kerning array up to the end
+// of the subtable, and up to the end of the table for the last subtable.
+// ParseKerx sets the data of the last subtable again, up to the end of the
+// table. go-text kept the data from the end of the header of the subtable
+// to the end of the table (D73).
+func (ks *KerxSubtable) readKerx2Data(src []byte) {
+	if kd, ok := ks.Data.(KerxData2); ok {
+		kd.KerningData = src
+		ks.Data = kd
+	}
 }
 
 // readKerx1Values reads the values of a subtable of format 1, from its value
@@ -147,7 +163,9 @@ type KerxData2 struct {
 	Left         AATLookup `offsetSize:"Offset32" offsetRelativeTo:"Parent"` // Offset from beginning of this subtable to the left-hand offset table.
 	Right        AATLookup `offsetSize:"Offset32" offsetRelativeTo:"Parent"` // Offset from beginning of this subtable to right-hand offset table.
 	KerningStart Offset32  // Offset from beginning of this subtable to the start of the kerning array.
-	KerningData  []byte    `subsliceStart:"AtStart" arrayCount:"ToEnd"` // indexed by Left + Right
+	// okage: KerningData starts at the start of the subtable, as the data
+	// of KernData2 does. KerxSubtable.readKerx2Data sets it (D73).
+	KerningData []byte `subsliceStart:"AtStart" arrayCount:"ToEnd"`
 }
 
 // binarygen: argument=valuesCount int

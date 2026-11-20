@@ -95,3 +95,42 @@ func TestMorxDeletedGlyphSet(t *testing.T) {
 		{"abcc", []shapedGlyph{{robotoX, 0, 1015, 0, 0}, {robotoD, 2, 1155, 0, 0}, {robotoC, 3, 1072, 0, 0}}},
 	})
 }
+
+// kerxFormat2 builds a subtable of format 2 of kerx for a, b, c and d. The
+// rows of the left classes are 0, 6, 12 and 18 bytes from the kerning
+// array, and the right classes are 0, 3, 4 and 2 bytes. The array has three
+// rows: 0, 0, 0, then 0, -80, 30, then 0, -50, -20.
+func kerxFormat2() kerxSubtable {
+	left := u16s(8, int(robotoA), 4, 0, 6, 12, 18)
+	right := u16s(8, int(robotoA), 4, 0, 3, 4, 2)
+	array := u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)
+	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
+	data = append(data, left...)
+	data = append(data, right...)
+	data = append(data, array...)
+	return kerxSubtable{coverage: 2, data: data}
+}
+
+// TestKerxFormat2 shapes texts with kerxFormat2. As the commit 88e5077a80
+// of HarfBuzz, in 15.1.0, reads it, the sum of the classes is a byte
+// offset from the kerning array, rounded down to a value of two bytes. A
+// value is read up to the end of the subtable, and up to the end of the
+// table for the last subtable. In the first table, d, d reads after the
+// end of the first subtable, in the header of the second. In the second
+// table, the length of the subtable leaves out the last row. go-text read
+// the sum as an offset from the end of the header of the subtable, and
+// required it to be after the start of the kerning array. So it did not
+// kern these texts (D73).
+func TestKerxFormat2(t *testing.T) {
+	bb := shapedText{"bb", []shapedGlyph{{robotoB, 0, 1109, 0, 0}, {robotoB, 1, 1109, -40, 0}}}
+	bc := shapedText{"bc", []shapedGlyph{{robotoB, 0, 1164, 0, 0}, {robotoC, 1, 1087, 15, 0}}}
+	cb := shapedText{"cb", []shapedGlyph{{robotoC, 0, 1047, 0, 0}, {robotoB, 1, 1124, -25, 0}}}
+	cc := shapedText{"cc", []shapedGlyph{{robotoC, 0, 1062, 0, 0}, {robotoC, 1, 1062, -10, 0}}}
+	bd := shapedText{"bd", []shapedGlyph{{robotoB, 0, 1109, 0, 0}, {robotoD, 1, 1115, -40, 0}}}
+	dd := shapedText{"dd", []shapedGlyph{{robotoD, 0, 1155, 0, 0}, {robotoD, 1, 1155, 0, 0}}}
+	kerx := kerxTable(kerxFormat2(), kerxPairs(int(robotoX), int(robotoY), -300))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{bb, bc, cb, cc, bd, dd})
+	last := kerxFormat2()
+	last.length = 12 + len(last.data) - 6
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(last)}), []shapedText{cb, cc, dd})
+}
