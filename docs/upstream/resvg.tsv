@@ -32,3 +32,4 @@ cd64e5155706cada17316fc2ed413e673d5de04b	2026-10-31	ported	4a70cf2	Store path ID
 121e1db8293dff33567d564e91f96bd0e2fadf3e	2026-11-14	ported		Support `color-interpolation` on gradients (#1229). Port: usvg, resvg, tests
 46de08c87c5be3faf64a5827b6ece0619c142ff1	2026-11-14	not-applicable		Update links and badges in the READMEs (#1214). It changes only the links and the badges of README.md and of the READMEs of the C API, svgtypes and usvg
 d448e0262d71cd063f5a6515430b8989118cce19	2026-11-14	ported		Support `color-interpolation` on luminance masks (#1235). Port: usvg, resvg, tests
+ae32c3ab8b07c61f9fe222836054043e4d36cf2f	2026-11-14	ported		Follow the SVG 2 path direction rules for marker orientation (#1173). Port: usvg, tests

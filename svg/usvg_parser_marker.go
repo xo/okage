@@ -38,6 +38,11 @@ type segment struct {
 	p    [3]path.Point
 }
 
+// samePoint is same_point in usvg src/parser/marker.rs.
+func samePoint(a, b path.Point) bool {
+	return ApproxEqUlps32(a.X, b.X, 4) && ApproxEqUlps32(a.Y, b.Y, 4)
+}
+
 // isValid is is_valid in usvg src/parser/marker.rs.
 func isValid(node svgNode) bool {
 	// `marker-*` attributes cannot be set on shapes inside a `clipPath`.
@@ -211,16 +216,22 @@ func resolveMarker(
 		}
 	}
 
+	orientation := convertOrientation(markerNode)
+	// The case Angle keeps no vertex angles.
+	var vertexAngles []float32
+	if orientation.kind == markerOrientationAuto || orientation.kind == markerOrientationAutoStartReverse {
+		vertexAngles = calcVertexAngles(segments)
+	}
+
 	drawMarker := func(pt path.Point, idx int) {
 		ts := path.TransformFromTranslate(pt.X, pt.Y)
 
 		var angle float32
-		orientation := convertOrientation(markerNode)
 		switch {
 		case orientation.kind == markerOrientationAutoStartReverse && idx == 0:
-			angle = float32(math.Mod(float64(calcVertexAngle(segments, idx)+180.0), 360.0))
+			angle = float32(math.Mod(float64(vertexAngles[idx]+180.0), 360.0))
 		case orientation.kind == markerOrientationAuto || orientation.kind == markerOrientationAutoStartReverse:
-			angle = calcVertexAngle(segments, idx)
+			angle = vertexAngles[idx]
 		default:
 			angle = orientation.angle
 		}
@@ -307,142 +318,160 @@ func drawMarkers(p []segment, kind markerKind, drawMarker func(path.Point, int))
 	}
 }
 
-// calcVertexAngle is calc_vertex_angle in usvg src/parser/marker.rs.
-func calcVertexAngle(p []segment, idx int) float32 {
-	if idx == 0 {
-		// First segment.
+// tangent is the tuple (Point, Point) of the two points of a direction in
+// usvg src/parser/marker.rs.
+type tangent [2]path.Point
 
-		seg1 := p[0]
-		seg2 := p[1]
-
-		switch {
-		case seg1.kind == segmentMoveTo && seg2.kind == segmentLineTo:
-			pm, pt := seg1.p[0], seg2.p[0]
-			return calcLineAngle(pm.X, pm.Y, pt.X, pt.Y)
-		case seg1.kind == segmentMoveTo && seg2.kind == segmentCubicTo:
-			pm, p1, pt := seg1.p[0], seg2.p[0], seg2.p[2]
-			if ApproxEqUlps32(pm.X, p1.X, 4) && ApproxEqUlps32(pm.Y, p1.Y, 4) {
-				return calcLineAngle(pm.X, pm.Y, pt.X, pt.Y)
-			}
-			return calcLineAngle(pm.X, pm.Y, p1.X, p1.Y)
-		}
-		return 0.0
-	} else if idx == len(p)-1 {
-		// Last segment.
-
-		seg1 := p[idx-1]
-		seg2 := p[idx]
-
-		switch {
-		case seg2.kind == segmentMoveTo:
-			return 0.0 // unreachable
-		case seg2.kind == segmentLineTo:
-			pt := seg2.p[0]
-			prev := getPrevVertex(p, idx)
-			return calcLineAngle(prev.X, prev.Y, pt.X, pt.Y)
-		case seg2.kind == segmentCubicTo:
-			p1, p2, pt := seg2.p[0], seg2.p[1], seg2.p[2]
-			if ApproxEqUlps32(p2.X, pt.X, 4) && ApproxEqUlps32(p2.Y, pt.Y, 4) {
-				return calcLineAngle(p1.X, p1.Y, pt.X, pt.Y)
-			}
-			return calcLineAngle(p2.X, p2.Y, pt.X, pt.Y)
-		case seg1.kind == segmentLineTo && seg2.kind == segmentClose:
-			pt := seg1.p[0]
-			next := getSubpathStart(p, idx)
-			return calcLineAngle(pt.X, pt.Y, next.X, next.Y)
-		case seg1.kind == segmentCubicTo && seg2.kind == segmentClose:
-			p2, pt := seg1.p[1], seg1.p[2]
-			prev := getPrevVertex(p, idx)
-			next := getSubpathStart(p, idx)
-			return calcCurvesAngle(
-				prev.X, prev.Y, p2.X, p2.Y, pt.X, pt.Y, next.X, next.Y, next.X, next.Y,
-			)
-		}
-		return 0.0 // (_, Segment::Close)
-	}
-
-	// Middle segments.
-
-	seg1 := p[idx]
-	seg2 := p[idx+1]
-
-	// TODO: Not sure if there is a better way.
-	switch {
-	case seg1.kind == segmentMoveTo && seg2.kind == segmentLineTo:
-		pm, pt := seg1.p[0], seg2.p[0]
-		return calcLineAngle(pm.X, pm.Y, pt.X, pt.Y)
-	case seg1.kind == segmentMoveTo && seg2.kind == segmentCubicTo:
-		pm, p1 := seg1.p[0], seg2.p[0]
-		return calcLineAngle(pm.X, pm.Y, p1.X, p1.Y)
-	case seg1.kind == segmentLineTo && seg2.kind == segmentLineTo:
-		p1, p2 := seg1.p[0], seg2.p[0]
-		prev := getPrevVertex(p, idx)
-		return calcAngle(prev.X, prev.Y, p1.X, p1.Y, p1.X, p1.Y, p2.X, p2.Y)
-	case seg1.kind == segmentCubicTo && seg2.kind == segmentCubicTo:
-		c1P2, c1P := seg1.p[1], seg1.p[2]
-		c2P1, c2P := seg2.p[0], seg2.p[2]
-		prev := getPrevVertex(p, idx)
-		return calcCurvesAngle(
-			prev.X, prev.Y, c1P2.X, c1P2.Y, c1P.X, c1P.Y, c2P1.X, c2P1.Y, c2P.X,
-			c2P.Y,
-		)
-	case seg1.kind == segmentLineTo && seg2.kind == segmentCubicTo:
-		pl := seg1.p[0]
-		p1, pt := seg2.p[0], seg2.p[2]
-		prev := getPrevVertex(p, idx)
-		return calcCurvesAngle(
-			prev.X, prev.Y, prev.X, prev.Y, pl.X, pl.Y, p1.X, p1.Y, pt.X, pt.Y,
-		)
-	case seg1.kind == segmentCubicTo && seg2.kind == segmentLineTo:
-		p2, pt := seg1.p[1], seg1.p[2]
-		pl := seg2.p[0]
-		prev := getPrevVertex(p, idx)
-		return calcCurvesAngle(prev.X, prev.Y, p2.X, p2.Y, pt.X, pt.Y, pl.X, pl.Y, pl.X, pl.Y)
-	case seg1.kind == segmentLineTo && seg2.kind == segmentMoveTo:
-		pt := seg1.p[0]
-		prev := getPrevVertex(p, idx)
-		return calcLineAngle(prev.X, prev.Y, pt.X, pt.Y)
-	case seg1.kind == segmentCubicTo && seg2.kind == segmentMoveTo:
-		p2, pt := seg1.p[1], seg1.p[2]
-		if ApproxEqUlps32(pt.X, p2.X, 4) && ApproxEqUlps32(pt.Y, p2.Y, 4) {
-			prev := getPrevVertex(p, idx)
-			return calcLineAngle(prev.X, prev.Y, pt.X, pt.Y)
-		}
-		return calcLineAngle(p2.X, p2.Y, pt.X, pt.Y)
-	case seg1.kind == segmentLineTo && seg2.kind == segmentClose:
-		pt := seg1.p[0]
-		prev := getPrevVertex(p, idx)
-		next := getSubpathStart(p, idx)
-		return calcAngle(prev.X, prev.Y, pt.X, pt.Y, pt.X, pt.Y, next.X, next.Y)
-	case seg2.kind == segmentClose:
-		prev := getPrevVertex(p, idx)
-		next := getSubpathStart(p, idx)
-		return calcLineAngle(prev.X, prev.Y, next.X, next.Y)
-	}
-	// (_, Segment::MoveTo(_)) | (Segment::Close, _)
-	return 0.0
+// optionTangent is Option<(Point, Point)> in usvg src/parser/marker.rs, for
+// the vectors of calc_vertex_angles.
+type optionTangent struct {
+	t  tangent
+	ok bool
 }
 
-// calcLineAngle is calc_line_angle in usvg src/parser/marker.rs.
-func calcLineAngle(x1, y1, x2, y2 float32) float32 {
-	return calcAngle(x1, y1, x2, y2, x1, y1, x2, y2)
+// or is Option::or of Rust.
+func (o optionTangent) or(b optionTangent) optionTangent {
+	if o.ok {
+		return o
+	}
+	return b
 }
 
-// calcCurvesAngle is calc_curves_angle in usvg src/parser/marker.rs.
-func calcCurvesAngle(
-	px, py float32, // previous vertex
-	cx1, cy1 float32, // previous control point
-	x, y float32, // current vertex
-	cx2, cy2 float32, // next control point
-	nx, ny float32, // next vertex
-) float32 {
-	switch {
-	case ApproxEqUlps32(cx1, x, 4) && ApproxEqUlps32(cy1, y, 4):
-		return calcAngle(px, py, x, y, x, y, cx2, cy2)
-	case ApproxEqUlps32(x, cx2, 4) && ApproxEqUlps32(y, cy2, 4):
-		return calcAngle(cx1, cy1, x, y, x, y, nx, ny)
+// calcVertexAngles is calc_vertex_angles in usvg src/parser/marker.rs.
+func calcVertexAngles(p []segment) []float32 {
+	precedingEnd := make([]optionTangent, len(p))
+	var last optionTangent
+	for idx := range p {
+		if p[idx].kind == segmentMoveTo {
+			last = optionTangent{}
+			continue
+		}
+		precedingEnd[idx] = last
+		t, ok := endTangent(p, idx)
+		last = optionTangent{t, ok}.or(last)
 	}
-	return calcAngle(cx1, cy1, x, y, x, y, cx2, cy2)
+
+	followingStart := make([]optionTangent, len(p))
+	var next optionTangent
+	for idx := len(p) - 1; idx >= 0; idx-- {
+		if p[idx].kind == segmentMoveTo {
+			next = optionTangent{}
+			continue
+		}
+		followingStart[idx] = next
+		t, ok := startTangent(p, idx)
+		next = optionTangent{t, ok}.or(next)
+	}
+
+	startDirection := func(idx int) optionTangent {
+		t, ok := startTangent(p, idx)
+		return optionTangent{t, ok}.
+			or(precedingEnd[idx]).
+			or(followingStart[idx])
+	}
+	endDirection := func(idx int) optionTangent {
+		t, ok := endTangent(p, idx)
+		return optionTangent{t, ok}.
+			or(followingStart[idx]).
+			or(precedingEnd[idx])
+	}
+
+	angles := make([]float32, len(p))
+	start := 0
+	for start < len(p) {
+		end := len(p)
+		for idx := start + 1; idx < len(p); idx++ {
+			if p[idx].kind == segmentMoveTo {
+				end = idx
+				break
+			}
+		}
+		closed := p[end-1].kind == segmentClose
+
+		for idx := start; idx < end; idx++ {
+			var preceding, following int
+			var hasPreceding, hasFollowing bool
+			if closed && (p[idx].kind == segmentMoveTo || p[idx].kind == segmentClose) {
+				preceding, hasPreceding = end-1, true
+				following, hasFollowing = start+1, true
+			} else {
+				preceding, hasPreceding = idx, idx > start
+				following, hasFollowing = idx+1, idx+1 < end
+			}
+
+			var incoming, outgoing optionTangent
+			if hasPreceding {
+				incoming = endDirection(preceding)
+			}
+			if hasFollowing {
+				outgoing = startDirection(following)
+			}
+			switch {
+			case incoming.ok && outgoing.ok:
+				angles[idx] = calcAngle(incoming.t, outgoing.t)
+			case incoming.ok:
+				angles[idx] = calcAngle(incoming.t, incoming.t)
+			case outgoing.ok:
+				angles[idx] = calcAngle(outgoing.t, outgoing.t)
+			default:
+				angles[idx] = 0.0
+			}
+		}
+
+		start = end
+	}
+
+	return angles
+}
+
+// startTangent is start_tangent in usvg src/parser/marker.rs.
+func startTangent(p []segment, idx int) (tangent, bool) {
+	var towards [3]path.Point
+	seg := p[idx]
+	switch seg.kind {
+	case segmentMoveTo:
+		return tangent{}, false
+	case segmentLineTo:
+		towards = [3]path.Point{seg.p[0], seg.p[0], seg.p[0]}
+	case segmentCubicTo:
+		towards = seg.p
+	case segmentClose:
+		s := getSubpathStart(p, idx)
+		towards = [3]path.Point{s, s, s}
+	}
+	from := getPrevVertex(p, idx)
+	for _, pt := range towards {
+		if !samePoint(from, pt) {
+			return tangent{from, pt}, true
+		}
+	}
+	return tangent{}, false
+}
+
+// endTangent is end_tangent in usvg src/parser/marker.rs.
+func endTangent(p []segment, idx int) (tangent, bool) {
+	prev := func() path.Point { return getPrevVertex(p, idx) }
+	var to path.Point
+	var from [3]path.Point
+	seg := p[idx]
+	switch seg.kind {
+	case segmentMoveTo:
+		return tangent{}, false
+	case segmentLineTo:
+		pv := prev()
+		to, from = seg.p[0], [3]path.Point{pv, pv, pv}
+	case segmentCubicTo:
+		to, from = seg.p[2], [3]path.Point{seg.p[1], seg.p[0], prev()}
+	case segmentClose:
+		pv := prev()
+		to, from = getSubpathStart(p, idx), [3]path.Point{pv, pv, pv}
+	}
+	for _, pt := range from {
+		if !samePoint(pt, to) {
+			return tangent{pt, to}, true
+		}
+	}
+	return tangent{}, false
 }
 
 // The constants of std::f32::consts of Rust that calc_angle uses.
@@ -454,7 +483,13 @@ const (
 )
 
 // calcAngle is calc_angle in usvg src/parser/marker.rs.
-func calcAngle(x1, y1, x2, y2, x3, y3, x4, y4 float32) float32 {
+//
+// Port: the arguments (a, b) and (c, d) are the tangents ab and cd. The point
+// d is dp, since the function also has a local d.
+func calcAngle(ab, cd tangent) float32 {
+	a, b := ab[0], ab[1]
+	c, dp := cd[0], cd[1]
+
 	normalize := func(rad float32) float32 {
 		v := float32(math.Mod(float64(rad), float64(pi32*2.0)))
 		if v < 0.0 {
@@ -471,8 +506,8 @@ func calcAngle(x1, y1, x2, y2, x3, y3, x4, y4 float32) float32 {
 		return normalize(rad)
 	}
 
-	inA := vectorAngle(x2-x1, y2-y1)
-	outA := vectorAngle(x4-x3, y4-y3)
+	inA := vectorAngle(b.X-a.X, b.Y-a.Y)
+	outA := vectorAngle(dp.X-c.X, dp.Y-c.Y)
 	d := float32((outA - inA) * 0.5)
 
 	angle := inA + d
