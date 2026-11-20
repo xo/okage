@@ -6,11 +6,11 @@ require (
 	github.com/cshum/vipsgen/v2 v2.1.2
 	github.com/xo/lottie v0.1.0
 	github.com/xo/okage v0.0.0
+	golang.org/x/image v0.47.0
 )
 
 require (
 	github.com/tetratelabs/wazero v1.12.0 // indirect
-	golang.org/x/image v0.47.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 )
 
