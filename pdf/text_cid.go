@@ -214,8 +214,12 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 	isCFF := f.f.info.hasCFF
 	isCFF2 := f.f.info.hasCFF2
 
+	// okage: when the font cannot be embedded, the fallback of D80 writes
+	// the font without its font program, and Document.Finish draws its
+	// glyphs as paths.
+	var embedErr error
 	if !isGlyf && !isCFF && !isCFF2 {
-		return fontError(f.f, "font is missing an outline table")
+		embedErr = fontError(f.f, "font is missing an outline table")
 	}
 
 	// OS/2 fsType has a few bits that describe which kind of license the
@@ -233,24 +237,38 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 	//
 	// Hence, we are not checking `fsType & 2 != 0` (as would be usual for
 	// bit flags), but rather `fsType & 0xF == 2`.
-	if os2, ok := readOS2(f.f.table("OS/2")); ok && os2.fsType&0xF == 2 {
+	if os2, ok := readOS2(f.f.table("OS/2")); embedErr == nil && ok && os2.fsType&0xF == 2 {
 		sc.registerValidationError(validationError{kind: validationRestrictedLicense, font: f.f.hash})
 	}
 
-	subsetted, globalBBox, err := subsetFont(f.f, glyphRemapper)
-	if err != nil {
-		return err
+	var subsetted *Font
+	var globalBBox Rect
+	if embedErr == nil {
+		subsetted, globalBBox, embedErr = subsetFont(f.f, glyphRemapper)
 	}
-	numGlyphs := subsetted.numGlyphs()
+	embedded := embedErr == nil
+	var numGlyphs uint32
+	var fontStream filterStream
+	var baseFont string
+	if embedded {
+		numGlyphs = subsetted.numGlyphs()
 
-	// If we have a CFF font, only embed the standalone CFF program.
-	data := subsetted.fontData()
-	if subsetted.ld.HasTable(ot.MustNewTag("CFF ")) {
-		data = subsetted.table("CFF ")
+		// If we have a CFF font, only embed the standalone CFF program.
+		data := subsetted.fontData()
+		if subsetted.ld.HasTable(ot.MustNewTag("CFF ")) {
+			data = subsetted.table("CFF ")
+		}
+		fontStream = newFilterStreamFromBinaryData(data).finish(sc.serializeSettings())
+
+		baseFont = cidBaseFontName(f.f, glyphRemapper)
+	} else {
+		if !sc.serializeSettings().subsetFallback {
+			return embedErr
+		}
+		sc.failFont(f, rootRef, embedErr)
+		globalBBox = f.f.bbox()
+		baseFont = cidFontName(f.f)
 	}
-	fontStream := newFilterStreamFromBinaryData(data).finish(sc.serializeSettings())
-
-	baseFont := cidBaseFontName(f.f, glyphRemapper)
 	baseFontType0 := baseFont
 	if isCFF {
 		baseFontType0 = baseFont + "-" + identityH
@@ -300,7 +318,7 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 
 	// The only reason we write this in the first place is that PDF/A-1b
 	// requires a CIDSet.
-	if !sc.serializeSettings().pdfVersion().deprecatesCIDSet() {
+	if embedded && !sc.serializeSettings().pdfVersion().deprecatesCIDSet() {
 		// It's always guaranteed by the subsetter that CIDs start from 0 and
 		// are consecutive, so this encoding is very straight-forward.
 		cidStreamData := make([]byte, 0, numGlyphs/8+1)
@@ -358,13 +376,15 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 		CapHeight(capHeight).
 		StemV(stemV)
 
-	if !sc.serializeSettings().pdfVersion().deprecatesCIDSet() {
+	if embedded && !sc.serializeSettings().pdfVersion().deprecatesCIDSet() {
 		fontDescriptor.CIDSet(cidSetRef)
 	}
 
-	if isCFF {
+	switch {
+	case !embedded:
+	case isCFF:
 		fontDescriptor.FontFile3(dataRef)
-	} else {
+	default:
 		fontDescriptor.FontFile2(dataRef)
 	}
 
@@ -389,13 +409,15 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 	cmapWriter.WritingMode(pdfwriter.WModeHorizontal)
 	cmapWriter.Finish()
 
-	stream := streamChunk.Stream(dataRef, fontStream.encodedData())
-	fontStream.writeFilters(stream.Dict)
-	if isCFF {
-		stream.Pair(pdfwriter.Name("Subtype"), pdfwriter.Name("CIDFontType0C"))
-	}
+	if embedded {
+		stream := streamChunk.Stream(dataRef, fontStream.encodedData())
+		fontStream.writeFilters(stream.Dict)
+		if isCFF {
+			stream.Pair(pdfwriter.Name("Subtype"), pdfwriter.Name("CIDFontType0C"))
+		}
 
-	stream.Finish()
+		stream.Finish()
+	}
 	cc.streams.fonts = append(cc.streams.fonts, streamChunk)
 
 	return nil
@@ -468,6 +490,15 @@ func subsetTag(m *subsetter.GlyphRemapper) string {
 
 // cidBaseFontName is base_font_name in krilla src/text/cid.rs.
 func cidBaseFontName(font *Font, m *subsetter.GlyphRemapper) string {
+	tag := subsetTag(m)
+
+	return tag + "+" + cidFontName(font)
+}
+
+// cidFontName is the part of base_font_name in krilla src/text/cid.rs that
+// trims the PostScript name of the font. The name of a font without its
+// font program has no tag, because the file has no subset of it (D80).
+func cidFontName(font *Font) string {
 	const restLen = subsetTagLen + 1 + 1 + len(identityH)
 
 	postscriptName, ok := font.postscriptName()
@@ -475,10 +506,7 @@ func cidBaseFontName(font *Font, m *subsetter.GlyphRemapper) string {
 		postscriptName = "unknown"
 	}
 	const maxLen = 127 - restLen
-	trimmed := postscriptName[:min(len(postscriptName), maxLen)]
-	tag := subsetTag(m)
-
-	return tag + "+" + trimmed
+	return postscriptName[:min(len(postscriptName), maxLen)]
 }
 
 // subsetFont is subset_font in krilla src/text/cid.rs. It returns the font

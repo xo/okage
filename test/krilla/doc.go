@@ -329,7 +329,12 @@
 // except for an instance of a variable font (D65). The tests of
 // interchange_test.go do the same for the metadata, the outlines and the
 // links, for fixed and for random scenes, and compare the errors where
-// krilla panics.
+// krilla panics. The test of fallback_test.go draws text with a font whose
+// table post subsetter refuses, for the fallback of D80. krilla returns an
+// error for it. pdf returns the error with the fallback off. With the
+// fallback on, the reader reads the file of pdf, MuPDF and Poppler render
+// it as the file of krilla with the font that does not fail, and Poppler
+// `pdftotext` extracts its text.
 //
 // # The question "point_ts"
 //

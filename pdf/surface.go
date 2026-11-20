@@ -241,8 +241,8 @@ func (s *Surface) outlineGlyphs(glyphs []Glyph, contextColor ColorRGB, start Poi
 //
 // krilla panics for a glyph whose range is outside the text or does not
 // fall on the bounds of its characters, and for a glyph ID above 65535 in a
-// CID font. Unless outlined is true, the port then records
-// ErrPDFInvalidGlyph, which Document.Finish returns, and draws nothing.
+// CID font. Unless outlined is true, the port then records the error of
+// CheckGlyphs, which Document.Finish returns, and draws nothing.
 //
 // Draw a sequence of glyphs using the currently active fill and/or stroke.
 //
@@ -256,7 +256,7 @@ func (s *Surface) DrawGlyphs(start Point, glyphs []Glyph, font *Font, text strin
 		s.outlineGlyphs(glyphs, contextColor, start, font, fontSize)
 		return
 	}
-	if err := checkGlyphs(glyphs, text); err != nil {
+	if err := CheckGlyphs(glyphs, text); err != nil {
 		s.sc.setError(err)
 		return
 	}
@@ -282,9 +282,15 @@ func (s *Surface) DrawGlyphs(start Point, glyphs []Glyph, font *Font, text strin
 	}
 }
 
-// checkGlyphs checks the glyphs of DrawGlyphs where krilla panics. It is not
-// in krilla.
-func checkGlyphs(glyphs []Glyph, text string) error {
+// CheckGlyphs is not in krilla. It checks the glyphs of a call of
+// DrawGlyphs with text, where krilla panics (D80). It returns an error that
+// wraps okage.ErrPDFInvalidGlyph for the first glyph whose range is not a
+// range of the text, or does not start and end at the bounds of its
+// characters, or whose ID is above 65535. DrawGlyphs runs the same check
+// when outlined is false, and Document.Finish then returns the same error.
+// A program calls CheckGlyphs before DrawGlyphs to draw such a run in
+// another way.
+func CheckGlyphs(glyphs []Glyph, text string) error {
 	boundary := func(i int) bool {
 		return i == len(text) || (i < len(text) && !isUTF8Continuation(text[i]))
 	}

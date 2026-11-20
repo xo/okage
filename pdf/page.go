@@ -309,10 +309,16 @@ func newInternalPage(stream *Stream, sc *serializeContext, annotations []annotat
 	stream.resourceDictionary = resourceDictionary{}
 	chunk := sc.newChunk()
 
-	pageStream := newFilterStreamFromContentStream(stream.content, settings).finish(settings)
-	s := chunk.Stream(streamRef, pageStream.encodedData())
-	pageStream.writeFilters(s.Dict)
-	s.Finish()
+	write := func(chunk *pdfwriter.Chunk, content []byte) {
+		pageStream := newFilterStreamFromContentStream(content, settings).finish(settings)
+		s := chunk.Stream(streamRef, pageStream.encodedData())
+		pageStream.writeFilters(s.Dict)
+		s.Finish()
+	}
+	write(chunk, stream.content)
+	// okage: Document.Finish writes the stream again when the subset of
+	// one of its fonts fails (D80).
+	sc.registerTextStream(chunk, &streamResources, write)
 
 	return &internalPage{
 		streamResources: streamResources,

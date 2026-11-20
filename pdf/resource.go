@@ -236,6 +236,22 @@ type resourcesExt interface {
 // resourcesChunk, with its reference in parent. A dictionary of PDF 2.0
 // without an entry is a direct empty dictionary.
 func (d *resourceDictionary) toPDFResources(parent resourcesExt, sc *serializeContext, resourcesChunk *pdfwriter.Chunk) {
+	d.writeResources(sc, resourcesChunk).write(parent)
+}
+
+// resourcesEntry is the entry /Resources of an object: the reference of
+// its resource dictionary, or a direct empty dictionary when indirect is
+// false. It is not in krilla.
+type resourcesEntry struct {
+	ref      pdfwriter.Ref
+	indirect bool
+}
+
+// writeResources is the first part of ResourceDictionary::to_pdf_resources
+// in krilla src/resource.rs. It writes the dictionary as an indirect object
+// into resourcesChunk, and returns the entry that names it. The split lets
+// Document.Finish write a content stream again (D80).
+func (d *resourceDictionary) writeResources(sc *serializeContext, resourcesChunk *pdfwriter.Chunk) resourcesEntry {
 	writeProcSets := !sc.serializeSettings().pdfVersion().deprecatesProcSets()
 	hasResourceEntries := d.colorSpaces.len() > 0 ||
 		d.extGStates.len() > 0 ||
@@ -250,8 +266,7 @@ func (d *resourceDictionary) toPDFResources(parent resourcesExt, sc *serializeCo
 		// we just assume it is always mandatory), so just write an empty
 		// one as a direct object instead of an indirect object, for
 		// aesthetic reasons.
-		parent.Resources().Finish()
-		return
+		return resourcesEntry{}
 	}
 
 	resourcesRef := sc.newRef()
@@ -272,7 +287,17 @@ func (d *resourceDictionary) toPDFResources(parent resourcesExt, sc *serializeCo
 	writeResourceType(resources, resourceShading, d.shadings, rdPrefix)
 	writeResourceType(resources, resourceFont, d.fonts, rdPrefix)
 	resources.Finish()
-	parent.Pair(pdfwriter.Name("Resources"), resourcesRef)
+	return resourcesEntry{ref: resourcesRef, indirect: true}
+}
+
+// write is the second part of ResourceDictionary::to_pdf_resources in
+// krilla src/resource.rs. It writes the entry into parent.
+func (e resourcesEntry) write(parent resourcesExt) {
+	if !e.indirect {
+		parent.Resources().Finish()
+		return
+	}
+	parent.Pair(pdfwriter.Name("Resources"), e.ref)
 }
 
 // writeResourceType is write_resource_type in krilla src/resource.rs.

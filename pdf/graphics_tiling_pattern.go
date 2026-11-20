@@ -58,23 +58,33 @@ func (p tilingPattern) serialize(sc *serializeContext, cc *chunkContainer, rootR
 		sc.registerValidationError(validationError)
 	}
 
-	patternStream := newFilterStreamFromContentStream(p.stream.content, sc.serializeSettings()).
-		finish(sc.serializeSettings())
-	tp := chunk.TilingPattern(rootRef, patternStream.encodedData())
-	patternStream.writeFilters(tp.Dict)
+	// okage: the resources come first, so that Document.Finish can write
+	// the stream again when the subset of one of its fonts fails. They are
+	// in another chunk, so the bytes do not change. write keeps no pointer
+	// to the stream, whose content the garbage collector can free (D80).
+	resources := p.stream.resourceDictionary.writeResources(sc, cc.nonStream.resourceDictionaries)
+	width, height, transform := p.width, p.height, p.transform
+	write := func(chunk *pdfwriter.Chunk, content []byte) {
+		patternStream := newFilterStreamFromContentStream(content, sc.serializeSettings()).
+			finish(sc.serializeSettings())
+		tp := chunk.TilingPattern(rootRef, patternStream.encodedData())
+		patternStream.writeFilters(tp.Dict)
 
-	p.stream.resourceDictionary.toPDFResources(tp, sc, cc.nonStream.resourceDictionaries)
+		resources.write(tp)
 
-	finalBBox := pdfwriter.NewRect(0.0, 0.0, p.width, p.height)
+		finalBBox := pdfwriter.NewRect(0.0, 0.0, width, height)
 
-	tp.TilingType(pdfwriter.TilingTypeConstantSpacing).
-		PaintType(pdfwriter.PaintTypeColored).
-		BBox(finalBBox).
-		Matrix(transformToPDF(p.transform)).
-		XStep(finalBBox.X2 - finalBBox.X1).
-		YStep(finalBBox.Y2 - finalBBox.Y1)
+		tp.TilingType(pdfwriter.TilingTypeConstantSpacing).
+			PaintType(pdfwriter.PaintTypeColored).
+			BBox(finalBBox).
+			Matrix(transformToPDF(transform)).
+			XStep(finalBBox.X2 - finalBBox.X1).
+			YStep(finalBBox.Y2 - finalBBox.Y1)
 
-	tp.Finish()
+		tp.Finish()
+	}
+	write(chunk, p.stream.content)
+	sc.registerTextStream(chunk, &p.stream.resourceDictionary, write)
 	cc.streams.patterns = append(cc.streams.patterns, chunk)
 }
 

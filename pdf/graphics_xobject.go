@@ -128,46 +128,57 @@ func (x xObject) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdf
 		transparencyGroupCS = &cs
 	}
 
-	xObjectStream := newFilterStreamFromContentStream(r.stream.content, serializeSettings).finish(serializeSettings)
-	xObj := chunk.FormXObject(rootRef, xObjectStream.encodedData())
-	xObjectStream.writeFilters(xObj.Dict)
+	// okage: the resources come first, so that Document.Finish can write
+	// the stream again when the subset of one of its fonts fails. They are
+	// in another chunk, so the bytes do not change. write keeps no pointer
+	// to the stream, whose content the garbage collector can free (D80).
+	resources := r.stream.resourceDictionary.writeResources(sc, cc.nonStream.resourceDictionaries)
+	bbox := x.bbox()
+	isolated, knockout := r.isolated, r.knockout
+	write := func(chunk *pdfwriter.Chunk, content []byte) {
+		xObjectStream := newFilterStreamFromContentStream(content, serializeSettings).finish(serializeSettings)
+		xObj := chunk.FormXObject(rootRef, xObjectStream.encodedData())
+		xObjectStream.writeFilters(xObj.Dict)
 
-	r.stream.resourceDictionary.toPDFResources(xObj, sc, cc.nonStream.resourceDictionaries)
-	xObj.BBox(rectToPDFRect(x.bbox()))
+		resources.write(xObj)
+		xObj.BBox(rectToPDFRect(bbox))
 
-	if useTransparencyGroup {
-		group := xObj.Group()
-		transparency := group.Transparency()
+		if useTransparencyGroup {
+			group := xObj.Group()
+			transparency := group.Transparency()
 
-		if r.isolated {
-			transparency.Isolated(r.isolated)
-		}
-
-		// okage: the flag K of a knockout group (D68).
-		if r.knockout {
-			transparency.Knockout(true)
-		}
-
-		if transparencyGroupCS != nil {
-			pdfCS := transparency.Insert(pdfwriter.Name("CS"))
-
-			switch transparencyGroupCS.kind {
-			case maybeDeviceRGB:
-				pdfCS.Primitive(pdfwriter.Name(deviceRGB))
-			case maybeDeviceResource:
-				// Can only be SRGB.
-				pdfCS.Primitive(transparencyGroupCS.cs.getRef())
-			default:
-				panic("unreachable")
+			if isolated {
+				transparency.Isolated(isolated)
 			}
+
+			// okage: the flag K of a knockout group (D68).
+			if knockout {
+				transparency.Knockout(true)
+			}
+
+			if transparencyGroupCS != nil {
+				pdfCS := transparency.Insert(pdfwriter.Name("CS"))
+
+				switch transparencyGroupCS.kind {
+				case maybeDeviceRGB:
+					pdfCS.Primitive(pdfwriter.Name(deviceRGB))
+				case maybeDeviceResource:
+					// Can only be SRGB.
+					pdfCS.Primitive(transparencyGroupCS.cs.getRef())
+				default:
+					panic("unreachable")
+				}
+			}
+
+			// Upstream also finishes transparency, which is a reference to
+			// group, so that call does nothing.
+			group.Finish()
 		}
 
-		// Upstream also finishes transparency, which is a reference to
-		// group, so that call does nothing.
-		group.Finish()
+		xObj.Finish()
 	}
-
-	xObj.Finish()
+	write(chunk, r.stream.content)
+	sc.registerTextStream(chunk, &r.stream.resourceDictionary, write)
 	cc.streams.xObjects = append(cc.streams.xObjects, chunk)
 }
 

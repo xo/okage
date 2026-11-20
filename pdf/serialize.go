@@ -6,6 +6,8 @@
 package pdf
 
 import (
+	"log/slog"
+
 	"github.com/xo/okage/internal/pdfwriter"
 	"github.com/xo/okage/internal/siphasher"
 )
@@ -56,6 +58,13 @@ type serializeSettings struct {
 	// draws no SVG glyph.
 	renderSVGGlyphFn SVGGlyphFunc
 
+	// subsetFallback draws the glyphs of a font as paths when its subset
+	// fails, and keeps its text as invisible text. It is not in krilla, and
+	// WithSubsetFallback sets it (D80).
+	subsetFallback bool
+	// logger is the logger of WithLogger, or nil. It is not in krilla (D20).
+	logger *slog.Logger
+
 	// err is the error of an option, such as a version that is not known.
 	// Document.Finish returns it.
 	err error
@@ -81,6 +90,7 @@ func defaultSerializeSettings() serializeSettings {
 		noDeviceCS:             false,
 		configuration:          defaultConfiguration(),
 		enableTagging:          true,
+		subsetFallback:         true,
 	}
 }
 
@@ -166,6 +176,30 @@ func WithPDFVersion(version PDFVersion) Option {
 			return
 		}
 		s.configuration = c
+	}
+}
+
+// WithSubsetFallback is not in krilla. The default is true (D80).
+//
+// When the subset of a font fails in Document.Finish and fallback is true,
+// the document draws each glyph of that font as a path, in the place of
+// the text, with the fill and the stroke of the text. The text stays in
+// the file as invisible text, with the font without its font program, so
+// that a reader can copy and search it. Finish then returns no error for
+// the font, and logs the font and the error of the subset to the logger of
+// WithLogger. When fallback is false, Finish returns the error, as krilla
+// does.
+func WithSubsetFallback(fallback bool) Option {
+	return func(s *serializeSettings) {
+		s.subsetFallback = fallback
+	}
+}
+
+// WithLogger is not in krilla. The document logs to the logger, and
+// without it, the document logs nothing (D20). The default is nil.
+func WithLogger(logger *slog.Logger) Option {
+	return func(s *serializeSettings) {
+		s.logger = logger
 	}
 }
 
@@ -262,6 +296,11 @@ type serializeContext struct {
 	// that a caller can cause, such as a pop without a push. Document.Finish
 	// returns it.
 	err error
+	// textStreams holds each content stream that names a font, and
+	// failedFonts holds each CID font whose subset failed, by the reference
+	// of its font object. They are not in krilla (D80).
+	textStreams []textStream
+	failedFonts map[pdfwriter.Ref]*failedFont
 }
 
 // newSerializeContext is SerializeContext::new in krilla src/serialize.rs.
@@ -351,6 +390,9 @@ func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 	if err := sc.serializeFonts(cc); err != nil {
 		return nil, err
 	}
+	// okage: draw the text of each font whose subset failed as paths
+	// (D80).
+	sc.outlineFailedFonts()
 	if err := sc.serializeXYZDestinations(cc); err != nil {
 		return nil, err
 	}

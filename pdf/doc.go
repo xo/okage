@@ -97,7 +97,8 @@
 //     - ErrPDFInvalidGlyph for a glyph whose range is not a range of its
 //     text, or whose ID is above 65535 in a CID font.
 //     - ErrPDFFont for a font that Document.Finish cannot embed, which
-//     krilla returns too.
+//     krilla returns too. Finish returns it only with
+//     WithSubsetFallback(false) (D80).
 //  4. The cache of the serializer keys each object with a hash. sipHash
 //     hashes a name of the type, then the value, as sip_hash of upstream
 //     hashes a type_id, then the value. stableHash128 gives the hash of
@@ -180,7 +181,7 @@
 //  3. krilla panics for a glyph whose range is not a range of the text, and
 //     for a glyph ID above 65535 in a CID font. DrawGlyphs then records
 //     okage.ErrPDFInvalidGlyph, which Document.Finish returns, and draws
-//     nothing.
+//     nothing. CheckGlyphs gives the same error before the call (D80).
 //  4. harfrust sets no language when it guesses the properties of a text,
 //     and typesetting takes the language of the locale. naiveShape sets no
 //     language, as harfrust does.
@@ -193,6 +194,15 @@
 //     Its default is nil, which draws no SVG glyph, as the default function
 //     of upstream does. pdfsvg.RenderGlyph draws the SVG glyphs, as
 //     render_svg_glyph of krilla-svg does.
+//  8. When the subset of a CID font fails, krilla returns an error. The port
+//     writes the font without its font program, and draws each run of the
+//     font as invisible text, with the text rendering mode 3, so that a
+//     reader can copy and search the text. Each glyph of the run follows
+//     the text object as a path, with the fill and the stroke of the text.
+//     text_fallback.go changes the content streams that show the font, and
+//     only them, so the other bytes of the file do not change.
+//     WithSubsetFallback(false) gives the error of krilla, and WithLogger
+//     takes the logger of the fallback (D80).
 //
 // # The additions for ivy
 //
