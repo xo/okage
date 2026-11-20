@@ -15,68 +15,51 @@ When the change is committed, delete the claim.
 
 From D52.
 
-1. Apply the 69 pending commits of `docs/upstream/typesetting.tsv` in
-   order, as "typesetting" in [`UPSTREAM.md`](UPSTREAM.md) says. D67 applied
-   the commits that fix a panic, a loop or a missing bound on malformed
-   input, and D70 applied five commits that remove allocations of the
-   shaper. Many of the others fix a wrong result on a malformed font.
-2. 33 test files of go-text read the data of
-   `github.com/go-text/typesetting-utils`, and the copy leaves them out.
-   Copy the fonts and the files that they read, each with its license, and
-   put the tests back in their packages, as D63 decides.
-3. In Amiri, `harfbuzz` places a mark on some ligatures of a short text in
-   another place than HarfBuzz 15.1.0. In `لًكنننننن`, U+064B is at the
-   x offset -10,560, and HarfBuzz puts it at -2,176, at a scale of 64 for
-   each unit of the font. U+064E in `هلَكو` has the same fault. In a longer
-   text that holds the same characters, both give the same offset. go-text
-   `v0.3.5` and its commit `bafa8730` have the fault. `FuzzUnsafeToBreak`
-   found it, and its Arabic alphabet leaves out the marks until a fix
-   (D70). Source: D70, 2026-11-19.
-4. Two fuzz targets of go-text fail at the commit `113f0ea` of okage, before
-   D70. `FuzzBreakOptions` finds that the line breaker of `shaping` gives 2
-   graphemes for `"0! ̽"`, and the segmenter gives 3.
-   `FuzzE2EVariableSize` finds that `WrapParagraph` gives 4,787 runes for
-   the 2,550 runes of `benchParagraphLatin`, at the size 16, the width 100
-   and the packed configuration byte 0x55. A pending commit of go-text can
-   fix them. Source: D70, 2026-11-19.
-5. Make the text code faster for a long text. A profile of ivy on 2026-11-20,
-   after D70, puts 23% of the CPU time of the layout of
+1. Make the text code faster for a long text. A profile of ivy on 2026-11-20,
+   after D70, put 23% of the CPU time of the layout of
    `gutenberg/html/pg1342-images.html` and 26% of `gutenberg/txt/pg24264.txt`
-   in `typesetting`. No function takes more than 2%. The time is spread over
-   the lookups of Unicode properties, the line breaker, the bidi algorithm and
-   the shaper. Try these, in this order, and keep the output of each test and
-   the hashes of ivy the same:
-   - Skip the bidi algorithm for a paragraph that has no character of a
-     right-to-left class and no bidi control. `bidi.(*Paragraph).segment`
-     takes 5.5% of the time of `pg24264.txt`, which has no such character. A
-     check of the text before the paragraph is built is enough.
-   - Give the lookups of Unicode properties a fast path for the runes below
-     U+0100, or for a run of ASCII. `unicodedata.gcLookup`,
-     `unicodedata.bidiLookup`, `unicodedata.gbLookup` and
-     `language.LookupScript` each look up every rune in a general table, about
-     4% to 5% of the time.
-   - Decode the UTF-8 of a text once. The segmenter, the split by script and
-     the bidi algorithm each decode the same text again, and
-     `runtime.decoderune` takes 3% of the time of `pg24264.txt`.
+   in `typesetting`. D72 then made four changes: the skip of the bidi
+   algorithm, the fast paths of the lookups below U+0100, the context of the
+   normalizer of `harfbuzz` in its buffer, and the breaker of `LineWrapper`
+   as a value. On 2026-11-20 `test/textbench` measured them with 10 runs on
+   4 CPUs. `BenchmarkEndToEnd` went from 352 to 305 ns/char on `pg24264`
+   (-13%) and from 414 to 350 ns/char on `pg1342` (-15%). Its allocations
+   went from 628,035 to 95 and from 187,416 to 62 for each run of a book.
+   The skip of the bidi algorithm gave most of the time. The fast paths gave
+   -8% on `pg1342`, but +1.7% on `BenchmarkEndToEndWrap` of `pg24264`,
+   because a rune above U+00FF now takes one more call. The two changes of
+   the buffers removed the allocations. Their change of the time is less
+   than 2%. A profile of `BenchmarkEndToEnd` after D72 shows the work that
+   remains.
+   Try these, in this order, and keep the output of each test and the
+   hashes of ivy the same:
+   - Shape a paragraph once, as item 3 says. The shaper takes 51% of the
+     time of `pg24264` and 69% of `pg1342`. The benchmark shapes 1.52 and
+     1.73 characters for each character of the book, so this saves about
+     17% and 29% of the time.
    - Keep the break attributes of a paragraph for all its lines.
-     `segmenter.computeBreakAttributes` and `applyLineBoundaryRules` take 6.6%
-     of the time of `pg24264.txt`, and a program that breaks a paragraph into
-     lines asks for the attributes of the same text again for each line.
-   - Measure `splitByScript`, `splitByFace` and the cache of shape plans
-     (`newShapePlanCached`), which take 2% to 4% together.
-   A change to the copy of go-text needs a decision first, as D65, D67 and
-   D70 had. A change at the calls in `shaping` keeps the copy closer to
-   go-text.
-6. Use SIMD in `typesetting` where the work is a scan or a loop over an array
+     `segmenter.computeBreakAttributes` takes 19% of the time of `pg24264`
+     and 13% of `pg1342`, and a program that breaks a paragraph into lines
+     asks for the attributes of the same text again for each line.
+   - Measure `splitByFace` and `splitByScript`, which take 8% and 6% of the
+     time of `pg24264`. `language.LookupScript` still does a binary search
+     for each rune above U+00FF, about 5% of the time of `pg24264`.
+   - Decode the UTF-8 of a text once. `runtime.decoderune` takes 3% of the
+     time of `pg24264`. D72 does not do this.
+   A change to the copy of go-text needs a decision first, as D65, D67, D70
+   and D72 had. A change at the calls in `shaping` keeps the copy closer to
+   go-text. Source: D72, `test/textbench`, 2026-11-20.
+2. Use SIMD in `typesetting` where the work is a scan or a loop over an array
    (D17, D28). Most of the text code is a table lookup or a state machine for
    each rune, and SIMD does not help there. These places can use it:
    - A scan of the bytes of a text for any byte that can start a right-to-left
-     character or a bidi control, for the skip of item 5.
-   - A scan for a run of ASCII, for the fast paths of item 5.
+     character or a bidi control, for the skip of the bidi algorithm of D72.
+   - A scan for a run of ASCII, for the fast paths of D72.
    - The scale and the rounding of the advances and the offsets of the glyphs
-     in `harfbuzz` (`emScalef`, `roundf`), about 2% to 3% of the time. The
+     in `harfbuzz` (`emScalef`, `roundf`). After D72 they take 9% of the
+     time of `BenchmarkEndToEnd` on `pg24264` and 8% on `pg1342`. The
      rounding must give the same numbers, and D16 and D71 still apply.
-7. Give `shaping` a way to shape a paragraph once and to give the glyphs of a
+3. Give `shaping` a way to shape a paragraph once and to give the glyphs of a
    line from it, as HarfBuzz suggests with the flag unsafe-to-break. Only the
    glyphs next to a cut that is not safe to break need a new shaping. ivy does
    this itself since D70, but it still shapes about 1.3 characters for each
@@ -84,15 +67,27 @@ From D52.
    `pg24264.txt`, because a text that starts or ends inside an earlier text
    shapes again. Source: ivy, item 9 of "Left by the speed of 2026-11-18",
    2026-11-20.
-8. Give the flag unsafe-to-concat of HarfBuzz when a program needs it. D70
+4. Give the flag unsafe-to-concat of HarfBuzz when a program needs it. D70
    gives only the flag unsafe-to-break, and the shaper never sets
    `ProduceUnsafeToConcat`. Source: D70.
+5. `typesetting` drops the whole table GSUB or GPOS when one subtable of a
+   lookup has an error. HarfBuzz sets the offset that fails to null, up to
+   32 offsets for each table, and keeps the rest of the table. To do the
+   same, the parse of each table and the sanitizers of `font` must drop
+   only the part that fails, and `harfbuzz` must accept a missing part.
+   Source: D73, 2026-11-20.
+6. `BenchmarkShaping` of `harfbuzz` does not end on the text
+   `perf_reference/texts/duployan.txt` in the font
+   `NotoSansDuployan-Regular.otf`. At `-benchtime 1x`, one shaping takes
+   more than 90 seconds in okage and in go-text `bafa8730`. The other texts
+   take 5 seconds or less. Find out whether the shaper loops. Source: D76,
+   2026-11-20.
 
 ## lottie
 
-From D41, D42, D43 and D44. The port of velato draws each sampled frame of the 879
-Noto animated emoji within the tolerance of ThorVG. These parts of Lottie are
-not done:
+From D41, D42, D43, D44 and D75. The port of velato draws each sampled
+frame of the 879 Noto animated emoji within the tolerance of ThorVG. These
+parts of Lottie are not done:
 
 1. Expressions. velato and okage ignore them. 29 files of the corpus have
    expressions, and they still pass, because their values are close to the
@@ -100,12 +95,26 @@ not done:
 2. The Gaussian blur, the drop shadow and the effect Set Matte in the
    `PixmapSink`. No file of the corpus uses the first two. 21 layers use Set
    Matte, which velato does not convert, and they still pass.
-3. Image assets. `PixmapSink.DrawImage` draws nothing, and velato leaves the
-   images to the sink. A dotLottie archive keeps its images in the archive,
-   and `DotLottie.FS` gives them (D44).
-4. Text layers, which velato does not parse. A file with one is an error.
-5. The geometric boolean operations of merge paths, for a stroke or a trim
+3. Text layers, which velato does not parse. A file with one is an error.
+4. The geometric boolean operations of merge paths, for a stroke or a trim
    after a merge path of mode 2 to 5 (D42).
+5. The edges of an image that is scaled up and turned (D75). ThorVG fades
+   the edge of such an image into the background over the width of one
+   pixel of the image. The `PixmapSink` antialiases the edge over one pixel
+   of the target. An image of 16 by 12 pixels that is scaled by 3.3 and
+   turned on a canvas of 100 by 100 differs from ThorVG in 4% of the pixels,
+   all at its edges. A turned image at about its own size, and a scaled
+   image that is not turned, are within the tolerance of D43.
+
+## Math
+
+1. Read the OpenType table MATH in `typesetting/font`: the constants, the
+   glyph info and the variants of stretchy glyphs, as the API `hb-ot-math`
+   of HarfBuzz gives them. zuzu needs them to lay out the KaTeX math of the
+   labels of Mermaid. The parser of TeX and the layout of math stay out of
+   okage. A reader of the table is an addition to the copy of go-text, so it
+   needs a decision first. The maintainers deferred it on 2026-11-20.
+   Source: zuzu, 2026-11-20.
 
 ## Fonts in a web format
 
@@ -206,12 +215,7 @@ differences stay:
 
 From D62.
 
-1. Limit the size of a subset of a font. A subset copies the data of a glyph
-   once for each glyph ID that the caller asks for, so a hostile font can
-   make a subset up to 65,536 times the size of its table glyf. Upstream has
-   the same property. Give `internal/subsetter` a limit on its output, and
-   return an error past it. Source: phase 13.
-2. `typesetting` computes the deltas of gvar, HVAR and the blends of CFF2 in
+1. `typesetting` computes the deltas of gvar, HVAR and the blends of CFF2 in
    float32, and skrifa in fixed point. In the instances of `test/krilla`
    that are not the same as the instances of subsetter, between 1 point in
    750 and 1 point in 150 differs by 1 unit. One glyph of
@@ -221,56 +225,32 @@ From D62.
    maintainers accept this within the tolerance of D65. To give the
    instances of subsetter, `typesetting` must compute the deltas in fixed
    point, as skrifa does. Source: phase 13, unit 4.
-3. `path.Path.Stroke` does not end for some paths with a point that is NaN.
-   `PathBuilder` takes such a point, and the bounds of the path leave it
-   out. For example, the stroke of width 2 of a path that moves to NaN,
-   1e38, draws lines to 1, -1.7e38 and -3e38, -2e37, and closes, does not
-   end. tiny-skia has the same fault. `pdf` checks each point before it
-   strokes a path, and returns `ErrPDFInvalidPath` (D66). A program that
-   renders such a path with okage still waits forever. Source: phase 14,
-   the merge of units 5 and 6.
-4. `typesetting` drops the whole table GPOS of `NotoSans_variable.ttf` of
-   krilla, because it cannot read an anchor of a lookup MarkLigPos. The
-   text of that font then has no kerning in `pdf`, and the file differs
-   from the file of krilla. D67 applies the commit `31064bfc` of go-text,
-   which fixes the bounds of the anchors, but the parse still fails with
-   "unsupported Anchor format 281" in the MarkArray of the lookup. Find
-   the fault in the parse of MarkLigPos. `test/krilla` compares the
-   variable fonts with RobotoFlex until it is fixed. Source: phase 16.
-5. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
+2. `pdf/text_glyph_outline.go` and `svg/usvg_text_cache.go` each hold a
    copy of the code that draws an outline of typesetting in the order of
    skrifa. The copy of `pdf` also drops the line back to the start of a
    contour that skrifa starts at its last point, and follows the rules of
    `NopFilterSink` of read-fonts for CFF. The tests of `svg` compare
    images within a tolerance, so the copy of `svg` does not need them yet.
    Move the code into one internal package for both. Source: phase 16.
-6. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
+3. `pdfsvg` draws the filters of SVG with its own port of `filter.rs` of
    krilla-svg (phase 17), and `Surface.DrawRaster` follows the same code
    (D68). D62 item 10 says that the writer uses one code for both. Make
    `pdfsvg` call `Surface.DrawRaster` when both phases are merged. Source:
    phase 18.
-7. `deflateEncode` makes a new zlib writer for each stream, as krilla makes
-   a new encoder. Each writer allocates about 700 KB. A document of 8,192
-   compressed pages allocated 5.8 GB in total, and on wasip1 one cycle of
-   the garbage collector did not end while the program allocated 3.5 GB of
-   them. The program then ran out of its memory of 4 GB. `TestDocumentErrors`
-   now writes those pages without compression. A writer that is reset and
-   used again gives the same bytes and removes the allocations. Source: the
-   nightly run of 2026-11-19.
-8. When the subset of a font fails in `Document.Finish`, draw the glyphs of
+4. When the subset of a font fails in `Document.Finish`, draw the glyphs of
    that font as paths and write the file, or give a method that makes the
    subset of a font before `Finish`. Today one font that the subsetter refuses
    makes the whole file fail. ivy then makes the subset of each font in a file
    of its own, and draws every page again without the font that fails. Source:
    ivy, `pdf/pdfenc`, 2026-11-19.
-9. Export the test of the ranges of `DrawGlyphs`, so that a caller knows that
+5. Export the test of the ranges of `DrawGlyphs`, so that a caller knows that
    the ranges of its glyphs are valid before the call. Today a range that is
    not valid makes `Document.Finish` fail, and ivy tests the ranges itself.
    Source: ivy, `pdf/pdfenc`, 2026-11-19.
-10. Make a Type 3 font from images that the caller gives, each with its text.
-    The writer makes a Type 3 font only from the glyphs of a font file. ivy
-    then writes the glyphs of a Type 3 font of bitmaps in a PDF file as image
-    masks of the page, which each viewer scales down in another way, and it
-    writes a color glyph or a bitmap glyph, such as an emoji, as an image
-    without its text. Source: ivy, "Left by phase 7a" item 3 and "Left by
-    phase 7b" item 2, 2026-11-19.
+6. Make a Type 3 font from images that the caller gives, each with its text.
+   The writer makes a Type 3 font only from the glyphs of a font file. ivy
+   then writes the glyphs of a Type 3 font of bitmaps in a PDF file as image
+   masks of the page, which each viewer scales down in another way, and it
+   writes a color glyph or a bitmap glyph, such as an emoji, as an image
+   without its text. Source: ivy, "Left by phase 7a" item 3 and "Left by
+   phase 7b" item 2, 2026-11-19.

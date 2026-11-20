@@ -100,9 +100,8 @@ Two faults stay:
 2. `FuzzUnsafeToBreak` found a fault of go-text that okage has from
    v0.3.5: in Amiri, the position of a mark such as U+064E on some
    ligatures, such as lam and kaf, differs from HarfBuzz when the text is
-   short. The flags are not the cause. Item 4 of "typesetting" in
-   [`BACKLOG.md`](../BACKLOG.md) records it. The fuzz test leaves the
-   marks out of its Arabic alphabet.
+   short. The flags are not the cause. D73 fixes it, and the Arabic
+   alphabet of the fuzz test holds the marks again.
 
 ## The cost
 

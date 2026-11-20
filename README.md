@@ -172,7 +172,9 @@ okage differs from upstream only where a decision says so:
 14. The subsetter of fonts of `internal/subsetter` runs at most 1,000,000
     operators for one glyph of a CFF font, and makes at most 1,000,000
     instructions. Past either limit, it returns an error. Upstream has no
-    such limit, so a small font can make it run for a very long time. Where
+    such limit, so a small font can make it run for a very long time. It
+    also returns `okage.ErrSubsetTooLarge` when a subset grows larger than
+    8 times the font data plus 1 MiB (D74). Where
     subsetter panics on a font, the port returns an error. The package
     comment of `internal/subsetter` lists the other differences (D62).
 15. `pdf` writes no XMP metadata, where krilla writes it by default, and it
@@ -222,6 +224,10 @@ okage differs from upstream only where a decision says so:
     of stitching functions. Each one holds at most 256 functions, because
     MuPDF 1.28 reads no more. krilla writes one stitching function. The
     tree draws the same gradient (D69).
+22. `Path.Stroke` and `PathStroker.Stroke` of `path` return no path, and
+    `false`, for a path with a point that is NaN or infinite. tiny-skia does
+    not end for some of these paths. A path whose points are finite gives
+    the bytes of tiny-skia (D74).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -248,12 +254,16 @@ okage also adds APIs that upstream does not have:
    the cells, the rules, the runs of text and the ports (D38).
 5. `lottie.Parse` reads a Lottie file, and `lottie.RenderFrame` draws a
    frame of it onto an okage pixmap through `PixmapSink`, the sink of
-   `lottie` that draws with okage (D41).
+   `lottie` that draws with okage (D41). The sink draws the image assets in
+   PNG, JPEG, GIF and WebP, as velato leaves them to the sink. It decodes an
+   image that the file embeds as a `data:` URL, and it reads an image file
+   from the `fs.FS` of the option `lottie.WithFS` (D75).
 6. `lottie.Detect` finds a Lottie document from the start of a file, and
    `lottie.OpenDotLottie` reads a dotLottie archive. `lottie.Load` parses
    either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
    given size, and `FrameCount` and `Duration` count and time the frames
-   (D44).
+   (D44). A composition of a dotLottie archive draws the image files of the
+   archive (D75).
 7. `FontDatabase.LoadFontData` loads a font in WOFF, WOFF2 or EOT, as well
    as TrueType and OpenType data. `svg.ConvertFontData` converts such a font
    to TrueType or OpenType data. `FontDatabase.FaceName` returns a string of

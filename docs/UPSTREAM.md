@@ -222,27 +222,35 @@ applied as a diff of Go code, in the order of the ledger.
 | `<package>/<name>.go`, for each package that D52 copies | `typesetting/<package>/<name>.go` | Port. Apply the diff, with the import paths of okage |
 | `internal/unicodedata/**` | `typesetting/internal/unicodedata/**` | Port |
 | `testutils/**` | `typesetting/testutils/**` | Port |
-| `<package>/<name>_test.go` | `typesetting/<package>/<name>_test.go` | Port, unless the test reads `github.com/go-text/typesetting-utils`. Then it is left out, as D52 says |
+| `<package>/<name>_test.go` | `typesetting/<package>/<name>_test.go` | Port. A test that reads `github.com/go-text/typesetting-utils` imports `typesetting/internal/testfonts` in its place (D63) |
 | `bidi/test/**`, `segmenter/test/**`, `font/testdata/**` | the same path under `typesetting/` | Port, byte for byte |
 | `LICENSE`, `harfbuzz/LICENSE` | `typesetting/LICENSE`, `typesetting/harfbuzz/LICENSE` | Review |
-| `go.mod`, `go.sum` | none | Review. A new requirement is a new dependency of okage (D6) |
+| `go.mod`, `go.sum` | none | Review. A new requirement is a new dependency of okage (D6). A new version of `typesetting-utils` needs the steps of `typesetting/testdata/readme.md` |
 | `fontscan/**` | none | Not applicable. okage does not copy `fontscan` (D52) |
 | `.github/**`, `README.md`, `CODEOWNERS` and the other files of the root | none | Not applicable |
 
+The tests read the files of `typesetting-utils` from copies in
+`typesetting/testdata`, through the package `typesetting/internal/testfonts`
+(D63). okage copies each file that the tests and the benchmarks read, also a
+font that has no license (D76). `typesetting/testdata` is a module of its
+own, so the module `github.com/xo/okage` does not hold the copies. When the
+folder is not there, as in the module cache, a test that reads it skips.
+`typesetting/testdata/readme.md` lists the files and their licenses.
+
 To apply a commit, make a diff of the commit in the checkout, change the
-import paths in the diff, and apply it in `typesetting/`. A test file that
-the copy leaves out is excluded (D52). Run these commands in the root of the
-repository, with the hash of the commit in `c`:
+import paths in the diff, and apply it in `typesetting/`. Run these commands
+in the root of the repository, with the hash of the commit in `c`:
 
 ```bash
-skip=$(git -C upstream/typesetting show --format= --name-only "$c" |
-  while read -r f; do
-    case $f in *_test.go) [ -e "typesetting/$f" ] || echo "--exclude=typesetting/$f" ;; esac
-  done)
 git -C upstream/typesetting show "$c" -- ':!fontscan' |
-  sed -e 's#github.com/go-text/typesetting/#github.com/xo/okage/typesetting/#g' |
-  git apply --directory=typesetting --reject $skip
+  sed -e 's#github.com/go-text/typesetting-utils/#github.com/xo/okage/typesetting/internal/testfonts/#g' \
+    -e 's#github.com/go-text/typesetting/#github.com/xo/okage/typesetting/#g' |
+  git apply --directory=typesetting --reject
 ```
+
+If a test of the commit reads a file of `typesetting-utils` that is not in
+`typesetting/testdata`, copy the file as `typesetting/testdata/readme.md`
+says.
 
 A hunk that does not apply touches a change of okage, which has a comment
 that starts with `okage:`. Apply the hunk by hand, and keep the change of
@@ -602,7 +610,12 @@ On 2026-11-18 eighteen ledgers exist:
    `ported` and 74 are `pending`. D70 applied five more out of order. On
    2026-11-20, okage applied the other 69 pending commits in order. 100
    commits are `ported` and 26 are `not-applicable`, and the column
-   `matched` is `bafa8730`.
+   `matched` is `bafa8730`. On the same day, okage put back the 35 test files
+   that read `typesetting-utils`, at `bafa8730`, with copies of the files that
+   they read (D63). The tests of 5 `not-applicable` commits are in these
+   files. okage copies each file that they read, also a font that has no
+   license, into `typesetting/testdata`, a module of its own (D76). No test
+   skips for a missing font.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
    On 2026-11-20 okage starts to port the commits of krilla after the base

@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `433d0213` of resvg. The maintainers accepted the decisions D1
-to D68. The package `html` parses and lays out the HTML-like labels of
+to D76. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -75,9 +75,9 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45 and D51 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70 and D71, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65, D66 and D68, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
-| working on the Lottie animations of `lottie` | D41, D42, D43 and D44 |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73 and D76, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68 and D74, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the Lottie animations of `lottie` | D41, D42, D43, D44 and D75 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
 | comparing the images of `svg` with resvg or libvips | D23 and D22 |
@@ -250,7 +250,8 @@ When code exists, the code goes here:
 | `html/testdata/tinyhtml5/` | the tests of tinyhtml5, from html5lib-tests, byte for byte (D49) |
 | `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
 | `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
-| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62) |
+| `typesetting/testdata/` | a module of its own, with its own `go.mod` and no Go package, so the module `github.com/xo/okage` does not hold it (D76). It holds the fonts and the test files of `github.com/go-text/typesetting-utils` that the tests of `typesetting` read, byte for byte, with their licenses and a `readme.md` that lists them. The package `typesetting/internal/testfonts` reads them from the disk for the tests, and a test skips when the folder is not there (D63, D76) |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62), and the benchmarks of the speed of `typesetting` on the workloads of ivy in `test/textbench` |
 
 ## Before you stage
 
