@@ -103,7 +103,7 @@ d64a4a9aaa144bca82b375d2da2b11d28c70bb13	2026-10-26	ported		[kern] Avoid rescann
 56a2aae7fcf4056a8bff6f13f569142787b6be73	2026-10-26	ported		[shape] Limit syllable length (#6120) Unbounded syllables can make the USE and Myanmar reordering passes perform quadratic work. Process syllables in configurable chunks of at most 64 glyphs to bound the work performed by each reordering pass.. It changes harfbuzz. Applied out of order for the panics, loops and missing bounds of malformed input (D67).
 d6549ec3f91740bd8d302868ca682b228c796428	2026-10-26	ported		OT: Fuse mask initialization into Unicode properties. It changes harfbuzz
 615a9883cd01d46644961d42352713e789af3d28	2026-10-26	ported		Monotone characters fixups (#5752). It changes harfbuzz
-211ded821b1d021af8697ef71ce3052136d4392d	2026-10-26	pending		[ot-shape] Skip the post-morx digest update if not applying GPOS (#6192). It changes harfbuzz
+211ded821b1d021af8697ef71ce3052136d4392d	2026-10-26	ported		[ot-shape] Skip the post-morx digest update if not applying GPOS (#6192). It changes harfbuzz
 5df28a99aa761e61aeec93a235a09e29fd379ff4	2026-10-26	pending		micro optimize. It changes harfbuzz
 47ed8cabab5d40e310d3788e28f264fd6d81608d	2026-10-26	ported		[arabic] Cap stch expansion per run (#5823). It changes harfbuzz. Applied out of order for the panics, loops and missing bounds of malformed input (D67).
 725e00e81bf158a020b642eddb213664049ca5a6	2026-10-26	pending		[hangul] Apply 'calt' feature to non-Hangul characters in Hangul runs. It changes harfbuzz
