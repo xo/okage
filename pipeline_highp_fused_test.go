@@ -269,6 +269,16 @@ func sameF32x8(a, b *wide.F32x8) (int, bool) {
 // the lanes, and its old body in pipeline_highp_ref_test.go on the same
 // random states. It compares the channels, the context and the destination
 // pixmap bit for bit.
+// withSameRow returns stage with the lanes of g set to lane 0 before it
+// runs, so that bilinear and bicubic take the path for lanes that share
+// their row (D35).
+func withSameRow(stage func(*highpPipeline)) func(*highpPipeline) {
+	return func(p *highpPipeline) {
+		p.g = wide.SplatF32x8(p.g[0])
+		stage(p)
+	}
+}
+
 func TestHighpFused(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -326,6 +336,8 @@ func TestHighpFused(t *testing.T) {
 		{"repeat", (*highpPipeline).repeat, refHighpRepeat},
 		{"bilinear", (*highpPipeline).bilinear, refHighpBilinear},
 		{"bicubic", (*highpPipeline).bicubic, refHighpBicubic},
+		{"bilinearRow", withSameRow((*highpPipeline).bilinear), withSameRow(refHighpBilinear)},
+		{"bicubicRow", withSameRow((*highpPipeline).bicubic), withSameRow(refHighpBicubic)},
 		{"padX1", (*highpPipeline).padX1, refHighpPadX1},
 		{"reflectX1", (*highpPipeline).reflectX1, refHighpReflectX1},
 		{"repeatX1", (*highpPipeline).repeatX1, refHighpRepeatX1},
@@ -398,5 +410,29 @@ func TestHighpFused(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestByteUnit makes sure that each value of byteUnit has the bits of the
+// multiplication of load_8888, which it replaces (D35).
+func TestByteUnit(t *testing.T) {
+	factor := float32(1.0 / 255.0)
+	for v := range 256 {
+		b := uint8(v)
+		want := float32(b) * factor
+		if got := byteUnit[b]; math.Float32bits(got) != math.Float32bits(want) {
+			t.Fatalf("byteUnit[%d] = %v, want %v", v, got, want)
+		}
+	}
+}
+
+// TestByteOver255 makes sure that each value of byteOver255 has the bits of
+// the division of mask_u8, which it replaces (D35).
+func TestByteOver255(t *testing.T) {
+	for v := range 256 {
+		c := wide.SplatF32x8(float32(uint8(v))).Div(wide.SplatF32x8(255.0))
+		if got := byteOver255[v]; math.Float32bits(got) != math.Float32bits(c[0]) {
+			t.Fatalf("byteOver255[%d] = %v, want %v", v, got, c[0])
+		}
 	}
 }

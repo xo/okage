@@ -28,6 +28,12 @@ type rasterPipelineBlitter struct {
 	blitRectRp       *rasterPipeline
 	blitMaskRp       *rasterPipeline
 	isMask           bool
+
+	// Port: hline holds the runs of callHLineBlitter, and rectClip the
+	// blitter of newRectClipBlitter, which upstream makes on the stack
+	// (D35).
+	hline    hlineRuns
+	rectClip rectClipBlitter
 }
 
 // The blitter interface that rasterPipelineBlitter implements.

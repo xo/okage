@@ -176,13 +176,43 @@ func doScanline(l fDot8, top int32, r fDot8, alpha alphaU8, b blitter) {
 // tiny-skia src/scan/hairline_aa.rs.
 const hlineStackBuffer = 100
 
+// hlineRuns holds the runs that callHLineBlitter gives to a blitter.
+//
+// Port: upstream makes the runs on the stack of call_hline_blitter. A slice
+// that goes to the blitter through an interface escapes to the heap in Go, so
+// the rasterPipelineBlitter at the end of the chain of blitters holds them,
+// and a horizontal line makes no allocation (D35). callHLineBlitter writes
+// each value that a blitter reads, so the values of an earlier line do not
+// change the result.
+type hlineRuns struct {
+	aa   [hlineStackBuffer]alphaU8
+	runs [hlineStackBuffer + 1]alphaRun
+}
+
+// hlineRunsOf returns the hlineRuns of the rasterPipelineBlitter that b gives
+// its pixels to, through each rectClipBlitter. For another blitter, it
+// returns new runs. It ports no upstream function.
+func hlineRunsOf(b blitter) *hlineRuns {
+	for {
+		switch t := b.(type) {
+		case *rasterPipelineBlitter:
+			return &t.hline
+		case *rectClipBlitter:
+			b = t.blitter
+		default:
+			return new(hlineRuns)
+		}
+	}
+}
+
 // callHLineBlitter is call_hline_blitter in tiny-skia
 // src/scan/hairline_aa.rs.
 //
 // Port: a nil y is the Rust None.
 func callHLineBlitter(x uint32, y *uint32, count lengthU32, alpha alphaU8, b blitter) {
-	var runs [hlineStackBuffer + 1]alphaRun
-	var aa [hlineStackBuffer]uint8
+	buf := hlineRunsOf(b)
+	runs := &buf.runs
+	aa := &buf.aa
 
 	for {
 		// In theory, we can just do this once (outside of the loop),
@@ -216,7 +246,7 @@ func callHLineBlitter(x uint32, y *uint32, count lengthU32, alpha alphaU8, b bli
 // The name takes the suffix of its module, because src/scan/hairline.rs has a
 // function of the same name (D10).
 func strokePathHairlineAA(p *Path, lineCap LineCap, clip *screenIntRect, b blitter) {
-	strokePathImpl(p, lineCap, clip, antiHairLineRgn, b)
+	strokePathImpl(p, lineCap, clip, lineProcAntiHair, b)
 }
 
 // antiHairLineRgn is anti_hair_line_rgn in tiny-skia src/scan/hairline_aa.rs.
@@ -512,21 +542,14 @@ func doAntiHairline(x0, y0, x1, y1 fDot6, clipOpt *screenIntRect, b blitter) {
 	}
 
 	if clipOpt != nil {
-		b = &rectClipBlitter{blitter: b, clip: *clipOpt}
+		b = newRectClipBlitter(b, *clipOpt)
 	}
 
 	// A bit ugly, but looks like this is the only way to have stack allocated object trait.
-	var hairBlitter antiHairBlitter
-	switch kind {
-	case blitterKindHLine:
-		hairBlitter = hlineAntiHairBlitter{b}
-	case blitterKindHorish:
-		hairBlitter = horishAntiHairBlitter{b}
-	case blitterKindVLine:
-		hairBlitter = vlineAntiHairBlitter{b}
-	case blitterKindVertish:
-		hairBlitter = vertishAntiHairBlitter{b}
-	}
+	//
+	// Port: a value of the interface antiHairBlitter escapes to the heap in
+	// Go, so kindAntiHairBlitter calls the blitter of kind directly (D35).
+	hairBlitter := kindAntiHairBlitter{kind: kind, b: b}
 
 	istartU := uint32(istart)
 
@@ -573,6 +596,51 @@ func contribution64(ordinate fDot6) int32 {
 type antiHairBlitter interface {
 	drawCap(x uint32, fy, slope fDot16, mod64 int32) fDot16
 	drawLine(x, stopX uint32, fy, slope fDot16) fDot16
+}
+
+// The blitters that implement antiHairBlitter.
+var (
+	_ antiHairBlitter = hlineAntiHairBlitter{}
+	_ antiHairBlitter = horishAntiHairBlitter{}
+	_ antiHairBlitter = vlineAntiHairBlitter{}
+	_ antiHairBlitter = vertishAntiHairBlitter{}
+	_ antiHairBlitter = kindAntiHairBlitter{}
+)
+
+// kindAntiHairBlitter is the antiHairBlitter of one blitterKind. It ports no
+// upstream type. doAntiHairline uses it in place of a value of the interface
+// antiHairBlitter, which escapes to the heap in Go (D35).
+type kindAntiHairBlitter struct {
+	kind blitterKind
+	b    blitter
+}
+
+// drawCap calls drawCap of the antiHairBlitter of h.kind.
+func (h kindAntiHairBlitter) drawCap(x uint32, fy, slope fDot16, mod64 int32) fDot16 {
+	switch h.kind {
+	case blitterKindHLine:
+		return hlineAntiHairBlitter{h.b}.drawCap(x, fy, slope, mod64)
+	case blitterKindHorish:
+		return horishAntiHairBlitter{h.b}.drawCap(x, fy, slope, mod64)
+	case blitterKindVLine:
+		return vlineAntiHairBlitter{h.b}.drawCap(x, fy, slope, mod64)
+	default:
+		return vertishAntiHairBlitter{h.b}.drawCap(x, fy, slope, mod64)
+	}
+}
+
+// drawLine calls drawLine of the antiHairBlitter of h.kind.
+func (h kindAntiHairBlitter) drawLine(x, stopX uint32, fy, slope fDot16) fDot16 {
+	switch h.kind {
+	case blitterKindHLine:
+		return hlineAntiHairBlitter{h.b}.drawLine(x, stopX, fy, slope)
+	case blitterKindHorish:
+		return horishAntiHairBlitter{h.b}.drawLine(x, stopX, fy, slope)
+	case blitterKindVLine:
+		return vlineAntiHairBlitter{h.b}.drawLine(x, stopX, fy, slope)
+	default:
+		return vertishAntiHairBlitter{h.b}.drawLine(x, stopX, fy, slope)
+	}
 }
 
 // hlineAntiHairBlitter is HLineAntiHairBlitter in tiny-skia
@@ -798,6 +866,22 @@ type rectClipBlitter struct {
 	clip    screenIntRect
 	aa      [2]alphaU8
 	runs    [3]alphaRun
+}
+
+// newRectClipBlitter returns a rectClipBlitter that clips the pixels of b to
+// clip. It ports no upstream function.
+//
+// Port: upstream makes the rectClipBlitter on the stack. A value that goes
+// to the blitters through an interface escapes to the heap in Go, so a
+// rasterPipelineBlitter holds one rectClipBlitter, and doAntiHairline makes
+// no allocation for each line (D35). A clipped line ends before the next
+// line starts, so one is enough.
+func newRectClipBlitter(b blitter, clip screenIntRect) blitter {
+	if t, ok := b.(*rasterPipelineBlitter); ok {
+		t.rectClip = rectClipBlitter{blitter: b, clip: clip}
+		return &t.rectClip
+	}
+	return &rectClipBlitter{blitter: b, clip: clip}
 }
 
 // yInRect is y_in_rect, an inner function of RectClipBlitter::blit_anti_h in

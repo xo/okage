@@ -18,8 +18,28 @@ const floatPi float32 = 3.14159265
 
 // lineProc is LineProc in tiny-skia src/scan/hairline.rs.
 //
-// Port: a nil clip is the Rust None.
-type lineProc func(points []Point, clip *screenIntRect, b blitter)
+// Port: upstream passes a function. Go names the function with a constant
+// and calls it directly in call. Points that go to a function value escape
+// to the heap in Go, and a cubic curve gives up to 513 points (D35).
+type lineProc uint8
+
+// The functions that a lineProc names.
+const (
+	// lineProcHair is hair_line_rgn.
+	lineProcHair lineProc = iota
+	// lineProcAntiHair is anti_hair_line_rgn.
+	lineProcAntiHair
+)
+
+// call calls the function that lp names. A nil clip is the Rust None. It
+// ports no upstream function.
+func (lp lineProc) call(points []Point, clip *screenIntRect, b blitter) {
+	if lp == lineProcAntiHair {
+		antiHairLineRgn(points, clip, b)
+		return
+	}
+	hairLineRgn(points, clip, b)
+}
 
 // maxCubicSubdivideLevel is MAX_CUBIC_SUBDIVIDE_LEVEL in tiny-skia
 // src/scan/hairline.rs.
@@ -33,7 +53,7 @@ const maxQuadSubdivideLevel uint8 = 5
 // name takes the suffix of its module, because src/scan/hairline_aa.rs has a
 // function of the same name (D10).
 func strokePathHairline(p *Path, lineCap LineCap, clip *screenIntRect, b blitter) {
-	strokePathImpl(p, lineCap, clip, hairLineRgn, b)
+	strokePathImpl(p, lineCap, clip, lineProcHair, b)
 }
 
 // hairLineRgn is hair_line_rgn in tiny-skia src/scan/hairline.rs.
@@ -227,7 +247,7 @@ func strokePathImpl(p *Path, lineCap LineCap, clip *screenIntRect, lp lineProc, 
 				extendPts(lineCap, prevVerb, nextVerb, hasNextVerb, points[:])
 			}
 
-			lp(points[:], clip, b)
+			lp.call(points[:], clip, b)
 			lastPt = pt
 			lastPt2 = points[0]
 		case path.PathSegmentQuadTo:
@@ -273,7 +293,7 @@ func strokePathImpl(p *Path, lineCap LineCap, clip *screenIntRect, lp lineProc, 
 				// cap moveTo/close to match svg expectations for degenerate segments
 				extendPts(lineCap, prevVerb, nextVerb, hasNextVerb, points[:])
 			}
-			lp(points[:], clip, b)
+			lp.call(points[:], clip, b)
 			lastPt2 = points[0]
 		}
 
@@ -454,7 +474,7 @@ func hairQuad2(points *[3]Point, clip *screenIntRect, level uint8, lp lineProc, 
 	}
 
 	tmp[lines] = points[2]
-	lp(tmp[0:lines+1], clip, b)
+	lp.call(tmp[0:lines+1], clip, b)
 }
 
 // computeQuadLevel is compute_quad_level in tiny-skia src/scan/hairline.rs.
@@ -563,7 +583,7 @@ func lt90(p0, pivot, p2 Point) bool {
 func hairCubic2(points *[4]Point, clip *screenIntRect, lp lineProc, b blitter) {
 	lines := computeCubicSegments(points)
 	if lines == 1 {
-		lp([]Point{points[0], points[3]}, clip, b)
+		lp.call([]Point{points[0], points[3]}, clip, b)
 		return
 	}
 
@@ -590,7 +610,7 @@ func hairCubic2(points *[4]Point, clip *screenIntRect, lp lineProc, b blitter) {
 	}
 	if allFinite {
 		tmp[lines] = points[3]
-		lp(tmp[0:lines+1], clip, b)
+		lp.call(tmp[0:lines+1], clip, b)
 	}
 	// else some point(s) are non-finite, so do not draw
 }

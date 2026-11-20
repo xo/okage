@@ -140,10 +140,10 @@ func (m *PixmapMut) drawPixmapAligned(
 // with the float32 operations of the stages gather, scale_1_float, mask_u8,
 // load_dst, source_over and store of highp (D53).
 func sourceOverAligned(s, d *[BytesPerPixel]byte, opacity float32, scaled bool, cover uint8) {
-	const factor float32 = 1.0 / 255.0
+	// The bytes become floats as load_8888 makes them, from byteUnit.
 	var c [BytesPerPixel]float32
 	for i := range c {
-		c[i] = float32(s[i]) * factor
+		c[i] = byteUnit[s[i]]
 	}
 	if scaled {
 		for i := range c {
@@ -151,14 +151,14 @@ func sourceOverAligned(s, d *[BytesPerPixel]byte, opacity float32, scaled bool, 
 		}
 	}
 	if cover != 255 {
-		k := float32(cover) / 255.0
+		k := byteOver255[cover]
 		for i := range c {
 			c[i] = float32(c[i] * k)
 		}
 	}
 	inv := invHighp(c[3])
 	for i := range c {
-		dc := float32(d[i]) * factor
+		dc := byteUnit[d[i]]
 		d[i] = uint8(unnormLane(madHighp(dc, inv, c[i])))
 	}
 }

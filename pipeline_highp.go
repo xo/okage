@@ -446,11 +446,12 @@ func (*highpPipeline) loadMaskU8() {
 // maskU8 is mask_u8 in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) maskU8() {
 	offset := p.maskCtx.offset(p.dx, p.dy)
+	// Port (D35): byteOver255 holds the value of c / 255 for each byte, in
+	// place of the conversion and c.div(255).
 	var c wide.F32x8
 	for i := range p.tail {
-		c[i] = float32(p.maskCtx.data[offset+i])
+		c[i] = byteOver255[p.maskCtx.data[offset+i]]
 	}
-	c = c.Div(wide.SplatF32x8(255.0))
 
 	if c.Equal(wide.F32x8{}) {
 		return
@@ -918,14 +919,17 @@ func colorBurnHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 //	    ),
 //	)
 func colorBurnHighpLane(s, d, sa, da float32) float32 {
+	// Port (D35): s * inv(da) and d * inv(sa) are computed first, with inv
+	// written out, so that the Go compiler inlines the function.
+	sInvDa, dInvSa := float32(s*(1-da)), float32(d*(1-sa))
 	if d == da {
-		return d + float32(s*invHighp(da))
+		return d + sInvDa
 	}
 	if s == 0 {
-		return float32(d * invHighp(sa))
+		return dInvSa
 	}
 	m := wide.LaneMin(da, float32(float32((da-d)*sa)*(1/s)))
-	return float32(sa*(da-m)) + float32(s*invHighp(da)) + float32(d*invHighp(sa))
+	return float32(sa*(da-m)) + sInvDa + dInvSa
 }
 
 // colorDodge is the stage color_dodge of blend_fn2! in tiny-skia
@@ -958,14 +962,17 @@ func colorDodgeHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
 //	    ),
 //	)
 func colorDodgeHighpLane(s, d, sa, da float32) float32 {
+	// Port (D35): s * inv(da) and d * inv(sa) are computed first, as
+	// colorBurnHighpLane does.
+	sInvDa, dInvSa := float32(s*(1-da)), float32(d*(1-sa))
 	if d == 0 {
-		return float32(s * invHighp(da))
+		return sInvDa
 	}
 	if s == sa {
-		return s + float32(d*invHighp(sa))
+		return s + dInvSa
 	}
 	m := wide.LaneMin(da, float32(float32(d*sa)*(1/(sa-s))))
-	return float32(sa*m) + float32(s*invHighp(da)) + float32(d*invHighp(sa))
+	return float32(sa*m) + sInvDa + dInvSa
 }
 
 // hardLight is the stage hard_light of blend_fn2! in tiny-skia
@@ -1099,23 +1106,22 @@ func softLightHighpLane(s, d, sa, da float32) float32 {
 //
 // Anything extra we add beyond that is to make the math work with premul inputs.
 
-// blendFn3 applies f to all the channels at once, as the macro blend_fn3! of
-// tiny-skia src/pipeline/highp.rs does, and calls the next stage.
-func (p *highpPipeline) blendFn3(f func(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F32x8, wide.F32x8)) {
-	tr, tg, tb, ta := f(p.r, p.g, p.b, p.a, p.dr, p.dg, p.db, p.da)
-	p.r = tr
-	p.g = tg
-	p.b = tb
-	p.a = ta
+// The macro blend_fn3! of tiny-skia src/pipeline/highp.rs makes a stage that
+// applies its function to all the channels at once, and calls the next
+// stage.
+//
+// Port (D35): each stage calls its function directly, not through a function
+// value, and the function changes the channels of the pipeline in place, so
+// that no channel is copied.
 
+// hue is the stage hue of blend_fn3! in tiny-skia src/pipeline/highp.rs.
+func (p *highpPipeline) hue() {
+	hueK(&p.r, &p.g, &p.b, &p.a, &p.dr, &p.dg, &p.db, &p.da)
 	p.nextStage()
 }
 
-// hue is the stage hue of blend_fn3! in tiny-skia src/pipeline/highp.rs.
-func (p *highpPipeline) hue() { p.blendFn3(hueK) }
-
 // hueK is hue_k in tiny-skia src/pipeline/highp.rs.
-func hueK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F32x8, wide.F32x8) {
+func hueK(r, g, b, a, dr, dg, db, da *wide.F32x8) {
 	// Port (D33): one loop on the lanes, with the lane versions of sat, lum,
 	// setSat, setLum and clipColor.
 	for i := range r {
@@ -1135,16 +1141,17 @@ func hueK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F
 		b[i] = float32(bi*invHighp(dai)) + float32(dbi*invHighp(ai)) + bb
 		a[i] = ai + dai - float32(ai*dai)
 	}
-
-	return r, g, b, a
 }
 
 // saturation is the stage saturation of blend_fn3! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) saturation() { p.blendFn3(saturationK) }
+func (p *highpPipeline) saturation() {
+	saturationK(&p.r, &p.g, &p.b, &p.a, &p.dr, &p.dg, &p.db, &p.da)
+	p.nextStage()
+}
 
 // saturationK is saturation_k in tiny-skia src/pipeline/highp.rs.
-func saturationK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F32x8, wide.F32x8) {
+func saturationK(r, g, b, a, dr, dg, db, da *wide.F32x8) {
 	// Port (D33): one loop on the lanes, with the lane versions of sat, lum,
 	// setSat, setLum and clipColor.
 	for i := range r {
@@ -1164,15 +1171,16 @@ func saturationK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8,
 		b[i] = float32(bi*invHighp(dai)) + float32(dbi*invHighp(ai)) + bb
 		a[i] = ai + dai - float32(ai*dai)
 	}
-
-	return r, g, b, a
 }
 
 // color is the stage color of blend_fn3! in tiny-skia src/pipeline/highp.rs.
-func (p *highpPipeline) color() { p.blendFn3(colorK) }
+func (p *highpPipeline) color() {
+	colorK(&p.r, &p.g, &p.b, &p.a, &p.dr, &p.dg, &p.db, &p.da)
+	p.nextStage()
+}
 
 // colorK is color_k in tiny-skia src/pipeline/highp.rs.
-func colorK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F32x8, wide.F32x8) {
+func colorK(r, g, b, a, dr, dg, db, da *wide.F32x8) {
 	// Port (D33): one loop on the lanes, with the lane versions of sat, lum,
 	// setSat, setLum and clipColor.
 	for i := range r {
@@ -1191,16 +1199,17 @@ func colorK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide
 		b[i] = float32(bi*invHighp(dai)) + float32(dbi*invHighp(ai)) + bb
 		a[i] = ai + dai - float32(ai*dai)
 	}
-
-	return r, g, b, a
 }
 
 // luminosity is the stage luminosity of blend_fn3! in tiny-skia
 // src/pipeline/highp.rs.
-func (p *highpPipeline) luminosity() { p.blendFn3(luminosityK) }
+func (p *highpPipeline) luminosity() {
+	luminosityK(&p.r, &p.g, &p.b, &p.a, &p.dr, &p.dg, &p.db, &p.da)
+	p.nextStage()
+}
 
 // luminosityK is luminosity_k in tiny-skia src/pipeline/highp.rs.
-func luminosityK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8, wide.F32x8, wide.F32x8) {
+func luminosityK(r, g, b, a, dr, dg, db, da *wide.F32x8) {
 	// Port (D33): one loop on the lanes, with the lane versions of sat, lum,
 	// setSat, setLum and clipColor.
 	for i := range r {
@@ -1219,8 +1228,6 @@ func luminosityK(r, g, b, a, dr, dg, db, da wide.F32x8) (wide.F32x8, wide.F32x8,
 		b[i] = float32(bi*invHighp(dai)) + float32(dbi*invHighp(ai)) + bb
 		a[i] = ai + dai - float32(ai*dai)
 	}
-
-	return r, g, b, a
 }
 
 // sat is sat in tiny-skia src/pipeline/highp.rs.
@@ -1305,13 +1312,12 @@ func (p *highpPipeline) sourceOverRgba() {
 	// Port (D33): one loop on the lanes. It loads a pixel as load_8888 does,
 	// computes mad(dr, inv(a), r) for each channel, and stores the pixel as
 	// store_8888 does.
-	const factor float32 = 1.0 / 255.0
 	for i := range highpStageWidth {
 		px := (*[BytesPerPixel]byte)(pixels[i*BytesPerPixel:])
-		dr := float32(float32(px[0]) * factor)
-		dg := float32(float32(px[1]) * factor)
-		db := float32(float32(px[2]) * factor)
-		da := float32(float32(px[3]) * factor)
+		dr := byteUnit[px[0]]
+		dg := byteUnit[px[1]]
+		db := byteUnit[px[2]]
+		da := byteUnit[px[3]]
 		p.dr[i], p.dg[i], p.db[i], p.da[i] = dr, dg, db, da
 
 		invA := invHighp(p.a[i])
@@ -1421,17 +1427,28 @@ func (p *highpPipeline) bilinear() {
 
 	// Port (D33): one loop on the lanes. Upstream: fx = (x + 0.5).fract(),
 	// wx = [1.0 - fx, fx], and the same for y.
+	//
+	// Port (D35): if the lanes share their row, as they do when the
+	// transform has no rotation and no skew, the weights and the rows of y
+	// are found once, from lane 0. Each lane gets the same bits.
+	row := sameLanes(&y)
 	var wx, wy [2]wide.F32x8
 	for i := range x {
 		fx := x[i] + 0.5
 		fx -= wide.LaneFloor(fx)
+		wx[0][i], wx[1][i] = 1.0-fx, fx
+	}
+	for i := range y {
 		fy := y[i] + 0.5
 		fy -= wide.LaneFloor(fy)
-		wx[0][i], wx[1][i] = 1.0-fx, fx
 		wy[0][i], wy[1][i] = 1.0-fy, fy
+		if row {
+			wy[0], wy[1] = wide.SplatF32x8(wy[0][0]), wide.SplatF32x8(wy[1][0])
+			break
+		}
 	}
 
-	sampler2x2(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, &p.r, &p.g, &p.b, &p.a)
+	sampler2x2(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
@@ -1444,17 +1461,29 @@ func (p *highpPipeline) bicubic() {
 	// Port (D33): one loop on the lanes. Upstream: fx = (x + 0.5).fract(),
 	// wx = [bicubic_far(1.0 - fx), bicubic_near(1.0 - fx), bicubic_near(fx),
 	// bicubic_far(fx)], and the same for y.
+	//
+	// Port (D35): if the lanes share their row, the weights and the rows of
+	// y are found once, as bilinear does.
+	row := sameLanes(&y)
 	var wx, wy [4]wide.F32x8
 	for i := range x {
 		fx := x[i] + 0.5
 		fx -= wide.LaneFloor(fx)
+		wx[0][i], wx[1][i], wx[2][i], wx[3][i] = bicubicFar(1.0-fx), bicubicNear(1.0-fx), bicubicNear(fx), bicubicFar(fx)
+	}
+	for i := range y {
 		fy := y[i] + 0.5
 		fy -= wide.LaneFloor(fy)
-		wx[0][i], wx[1][i], wx[2][i], wx[3][i] = bicubicFar(1.0-fx), bicubicNear(1.0-fx), bicubicNear(fx), bicubicFar(fx)
 		wy[0][i], wy[1][i], wy[2][i], wy[3][i] = bicubicFar(1.0-fy), bicubicNear(1.0-fy), bicubicNear(fy), bicubicFar(fy)
+		if row {
+			for j := range wy {
+				wy[j] = wide.SplatF32x8(wy[j][0])
+			}
+			break
+		}
 	}
 
-	sampler4x4(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, &p.r, &p.g, &p.b, &p.a)
+	sampler4x4(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
@@ -1497,31 +1526,53 @@ func bicubicFar(t float32) float32 {
 // Port (D33): one loop on the lanes. Upstream samples the four pixels with
 // sample, at x = cx - 0.5 and x + 1.0, and y = cy - 0.5 and y + 1.0, and
 // adds each one with w = wx[i] * wy[j], as r = mad(w, rr, r), the same for g,
-// b and a. Port (D35): sampleCtx tiles and clamps each coordinate once for
-// its column or its row of pixels, not once for each pixel. Each pixel gets
-// the same operations in the same order, so the bits are the same.
+// b and a. Port (D35): it tiles and clamps each coordinate once for its
+// column or its row of pixels, not once for each pixel. Each pixel gets
+// the same operations in the same order, so the bits are the same. If row is
+// true, the lanes of cy have the same bits, and the rows are found once, from
+// lane 0.
 func sampler2x2(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
 	cx, cy wide.F32x8,
 	wx, wy *[2]wide.F32x8,
+	row bool,
 	r, g, b, a *wide.F32x8,
 ) {
 	s := newSampleCtx(pixmap, ctx)
 	const start = -0.5
+	var ys [2]int32
 	for l := range highpStageWidth {
-		var xs, ys [2]int32
-		x, y := cx[l]+start, cy[l]+start
-		for i := range 2 {
-			xs[i], ys[i] = s.column(x), s.row(y)
+		if l == 0 || !row {
+			y := cy[l] + start
+			for j := range ys {
+				yt := y
+				if !s.pad {
+					yt = tile(yt, s.mode, s.height, s.invH)
+				}
+				ys[j] = clampIndex(yt, s.h) * s.stride
+				y += 1.0
+			}
+		}
+		var xs [2]int32
+		x := cx[l] + start
+		for i := range xs {
+			xt := x
+			if !s.pad {
+				xt = tile(xt, s.mode, s.width, s.invW)
+			}
+			xs[i] = clampIndex(xt, s.w)
 			x += 1.0
-			y += 1.0
 		}
 		var rl, gl, bl, al float32
-		for j := range 2 {
-			for i := range 2 {
+		for j := range ys {
+			for i := range xs {
 				w := float32(wx[i][l] * wy[j][l])
-				rl, gl, bl, al = s.add(xs[i], ys[j], w, rl, gl, bl, al)
+				px := s.pixel(ys[j] + xs[i])
+				rl = madHighp(w, byteUnit[px[0]], rl)
+				gl = madHighp(w, byteUnit[px[1]], gl)
+				bl = madHighp(w, byteUnit[px[2]], bl)
+				al = madHighp(w, byteUnit[px[3]], al)
 			}
 		}
 		r[l], g[l], b[l], a[l] = rl, gl, bl, al
@@ -1531,33 +1582,65 @@ func sampler2x2(
 // sampler4x4 is sampler_4x4 in tiny-skia src/pipeline/highp.rs.
 //
 // Port (D33, D35): one loop on the lanes, as sampler2x2 does, with the
-// sixteen pixels from cx - 1.5 and cy - 1.5.
+// sixteen pixels from cx - 1.5 and cy - 1.5, and row as sampler2x2 has it.
 func sampler4x4(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
 	cx, cy wide.F32x8,
 	wx, wy *[4]wide.F32x8,
+	row bool,
 	r, g, b, a *wide.F32x8,
 ) {
 	s := newSampleCtx(pixmap, ctx)
 	const start = -1.5
+	var ys [4]int32
 	for l := range highpStageWidth {
-		var xs, ys [4]int32
-		x, y := cx[l]+start, cy[l]+start
-		for i := range 4 {
-			xs[i], ys[i] = s.column(x), s.row(y)
+		if l == 0 || !row {
+			y := cy[l] + start
+			for j := range ys {
+				yt := y
+				if !s.pad {
+					yt = tile(yt, s.mode, s.height, s.invH)
+				}
+				ys[j] = clampIndex(yt, s.h) * s.stride
+				y += 1.0
+			}
+		}
+		var xs [4]int32
+		x := cx[l] + start
+		for i := range xs {
+			xt := x
+			if !s.pad {
+				xt = tile(xt, s.mode, s.width, s.invW)
+			}
+			xs[i] = clampIndex(xt, s.w)
 			x += 1.0
-			y += 1.0
 		}
 		var rl, gl, bl, al float32
-		for j := range 4 {
-			for i := range 4 {
+		for j := range ys {
+			for i := range xs {
 				w := float32(wx[i][l] * wy[j][l])
-				rl, gl, bl, al = s.add(xs[i], ys[j], w, rl, gl, bl, al)
+				px := s.pixel(ys[j] + xs[i])
+				rl = madHighp(w, byteUnit[px[0]], rl)
+				gl = madHighp(w, byteUnit[px[1]], gl)
+				bl = madHighp(w, byteUnit[px[2]], bl)
+				al = madHighp(w, byteUnit[px[3]], al)
 			}
 		}
 		r[l], g[l], b[l], a[l] = rl, gl, bl, al
 	}
+}
+
+// sameLanes reports whether the lanes of v have the same bits. It ports no
+// upstream function (D35).
+func sameLanes(v *wide.F32x8) bool {
+	b := math.Float32bits(v[0])
+	for _, x := range v[1:] {
+		if math.Float32bits(x) != b {
+			return false
+		}
+	}
+	return true
 }
 
 // sampleCtx holds what sample of tiny-skia src/pipeline/highp.rs reads for
@@ -1569,6 +1652,7 @@ type sampleCtx struct {
 	w, h          float32
 	invW, invH    float32
 	stride        int32
+	pad           bool
 	mode          SpreadMode
 }
 
@@ -1586,38 +1670,23 @@ func newSampleCtx(pixmap PixmapRef, ctx *samplerCtx) sampleCtx {
 		invW:   ctx.invWidth,
 		invH:   ctx.invHeight,
 		stride: int32(pixmap.Width()),
+		pad:    ctx.spreadMode == SpreadModePad,
 		mode:   ctx.spreadMode,
 	}
 }
 
-// column returns the column of the pixel at x, as sample tiles x and
-// gather_ix clamps and truncates it.
-func (s *sampleCtx) column(x float32) int32 {
-	if s.mode != SpreadModePad {
-		x = tile(x, s.mode, s.width, s.invW)
-	}
-	return wide.TruncI32(wide.LaneMin(wide.LaneMax(x, 0), s.w))
+// clampIndex returns the column or the row of the pixel at v, as gather_ix
+// clamps v to limit and truncates it. The samplers tile v first, as sample
+// does, if the spread mode is not pad.
+func clampIndex(v, limit float32) int32 {
+	return wide.TruncI32(wide.LaneMin(wide.LaneMax(v, 0), limit))
 }
 
-// row returns the row of the pixel at y, as column does for x.
-func (s *sampleCtx) row(y float32) int32 {
-	if s.mode != SpreadModePad {
-		y = tile(y, s.mode, s.height, s.invH)
-	}
-	return wide.TruncI32(wide.LaneMin(wide.LaneMax(y, 0), s.h))
-}
-
-// add loads the pixel at column x and row y, as gather and load_8888 do, and
-// adds it with the weight w to r, g, b and a, as mad(w, rr, r) does.
-func (s *sampleCtx) add(x, y int32, w, r, g, b, a float32) (float32, float32, float32, float32) {
-	const factor float32 = 1.0 / 255.0
-	j := int(uint32(y*s.stride+x)) * BytesPerPixel
-	px := (*[BytesPerPixel]byte)(s.pixels[j : j+BytesPerPixel])
-	r = madHighp(w, float32(float32(px[0])*factor), r)
-	g = madHighp(w, float32(float32(px[1])*factor), g)
-	b = madHighp(w, float32(float32(px[2])*factor), b)
-	a = madHighp(w, float32(float32(px[3])*factor), a)
-	return r, g, b, a
+// pixel returns the bytes of the pixel at index ix, the sum of a rowOffset
+// and a column, as gather does.
+func (s *sampleCtx) pixel(ix int32) *[BytesPerPixel]byte {
+	j := int(uint32(ix)) * BytesPerPixel
+	return (*[BytesPerPixel]byte)(s.pixels[j : j+BytesPerPixel])
 }
 
 // tile is tile in tiny-skia src/pipeline/highp.rs.
@@ -2149,15 +2218,43 @@ func load8888Highp(
 	r, g, b, a *wide.F32x8,
 ) {
 	// Surprisingly, `f32 * FACTOR` is way faster than `f32x8 * f32x8::splat(FACTOR)`.
-
-	const factor float32 = 1.0 / 255.0
-
+	//
+	// Port (D35): byteUnit holds f32 * FACTOR for each byte.
 	for i := range highpStageWidth {
-		r[i] = float32(data[i*BytesPerPixel]) * factor
-		g[i] = float32(data[i*BytesPerPixel+1]) * factor
-		b[i] = float32(data[i*BytesPerPixel+2]) * factor
-		a[i] = float32(data[i*BytesPerPixel+3]) * factor
+		r[i] = byteUnit[data[i*BytesPerPixel]]
+		g[i] = byteUnit[data[i*BytesPerPixel+1]]
+		b[i] = byteUnit[data[i*BytesPerPixel+2]]
+		a[i] = byteUnit[data[i*BytesPerPixel+3]]
 	}
+}
+
+// byteUnit holds float32(v) * (1.0 / 255.0) for each byte v, the value of a
+// channel that load_8888 of tiny-skia src/pipeline/highp.rs computes. A
+// lookup gives the same bits as the multiplication, and it is faster (D35).
+var byteUnit = makeByteUnit()
+
+// byteOver255 holds float32(v) / 255.0 for each byte v, the coverage that
+// mask_u8 of tiny-skia src/pipeline/highp.rs computes. A lookup gives the
+// same bits as the division (D35).
+var byteOver255 = makeByteOver255()
+
+// makeByteOver255 returns the values of byteOver255.
+func makeByteOver255() [256]float32 {
+	var t [256]float32
+	for v := range t {
+		t[v] = float32(uint8(v)) / 255.0
+	}
+	return t
+}
+
+// makeByteUnit returns the values of byteUnit.
+func makeByteUnit() [256]float32 {
+	const factor float32 = 1.0 / 255.0
+	var t [256]float32
+	for v := range t {
+		t[v] = float32(uint8(v)) * factor
+	}
+	return t
 }
 
 // load8888TailHighp is load_8888_tail in tiny-skia src/pipeline/highp.rs.
