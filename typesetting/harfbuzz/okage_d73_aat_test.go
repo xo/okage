@@ -2,7 +2,11 @@
 
 package harfbuzz
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/xo/okage/typesetting/font/opentype/tables"
+)
 
 // okage: the tests of the audit of D73 of the commits of HarfBuzz after
 // 873dbc1e that change the AAT code. test/harfbuzz compares the same fonts
@@ -67,7 +71,14 @@ func morxLigature() morxAuditSubtable {
 // goes to the state 2, where the class 1, out of bounds, replaces the
 // current glyph with the lookup.
 func morxContextual(classTable, lookup []byte) morxAuditSubtable {
-	states := u16s(0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0)
+	return morxContextualStates(classTable, u16s(0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0), lookup)
+}
+
+// morxContextualStates builds a contextual subtable with the class table,
+// the rows of the states for the four classes and the substitution lookup.
+// The entry 0 does nothing, the entry 1 goes to the state 2, and the entry
+// 2 replaces the current glyph with the lookup.
+func morxContextualStates(classTable, states, lookup []byte) morxAuditSubtable {
 	entries := u16s(0, 0, 0xFFFF, 0xFFFF, 2, 0, 0xFFFF, 0xFFFF, 0, 0, 0xFFFF, 0)
 	substitutions := append(u32s(4), lookup...)
 	classOffset := 20
@@ -186,4 +197,53 @@ func TestKernNegativeState(t *testing.T) {
 		{"ab", []shapedGlyph{{robotoA, 0, 1084, -30, 0}, {robotoB, 1, 1109, -40, 0}}},
 		{"aab", []shapedGlyph{{robotoA, 0, 1084, -30, 0}, {robotoA, 1, 1074, -40, 0}, {robotoB, 2, 1149, 0, 0}}},
 	})
+}
+
+// TestLookupSegmentsOutOfOrder shapes c and cccc with a contextual
+// subtable whose class table is a lookup of format 2 with the segments x,
+// a and z, out of order. In each state, the class 1, out of bounds,
+// replaces c with d. As the commit 77be62a733 of HarfBuzz, in 15.1.0,
+// collects them, the glyphs from a to z go into the set of the subtable at
+// the first segment out of order. So c is in the set, and the subtable
+// applies. go-text added only x, a and z, and did not apply the subtable
+// (D73).
+func TestLookupSegmentsOutOfOrder(t *testing.T) {
+	classTable := u16s(2, 6, 3, 12, 1, 6, int(robotoX), int(robotoX), 1, int(robotoA), int(robotoA), 1, int(robotoZ), int(robotoZ), 1)
+	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
+	morx := morxAuditTable(morxContextualStates(classTable, states, u16s(8, int(robotoC), 1, int(robotoD))))
+	d := shapedGlyph{robotoD, 0, 1155, 0, 0}
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"c", []shapedGlyph{d}},
+		{"cccc", []shapedGlyph{d, {robotoD, 1, 1155, 0, 0}, {robotoD, 2, 1155, 0, 0}, {robotoD, 3, 1155, 0, 0}}},
+	})
+}
+
+// TestLookupSegmentsCollect collects the glyphs of lookups of format 2. At
+// the first segment out of order, one range from the first to the last
+// glyph of the rest of the segments takes their place. A segment whose
+// first glyph is after its last glyph adds nothing.
+func TestLookupSegmentsCollect(t *testing.T) {
+	for _, test := range []struct {
+		segments [][2]tables.GlyphID
+		want     [][2]uint32
+	}{
+		{[][2]tables.GlyphID{{1, 3}, {5, 5}, {8, 9}}, [][2]uint32{{1, 3}, {5, 5}, {8, 9}}},
+		{[][2]tables.GlyphID{{10, 12}, {5, 6}, {20, 21}}, [][2]uint32{{5, 21}}},
+		{[][2]tables.GlyphID{{1, 3}, {9, 4}, {5, 6}, {2, 2}, {7, 7}}, [][2]uint32{{1, 7}}},
+		{[][2]tables.GlyphID{{5, 6}, {0, 0}, {9, 4}, {3, 3}}, [][2]uint32{{0, 3}, {5, 6}}},
+		{[][2]tables.GlyphID{{1, 3}, {3, 4}, {9, 8}}, [][2]uint32{{1, 4}}},
+		{[][2]tables.GlyphID{{0, 0xFFFE}, {0, 0xFFFE}}, [][2]uint32{{0, 0xFFFE}}},
+	} {
+		var got, want intSet
+		collectSegmentGlyphs(&got, test.segments)
+		for _, r := range test.want {
+			want.addRange(r[0], r[1])
+		}
+		for g := uint32(0); g < 0x10000; g++ {
+			if got.has(g) != want.has(g) {
+				t.Errorf("%v: glyph %d is in the set: %v, want %v", test.segments, g, got.has(g), want.has(g))
+				break
+			}
+		}
+	}
 }

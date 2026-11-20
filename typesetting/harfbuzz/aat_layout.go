@@ -877,6 +877,11 @@ func (sp *otShapePlan) aatLayoutPosition(font *Font, buffer *Buffer) {
 }
 
 func collectLookupGlyphs(dst *intSet, src tables.AatLookupMixed) {
+	switch src.(type) {
+	case tables.AATLoopkup2, tables.AATLoopkupExt2:
+		collectSegmentGlyphs(dst, src.Coverage())
+		return
+	}
 	for _, r := range src.Coverage() {
 		dst.addRange(uint32(r[0]), uint32(r[1]))
 	}
@@ -1001,6 +1006,45 @@ func collectLookupFiltered(dst *intSet, lookup tables.AATLookup, filter *aatClas
 		addValues(lookup.FirstGlyph, lookup.Values)
 	case tables.AATLoopkup10:
 		addValues(lookup.FirstGlyph, lookup.Values)
+	}
+}
+
+// collectSegmentGlyphs adds the glyphs of the segments of a lookup of
+// format 2, in their order in the lookup, to dst.
+//
+// okage: collectSegmentGlyphs follows LookupFormat2::collect_glyphs of
+// HarfBuzz 15.1.0, from its commit 77be62a733. The segments of a lookup
+// must be sorted and disjoint, but nothing checks it. So at the first
+// segment out of order, one range from the first to the last glyph of the
+// rest of the segments takes their place. The set then holds more glyphs,
+// and it only tells whether a subtable can apply. go-text added each
+// segment. So NewFont took 1.3 seconds for a chain of 20 subtables, each
+// with 65,000 segments over all the glyphs (D73).
+func collectSegmentGlyphs(dst *intSet, segments [][2]tables.GlyphID) {
+	next := uint32(0) // one past the last glyph added
+	i := 0
+	for ; i < len(segments); i++ {
+		first, last := uint32(segments[i][0]), uint32(segments[i][1])
+		if first < next {
+			break // not sorted and disjoint
+		}
+		if first > last {
+			continue
+		}
+		dst.addRange(first, last)
+		next = last + 1
+	}
+
+	low, high := uint32(math.MaxUint32), uint32(0)
+	for ; i < len(segments); i++ {
+		first, last := uint32(segments[i][0]), uint32(segments[i][1])
+		if first > last {
+			continue
+		}
+		low, high = min(low, first), max(high, last)
+	}
+	if low <= high {
+		dst.addRange(low, high)
 	}
 }
 

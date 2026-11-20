@@ -65,7 +65,14 @@ func morxLigature() morxAuditSubtable {
 // goes to the state 2, where the class 1, out of bounds, replaces the
 // current glyph with the lookup.
 func morxContextual(classTable, lookup []byte) morxAuditSubtable {
-	states := u16s(0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0)
+	return morxContextualStates(classTable, u16s(0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 0, 0), lookup)
+}
+
+// morxContextualStates builds a contextual subtable with the class table,
+// the rows of the states for the four classes and the substitution lookup.
+// The entry 0 does nothing, the entry 1 goes to the state 2, and the entry
+// 2 replaces the current glyph with the lookup.
+func morxContextualStates(classTable, states, lookup []byte) morxAuditSubtable {
 	entries := u16s(0, 0, 0xFFFF, 0xFFFF, 2, 0, 0xFFFF, 0xFFFF, 0, 0, 0xFFFF, 0)
 	substitutions := append(u32s(4), lookup...)
 	classOffset := 20
@@ -161,4 +168,17 @@ func kernNegativeState() []byte {
 // ec4a38c4ab. Before it, HarfBuzz refused the table.
 func TestKernNegativeState(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kernNegativeState()}), false, "ab", "ba", "aab", "abab", "abc")
+}
+
+// TestLookupSegmentsOutOfOrder: a contextual subtable whose class table is
+// a lookup of format 2 with the segments x, a and z, out of order. In each
+// state, the class 1, out of bounds, replaces c with d. From its commit
+// 77be62a733, HarfBuzz adds the glyphs from a to z to the set of the
+// subtable, at the first segment out of order. So c is in the set, and
+// the subtable applies.
+func TestLookupSegmentsOutOfOrder(t *testing.T) {
+	classTable := u16s(2, 6, 3, 12, 1, 6, robotoX, robotoX, 1, robotoA, robotoA, 1, robotoZ, robotoZ, 1)
+	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
+	morx := morxAuditTable(morxContextualStates(classTable, states, u16s(8, robotoC, 1, robotoD)))
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "bcb", "cccc", "bbbb")
 }
