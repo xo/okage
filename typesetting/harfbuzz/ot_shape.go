@@ -540,7 +540,7 @@ func hideDefaultIgnorables(buffer *Buffer, font *Font) {
 			}
 		}
 	} else {
-		otLayoutDeleteGlyphsInplace(buffer, (*GlyphInfo).isDefaultIgnorable)
+		buffer.deleteGlyphsInplace((*GlyphInfo).isDefaultIgnorable)
 	}
 }
 
