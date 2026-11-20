@@ -674,8 +674,7 @@ func (s stateTableDriver) drive(c driverContext, ac *aatApplyContext) {
 				nextState == stateStartOfText &&
 				startStateSafeToBreakEot &&
 				isNotActionable &&
-				isNotEpsilonTransition &&
-				lastRange == -1
+				isNotEpsilonTransition
 
 			if isNullTransition {
 				oldKlass := class
