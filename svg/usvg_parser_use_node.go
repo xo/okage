@@ -45,47 +45,42 @@ func convertUseNode(
 
 	// We require an original transformation to setup 'clipPath'.
 	origTs := node.resolveTransform(AIdTransform, state)
-	newTs := path.DefaultTransform()
 
-	{
-		x := node.convertUserLength(AIdX, useState, svgtypes.LengthZero())
-		y := node.convertUserLength(AIdY, useState, svgtypes.LengthZero())
-		newTs = newTs.PreTranslate(x, y)
-	}
+	x := node.convertUserLength(AIdX, useState, svgtypes.LengthZero())
+	y := node.convertUserLength(AIdY, useState, svgtypes.LengthZero())
+	newTs := path.TransformFromTranslate(x, y)
 
 	linkedToSymbol := child.hasTagName(EIdSymbol)
 
 	if linkedToSymbol {
-		// If a `use` element has a width/height attribute and references a symbol
-		// then relative units (like percentages) should be resolved relative
-		// to the width/height of the `use` element, and not the original SVG.
-		// This is why we need to (potentially) adapt the view box here.
-		{
-			def := svgtypes.NewLength(100.0, svgtypes.LengthUnitPercent)
-			x := useState.viewBox.X()
-			y := useState.viewBox.Y()
+		symbolX := child.convertUserLength(AIdX, useState, svgtypes.LengthZero())
+		symbolY := child.convertUserLength(AIdY, useState, svgtypes.LengthZero())
+		width, height := symbolSize(node, child, useState)
 
-			width := useState.viewBox.Width()
-			if node.hasAttribute(AIdWidth) {
-				width = node.convertUserLength(AIdWidth, useState, def)
-			}
-
-			height := useState.viewBox.Height()
-			if node.hasAttribute(AIdHeight) {
-				height = node.convertUserLength(AIdHeight, useState, def)
-			}
-
-			// Fail silently if the rect is not valid.
-			if r, ok := path.NonZeroRectFromXYWH(x, y, width, height); ok {
-				useState.viewBox = r
-			}
+		// Relative units inside the symbol are resolved against its viewport,
+		// and not the original SVG.
+		// Fail silently if the rect is not valid.
+		if r, ok := path.NonZeroRectFromXYWH(
+			useState.viewBox.X(),
+			useState.viewBox.Y(),
+			width,
+			height,
+		); ok {
+			useState.viewBox = r
 		}
 
-		if ts, ok := viewboxTransform(node, child, useState); ok {
+		newTs = newTs.PreTranslate(symbolX, symbolY)
+		if ts, ok := viewboxTransform(child, width, height); ok {
 			newTs = newTs.PreConcat(ts)
 		}
 
-		if clipRect, ok := getClipRect(node, child, useState); ok {
+		var clipRect NonZeroRect
+		hasClipRect := false
+		if clipsContent(child) {
+			clipRect, hasClipRect = path.NonZeroRectFromXYWH(x+symbolX, y+symbolY, width, height)
+		}
+
+		if hasClipRect {
 			g := clipElement(node, clipRect, origTs, useState, cache)
 			g.absTransform = parent.absTransform
 
@@ -168,13 +163,13 @@ func convertSvg(
 ) {
 	// We require original transformation to setup 'clipPath'.
 	origTs := node.resolveTransform(AIdTransform, state)
-	newTs := path.DefaultTransform()
 
 	x := node.convertUserLength(AIdX, state, svgtypes.LengthZero())
 	y := node.convertUserLength(AIdY, state, svgtypes.LengthZero())
-	newTs = newTs.PreTranslate(x, y)
+	w, h := svgSize(node, state)
 
-	if ts, ok := viewboxTransform(node, node, state); ok {
+	newTs := path.TransformFromTranslate(x, y)
+	if ts, ok := viewboxTransform(node, w, h); ok {
 		newTs = newTs.PreConcat(ts)
 	}
 
@@ -185,18 +180,6 @@ func convertSvg(
 		newState.viewBox = vb
 	} else {
 		// No `viewBox` attribute? Then use `x`, `y`, `width` and `height` instead.
-		w, h := useNodeSize(node, state)
-
-		// If attributes `width` and/or `height` are provided on the `use` element,
-		// then these values will override the corresponding attributes
-		// on the `svg` in the generated tree.
-		if state.hasUseWidth {
-			w = state.useWidth
-		}
-		if state.hasUseHeight {
-			h = state.useHeight
-		}
-
 		if r, ok := path.NonZeroRectFromXYWH(x, y, w, h); ok {
 			newState.viewBox = r
 		} else {
@@ -204,7 +187,7 @@ func convertSvg(
 		}
 	}
 
-	if clipRect, ok := getClipRect(node, node, state); ok {
+	if clipRect, ok := getClipRect(node, x, y, w, h, state); ok {
 		g := clipElement(node, clipRect, origTs, state, cache)
 		g.absTransform = parent.absTransform.PreConcat(origTs)
 		convertChildrenUseNode(node, newTs, newState, cache, false, g)
@@ -298,40 +281,24 @@ func convertChildrenUseNode(
 
 // getClipRect is get_clip_rect in usvg src/parser/use_node.rs.
 func getClipRect(
-	useNode svgNode,
-	symbolNode svgNode,
+	node svgNode,
+	x float32,
+	y float32,
+	w float32,
+	h float32,
 	state *converterState,
 ) (NonZeroRect, bool) {
-	// No need to clip elements with overflow:visible.
-	if v, ok := symbolNode.attributeStr(AIdOverflow); ok && (v == "visible" || v == "auto") { //nolint:goconst // an SVG keyword, as upstream writes it
+	if !clipsContent(node) {
 		return NonZeroRect{}, false
 	}
 
 	// A nested `svg` with only the `viewBox` attribute and no "rectangle" (x, y, width, height)
 	// should not be clipped.
-	if useNode.hasTagName(EIdSvg) {
-		// Nested `svg` referenced by `use` still should be clipped, but by `use` bounds.
-		if !state.hasUseWidth && !state.hasUseHeight {
-			if !useNode.hasAttribute(AIdWidth) || !useNode.hasAttribute(AIdHeight) {
-				return NonZeroRect{}, false
-			}
-		}
-	}
-
-	x := useNode.convertUserLength(AIdX, state, svgtypes.LengthZero())
-	y := useNode.convertUserLength(AIdY, state, svgtypes.LengthZero())
-	w, h := useNodeSize(useNode, state)
-
-	if useNode.hasTagName(EIdSvg) {
-		// If attributes `width` and/or `height` are provided on the `use` element,
-		// then these values will override the corresponding attributes
-		// on the `svg` in the generated tree.
-		if state.hasUseWidth {
-			w = state.useWidth
-		}
-		if state.hasUseHeight {
-			h = state.useHeight
-		}
+	// Nested `svg` referenced by `use` still should be clipped, but by `use` bounds.
+	if !state.hasUseWidth &&
+		!state.hasUseHeight &&
+		!(node.hasAttribute(AIdWidth) && node.hasAttribute(AIdHeight)) {
+		return NonZeroRect{}, false
 	}
 
 	if !isValidLength32(w) || !isValidLength32(h) {
@@ -341,43 +308,54 @@ func getClipRect(
 	return path.NonZeroRectFromXYWH(x, y, w, h)
 }
 
-// useNodeSize is use_node_size in usvg src/parser/use_node.rs.
-func useNodeSize(node svgNode, state *converterState) (float32, float32) {
+// clipsContent is clips_content in usvg src/parser/use_node.rs.
+func clipsContent(node svgNode) bool {
+	v, ok := node.attributeStr(AIdOverflow)
+	return !ok || (v != "visible" && v != "auto") //nolint:goconst // an SVG keyword, as upstream writes it
+}
+
+// svgSize is svg_size in usvg src/parser/use_node.rs.
+func svgSize(node svgNode, state *converterState) (float32, float32) {
 	def := svgtypes.NewLength(100.0, svgtypes.LengthUnitPercent)
 	w := node.convertUserLength(AIdWidth, state, def)
 	h := node.convertUserLength(AIdHeight, state, def)
+
+	// If attributes `width` and/or `height` are provided on the `use` element,
+	// then these values will override the corresponding attributes
+	// on the `svg` in the generated tree.
+	if state.hasUseWidth {
+		w = state.useWidth
+	}
+	if state.hasUseHeight {
+		h = state.useHeight
+	}
 	return w, h
 }
 
-// viewboxTransform is viewbox_transform in usvg src/parser/use_node.rs.
-func viewboxTransform(
-	node svgNode,
-	linked svgNode,
-	state *converterState,
-) (Transform, bool) {
-	w, h := useNodeSize(node, state)
-
-	if node.hasTagName(EIdSvg) {
-		// If attributes `width` and/or `height` are provided on the `use` element,
-		// then these values will override the corresponding attributes
-		// on the `svg` in the generated tree.
-		if state.hasUseWidth {
-			w = state.useWidth
+// symbolSize is symbol_size in usvg src/parser/use_node.rs.
+func symbolSize(useNode svgNode, symbol svgNode, state *converterState) (float32, float32) {
+	def := svgtypes.NewLength(100.0, svgtypes.LengthUnitPercent)
+	length := func(aid AId) float32 {
+		node := symbol
+		if useNode.hasAttribute(aid) {
+			node = useNode
 		}
-		if state.hasUseHeight {
-			h = state.useHeight
-		}
+		return node.convertUserLength(aid, state, def)
 	}
+	return length(AIdWidth), length(AIdHeight)
+}
 
+// viewboxTransform is viewbox_transform in usvg src/parser/use_node.rs.
+func viewboxTransform(node svgNode, w, h float32) (Transform, bool) {
 	size, ok := path.SizeFromWH(w, h)
 	if !ok {
 		return Transform{}, false
 	}
-	rect, ok := linked.parseViewbox()
+	rect, ok := node.parseViewbox()
 	if !ok {
 		return Transform{}, false
 	}
-	aspect, ok := nodeAttribute(linked, AIdPreserveAspectRatio, fromValueAspectRatio)
+	aspect, ok := nodeAttribute(node, AIdPreserveAspectRatio, fromValueAspectRatio)
 	if !ok {
 		aspect = svgtypes.DefaultAspectRatio()
 	}
