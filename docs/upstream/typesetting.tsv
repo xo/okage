@@ -52,7 +52,7 @@ d373f8ac2945ad8105952f64dd4d3fdbf02f626d	2026-09-30	ported		[segmenter] restart 
 71b2f6d135a4636717de8ae530f3a54f2238cd8f	2026-09-30	ported		[font] cmap4: wrap iterator glyph deltas to 16 bits. It changes font
 995755fa355a7455cf204dad81b221b4a0ce8b01	2026-09-30	ported		[font] cmap0: skip glyph 0 instead of byte 0. It changes font
 45139db4a4af07d7a89919eff092cfeb8d03c26f	2026-09-30	ported		[font] cmap10: drop subtables whose start code overflows rune. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
-7a608982d4b3f9da5ca310bdd56d28adb3dae7dd	2026-09-30	pending		[font] cmap: exclude glyph 0 from Lookup and RuneRanges. It changes font
+7a608982d4b3f9da5ca310bdd56d28adb3dae7dd	2026-09-30	ported		[font] cmap: exclude glyph 0 from Lookup and RuneRanges. It changes font
 54959099dd93f17b938f39bdb8ef716b2690d4a4	2026-09-30	not-applicable		[fontscan] skip glyph 0 on the iterator path of rune coverage. It changes only fontscan, which okage does not copy
 cc144d5672dc21afc58d7a7cbdce9582c14e6054	2026-09-30	ported		[font] svg: check document offset+length without uint32 wrap. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The hunks of svg_test.go are applied by hand, because the copy of that file leaves out the tests that read typesetting-utils
 b17dec7aaa67a1f19df950ba19e7d62168c7e48a	2026-09-30	pending		[font] svg: report failure on a corrupt gzip glyph document. It changes font
