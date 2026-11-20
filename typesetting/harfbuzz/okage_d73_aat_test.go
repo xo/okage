@@ -101,8 +101,12 @@ func TestMorxDeletedGlyphSet(t *testing.T) {
 // array, and the right classes are 0, 3, 4 and 2 bytes. The array has three
 // rows: 0, 0, 0, then 0, -80, 30, then 0, -50, -20.
 func kerxFormat2() kerxSubtable {
-	left := u16s(8, int(robotoA), 4, 0, 6, 12, 18)
-	right := u16s(8, int(robotoA), 4, 0, 3, 4, 2)
+	return kerxFormat2Lookups(u16s(8, int(robotoA), 4, 0, 6, 12, 18), u16s(8, int(robotoA), 4, 0, 3, 4, 2))
+}
+
+// kerxFormat2Lookups builds the subtable of kerxFormat2 with the lookups
+// of the left and the right classes.
+func kerxFormat2Lookups(left, right []byte) kerxSubtable {
 	array := u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)
 	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
 	data = append(data, left...)
@@ -133,4 +137,25 @@ func TestKerxFormat2(t *testing.T) {
 	last := kerxFormat2()
 	last.length = 12 + len(last.data) - 6
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(last)}), []shapedText{cb, cc, dd})
+}
+
+// TestLookupFormat10ValueSize shapes ab with a table kerx whose first
+// subtable has a lookup of format 10 for its left classes, then a subtable
+// of format 0 that kerns a, b. The values of the lookup have 0 to 5 bytes.
+// As in HarfBuzz 15.1.0, a size of 0 bytes or of more than 4 bytes is an
+// error, and the table has no subtable. The commit a763a612d1 of HarfBuzz
+// refuses the size 0. go-text read the values as two bytes for each size,
+// and kerned a, b (D73).
+func TestLookupFormat10ValueSize(t *testing.T) {
+	kerned := []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoB, 1, 999, -150, 0}}
+	plain := []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}
+	for _, test := range []struct {
+		size int
+		want []shapedGlyph
+	}{{0, plain}, {1, kerned}, {2, kerned}, {4, kerned}, {5, plain}} {
+		left := u16s(10, test.size, int(robotoA), 3, 0, 6, 12)
+		kerx := kerxTable(kerxFormat2Lookups(left, u16s(8, int(robotoA), 3, 0, 2, 4)), kerxPairs(int(robotoA), int(robotoB), -300))
+		face := fontWithLayout(t, map[string][]byte{"kerx": kerx})
+		testShapedFace(t, face, []shapedText{{"ab", test.want}})
+	}
 }

@@ -95,8 +95,12 @@ func TestMorxDeletedGlyphSet(t *testing.T) {
 // array, and the right classes are 0, 3, 4 and 2 bytes. The array has three
 // rows: 0, 0, 0, then 0, -80, 30, then 0, -50, -20.
 func kerxFormat2() kerxSubtable {
-	left := u16s(8, robotoA, 4, 0, 6, 12, 18)
-	right := u16s(8, robotoA, 4, 0, 3, 4, 2)
+	return kerxFormat2Lookups(u16s(8, robotoA, 4, 0, 6, 12, 18), u16s(8, robotoA, 4, 0, 3, 4, 2))
+}
+
+// kerxFormat2Lookups builds the subtable of kerxFormat2 with the lookups
+// of the left and the right classes.
+func kerxFormat2Lookups(left, right []byte) kerxSubtable {
 	array := u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)
 	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
 	data = append(data, left...)
@@ -119,4 +123,18 @@ func TestKerxFormat2(t *testing.T) {
 	last := kerxFormat2()
 	last.length = 12 + len(last.data) - 6
 	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(last)}), false, texts...)
+}
+
+// TestLookupFormat10ValueSize: a table kerx whose first subtable has a
+// lookup of format 10 for its left classes, then a subtable of format 0
+// that kerns a, b. HarfBuzz refuses a lookup of format 10 whose values
+// have 0 bytes, from its commit a763a612d1, or more than 4 bytes, and then
+// refuses the whole table. The test shapes only a, b, because HarfBuzz
+// reads no class from a lookup of format 10, and harfbuzz does.
+func TestLookupFormat10ValueSize(t *testing.T) {
+	for _, size := range []int{0, 1, 2, 4, 5} {
+		left := u16s(10, size, robotoA, 3, 0, 6, 12)
+		kerx := kerxTable(kerxFormat2Lookups(left, u16s(8, robotoA, 3, 0, 2, 4)), kerxPairs(robotoA, robotoB, -300))
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "aab")
+	}
 }

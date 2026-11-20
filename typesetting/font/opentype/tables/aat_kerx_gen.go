@@ -108,6 +108,12 @@ func ParseAATLoopkupExt10(src []byte) (AATLoopkupExt10, int, error) {
 	item.FirstGlyph = binary.BigEndian.Uint16(src[4:])
 	arrayLengthValues := int(binary.BigEndian.Uint16(src[6:]))
 	n += 8
+	// okage: the size of a value is 1 to 4 bytes, as the sanitizer of
+	// HarfBuzz 15.1.0 requires. The commit a763a612d1 of HarfBuzz refuses
+	// the size 0 (D73).
+	if item.unitSize < 1 || item.unitSize > 4 {
+		return item, 0, fmt.Errorf("reading AATLoopkupExt10: invalid value size %d", item.unitSize)
+	}
 
 	{
 
