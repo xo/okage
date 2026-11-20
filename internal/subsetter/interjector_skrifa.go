@@ -310,7 +310,7 @@ func newGlyphInstance(s *skrifaInterjector) *glyphInstance {
 		}
 	}
 	slices.SortFunc(tbls, func(a, b ot.Table) int { return cmp.Compare(a.Tag, b.Tag) })
-	ld, err := ot.NewLoader(ot.NewSlicedResource(ot.WriteTTF(tbls)))
+	ld, err := ot.NewLoader(ot.NewSlicedResource(ot.WriteOpentype(tbls, ot.TrueType)))
 	if err != nil {
 		return inst
 	}
