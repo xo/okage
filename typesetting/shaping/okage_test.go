@@ -4,11 +4,13 @@ package shaping
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/language"
+	"github.com/xo/okage/typesetting/segmenter"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -65,14 +67,12 @@ func TestUnsafeToBreak(t *testing.T) {
 // for a character that the font does not have, such as U+01EC, when a mark
 // is elsewhere in the text, and it does not mark such a cluster as unsafe
 // to break. The alphabets leave such characters out. The Arabic alphabet
-// also leaves out the marks, such as U+064E, because okage does not place
-// a mark on some ligatures as HarfBuzz does, as "typesetting" in
-// docs/BACKLOG.md says.
+// holds the marks U+064B to U+0652 (D73).
 func FuzzUnsafeToBreak(f *testing.F) {
 	roboto := loadOpentypeFont(f, "../font/testdata/Roboto-Regular.ttf")
 	amiri := loadOpentypeFont(f, "../font/testdata/Amiri-Regular.ttf")
 	latin := []rune("AVWTYLPFKkoaecfilty0147.,;:'\" -()/")
-	arabic := []rune("ابتجحدرسعفقكلمنهويةءأإـ،؟ ١٢")
+	arabic := []rune("ابتجحدرسعفقكلمنهويةءأإـ،؟ ١٢\u064b\u064c\u064d\u064e\u064f\u0650\u0651\u0652")
 	f.Add([]byte("AVA Wave, To. office"), false)
 	f.Add([]byte("bismillah ar-rahman"), true)
 	f.Fuzz(func(t *testing.T, data []byte, isArabic bool) {
@@ -240,4 +240,66 @@ func BenchmarkShape(b *testing.B) {
 			buf = shaper.ShapeInto(input, buf).Glyphs
 		}
 	})
+}
+
+// okage: the tests of D73.
+
+// TestWrapParagraphTruncatorRunes wraps the input of D73 that
+// FuzzE2EVariableSize found: 21 lines with the policy Always. The lines
+// give each rune of the text once, and the truncator at the end gives the
+// truncated runes. FuzzE2EVariableSize counted the truncated runes twice.
+func TestWrapParagraphTruncatorRunes(t *testing.T) {
+	text := []rune(benchParagraphLatin)
+	var shaper HarfbuzzShaper
+	out := shaper.Shape(Input{
+		Text: text, RunEnd: len(text), Direction: di.DirectionRTL,
+		Face: loadOpentypeFont(t, "../font/testdata/Amiri-Regular.ttf"), Size: fixed.I(16),
+		Script: language.Arabic, Language: language.NewLanguage("AR"),
+	})
+	config := WrapConfig{TruncateAfterLines: 21, BreakPolicy: Always}
+	var l LineWrapper
+	lines, truncated := l.WrapParagraph(config, 100, text, NewSliceIterator([]Output{out}))
+	if len(lines) != config.TruncateAfterLines || truncated == 0 {
+		t.Fatalf("got %d lines and %d truncated runes, want %d lines and some truncated runes", len(lines), truncated, config.TruncateAfterLines)
+	}
+	last := lines[len(lines)-1]
+	if got, want := last[len(last)-1].Runes, (Range{Offset: len(text) - truncated, Count: truncated}); got != want {
+		t.Fatalf("got the truncator runes %v, want %v", got, want)
+	}
+	runes := 0
+	for _, line := range lines {
+		for _, run := range line {
+			if run.Runes.Offset != runes {
+				t.Fatalf("got the rune offset %d, want %d", run.Runes.Offset, runes)
+			}
+			runes += run.Runes.Count
+		}
+	}
+	if runes != len(text) {
+		t.Fatalf("got %d runes with the truncator, want %d", runes, len(text))
+	}
+}
+
+// TestBreakerGraphemeInsideLine breaks the input of D73 that
+// FuzzBreakOptions found. UAX #14 can break the line after the space and
+// before U+033D (LB10 and LB18), but UAX #29 keeps the two in one grapheme
+// cluster (GB9). The breaker gives the clusters of the whole text, so the
+// first line has no cluster that ends at the space.
+func TestBreakerGraphemeInsideLine(t *testing.T) {
+	var seg segmenter.Segmenter
+	seg.Init([]rune("0! ̽"))
+	breaker := newBreaker(&seg)
+	var got [][]int
+	for word, ok := breaker.nextWordBreak(); ok; word, ok = breaker.nextWordBreak() {
+		line := []int{word.breakAtRune}
+		for g, ok := breaker.nextGraphemeBreak(); ok; g, ok = breaker.nextGraphemeBreak() {
+			line = append(line, g.breakAtRune)
+		}
+		got = append(got, line)
+	}
+	// Each line holds its break, then the ends of its clusters.
+	want := [][]int{{2, 0, 1}, {3, 3}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
 }

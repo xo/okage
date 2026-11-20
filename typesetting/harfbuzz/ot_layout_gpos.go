@@ -635,8 +635,15 @@ func resolveCrossOffset(pos []GlyphPosition,
 
 func (c *otApplyContext) applyGPOSMarks(marks tables.MarkArray, markIndex, glyphIndex int, anchors tables.AnchorMatrix, glyphPos int) bool {
 	buffer := c.buffer
-	markClass := marks.MarkRecords[markIndex].MarkClass
-	markAnchor := marks.MarkAnchors[markIndex]
+	// okage: a mark of the coverage without a record of the MarkArray has
+	// the class 0 and an anchor at (0, 0), the Null MarkRecord of HarfBuzz
+	// (D73).
+	var markClass uint16
+	var markAnchor tables.Anchor = tables.AnchorFormat1{}
+	if markIndex < len(marks.MarkRecords) {
+		markClass = marks.MarkRecords[markIndex].MarkClass
+		markAnchor = marks.MarkAnchors[markIndex]
+	}
 
 	glyphAnchor := anchors.AnchorBytes(glyphIndex, int(markClass))
 	// If this subtable doesn't have an anchor for this base and this class,

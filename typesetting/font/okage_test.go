@@ -3,9 +3,11 @@
 package font
 
 // okage: this file is not in go-text. It tests the changes of D67 to
-// sanitizeLangSys and newCmap4.
+// sanitizeLangSys and newCmap4, and the change of D73 to the anchors of a
+// MarkArray.
 
 import (
+	"os"
 	"slices"
 	"testing"
 
@@ -71,5 +73,60 @@ func TestCmap4FullSegment(t *testing.T) {
 		GlyphIDArray:   array,
 	}); err == nil {
 		t.Error("a segment that ends before it starts gives no error")
+	}
+}
+
+// TestMarkArrayNullAnchor checks that a mark record with a null offset has
+// an anchor at (0, 0), as the Null anchor of HarfBuzz (D73).
+func TestMarkArrayNullAnchor(t *testing.T) {
+	src := []byte{
+		0, 2, // two mark records
+		0, 1, 0, 0, // the class 1 and a null offset
+		0, 0, 0, 10, // the class 0 and the anchor at 10
+		0, 1, 0, 7, 0xFF, 0xFE, // the anchor of format 1 at (7, -2)
+	}
+	marks, _, err := tables.ParseMarkArray(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][2]int16{{0, 0}, {7, -2}}
+	if len(marks.MarkAnchors) != len(want) {
+		t.Fatalf("got %d anchors, want %d", len(marks.MarkAnchors), len(want))
+	}
+	for i, anchor := range marks.MarkAnchors {
+		got, ok := anchor.(tables.AnchorFormat1)
+		if !ok || got.XCoordinate != want[i][0] || got.YCoordinate != want[i][1] {
+			t.Errorf("anchor %d: got %+v, want an anchor of format 1 at %v", i, anchor, want[i])
+		}
+	}
+}
+
+// TestNotoSansVariableGPOS loads NotoSans-Regular_var.ttf, the same file
+// as NotoSans_variable.ttf of krilla. Six mark records of its lookup 35, a
+// MarkLigPos, have a null anchor offset, and go-text dropped the whole
+// table GPOS of the font (D73).
+func TestNotoSansVariableGPOS(t *testing.T) {
+	file, err := os.Open("../../internal/subsetter/testdata/NotoSans-Regular_var.ttf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	face, err := ParseTTF(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := len(face.GPOS.Lookups); got != 40 {
+		t.Fatalf("got %d lookups of GPOS, want 40", got)
+	}
+	subtables := face.GPOS.Lookups[35].Subtables
+	if len(subtables) != 1 {
+		t.Fatalf("lookup 35 has %d subtables, want 1", len(subtables))
+	}
+	lig, ok := subtables[0].(tables.MarkLigPos)
+	if !ok {
+		t.Fatalf("lookup 35 is a %T, want a MarkLigPos", subtables[0])
+	}
+	if got := len(lig.MarkArray.MarkAnchors); got != 281 {
+		t.Errorf("got %d mark anchors, want 281", got)
 	}
 }

@@ -356,11 +356,19 @@ func allGlyphsCase(t *testing.T, name string, f fontSpec, text string) documentC
 		Pages: []pageSpec{{Width: width, Height: height, Ops: ops}}}}
 }
 
+// subsetterFont is a font of the tests of internal/subsetter.
+func subsetterFont(t *testing.T, name string, coords ...coord) fontSpec {
+	t.Helper()
+	return fontSpec{File: abs(t, "internal", "subsetter", "testdata", name), Coords: coords}
+}
+
 // TestTextGoVariable compares the instances of a variable font with
-// krilla. The test text_variable_font of krilla takes NotoSans_variable.ttf,
-// whose table GPOS typesetting cannot read, as item 4 of "The PDF writer" in
-// docs/BACKLOG.md says, so RobotoFlex of the tests of svg takes its place. The glyphs of an instance can differ by 1 unit, which D65 accepts,
-// so the font files of the subsets can differ. Each other object must be the
+// krilla, as the test text_variable_font of krilla does with
+// NotoSans_variable.ttf, and with RobotoFlex of the tests of svg, which has
+// more axes. NotoSans-Regular_var.ttf of the tests of internal/subsetter is
+// the same file as NotoSans_variable.ttf. The glyphs of an instance can
+// differ by 1 unit, which D65 accepts, so the font files of the subsets can
+// differ. Each other object must be the
 // same, with the widths, the bounding boxes and the tags of the names. The
 // coordinates are the ends and the default of each axis. At other
 // coordinates, typesetting computes the deltas of HVAR in float32 and skrifa
@@ -369,10 +377,14 @@ func TestTextGoVariable(t *testing.T) {
 	text := "I love variable fonts!"
 	for _, c := range []struct {
 		name string
+		load func(*testing.T, string, ...coord) fontSpec
 		font string
 		axes [][]coord
 	}{
-		{"RobotoFlex", "RobotoFlex.subset.ttf", [][]coord{
+		{"NotoSans", subsetterFont, "NotoSans-Regular_var.ttf", [][]coord{
+			{{"wght", 400}}, {{"wght", 100}}, {{"wght", 900}}, {{"wght", 900}, {"wdth", 62.5}},
+		}},
+		{"RobotoFlex", svgFont, "RobotoFlex.subset.ttf", [][]coord{
 			{{"wght", 400}}, {{"wght", 100}}, {{"wght", 1000}}, {{"wght", 1000}, {"wdth", 151}},
 			{{"wdth", 25}}, {{"opsz", 144}, {"wght", 100}},
 		}},
@@ -381,7 +393,7 @@ func TestTextGoVariable(t *testing.T) {
 			var fonts []fontSpec
 			var ops []op
 			for i, coords := range c.axes {
-				fonts = append(fonts, svgFont(t, c.font, coords...))
+				fonts = append(fonts, c.load(t, c.font, coords...))
 				ops = append(ops, drawText(4, float32(17+20*i), i, 16, text))
 			}
 			sc := scene{Settings: textSettings(nil), Fonts: fonts, Pages: []pageSpec{{Width: 200, Height: 200, Ops: ops}}}

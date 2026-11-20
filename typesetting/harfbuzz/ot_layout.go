@@ -139,6 +139,11 @@ func (m *otMap) apply(proxy otProxy, plan *otShapePlan, font *Font, buffer *Buff
 			if accel.digest.mayIntersects(buffer.digest) {
 				c.lookupIndex = lookupIndex
 				c.lookupMask = lookup.mask
+				// okage: each lookup searches for its own base glyph, as
+				// set_lookup_mask of HarfBuzz does. An earlier lookup can
+				// find a glyph that this lookup skips, such as a glyph that
+				// a multiple substitution added (D73).
+				c.lastBase, c.lastBaseUntil = -1, 0
 				c.autoZWJ = lookup.autoZWJ
 				c.autoZWNJ = lookup.autoZWNJ
 				c.random = lookup.random

@@ -356,9 +356,9 @@ func (pp *PairPos) Sanitize() error {
 }
 
 func (mp *MarkBasePos) Sanitize() error {
-	if exp, got := mp.markCoverage.Len(), len(mp.MarkArray.MarkRecords); exp != got {
-		return fmt.Errorf("GPOS: invalid MarkBasePos marks count (%d != %d)", exp, got)
-	}
+	// okage: the number of marks of the coverage can differ from the
+	// number of records of the MarkArray, as in HarfBuzz. harfbuzz gives a
+	// mark without a record the class 0 and an anchor at (0, 0) (D73).
 	if exp, got := mp.BaseCoverage.Len(), len(mp.BaseArray.baseRecords); exp != got {
 		return fmt.Errorf("GPOS: invalid MarkBasePos marks count (%d != %d)", exp, got)
 	}
@@ -373,9 +373,10 @@ func (mp *MarkBasePos) Sanitize() error {
 }
 
 func (mp *MarkLigPos) Sanitize() error {
-	if exp, got := mp.MarkCoverage.Len(), len(mp.MarkArray.MarkAnchors); exp != got {
-		return fmt.Errorf("GPOS: invalid MarkLigPos marks count (%d != %d)", exp, got)
-	}
+	// okage: the number of marks of the coverage can differ from the
+	// number of records of the MarkArray, as in HarfBuzz. Lookup 35 of
+	// NotoSans_variable.ttf of krilla covers 287 marks with 281 records
+	// (D73).
 	if exp, got := mp.LigatureCoverage.Len(), len(mp.LigatureArray.LigatureAttachs); exp != got {
 		return fmt.Errorf("GPOS: invalid MarkLigPos ligatures count (%d != %d)", exp, got)
 	}
@@ -387,9 +388,8 @@ func (mp *MarkLigPos) Sanitize() error {
 }
 
 func (mp *MarkMarkPos) Sanitize() error {
-	if exp, got := mp.Mark1Coverage.Len(), len(mp.Mark1Array.MarkRecords); exp != got {
-		return fmt.Errorf("GPOS: invalid MarkMarkPos marks count (%d != %d)", exp, got)
-	}
+	// okage: the number of marks of the coverage can differ from the
+	// number of records of the MarkArray, as in HarfBuzz (D73).
 	if exp, got := mp.Mark2Coverage.Len(), len(mp.Mark2Array.mark2Records); exp != got {
 		return fmt.Errorf("GPOS: invalid MarkMarkPos base marks count (%d != %d)", exp, got)
 	}
@@ -798,6 +798,13 @@ func (ma *MarkArray) parseMarkAnchors(src []byte) error {
 	ma.MarkAnchors = make([]Anchor, len(ma.MarkRecords))
 	var err error
 	for i, rec := range ma.MarkRecords {
+		// okage: a null offset is an anchor at (0, 0), the Null anchor of
+		// HarfBuzz. go-text read the count of the MarkArray as the format
+		// of an anchor, and the whole table failed (D73).
+		if rec.markAnchorOffset == 0 {
+			ma.MarkAnchors[i] = AnchorFormat1{anchorFormat: 1}
+			continue
+		}
 		if L := len(src); L < int(rec.markAnchorOffset) {
 			return fmt.Errorf("EOF: expected length: %d, got %d", rec.markAnchorOffset, L)
 		}

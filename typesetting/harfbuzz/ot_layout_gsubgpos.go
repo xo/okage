@@ -401,6 +401,9 @@ func (c *otApplyContext) initIters() {
 
 func (c *otApplyContext) setLookupMask(mask GlyphMask) {
 	c.lookupMask = mask
+	// okage: a new mask also clears the base glyph that the last lookup
+	// found, as set_lookup_mask of HarfBuzz does (D73).
+	c.lastBase, c.lastBaseUntil = -1, 0
 	c.initIters()
 }
 
