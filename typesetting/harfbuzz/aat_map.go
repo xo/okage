@@ -83,7 +83,22 @@ type aatMapBuilder struct {
 	currentFeatures []aatFeatureInfo // sorted by (type_, setting) after compilation
 	rangeFirst      int
 	rangeLast       int
+
+	// okage: budget is the work that the compilation of the map has left,
+	// as in HarfBuzz 15.1.0 (D73).
+	budget int64
 }
+
+// aatBudgetMap is the work of the compilation of one map of morx, as
+// HB_BUDGET_AAT_MAP of hb-limits.hh of HarfBuzz 15.1.0. A chain costs 1,
+// and each of its feature records costs 1, for each range of the text with
+// its own features. A range that a chain keeps costs 16 more. When the
+// budget runs out, the last range that the map compiled goes to the end of
+// the text.
+//
+// okage: the commit 370a0da5a1 of HarfBuzz adds the budget. go-text had
+// no limit (D73).
+const aatBudgetMap = 1 << 24
 
 func newAatMapBuilder(tables *font.Font, props SegmentProperties) aatMapBuilder {
 	return aatMapBuilder{
@@ -91,6 +106,7 @@ func newAatMapBuilder(tables *font.Font, props SegmentProperties) aatMapBuilder 
 		props:      props,
 		rangeFirst: FeatureGlobalStart,
 		rangeLast:  FeatureGlobalEnd,
+		budget:     aatBudgetMap,
 	}
 }
 
@@ -111,12 +127,26 @@ func (mb *aatMapBuilder) hasFeature(info aatFeatureInfo) bool {
 	return false
 }
 
+// okage: compileMap extends the last range of a chain when the new range
+// has the same flags, as the commit 370a0da5a1 of HarfBuzz, in 15.1.0,
+// does. The ranges come in order and touch, and the flags of each cluster
+// do not change. go-text kept one range for each chain and each range of
+// the text, so a font with many chains and a text with many ranges of
+// features took memory for the product of the two (D73).
 func (mb *aatMapBuilder) compileMap(map_ *aatMap) {
 	morx := mb.tables.Morx
 	map_.resizeChainFlags(len(morx))
 	for i, chain := range morx {
-		map_.chainFlags[i] = append(map_.chainFlags[i], rangeFlags{
-			flags:        mb.compileMorxFlag(chain),
+		flags := mb.compileMorxFlag(chain)
+		ranges := map_.chainFlags[i]
+		if n := len(ranges); n != 0 && ranges[n-1].flags == flags {
+			ranges[n-1].clusterLast = mb.rangeLast
+			continue
+		}
+		// A range that the map keeps costs more than a range that it visits.
+		mb.budget -= 16
+		map_.chainFlags[i] = append(ranges, rangeFlags{
+			flags:        flags,
 			clusterFirst: mb.rangeFirst,
 			clusterLast:  mb.rangeLast,
 		})
@@ -132,6 +162,9 @@ func (mb *aatMapBuilder) compileMap(map_ *aatMap) {
 
 func (mb *aatMapBuilder) compileMorxFlag(chain font.MorxChain) GlyphMask {
 	flags := chain.DefaultFlags
+	// okage: the chain and its feature records take from the budget, as in
+	// HarfBuzz 15.1.0 (D73).
+	mb.budget -= int64(1 + len(chain.Features))
 
 	for _, feature := range chain.Features {
 		type_, setting := feature.FeatureType, feature.FeatureSetting
@@ -284,6 +317,14 @@ func (mb *aatMapBuilder) compile(m *aatMap) {
 			}
 
 			mb.compileMap(m)
+
+			// okage: when the budget runs out, the compilation stops, and
+			// the code after the loop extends the last ranges to the end of
+			// the text, as in HarfBuzz 15.1.0 (D73).
+			mb.budget -= int64(len(activeFeatures))
+			if mb.budget < 0 {
+				break
+			}
 
 			lastIndex = event.index
 		}

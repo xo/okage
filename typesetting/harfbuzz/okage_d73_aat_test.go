@@ -3,8 +3,10 @@
 package harfbuzz
 
 import (
+	"strings"
 	"testing"
 
+	ot "github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 	"github.com/xo/okage/typesetting/language"
 )
@@ -308,6 +310,71 @@ func TestLtagLanguage(t *testing.T) {
 		buf.Shape(hf, nil)
 		if got := buf.Info[0].Glyph; got != test.want {
 			t.Errorf("a in %s: got the glyph %d, want %d", test.lang, got, test.want)
+		}
+	}
+}
+
+// featLigatures builds a table feat with the feature type 1, the
+// ligatures, and its settings 2 and 3, the common ligatures on and off.
+func featLigatures() []byte {
+	out := u32s(0x00010000)
+	out = append(out, u16s(1, 0, 0, 0)...)
+	out = append(out, u16s(1, 2, 0, 24, 0, 256)...)
+	return append(out, u16s(2, 256, 3, 256)...)
+}
+
+// morxBudget builds a table morx with a chain whose subtable replaces a
+// with b when the common ligatures are on, then empty chains. The first
+// chain has extra feature records that no text asks for.
+func morxBudget(extra, empty int) []byte {
+	features := u16s(1, 2)
+	features = append(features, u32s(1, 0xFFFFFFFF)...)
+	features = append(features, u16s(1, 3)...)
+	features = append(features, u32s(0, 0xFFFFFFFE)...)
+	for range extra {
+		features = append(features, u16s(100, 0)...)
+		features = append(features, u32s(0, 0xFFFFFFFF)...)
+	}
+	out := u16s(2, 0)
+	out = append(out, u32s(uint32(1+empty), 0, uint32(16+len(features)+20), uint32(2+extra), 1)...)
+	out = append(out, features...)
+	out = append(out, u32s(20, 0x20000004, 1)...)
+	out = append(out, u16s(8, int(robotoA), 1, int(robotoB))...)
+	for range empty {
+		out = append(out, u32s(0, 16, 0, 0)...)
+	}
+	return out
+}
+
+// TestMorxMapBudget shapes 2,000 a, whose characters each have the feature
+// liga in a range of their own, on at an odd index and off at an even
+// index. The table morx is morxBudget with 10,000 extra feature records
+// and 1,000 empty chains. As the commit 370a0da5a1 of HarfBuzz, in 15.1.0,
+// does, the map extends the last range of a chain when the next range has
+// the same flags. Each range costs 11,020 from the budget of 16,777,216,
+// and the first range costs 16,000 more for the empty chains. So the
+// compilation stops after the range of the index 1,520, which then goes
+// to the end of the text. go-text had no budget, and kept a range for each
+// chain and each range of the text. Without the merge of the ranges, a
+// range costs 27,020 (D73).
+func TestMorxMapBudget(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"morx": morxBudget(10000, 1000), "feat": featLigatures()})
+	const n = 2000
+	features := make([]Feature, n)
+	for i := range features {
+		features[i] = Feature{Tag: ot.NewTag('l', 'i', 'g', 'a'), Value: uint32(i % 2), Start: i, End: i + 1}
+	}
+	buf := NewBuffer()
+	buf.AddRunes([]rune(strings.Repeat("a", n)), 0, -1)
+	buf.GuessSegmentProperties()
+	buf.Shape(NewFont(face), features)
+	for i, info := range buf.Info {
+		want := robotoA
+		if i%2 == 1 && i <= 1520 {
+			want = robotoB
+		}
+		if info.Glyph != want {
+			t.Fatalf("glyph %d: got %d, want %d", i, info.Glyph, want)
 		}
 	}
 }

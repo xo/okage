@@ -6,9 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/xo/okage/typesetting/font"
+	ot "github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/harfbuzz"
 	"github.com/xo/okage/typesetting/language"
 )
@@ -194,33 +197,70 @@ func TestLookupSegmentsOutOfOrder(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "bcb", "cccc", "bbbb")
 }
 
-// compareLanguage shapes each text in the font data with harfbuzz and with
-// HarfBuzz, in the language, and fails the test for each difference.
-func compareLanguage(t *testing.T, data []byte, lang string, texts ...string) {
+// shapeOptions are the options of compareOptions. When language is not
+// empty, it is the language of the buffer. When ranged is not empty, each
+// character i of a text has the feature ranged in a range of its own, on
+// when i is not a multiple of period and off when it is.
+type shapeOptions struct {
+	language string
+	ranged   string
+	period   int
+}
+
+// compareOptions shapes each text in the font data with harfbuzz and with
+// HarfBuzz, with the options, and fails the test for each difference.
+func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...string) {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "font.ttf")
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	want := shapeHarfBuzz(t, path, texts, false, "--language", lang)
+	var args []string
+	if opts.language != "" {
+		args = append(args, "--language", opts.language)
+	}
+	if opts.ranged != "" {
+		args = append(args, "--ranged", opts.ranged, strconv.Itoa(opts.period))
+	}
+	want := shapeHarfBuzz(t, path, texts, false, args...)
 	face, err := font.ParseTTF(bytes.NewReader(data))
 	if err != nil {
 		t.Fatal(err)
 	}
 	hf := harfbuzz.NewFont(face)
 	for i, text := range texts {
+		runes := []rune(text)
 		buf := harfbuzz.NewBuffer()
-		buf.AddRunes([]rune(text), 0, -1)
-		buf.Props.Language = language.NewLanguage(lang)
+		buf.AddRunes(runes, 0, -1)
+		if opts.language != "" {
+			buf.Props.Language = language.NewLanguage(opts.language)
+		}
 		buf.GuessSegmentProperties()
-		buf.Shape(hf, nil)
+		var features []harfbuzz.Feature
+		if opts.ranged != "" {
+			tag := ot.MustNewTag(opts.ranged)
+			for j := range runes {
+				value := uint32(0)
+				if j%opts.period != 0 {
+					value = 1
+				}
+				features = append(features, harfbuzz.Feature{Tag: tag, Value: value, Start: j, End: j + 1})
+			}
+		}
+		buf.Shape(hf, features)
 		var got []string
 		for j, info := range buf.Info {
 			pos := buf.Pos[j]
 			got = append(got, fmt.Sprintf("%d %d %d %d %d %d", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset))
 		}
 		if !slices.Equal(got, want[i].glyphs) {
-			t.Errorf("%+q in %s: got %q, HarfBuzz gives %q", text, lang, got, want[i].glyphs)
+			t.Errorf("%+q with %+v: got %d glyphs, HarfBuzz gives %d", trim(text), opts, len(got), len(want[i].glyphs))
+			for j := range min(len(got), len(want[i].glyphs)) {
+				if got[j] != want[i].glyphs[j] {
+					t.Errorf("  glyph %d: got %q, HarfBuzz gives %q", j, got[j], want[i].glyphs[j])
+					break
+				}
+			}
 		}
 	}
 }
@@ -268,6 +308,52 @@ func morxLanguages() []byte {
 func TestLtagLanguage(t *testing.T) {
 	data := robotoWith(t, map[string][]byte{"morx": morxLanguages(), "ltag": ltagTable("sr", "Zh_Hant", "en@x")})
 	for _, lang := range []string{"sr", "SR", "sr-Latn-RS", "srb", "s", "zh-hant", "zh-hant-tw", "zh", "en", "en-us", "enx", "fr"} {
-		compareLanguage(t, data, lang, "a", "aa")
+		compareOptions(t, data, shapeOptions{language: lang}, "a", "aa")
 	}
+}
+
+// featLigatures builds a table feat with the feature type 1, the
+// ligatures, and its settings 2 and 3, the common ligatures on and off.
+func featLigatures() []byte {
+	out := u32s(0x00010000)
+	out = append(out, u16s(1, 0, 0, 0)...)
+	out = append(out, u16s(1, 2, 0, 24, 0, 256)...)
+	return append(out, u16s(2, 256, 3, 256)...)
+}
+
+// morxBudget builds a table morx with a chain whose subtable replaces a
+// with b when the common ligatures are on, then empty chains. The first
+// chain has extra feature records that no text asks for.
+func morxBudget(extra, empty int) []byte {
+	features := u16s(1, 2)
+	features = append(features, u32s(1, 0xFFFFFFFF)...)
+	features = append(features, u16s(1, 3)...)
+	features = append(features, u32s(0, 0xFFFFFFFE)...)
+	for range extra {
+		features = append(features, u16s(100, 0)...)
+		features = append(features, u32s(0, 0xFFFFFFFF)...)
+	}
+	out := u16s(2, 0)
+	out = append(out, u32s(uint32(1+empty), 0, uint32(16+len(features)+20), uint32(2+extra), 1)...)
+	out = append(out, features...)
+	out = append(out, u32s(20, 0x20000004, 1)...)
+	out = append(out, u16s(8, robotoA, 1, robotoB)...)
+	for range empty {
+		out = append(out, u32s(0, 16, 0, 0)...)
+	}
+	return out
+}
+
+// TestMorxMapBudget: a text of 2,000 a, whose characters each have the
+// feature liga in a range of their own, on at an odd index and off at an
+// even index. The table morx is morxBudget with 10,000 extra feature
+// records and 1,000 empty chains. From its commit 370a0da5a1, HarfBuzz
+// extends the last range of a chain when the next range has the same
+// flags, and stops the compilation of the map when it runs out of its
+// budget. The last range then goes to the end of the text. The extra
+// feature records and the chains take from the budget, and so do the
+// ranges that the map keeps.
+func TestMorxMapBudget(t *testing.T) {
+	data := robotoWith(t, map[string][]byte{"morx": morxBudget(10000, 1000), "feat": featLigatures()})
+	compareOptions(t, data, shapeOptions{ranged: "liga", period: 2}, "aaaa", strings.Repeat("a", 2000))
 }
