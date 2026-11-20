@@ -491,20 +491,22 @@ func (s *PixmapSink) bounds(transform kurbo.Affine, shape []kurbo.PathEl, pad fl
 	return pixRect{int(math.Floor(x0 - g)), int(math.Floor(y0 - g)), int(math.Ceil(x1 + g)), int(math.Ceil(y1 + g))}
 }
 
-// rectMask returns a mask of the pixels of r.
+// rectMask returns a mask of the pixels of r. The mask holds the rectangle
+// and no pixels, and draws the same bytes as a mask of 255 in r and 0
+// elsewhere (D86).
 func (s *PixmapSink) rectMask(r pixRect) *okage.Mask {
 	if r == s.canvas() {
 		return nil
 	}
-	mask, ok := okage.NewMask(s.width, s.height)
+	rect, ok := path.IntRectFromLTRB(int32(r.x0), int32(r.y0), int32(r.x1), int32(r.y1))
+	if !ok {
+		// An empty rectangle hides each pixel.
+		mask, _ := okage.NewMask(s.width, s.height)
+		return mask
+	}
+	mask, ok := okage.NewRectMask(s.width, s.height, rect)
 	if !ok {
 		return nil
-	}
-	data := mask.DataMut()
-	for y := r.y0; y < r.y1; y++ {
-		for x := r.x0; x < r.x1; x++ {
-			data[y*int(s.width)+x] = 255
-		}
 	}
 	return mask
 }
