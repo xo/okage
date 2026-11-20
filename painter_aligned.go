@@ -94,6 +94,10 @@ func (m *PixmapMut) drawPixmapAligned(
 	if mask != nil {
 		mt, mb := mask.rows()
 		ml, mr := mask.columns()
+		if mask.rect {
+			// A mask of NewRectMask covers its rectangle (D86).
+			mt, mb, ml, mr = mask.rectTop, mask.rectBottom, mask.rectLeft, mask.rectRight
+		}
 		top, bottom = max(top, mt), min(bottom, mb)
 		if ml > left {
 			first = left + (ml-left)/highpStageWidth*highpStageWidth
@@ -112,7 +116,12 @@ func (m *PixmapMut) drawPixmapAligned(
 		// maskRow holds the columns of the mask from maskLeft.
 		var maskRow []byte
 		maskLeft := 0
-		if mask != nil {
+		switch {
+		case mask != nil && mask.rect:
+			// The row of a mask of NewRectMask starts at the column 0
+			// (D86).
+			maskRow = mask.edge
+		case mask != nil:
 			maskRow, maskLeft = mask.row(row), mask.left
 		}
 		for start := first; start < last; start += highpStageWidth {

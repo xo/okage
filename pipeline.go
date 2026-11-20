@@ -546,6 +546,20 @@ func (b *rasterPipelineBuilder) compile() *rasterPipeline {
 	}
 }
 
+// compileWithout compiles the pipeline of b without the stage s, and leaves
+// b as it was. It ports no upstream function (D86).
+func (b *rasterPipelineBuilder) compileWithout(s stage) *rasterPipeline {
+	c := *b
+	c.stagesLen = 0
+	for _, t := range b.stages[:b.stagesLen] {
+		if t != s {
+			c.stages[c.stagesLen] = t
+			c.stagesLen++
+		}
+	}
+	return c.compile()
+}
+
 // rasterPipelineKind is RasterPipelineKind in tiny-skia src/pipeline/mod.rs.
 //
 // Port: the Rust enum holds the functions of each variant. Go holds the

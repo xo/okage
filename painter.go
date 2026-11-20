@@ -345,6 +345,16 @@ func (m *PixmapMut) FillPath(
 
 		// TODO: ignore paths outside the pixmap
 
+		// Port: a mask of NewRectMask hides each pixel outside its
+		// rectangle, so a path whose pixels are all outside it draws
+		// nothing (D86).
+		if mask != nil && mask.rect && mask.Size() == m.Size() {
+			x0, y0, x1, y1 := pathPixelBounds(p, path.IdentityTransform(), int(m.Width()), int(m.Height()))
+			if x0 >= mask.rectRight || x1 <= mask.rectLeft || y0 >= mask.rectBottom || y1 <= mask.rectTop {
+				return
+			}
+		}
+
 		if tiler, ok := newDrawTiler(m.Width(), m.Height()); ok {
 			p := p.Clone() // TODO: avoid cloning
 			paint := *paint
@@ -787,6 +797,14 @@ func (m *PixmapMut) ApplyMask(mask *Mask) {
 		return
 	}
 
+	// Port: a mask of NewRectMask keeps the pixels inside its rectangle
+	// and clears the others. The stages load_mask_u8, destination_in and
+	// store of lowp give these bytes for a mask of 255 and of 0 (D86).
+	if mask.rect {
+		m.applyRectMask(mask)
+		return
+	}
+
 	// Port: the mask first holds every row, so that each row of the pixmap
 	// reads it (D35).
 	mask.dense()
@@ -810,6 +828,21 @@ func (m *PixmapMut) ApplyMask(mask *Mask) {
 		pixmapSrc,
 		&subpix,
 	)
+}
+
+// applyRectMask is ApplyMask with a mask of NewRectMask, which has the size
+// of the pixmap. It clears each pixel outside the rectangle of the mask. It
+// ports no upstream function (D86).
+func (m *PixmapMut) applyRectMask(mask *Mask) {
+	stride := int(m.Width()) * BytesPerPixel
+	left, right := mask.rectLeft*BytesPerPixel, mask.rectRight*BytesPerPixel
+	clear(m.data[:mask.rectTop*stride])
+	for y := mask.rectTop; y < mask.rectBottom; y++ {
+		row := m.data[y*stride : (y+1)*stride]
+		clear(row[:left])
+		clear(row[right:])
+	}
+	clear(m.data[mask.rectBottom*stride:])
 }
 
 // treatAsHairline is treat_as_hairline in tiny-skia src/painter.rs.

@@ -73,6 +73,10 @@ func (t MaskType) String() string {
 // caller can hold data after Data, DataMut, Take or MaskFromVec. Then data
 // holds every pixel, and the mask never shares it again. A caller sees no
 // difference, except in the memory that a mask takes.
+//
+// Port: a mask of NewRectMask holds a rectangle and no pixels (D86). The
+// first read or write of its pixels makes the pixels of the rectangle, with
+// the layout above.
 type Mask struct {
 	data   []byte
 	size   path.IntSize
@@ -88,6 +92,16 @@ type Mask struct {
 	// Clone sets it, so that a write copies data first. It is nil when the
 	// mask cannot share data.
 	cloned *atomic.Bool
+
+	// rect is true for a mask of NewRectMask that holds no pixels (D86).
+	// The mask is then 255 on the columns from rectLeft to rectRight of the
+	// rows from rectTop to rectBottom, without rectRight and rectBottom,
+	// and 0 on the other pixels. data is empty. edge holds the row of the
+	// mask from the column 0 to maskChunk-1 columns past rectRight, or to
+	// the side of the mask. No mask writes edge, so its clones share it.
+	rect                                     bool
+	rectLeft, rectTop, rectRight, rectBottom int
+	edge                                     []byte
 }
 
 // NewMask is Mask::new in tiny-skia src/mask.rs. It creates a new mask,
@@ -104,6 +118,96 @@ func NewMask(width, height uint32, opts ...Option) (*Mask, bool) {
 		size:   size,
 		logger: newOptions(opts).logger,
 	}, true
+}
+
+// NewRectMask makes a mask of the size width by height that is 255 on the
+// pixels of rect inside the mask and 0 on the other pixels. It returns false
+// where NewMask returns false. It ports no upstream function (D86).
+//
+// The mask holds the rectangle and no pixels. A method of Pixmap or
+// PixmapMut that draws through the mask gives the same bytes as through a
+// mask that holds those pixels, and runs the stage mask_u8 only on the
+// chunks of pixels at the sides of the rectangle. The first method that
+// reads or writes the pixels of the mask, such as Data, DataMut, FillPath,
+// IntersectPath or Invert, makes its pixels. A rect with no pixel inside
+// the mask gives the mask of NewMask.
+//
+// opts configure the mask, as D20 says.
+func NewRectMask(width, height uint32, rect IntRect, opts ...Option) (*Mask, bool) {
+	m, ok := NewMask(width, height, opts...)
+	if !ok {
+		return nil, false
+	}
+	r, ok := m.size.ToIntRect(0, 0).Intersect(rect)
+	if !ok {
+		return m, true
+	}
+	m.rect = true
+	m.rectLeft, m.rectTop = int(r.Left()), int(r.Top())
+	m.rectRight, m.rectBottom = int(r.Right()), int(r.Bottom())
+	m.edge = make([]byte, min(int(width), m.rectRight+maskChunk-1))
+	fill255(m.edge[m.rectLeft:m.rectRight])
+	return m, true
+}
+
+// fill255 sets each byte of b to 255.
+func fill255(b []byte) {
+	for i := range b {
+		b[i] = 255
+	}
+}
+
+// unrect makes a mask of NewRectMask hold the pixels of its rectangle, with
+// the margin of padColumns, as a mask of pixels (D35, D86).
+func (m *Mask) unrect() {
+	if !m.rect {
+		return
+	}
+	x0, y0, x1, y1 := m.rectLeft, m.rectTop, m.rectRight, m.rectBottom
+	m.dropRect()
+	left, right := m.padColumns(x0, x1)
+	stride := right - left
+	data := make([]byte, left+stride*(y1-y0))
+	for y := y0; y < y1; y++ {
+		start := stride*(y-y0) + x0
+		fill255(data[start : start+x1-x0])
+	}
+	m.setData(data, y0, left, stride)
+}
+
+// dropRect makes a mask of NewRectMask a mask that holds no pixel (D86).
+func (m *Mask) dropRect() {
+	m.rect, m.edge = false, nil
+	m.rectLeft, m.rectTop, m.rectRight, m.rectBottom = 0, 0, 0, 0
+}
+
+// rectAt returns the pixel (x, y) of a mask of NewRectMask (D86).
+func (m *Mask) rectAt(x, y int) byte {
+	if x >= m.rectLeft && x < m.rectRight && y >= m.rectTop && y < m.rectBottom {
+		return 255
+	}
+	return 0
+}
+
+// rectSubmask returns the submask of a mask of NewRectMask inside r, a
+// rectangle inside the mask (D86).
+func (m *Mask) rectSubmask(r IntRect) subMaskRef {
+	x, y := int(r.Left()), int(r.Top())
+	s := subMaskRef{
+		size:   r.Size(),
+		rect:   true,
+		top:    max(m.rectTop-y, 0),
+		bottom: min(m.rectBottom-y, int(r.Height())),
+		left:   max(m.rectLeft-x, 0),
+		right:  min(m.rectRight-x, int(r.Width())),
+	}
+	if s.top >= s.bottom || s.left >= s.right {
+		// No pixel of r is in the rectangle, so the blitter draws nothing.
+		return subMaskRef{size: r.Size(), rect: true}
+	}
+	// x is left of rectRight, so edge holds it.
+	s.data = m.edge[x:]
+	return s
 }
 
 // MaskFromPixmap is Mask::from_pixmap in tiny-skia src/mask.rs. It creates a
@@ -237,9 +341,15 @@ func (m *Mask) Take() []byte {
 // copies it. Clone only sets an atomic flag, so that two goroutines can
 // clone a mask at the same time, as they can in upstream. When m cannot
 // share its data, as when a caller can hold it, the copy takes only the rows
-// of m from its first row that is not 0 to its last (D35).
+// of m from its first row that is not 0 to its last (D35). The copy of a
+// mask of NewRectMask holds the same rectangle and no pixels (D86).
 func (m *Mask) Clone() *Mask {
 	c := &Mask{size: m.size, logger: m.logger}
+	if m.rect {
+		c.rect, c.edge = true, m.edge
+		c.rectLeft, c.rectTop, c.rectRight, c.rectBottom = m.rectLeft, m.rectTop, m.rectRight, m.rectBottom
+		return c
+	}
 	if !m.exposed && m.cloned != nil {
 		m.cloned.Store(true)
 		c.data, c.top, c.left, c.stride, c.cloned = m.data, m.top, m.left, m.stride, m.cloned
@@ -308,6 +418,7 @@ func (m *Mask) padColumns(x0, x1 int) (left, right int) {
 
 // dense makes data hold every pixel (D35).
 func (m *Mask) dense() {
+	m.unrect()
 	w, h := int(m.Width()), int(m.Height())
 	if m.top == 0 && m.left == 0 && m.stride == w && len(m.data) == w*h {
 		return
@@ -338,8 +449,10 @@ func (m *Mask) expose() {
 // cover makes data hold the pixels from the column x0 to x1 and from the
 // row y0 to y1, without x1 and y1, with the margin of padColumns and the
 // pixels that it held before, in a buffer that no other mask shares. A mask
-// that a caller can hold already holds every pixel (D35).
+// that a caller can hold already holds every pixel (D35). A mask of
+// NewRectMask first makes its pixels (D86).
 func (m *Mask) cover(x0, y0, x1, y1 int) {
+	m.unrect()
 	if m.exposed {
 		return
 	}
@@ -367,8 +480,12 @@ func (m *Mask) cover(x0, y0, x1, y1 int) {
 
 // asSubmask is Mask::as_submask in tiny-skia src/mask.rs.
 //
-// Port: the submask holds the pixels of data (D35).
+// Port: the submask holds the pixels of data (D35), or the rectangle of a
+// mask of NewRectMask (D86).
 func (m *Mask) asSubmask() subMaskRef {
+	if m.rect {
+		return m.rectSubmask(m.size.ToIntRect(0, 0))
+	}
 	top, bottom := m.rows()
 	left, right := m.columns()
 	return subMaskRef{
@@ -384,11 +501,15 @@ func (m *Mask) asSubmask() subMaskRef {
 
 // submask is Mask::submask in tiny-skia src/mask.rs.
 //
-// Port: the submask holds the pixels of data inside rect (D35).
+// Port: the submask holds the pixels of data inside rect (D35), or the
+// part of the rectangle of a mask of NewRectMask inside rect (D86).
 func (m *Mask) submask(rect IntRect) (subMaskRef, bool) {
 	rect, ok := m.size.ToIntRect(0, 0).Intersect(rect)
 	if !ok {
 		return subMaskRef{}, false
+	}
+	if m.rect {
+		return m.rectSubmask(rect), true
 	}
 	s := m.subrect(rect)
 	return subMaskRef{
@@ -698,13 +819,14 @@ func (m *Mask) fillPath(
 // then takes a time that depends on the size of the path, not on the size
 // of the page. The bytes are the same as upstream (D60). Then data holds
 // only the pixels that the path and the mask both cover, with the margin of
-// padColumns (D35).
+// padColumns (D35). A mask of NewRectMask first makes its pixels (D86).
 func (m *Mask) IntersectPath(
 	p *Path,
 	fillRule FillRule,
 	antiAlias bool,
 	transform Transform,
 ) {
+	m.unrect()
 	w, h := int(m.Width()), int(m.Height())
 	x0, y0, x1, y1 := pathPixelBounds(p, transform, w, h)
 	oldTop, _ := m.rows()
@@ -829,8 +951,10 @@ func (m *Mask) Invert() {
 //
 // It zero-fills the internal data buffer.
 //
-// Port: a mask that no caller can hold drops its data (D35).
+// Port: a mask that no caller can hold drops its data (D35). A mask of
+// NewRectMask drops its rectangle (D86).
 func (m *Mask) Clear() {
+	m.dropRect()
 	if m.exposed {
 		clear(m.data)
 		return
@@ -850,11 +974,18 @@ func (m *Mask) String() string {
 // right, without bottom and right, and realWidth is its number of columns.
 // The byte of the pixel (x, y) is at realWidth*(y-top) + x. The other
 // pixels are 0 (D35).
+//
+// Port: rect is true for a submask of a mask of NewRectMask (D86). The
+// submask is then 255 on the columns from left to right of the rows from
+// top to bottom, and 0 on the other pixels. data holds one row of the mask
+// from the column 0 of the submask, and realWidth is 0, so that the stage
+// mask_u8 reads that row for each row.
 type subMaskRef struct {
 	data                     []byte
 	size                     path.IntSize
 	realWidth                uint32
 	top, bottom, left, right int
+	rect                     bool
 }
 
 // maskCtx is SubMaskRef::mask_ctx in tiny-skia src/mask.rs.

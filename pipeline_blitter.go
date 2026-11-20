@@ -20,6 +20,10 @@ import "encoding/binary"
 // that the pixmap holds. The columns of a mask that a pixmap draws through
 // do not cut a rect here, because maskBounds keeps the chunks of the stages
 // in their places (D35).
+//
+// Port: innerAntiHRp, innerRectRp and innerMaskRp are the pipelines without
+// the stage mask_u8, for a mask of NewRectMask. They run on the chunks of
+// pixels inside its rectangle (D86).
 type rasterPipelineBlitter struct {
 	rowTop, rowBottom uint32
 	colLeft, colRight uint32
@@ -33,6 +37,8 @@ type rasterPipelineBlitter struct {
 	blitRectRp       *rasterPipeline
 	blitMaskRp       *rasterPipeline
 	isMask           bool
+
+	innerAntiHRp, innerRectRp, innerMaskRp *rasterPipeline
 
 	// Port: hline holds the runs of callHLineBlitter, and rectClip the
 	// blitter of newRectClipBlitter, which upstream makes on the stack
@@ -83,6 +89,10 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		return nil, false
 	}
 
+	// Port: a mask of NewRectMask also compiles each pipeline without the
+	// stage mask_u8 (D86).
+	rect := mask != nil && mask.rect
+
 	// We can strength-reduce SourceOver into Source when opaque.
 	blendMode := paint.BlendMode
 	if paint.Shader.IsOpaque() && blendMode == BlendModeSourceOver && mask == nil {
@@ -108,7 +118,7 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		hasMemset2dColor = true
 	}
 
-	var blitAntiHRp *rasterPipeline
+	var blitAntiHRp, innerAntiHRp *rasterPipeline
 	{ //nolint:dupl // upstream repeats this block for each kind of pipeline
 		p := newRasterPipelineBuilder()
 		p.logger = logger
@@ -148,9 +158,12 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		p.push(stageStore)
 
 		blitAntiHRp = p.compile()
+		if rect {
+			innerAntiHRp = p.compileWithout(stageMaskU8)
+		}
 	}
 
-	var blitRectRp *rasterPipeline
+	var blitRectRp, innerRectRp *rasterPipeline
 	{
 		p := newRasterPipelineBuilder()
 		p.logger = logger
@@ -187,9 +200,12 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		}
 
 		blitRectRp = p.compile()
+		if rect {
+			innerRectRp = p.compileWithout(stageMaskU8)
+		}
 	}
 
-	var blitMaskRp *rasterPipeline
+	var blitMaskRp, innerMaskRp *rasterPipeline
 	{ //nolint:dupl // upstream repeats this block for each kind of pipeline
 		p := newRasterPipelineBuilder()
 		p.logger = logger
@@ -229,6 +245,9 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		p.push(stageStore)
 
 		blitMaskRp = p.compile()
+		if rect {
+			innerMaskRp = p.compileWithout(stageMaskU8)
+		}
 	}
 
 	var pixmapSrc PixmapRef
@@ -258,6 +277,9 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		blitRectRp:       blitRectRp,
 		blitMaskRp:       blitMaskRp,
 		isMask:           false,
+		innerAntiHRp:     innerAntiHRp,
+		innerRectRp:      innerRectRp,
+		innerMaskRp:      innerMaskRp,
 	}, true
 }
 
@@ -357,6 +379,13 @@ func (b *rasterPipelineBlitter) blitAntiH(x, y uint32, aa []alphaU8, runs []alph
 				if rect, ok = b.clipRect(&rect); !ok {
 					break
 				}
+			}
+			if b.mask != nil && b.mask.rect {
+				coverage := float32(alpha) * (1.0 / 255.0)
+				b.blitAntiHRp.ctx.currentCoverage = coverage
+				b.innerAntiHRp.ctx.currentCoverage = coverage
+				b.runRect(b.blitAntiHRp, b.innerAntiHRp, &rect, aaMaskCtx{}, maskCtx)
+				break
 			}
 			if b.mask != nil {
 				if rect, ok = b.maskBounds(&rect, maskCtx); !ok {
@@ -468,6 +497,10 @@ func (b *rasterPipelineBlitter) blitRect(rect *screenIntRect) {
 
 	maskCtx := b.maskCtx()
 
+	if b.mask != nil && b.mask.rect {
+		b.runRect(b.blitRectRp, b.innerRectRp, rect, aaMaskCtx{}, maskCtx)
+		return
+	}
 	if b.mask != nil {
 		r, ok := b.maskBounds(rect, maskCtx)
 		if !ok {
@@ -612,6 +645,10 @@ func (b *rasterPipelineBlitter) blitMask(mask *maskBlitter, clip *screenIntRect)
 
 	maskCtx := b.maskCtx()
 
+	if b.mask != nil && b.mask.rect {
+		b.runRect(b.blitMaskRp, b.innerMaskRp, clip, aaMaskCtx, maskCtx)
+		return
+	}
 	// Port: the rect leaves out the rows where the mask is 0, as blitRect
 	// does (D60).
 	if b.mask != nil {
@@ -623,4 +660,67 @@ func (b *rasterPipelineBlitter) blitMask(mask *maskBlitter, clip *screenIntRect)
 	}
 
 	b.blitMaskRp.run(clip, aaMaskCtx, maskCtx, b.pixmapSrc, b.pixmap)
+}
+
+// runRect runs a pipeline on rect through the mask of the blitter, a mask
+// of NewRectMask. masked is the pipeline with the stage mask_u8, and inner
+// the same pipeline without it. It ports no upstream function (D86).
+//
+// The rows of rect are inside the rectangle of the mask. The pipeline runs
+// on chunks of pixels that start at the left of rect, and maskChunk is a
+// multiple of the width of a chunk in lowp and in highp. A chunk of
+// maskChunk pixels with no pixel in the rectangle does not run, as in
+// maskBounds. A chunk whose pixels are all in the rectangle runs inner:
+// mask_u8 multiplies each channel by 255 and divides by 255, which gives
+// the same bytes, so it changes nothing there. A chunk that holds a side of
+// the rectangle runs masked, because mask_u8 makes the source 0 on its
+// pixels outside the rectangle, and the next stages still store those
+// pixels. The chunks keep their places and their order in each row, so the
+// bytes are the same as through a mask of pixels.
+func (b *rasterPipelineBlitter) runRect(masked, inner *rasterPipeline, rect *screenIntRect, aa aaMaskCtx, ctx maskCtx) {
+	x, end := int(rect.X()), int(rect.Right())
+	in0, in1 := max(x, b.mask.left), min(end, b.mask.right)
+	if in0 >= in1 {
+		return
+	}
+	chunkEnd := func(start int) int { return min(start+maskChunk, end) }
+	// first and last are the starts of the first and the last chunk with a
+	// pixel in the rectangle.
+	first := x + (in0-x)/maskChunk*maskChunk
+	last := x + (in1-1-x)/maskChunk*maskChunk
+	firstCut := first < b.mask.left || chunkEnd(first) > b.mask.right
+	lastCut := last != first && chunkEnd(last) > b.mask.right
+	// The pixels from lo to hi, without hi, run inner.
+	lo, hi := first, chunkEnd(last)
+	if firstCut {
+		lo = chunkEnd(first)
+	}
+	if lastCut {
+		hi = last
+	}
+	if !firstCut && !lastCut {
+		r := screenIntRectFromXYWHSafe(uint32(lo), rect.Y(), lengthU32(hi-lo), rect.Height())
+		inner.run(&r, aa, ctx, b.pixmapSrc, b.pixmap)
+		return
+	}
+	// The pixels of each row run from left to right, as in one run of
+	// masked, for a pattern that reads the pixmap that it draws on.
+	for y := rect.Y(); y < rect.Bottom(); y++ {
+		if firstCut {
+			b.runRow(masked, first, chunkEnd(first), y, aa, ctx)
+		}
+		if lo < hi {
+			b.runRow(inner, lo, hi, y, aa, ctx)
+		}
+		if lastCut {
+			b.runRow(masked, last, chunkEnd(last), y, aa, ctx)
+		}
+	}
+}
+
+// runRow runs rp on the pixels from start to stop, without stop, of the row
+// y. It ports no upstream function (D86).
+func (b *rasterPipelineBlitter) runRow(rp *rasterPipeline, start, stop int, y uint32, aa aaMaskCtx, ctx maskCtx) {
+	r := screenIntRectFromXYWHSafe(uint32(start), y, lengthU32(stop-start), lengthU32One)
+	rp.run(&r, aa, ctx, b.pixmapSrc, b.pixmap)
 }

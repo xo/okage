@@ -165,18 +165,25 @@ func (m *PixmapMut) Knockout(element, backdrop PixmapRef, shape *Mask) {
 		warn(m.logger, "Knockout: the pixmaps and the mask must have the same size")
 		return
 	}
-	if shape != nil {
-		// The loop reads each row of the shape (D35).
+	if shape != nil && !shape.rect {
+		// The loop reads each row of the shape (D35). A shape of
+		// NewRectMask holds no pixels, and the loop reads its rectangle
+		// (D86).
 		shape.dense()
 	}
+	width := int(size.Width())
 	dst := m.data
 	ed := element.data
 	bd := backdrop.data
 	n := min(len(dst), len(ed))
 	for i := 0; i+BytesPerPixel <= n; i += BytesPerPixel {
 		inv := int32(0)
-		if shape != nil {
-			inv = 255 - int32(shape.data[i/BytesPerPixel])
+		switch p := i / BytesPerPixel; {
+		case shape == nil:
+		case shape.rect:
+			inv = 255 - int32(shape.rectAt(p%width, p/width))
+		default:
+			inv = 255 - int32(shape.data[p])
 		}
 		var px [BytesPerPixel]int32
 		for k := range BytesPerPixel {
