@@ -194,6 +194,14 @@ func renderLayer(group *Group, ctx *context, transform Transform) (*okage.Pixmap
 	}
 
 	transform = shiftTs.PreConcat(transform)
+	maxBBox, ok := ctx.maxBBox.Translate(-ibbox.X(), -ibbox.Y())
+	if !ok {
+		return nil, path.IntRect{}, false
+	}
+	ctx = &context{
+		maxBBox: maxBBox,
+		opt:     ctx.opt,
+	}
 
 	subPixmap, ok := newPixmap(ibbox.Width(), ibbox.Height(), ctx.opt)
 	subPixmap, ok = logNone(subPixmap, ok, func() {
