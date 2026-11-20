@@ -3,6 +3,7 @@
 package shaping
 
 import (
+	"github.com/xo/okage/typesetting/bidi"
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/harfbuzz"
@@ -196,6 +197,10 @@ type Output struct {
 	// 0 indicates the leftmost run and increasing values move to the right. This is
 	// useful for sorting the runs for drawing purposes.
 	VisualIndex int32
+
+	// BIDI embedding level, used to properly compute [VisualIndex];
+	// copied from [Input]
+	level bidi.Level
 }
 
 // ToFontUnit converts a metrics (typically found in [Glyph] fields)
