@@ -74,7 +74,7 @@ c4f9c9e6e2a46d4d60da5b722cb4ef4cb9bd67d8	2026-10-01	ported		[harfbuzz] cache the
 117857489da8d2a9eb28195e890fa65b00ac154d	2026-10-01	ported		[harfbuzz] read pair positioning value records without allocating. It changes font/opentype Applied out of order for the allocations of the shaper (D70).
 64922d2b48df3ea2ebae4733781b7c0d0c00d91b	2026-10-01	ported		[harfbuzz] read base/ligature/mark2 anchors without boxing them. It changes font/opentype, harfbuzz Applied out of order for the allocations of the shaper (D70).
 ed71a39ba10fb3055ffdab4b1e1c879ce23b75d5	2026-10-06	not-applicable		bump the minimum Go version to 1.22. It changes go.mod. It raises the go line of go.mod to 1.22, cleans go.sum and changes the CI. okage requires Go 1.27.3 already and copies neither file
-b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	pending		replace the hand-rolled min and max helpers with the builtins. It changes bidi, font, harfbuzz, shaping
+b96f51f5614a8fa9e5b7f1844233c9ce6dc3393f	2026-10-06	ported		replace the hand-rolled min and max helpers with the builtins. It changes bidi, font, harfbuzz, shaping
 00dfa4fd057ccc5bac6bff26edf317aa7b7d74f3	2026-10-06	pending		tests: stop calling the deprecated top-level math/rand functions. It changes font/opentype
 1966ba783c7c00ba85f92e237f6233fde9066889	2026-10-06	not-applicable		[fontscan] use any and strings.CutPrefix, available since Go 1.18 and 1.20. It changes only fontscan, which okage does not copy
 2c07decd4b3d7723a4c029bcf68843226fbd3f4b	2026-10-06	pending		[shaping] drop the go1.18 build constraint on the fuzz test. It changes shaping
