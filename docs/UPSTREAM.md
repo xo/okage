@@ -44,7 +44,12 @@ until okage ports the pending commit of its ledger. write-fonts came on
 fontations, which holds write-fonts, read-fonts, skrifa and other crates.
 Its base commit is the tag `write-fonts-v0.48.0`, which is `9af3f318`, the
 version in the `Cargo.lock` of krilla. The column `matched` stays empty
-until okage ports the pending commits of its ledger.
+until okage ports the pending commits of its ledger. go-tex/math came on
+2026-11-20, as the upstream `go-tex-math`, for the math layout of `texmath`
+(D78). It is a Go module, but its policy is `port`, because the port splits
+its parser from its layout and reads fonts with `typesetting`. Its base
+commit is `6a6d2729`, the head of main on 2026-11-18, and its column
+`matched` stays empty until the base port is done.
 
 ## The checkouts
 
@@ -66,13 +71,14 @@ must print nothing:
 git -C upstream/tiny-skia status --short
 ```
 
-Only `upstream/typesetting` holds Go files, because go-text is a Go module
-(D52). Its `go.mod` makes it a module of its own, so `go build ./...` in okage
-skips it. If another upstream adds a Go file, `go build ./...` finds it.
-After each fetch, run this command. It must print nothing:
+Only `upstream/typesetting` and `upstream/go-tex-math` hold Go files,
+because go-text and go-tex/math are Go modules (D52, D78). The `go.mod` of
+each one makes it a module of its own, so `go build ./...` in okage skips it.
+If another upstream adds a Go file, `go build ./...` finds it. After each
+fetch, run this command. It must print nothing:
 
 ```bash
-find upstream -path upstream/typesetting -prune -o -name '*.go' -print
+find upstream \( -path upstream/typesetting -o -path upstream/go-tex-math \) -prune -o -name '*.go' -print
 ```
 
 ## The base commits
@@ -336,6 +342,29 @@ reaches okage only with a new version of subsetter.
 | `LICENSE-MIT`, `LICENSE-APACHE`, `write-fonts/Cargo.toml` | `internal/subsetter/LICENSE` | Review |
 | everything else | none | Not applicable |
 
+### go-tex/math
+
+The port is in the package `texmath`, and the font that the source embeds is
+in `texmath/stixtwomath` (D78). `texmath` is a fork. okage fixes the faults
+of the source in it, and does not try to give the bytes or the rounded
+metrics of the source. The reader of the table MATH that the port needs is
+an addition to `typesetting/font`, marked as D52 says.
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `<name>.go` | `texmath/<name>.go`. A file keeps its name. The parse half of a command stays in the file of the source, and its layout half goes in the same file, in a function whose doc comment names the source function | Port |
+| `<name>_test.go` | `texmath/<name>_test.go` | Port. A test of SVG text becomes a test of items |
+| `stixtwomath.otf`, `STIXTwoMath-OFL.txt`, `font_embed.go` | `texmath/stixtwomath/` | Port, byte for byte for the font and the license |
+| `testdata/nomath.otf` | none | Not applicable. A font of okage replaces it |
+| `go.mod`, `go.sum` | none | Not applicable. okage reads fonts with `typesetting`, not go-opentype |
+| `cmd/**`, `sheet.*`, `README.md`, `.github/**`, `renovate.json` | none | Not applicable |
+
+The files of okage that have no source file are `texmath/node.go` for the
+tree, `texmath/layout.go` for the walk of the tree, and `texmath/item.go`
+for `Box`, `Item`, `Draw` and `Path`. The section "When upstream changes"
+of D78 says how a commit that changes a command, the rounding or a fault
+that okage fixed is ported.
+
 ### File names
 
 The name of a Go file uses the base name of the Rust file without the suffix
@@ -559,7 +588,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-18 eighteen ledgers exist:
+On 2026-11-20 nineteen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -640,6 +669,10 @@ On 2026-11-18 eighteen ledgers exist:
     other 847 are merge commits, or change only other crates, or change
     other parts of write-fonts, so they are `not-applicable`. The column
     `matched` is empty.
+11. `go-tex-math.tsv` starts at `6a6d2729`, the head of main of go-tex/math
+    on 2026-11-18 (D78). On 2026-11-20 the base commit is still the head of
+    main, so the ledger holds no commit. The column `matched` is empty until
+    the base port of phases 23 to 25 of D78 is done.
 
 ## A difference from upstream
 

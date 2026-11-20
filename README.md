@@ -43,6 +43,10 @@
    parse HTML, parse CSS and match CSS selectors in Python, for WeasyPrint.
    okage ports them into the packages `html`, `tinycss2` and `cssselect2`
    (D49, D50).
+5. [go-tex/math][gotexmath] lays out TeX math with the OpenType MATH table
+   of a font, in Go. okage ports it into the package `texmath`, on the fonts
+   of `typesetting`. The package `texmath/stixtwomath` holds the font STIX
+   Two Math, which has a MATH table (D78).
 
 Today [`xo/resvg`][xoresvg] wraps resvg through cgo and a static archive for
 each platform. A program that imports okage needs the Go toolchain and nothing
@@ -228,6 +232,42 @@ okage differs from upstream only where a decision says so:
     `false`, for a path with a point that is NaN or infinite. tiny-skia does
     not end for some of these paths. A path whose points are finite gives
     the bytes of tiny-skia (D74).
+23. When the subset of a font fails, `pdf` draws the glyphs of that font
+    as paths, with the fill and the stroke of the text. The text stays in
+    the file as invisible text, in the font without its font program, so
+    that a reader can copy and search it. `Document.Finish` returns no
+    error for the font, and logs it to the logger of `pdf.WithLogger`.
+    krilla returns an error and writes no file. `pdf.WithSubsetFallback`
+    with `false` gives the error of krilla. `pdf.CheckGlyphs` checks the
+    ranges and the glyph IDs of a run before `Surface.DrawGlyphs`. It
+    returns the error that `Document.Finish` returns for the run (D80).
+24. `texmath` is a fork of go-tex/math, and fixes its faults (D78). Its
+    parser makes a tree, and its layout makes a box of glyphs, rectangles
+    and paths, where the source writes SVG text. The layout reads exact font
+    units with `typesetting` at a size that is a `float64`, where the source
+    rounds each value to a whole pixel. Limits bound the depth, the nodes,
+    the macros, the items and the lengths, and their errors wrap the
+    sentinel errors of the root package. The layout follows TeX Appendix G
+    where the source approximates it: three sizes of scripts, the spaces of
+    script style, a kern that is not an atom, the rules of a binary
+    operator, the shifts of scripts, limits, fractions and stacks with all
+    the constants of the MATH table, a radical sign that centers its body, a
+    large operator on the math axis, and delimiters with
+    `\delimiterfactor` and `\delimitershortfall`. The parts of an assembly go
+    from the bottom up, so a tall parenthesis is not upside down. The
+    additions of phase 26 of D78 use the italic correction, the top accent
+    attachment and the math kerning of the MATH table, and an option turns
+    each one off. They set `\text` and its kin with a text face, shaped with
+    `typesetting/shaping`, or with the math alphabets of the math face, and
+    keep the spaces of `\text`. They add `\color`, `\textcolor`,
+    `\colorbox`, `\fcolorbox`, `\fbox`, `\cancel`, `\tag`, `\hline`,
+    `\cfrac`, `\kern`, `\hspace`, `\llap` and the other missing commands of
+    KaTeX that Mermaid labels use, `\newcommand`, and the macros of KaTeX
+    such as `\R`. `\overbrace` and `\underbrace` draw a brace that grows,
+    the wide accents grow, `\middle` grows to its fence, `\smash` removes
+    the extent, and the size commands such as `\large` change the size. The
+    package comment of `texmath` lists each fault with its line in the
+    source, and each addition.
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
@@ -257,7 +297,15 @@ okage also adds APIs that upstream does not have:
    `lottie` that draws with okage (D41). The sink draws the image assets in
    PNG, JPEG, GIF and WebP, as velato leaves them to the sink. It decodes an
    image that the file embeds as a `data:` URL, and it reads an image file
-   from the `fs.FS` of the option `lottie.WithFS` (D75).
+   from the `fs.FS` of the option `lottie.WithFS` (D75). The sink also
+   draws the Gaussian blur and the drop shadow of a layer, as ThorVG does.
+   `lottie.Parse` reads the text layers, which velato does not parse. A text
+   layer draws the glyphs of the list `chars` of the file. The sink shapes
+   each other character with the fonts of the option
+   `lottie.WithFontDatabase`. Without that option, it logs the character
+   and draws nothing. The size, the fill and the stroke, the justification,
+   the line height, the tracking and the box of a text document apply. The
+   text animators and the text on a path do not (D79).
 6. `lottie.Detect` finds a Lottie document from the start of a file, and
    `lottie.OpenDotLottie` reads a dotLottie archive. `lottie.Load` parses
    either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
@@ -333,6 +381,19 @@ okage also adds APIs that upstream does not have:
 18. `StrokeDash` gives its dash array and its dash offset with the methods
     `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
     with them (D69).
+19. `typesetting/font` reads the OpenType MATH table, which go-text does not
+    read. `Font.HasMath`, `Face.MathConstant` and the other methods of D78
+    give its values in font units, as the API `hb-ot-math` of HarfBuzz does.
+    A malformed MATH table is left out of the font, and never panics (D78).
+20. `texmath.Parse` reads TeX math into a tree of nodes, and a program can
+    build such a tree itself, for example from MathML. `texmath.Layout` lays
+    out a tree with a face that has a MATH table, and `texmath.LayoutTeX`
+    parses and lays out TeX math. The `Box` that they return gives its
+    width, its height, its depth and its items. `Box.Draw` fills it into a
+    pixmap, and `Box.Path` and `Box.ItemPath` give its outlines without a
+    `FontDatabase`. The options `WithColor` and `WithLogger` set the color of
+    the items and log a character without a glyph. `WithTextFace` and
+    `WithTextFamily` give the faces of `\text` and its kin (D78).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as
@@ -360,6 +421,9 @@ MIT license of HarfBuzz in
 package `lottie` takes the MIT license of velato, in
 [lottie/LICENSE](lottie/LICENSE). Its test files are Noto animated emoji
 under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.
+The font STIX Two Math in `texmath/stixtwomath` is under the SIL Open Font
+License 1.1, in [texmath/stixtwomath/OFL.txt](texmath/stixtwomath/OFL.txt)
+(D78).
 
 <div align="center">
   <a href="https://github.com/xo/usql" title="A command line client for many databases">usql</a> |
@@ -384,3 +448,4 @@ under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.
 [xoresvg]: https://github.com/xo/resvg
 [tinygo]: https://tinygo.org
 [typesetting]: https://github.com/go-text/typesetting
+[gotexmath]: https://github.com/go-tex/math

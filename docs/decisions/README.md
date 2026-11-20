@@ -24,15 +24,15 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D2 | [okage is set up for coding agents as dbmeta D110 says](D002-okage-is-set-up-for-coding-agents-as-dbmeta-d110-says.md) | Decided |
 | D3 | [The plan and the rules come before any code](D003-the-plan-and-the-rules-come-before-any-code.md) | Decided |
 | D4 | [Each decision is a file of its own](D004-each-decision-is-a-file-of-its-own.md) | Decided |
-| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50, D51, D52 and D62 |
+| D5 | [The packages follow the crates](D005-the-packages-follow-the-crates.md) | Decided, amended by D38, D41, D47, D48, D49, D50, D51, D52, D62 and D78 |
 | D6 | [The goal is no dependencies](D006-the-goal-is-no-dependencies.md) | Decided, amended by D52 |
-| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45, D48, D52 and D62 |
+| D7 | [Each crate has a policy: port, subset, replace or none](D007-each-crate-has-a-policy-port-subset-replace-or-none.md) | Decided, amended by D41, D45, D48, D52, D62 and D78 |
 | D8 | [The XML and CSS parsers are ports of roxmltree and simplecss](D008-the-xml-and-css-parsers-are-ports-of-roxmltree-and-simplecss.md) | Decided, amended by D47 and D50 |
-| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36, D45, D52 and D62 |
+| D9 | [Text uses go-text, and the layout of text of usvg is ported](D009-text-uses-go-text-and-the-layout-of-text-of-usvg-is-ported.md) | Decided, amended by D32, D36, D45, D52, D62 and D78 |
 | D10 | [A name that collides takes the name of its module](D010-a-name-that-collides-takes-the-name-of-its-module.md) | Decided |
 | D11 | [The upstream checkouts are in `upstream/`, and git ignores them](D011-the-upstream-checkouts-are-in-upstream-and-git-ignores-them.md) | Decided |
 | D12 | [Each upstream has a base commit and a ledger of its own](D012-each-upstream-has-a-base-commit-and-a-ledger-of-its-own.md) | Decided, amended by D52 |
-| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49, D50 and D52 |
+| D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49, D50, D52 and D78 |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
 | D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34, D54, D71 and D74 |
@@ -60,7 +60,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5, amended by D49 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
 | D40 | [Text falls back for an emoji that the font does not draw as an emoji](D040-text-falls-back-for-an-emoji-that-the-font-does-not-draw-as-emoji.md) | Decided, amends D39 |
-| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44 and D75 |
+| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44, D75 and D79 |
 | D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 |
 | D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
@@ -81,7 +81,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |
 | D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
 | D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |
-| D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32, amended by D66 and D68 |
+| D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32, amended by D66, D68 and D80 |
 | D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52, amended by D76 |
 | D64 | [Radial gradients with the extend rule of PDF](D064-radial-gradients-with-the-extend-rule-of-pdf.md) | Decided |
 | D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided, amended by D67 |
@@ -89,10 +89,14 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D67 | [typesetting applies the fixes of malformed input out of order](D067-typesetting-applies-the-fixes-of-malformed-input-out-of-order.md) | Decided, amends D65 |
 | D68 | [`pdf` adds what the PDF device of ivy needs](D068-pdf-adds-what-the-pdf-device-of-ivy-needs.md) | Decided, amends D62, amended by D69 |
 | D69 | [Dashes, many stops and image masks for the PDF device of ivy](D069-dashes-many-stops-and-image-masks-for-the-pdf-device-of-ivy.md) | Decided, amends D68 |
-| D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided |
+| D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided, amended by D77 |
 | D71 | [The copy of go-text does not fuse a multiply and an add](D071-the-copy-of-go-text-does-not-fuse-a-multiply-and-an-add.md) | Decided, amends D16 |
 | D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided |
 | D73 | [typesetting fixes the faults that go-text still has](D073-typesetting-fixes-the-faults-that-go-text-still-has.md) | Decided |
 | D74 | [pdf reuses its compressor, limits a subset, and a stroke ends on NaN](D074-pdf-reuses-its-compressor-limits-a-subset-and-a-stroke-ends-on-nan.md) | Decided, amends D16 |
 | D75 | [lottie draws image assets in the pixmap sink](D075-lottie-draws-image-assets-in-the-pixmap-sink.md) | Decided, amends D41 |
 | D76 | [The test fonts of go-text are a module of their own](D076-the-test-fonts-of-go-text-are-a-module-of-their-own.md) | Decided, amends D63 |
+| D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70 |
+| D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13 |
+| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41 |
+| D80 | [pdf draws a font as paths when its subset fails](D080-pdf-draws-a-font-as-paths-when-its-subset-fails.md) | Decided, amends D62 |

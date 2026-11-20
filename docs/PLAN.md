@@ -1104,7 +1104,8 @@ list. The numbers do not repeat. The maintainers answered question 19 with
 D63, and questions 20 to 27 with the recommendations of D62, on 2026-11-18.
 D68 answers question 28, on 2026-11-19. D69 answers question 29, and
 D70 answers question 30, on 2026-11-19. D71 answers question 31, on
-2026-11-20. No question is open. The next question is question 32.
+2026-11-20. D78 answers question 32 with answer 1, on 2026-11-20. No
+question is open. The next question is question 33.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -1266,3 +1267,36 @@ The recommendation is answer 1, and ivy gives the text of its clusters,
 which its layout knows. Answer 2 guesses wrong for a ligature or a glyph of
 two characters.
 
+### Question 32: where the math layout lives, and what okage holds of it
+
+Asked on 2026-11-20, from D78. ivy will set the math of LaTeX with a copy
+of go-tex/engine, and lay out the math of Office Math, MathML and
+OpenDocument formulas. zuzu draws the KaTeX math of Mermaid labels. Both
+programs ask for one math layout in okage. The source is go-tex/math at
+`6a6d2729`, about 4,600 lines of Go under the BSD-3-Clause license, which
+reads fonts with go-opentype. The maintainers can choose one of these
+answers:
+
+1. okage ports go-tex/math into `texmath`, a public package at the root of
+   the module, on the fonts of `typesetting`. The port splits the parser
+   from the layout, so that ivy builds a tree of nodes without TeX. It gives
+   items, a path and a call that draws with okage. typesetting reads the
+   MATH table as an addition to the copy of go-text. STIX Two Math is in
+   `texmath/stixtwomath`.
+2. The same port, in `typesetting/texmath`, beside the copy of go-text.
+3. okage adds only the reader of the MATH table to `typesetting/font`, as
+   the item "Math" of `BACKLOG.md` says. ivy and zuzu each keep a parser and
+   a layout of their own.
+4. okage adds nothing. ivy and zuzu import go-tex/math and go-opentype, and
+   each program reads its fonts with two libraries.
+
+The recommendation is answer 1. One port serves both programs, with one
+reader of fonts and one set of tests. A package at the root keeps the
+ledger of go-text apart from the ledger of go-tex/math. With answer 1, the
+maintainers also accept the other recommendations of D78, unless they say
+otherwise: the layout uses exact font units, with a switch that rounds as
+the source does for the comparison only. okage bundles STIX Two Math and
+not Latin Modern Math. The limits of section 5 of D78 apply. The test
+module requires `github.com/go-tex/math` and
+`github.com/go-opentype/opentype` for the source oracle, and runs KaTeX
+with Node. The two helpers for a TeX engine wait until ivy measures a need.
