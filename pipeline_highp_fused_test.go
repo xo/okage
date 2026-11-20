@@ -265,10 +265,6 @@ func sameF32x8(a, b *wide.F32x8) (int, bool) {
 	return 0, true
 }
 
-// TestHighpFused runs each stage of highp, which D33 writes as one loop on
-// the lanes, and its old body in pipeline_highp_ref_test.go on the same
-// random states. It compares the channels, the context and the destination
-// pixmap bit for bit.
 // withSameRow returns stage with the lanes of g set to lane 0 before it
 // runs, so that bilinear and bicubic take the path for lanes that share
 // their row (D35).
@@ -279,6 +275,22 @@ func withSameRow(stage func(*highpPipeline)) func(*highpPipeline) {
 	}
 }
 
+// withSameColumns returns withSameRow of stage with the lanes of r 1/8
+// apart, as for an image that is scaled up by 8, so that bilinear and
+// bicubic take the path for lanes that share their columns too (D35).
+func withSameColumns(stage func(*highpPipeline)) func(*highpPipeline) {
+	return withSameRow(func(p *highpPipeline) {
+		for i := range p.r {
+			p.r[i] = p.r[0] + float32(i)/8
+		}
+		stage(p)
+	})
+}
+
+// TestHighpFused runs each stage of highp, which D33 writes as one loop on
+// the lanes, and its old body in pipeline_highp_ref_test.go on the same
+// random states. It compares the channels, the context and the destination
+// pixmap bit for bit.
 func TestHighpFused(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -338,6 +350,8 @@ func TestHighpFused(t *testing.T) {
 		{"bicubic", (*highpPipeline).bicubic, refHighpBicubic},
 		{"bilinearRow", withSameRow((*highpPipeline).bilinear), withSameRow(refHighpBilinear)},
 		{"bicubicRow", withSameRow((*highpPipeline).bicubic), withSameRow(refHighpBicubic)},
+		{"bilinearColumns", withSameColumns((*highpPipeline).bilinear), withSameColumns(refHighpBilinear)},
+		{"bicubicColumns", withSameColumns((*highpPipeline).bicubic), withSameColumns(refHighpBicubic)},
 		{"padX1", (*highpPipeline).padX1, refHighpPadX1},
 		{"reflectX1", (*highpPipeline).reflectX1, refHighpReflectX1},
 		{"repeatX1", (*highpPipeline).repeatX1, refHighpRepeatX1},

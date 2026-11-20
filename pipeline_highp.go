@@ -1530,7 +1530,9 @@ func bicubicFar(t float32) float32 {
 // column or its row of pixels, not once for each pixel. Each pixel gets
 // the same operations in the same order, so the bits are the same. If row is
 // true, the lanes of cy have the same bits, and the rows are found once, from
-// lane 0.
+// lane 0. Then a lane whose columns are the columns of the lane before it,
+// as in an image that is scaled up, takes the pixels of that lane, which
+// are already floats.
 func sampler2x2(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
@@ -1542,6 +1544,10 @@ func sampler2x2(
 	s := newSampleCtx(pixmap, ctx)
 	const start = -0.5
 	var ys [2]int32
+	// block holds the channels of the pixels of the lane as floats. The
+	// next lane takes them again if it has the same rows and columns.
+	var block [2][2][BytesPerPixel]float32
+	var prevXs [2]int32
 	for l := range highpStageWidth {
 		if l == 0 || !row {
 			y := cy[l] + start
@@ -1564,15 +1570,24 @@ func sampler2x2(
 			xs[i] = clampIndex(xt, s.w)
 			x += 1.0
 		}
+		if l == 0 || !row || xs != prevXs {
+			for j := range ys {
+				for i := range xs {
+					px := s.pixel(ys[j] + xs[i])
+					block[j][i] = [BytesPerPixel]float32{byteUnit[px[0]], byteUnit[px[1]], byteUnit[px[2]], byteUnit[px[3]]}
+				}
+			}
+			prevXs = xs
+		}
 		var rl, gl, bl, al float32
 		for j := range ys {
 			for i := range xs {
 				w := float32(wx[i][l] * wy[j][l])
-				px := s.pixel(ys[j] + xs[i])
-				rl = madHighp(w, byteUnit[px[0]], rl)
-				gl = madHighp(w, byteUnit[px[1]], gl)
-				bl = madHighp(w, byteUnit[px[2]], bl)
-				al = madHighp(w, byteUnit[px[3]], al)
+				c := &block[j][i]
+				rl = madHighp(w, c[0], rl)
+				gl = madHighp(w, c[1], gl)
+				bl = madHighp(w, c[2], bl)
+				al = madHighp(w, c[3], al)
 			}
 		}
 		r[l], g[l], b[l], a[l] = rl, gl, bl, al
@@ -1594,6 +1609,10 @@ func sampler4x4(
 	s := newSampleCtx(pixmap, ctx)
 	const start = -1.5
 	var ys [4]int32
+	// block holds the channels of the pixels of the lane as floats. The
+	// next lane takes them again if it has the same rows and columns.
+	var block [4][4][BytesPerPixel]float32
+	var prevXs [4]int32
 	for l := range highpStageWidth {
 		if l == 0 || !row {
 			y := cy[l] + start
@@ -1616,15 +1635,24 @@ func sampler4x4(
 			xs[i] = clampIndex(xt, s.w)
 			x += 1.0
 		}
+		if l == 0 || !row || xs != prevXs {
+			for j := range ys {
+				for i := range xs {
+					px := s.pixel(ys[j] + xs[i])
+					block[j][i] = [BytesPerPixel]float32{byteUnit[px[0]], byteUnit[px[1]], byteUnit[px[2]], byteUnit[px[3]]}
+				}
+			}
+			prevXs = xs
+		}
 		var rl, gl, bl, al float32
 		for j := range ys {
 			for i := range xs {
 				w := float32(wx[i][l] * wy[j][l])
-				px := s.pixel(ys[j] + xs[i])
-				rl = madHighp(w, byteUnit[px[0]], rl)
-				gl = madHighp(w, byteUnit[px[1]], gl)
-				bl = madHighp(w, byteUnit[px[2]], bl)
-				al = madHighp(w, byteUnit[px[3]], al)
+				c := &block[j][i]
+				rl = madHighp(w, c[0], rl)
+				gl = madHighp(w, c[1], gl)
+				bl = madHighp(w, c[2], bl)
+				al = madHighp(w, c[3], al)
 			}
 		}
 		r[l], g[l], b[l], a[l] = rl, gl, bl, al
