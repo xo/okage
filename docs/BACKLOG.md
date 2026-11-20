@@ -291,14 +291,20 @@ test:
    the scalar build and from -4 to -2 percent in the SIMD build, because
    the fills of the cells take most of it. `BenchmarkDrawPixmapLayer`,
    whose mask is a circle in the middle of the page, went from 6.2 ms to
-   5.2 ms in the scalar build. One step remains:
-   - A clip of a rectangle on the grid of the pixels still makes a mask. ivy
-     can draw such a clip without a mask, as `PixmapSink` of `lottie` does,
-     or the API of okage can take a clip rectangle. That is a decision of
-     the maintainers.
+   5.2 ms in the scalar build. Since 2026-11-21, `NewRectMask` makes a mask
+   of a rectangle on the grid of the pixels that holds no pixels, and a draw
+   through it skips the stage `mask_u8` inside the rectangle (D86). A page
+   of 496 cells on the pixel grid in `BenchmarkClipGrid`, which makes a mask
+   of pixels for each cell, takes 61.9 ms in the scalar build and 61.6 ms in
+   the SIMD build. With a mask of `NewRectMask` for each cell, in
+   `BenchmarkClipGridRect`, it takes 50.5 ms and 51.4 ms. Both allocate
+   about 12 MiB, because the blitter compiles each pipeline a second time
+   without `mask_u8`, in place of the pixels of the mask. The fills of the
+   cells take most of the time. `BenchmarkClipSpreadsheet`, whose cells are
+   not on the pixel grid, stays at 81 ms in both builds.
 
    Source: ivy, item 5 of "Left by the speed of 2026-11-18", 2026-11-19,
-   and `bench_ivy_test.go`, 2026-11-20.
+   `bench_ivy_test.go`, 2026-11-20, and D86, 2026-11-21.
 
 ### Measure the cost of GOEXPERIMENT=simd in each release of Go
 

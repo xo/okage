@@ -401,6 +401,11 @@ okage also adds APIs that upstream does not have:
     `FontDatabase`. The options `WithColor` and `WithLogger` set the color of
     the items and log a character without a glyph. `WithTextFace` and
     `WithTextFamily` give the faces of `\text` and its kin (D78).
+21. `NewRectMask` makes a mask that is 255 on a rectangle and 0 elsewhere,
+    and holds the rectangle in place of its pixels. A draw through it gives
+    the same bytes as through a mask of those pixels, and skips the stage
+    `mask_u8` inside the rectangle. The first method that reads or writes
+    the pixels of the mask makes them (D86).
 
 The output of `svg` is compared with resvg and with libvips within a
 tolerance, not byte for byte (D23). The renderer gives the same bytes as

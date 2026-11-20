@@ -83,6 +83,13 @@ the same place. It is a deliberate addition to the API of tiny-skia.
 A clip of a rectangle on the grid of the pixels allocates one row in place
 of its pixels, and its draws skip the stage `mask_u8` inside the
 rectangle. `PixmapSink` of `lottie` makes its masks of a rectangle with
-`NewRectMask`, and draws the same bytes. This decision amends D60: a
+`NewRectMask`, and draws the same bytes. On 2026-11-21, a page of 496
+cells on the pixel grid in `BenchmarkClipGrid` took 61.9 ms in the scalar
+build and 61.6 ms in the SIMD build with a mask of pixels for each cell.
+With a mask of `NewRectMask` for each cell, in `BenchmarkClipGridRect`, it
+took 50.5 ms and 51.4 ms. Both allocated about 12 MiB, because the blitter
+compiles each pipeline a second time in place of the pixels of the mask.
+`BenchmarkClipSpreadsheet`, whose cells are not on the pixel grid, stayed
+at 81 ms. This decision amends D60: a
 `Mask` now has two forms, the rows and the columns of D35 and D60, and the
 rectangle of this decision.

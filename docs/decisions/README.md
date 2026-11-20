@@ -79,7 +79,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D57 | [`svg` gives the faces, the clusters and the color glyphs of text](D057-svg-gives-the-faces-the-clusters-and-the-color-glyphs-of-text.md) | Decided, amends D37 |
 | D58 | [SVG images for a layout, and :has() in linear time](D058-svg-images-for-a-layout-and-has-in-linear-time.md) | Decided, amends D47 and D50 |
 | D59 | [typesetting draws seac and the FontMatrix, and fixes the digest](D059-typesetting-draws-seac-and-the-fontmatrix-and-fixes-the-digest.md) | Decided |
-| D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided |
+| D60 | [A masked fill skips the pixels that its mask hides](D060-a-masked-fill-skips-the-pixels-that-its-mask-hides.md) | Decided, amended by D86 |
 | D61 | [The font loader limits tables, and the matcher groups selectors by name](D061-the-font-loader-limits-tables-and-the-matcher-groups-selectors-by-name.md) | Decided |
 | D62 | [`pdf` writes PDF files, as a port of krilla](D062-pdf-writes-pdf-files-as-a-port-of-krilla.md) | Decided, amends D5, D7, D9 and D32, amended by D66, D68 and D80 |
 | D63 | [The tests of go-text read copies of their fonts](D063-the-tests-of-go-text-read-copies-of-their-fonts.md) | Decided, amends D52, amended by D76 |

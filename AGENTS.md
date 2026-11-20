@@ -26,7 +26,7 @@ integration tests of upstream pass, and the Rust oracle gives the same bytes
 on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35). `svg` holds the port of usvg and resvg, with the layout of text on
 go-text (D9), up to the commit `433d0213` of resvg. The maintainers accepted the decisions D1
-to D85. The package `html` parses and lays out the HTML-like labels of
+to D86. The package `html` parses and lays out the HTML-like labels of
 Graphviz, with `dot` as its oracle (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
 velato at the commit `83336b65`, with velato and ThorVG as its oracles (D41,
@@ -63,6 +63,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | naming a function whose Rust name collides with another | D10 |
 | working on the scan converter, a huge path, or the fast path of `DrawPixmap` | D53 |
 | working on the coverage of a fill, stroke adjustment or the clip of a hairline | D16, then D54 |
+| working on a `Mask`, a clip, or the stage `mask_u8` | D35 and D60, then D86 for the masks of `NewRectMask` |
 | working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |
 | working on the radial gradients of `NewRadialGradientExtend`, for the radial shadings of PDF | D64, then D55 |
 | working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |

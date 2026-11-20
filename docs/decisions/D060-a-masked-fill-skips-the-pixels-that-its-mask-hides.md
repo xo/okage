@@ -1,6 +1,6 @@
 # D60. A masked fill skips the pixels that its mask hides
 
-Status: Decided.
+Status: Decided, amended by D86.
 
 ## Context
 
