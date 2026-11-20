@@ -160,8 +160,10 @@ func compareFile(ctx context.Context, r *lottie.Renderer, file string) []result 
 }
 
 // compareFrames compares five frames of the composition c of okage with the
-// frames of ThorVG for the Lottie document data.
-func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okagelottie.Composition, data []byte) []result {
+// frames of ThorVG for the Lottie document data. Without opts, okage draws
+// each frame with RenderFrame, and else with a PixmapSink with the options
+// opts.
+func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okagelottie.Composition, data []byte, opts ...okagelottie.SinkOption) []result {
 	a, err := r.Load(ctx, data, lottie.Options{})
 	if err != nil {
 		return []result{{name: name, err: "thorvg: " + err.Error()}}
@@ -185,7 +187,7 @@ func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okag
 			continue
 		}
 		m := pm.AsMut()
-		if err := okagelottie.RenderFrame(c, c.Frames[0]+float64(f), okagelottie.IdentityAffine, &m); err != nil {
+		if err := renderFrame(c, c.Frames[0]+float64(f), &m, opts); err != nil {
 			res.err = "okage: " + err.Error()
 			results = append(results, res)
 			continue
@@ -198,12 +200,21 @@ func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okag
 			_ = os.WriteFile(filepath.Join(dump, fmt.Sprintf("%s-%03d-thorvg.png", name, int(f))), b, 0o644)
 			pm2, _ := okage.NewPixmap(uint32(c.Width), uint32(c.Height))
 			m2 := pm2.AsMut()
-			_ = okagelottie.RenderFrame(c, c.Frames[0]+float64(f), okagelottie.IdentityAffine, &m2)
+			_ = renderFrame(c, c.Frames[0]+float64(f), &m2, opts)
 			_ = pm2.SavePNG(filepath.Join(dump, fmt.Sprintf("%s-%03d-okage.png", name, int(f))))
 		}
 		results = append(results, res)
 	}
 	return results
+}
+
+// renderFrame draws the frame of c onto pixmap, with RenderFrame when opts
+// is empty, and else with a PixmapSink with the options opts.
+func renderFrame(c *okagelottie.Composition, frame float64, pixmap *okage.PixmapMut, opts []okagelottie.SinkOption) error {
+	if len(opts) == 0 {
+		return okagelottie.RenderFrame(c, frame, okagelottie.IdentityAffine, pixmap)
+	}
+	return okagelottie.NewRenderer().Append(c, frame, okagelottie.IdentityAffine, 1, okagelottie.NewPixmapSink(pixmap, opts...))
 }
 
 // report logs the results, worst first.

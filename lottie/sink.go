@@ -18,6 +18,7 @@ import (
 	"github.com/xo/okage"
 	"github.com/xo/okage/kurbo"
 	"github.com/xo/okage/path"
+	"github.com/xo/okage/svg"
 )
 
 // PixmapSink is a Sink that draws onto an okage pixmap. Each layer is a
@@ -37,6 +38,12 @@ type PixmapSink struct {
 	logger *slog.Logger
 	// images holds the decoded image assets.
 	images *imageCache
+	// fonts holds the fonts of the characters of a text layer that the
+	// file has no glyph for, or nil, and faces the faces that the sink
+	// loaded from it, by font, with nil for a font that it does not have
+	// (D79).
+	fonts *svg.FontDatabase
+	faces map[string]*textFace
 }
 
 // pixRect is a rectangle of pixels, from (x0, y0) to (x1, y1), exclusive. It
@@ -78,8 +85,10 @@ type sinkLayer struct {
 	clip pixRect
 	// dirty holds the pixels that the draws into the layer touch.
 	dirty pixRect
-	// filter is the effect of a filter layer, which has no clip, or nil.
-	filter *FilterEffect
+	// filter is the effect of a filter layer, which has no clip, or nil,
+	// and transform is the transform of the layer of the effect.
+	filter    *FilterEffect
+	transform kurbo.Affine
 }
 
 // NewPixmapSink returns a sink that draws onto target, with the options
@@ -186,10 +195,12 @@ func (s *PixmapSink) PopLayer() {
 		release(layer.pixmap, layer.dirty)
 		return
 	}
-	defer release(layer.pixmap, layer.dirty)
+	// A blur or a shadow grows the dirty rectangle, so the filter goes
+	// first, and the release clears the grown rectangle.
 	if layer.filter != nil {
-		applyFilter(layer.pixmap, layer.filter, layer.dirty)
+		layer.dirty = s.applyFilter(layer)
 	}
+	defer release(layer.pixmap, layer.dirty)
 	// A mode that keeps the target where the layer is transparent changes
 	// only the dirty pixels. Any other mode changes each pixel of the clip.
 	region := layer.dirty.intersect(layer.clip)
@@ -343,9 +354,9 @@ func composite(dst, src, mask []byte, width int, region pixRect, compose Compose
 	}
 }
 
-// applyFilter applies the effect of a Fill or Tint filter to the pixels of
-// pixmap in region, as FilterEffect describes them.
-func applyFilter(pixmap *okage.Pixmap, f *FilterEffect, region pixRect) {
+// applyColorFilter applies the effect of a Fill or Tint filter to the pixels
+// of pixmap in region, as FilterEffect describes them.
+func applyColorFilter(pixmap *okage.Pixmap, f *FilterEffect, region pixRect) {
 	data := pixmap.DataMut()
 	width := int(pixmap.Width())
 	for y := region.y0; y < region.y1; y++ {
@@ -498,13 +509,10 @@ func (s *PixmapSink) rectMask(r pixRect) *okage.Mask {
 	return mask
 }
 
-// PushFilter starts a layer for a Fill or a Tint effect. It returns
-// FilterUnsupported for the Gaussian blur and the drop shadow, as the sinks
-// of velato for Vello do for every effect (D41, D43).
-func (s *PixmapSink) PushFilter(_ kurbo.Affine, effect *FilterEffect) FilterLayerResult {
-	if effect.Kind != EffectFill && effect.Kind != EffectTint {
-		return FilterUnsupported
-	}
+// PushFilter starts a layer for a Fill, a Tint, a Gaussian blur or a drop
+// shadow effect of a layer under transform. The sinks of velato for Vello
+// draw no effect (D41, D43, D79).
+func (s *PixmapSink) PushFilter(transform kurbo.Affine, effect *FilterEffect) FilterLayerResult {
 	if s.current() == nil {
 		return FilterUnsupported
 	}
@@ -513,7 +521,7 @@ func (s *PixmapSink) PushFilter(_ kurbo.Affine, effect *FilterEffect) FilterLaye
 		return FilterUnsupported
 	}
 	f := *effect
-	s.stack = append(s.stack, &sinkLayer{pixmap: pixmap, blend: blendMix(MixNormal), alpha: 1, clip: s.canvas(), filter: &f})
+	s.stack = append(s.stack, &sinkLayer{pixmap: pixmap, blend: blendMix(MixNormal), alpha: 1, clip: s.canvas(), filter: &f, transform: transform})
 	return FilterPushed
 }
 

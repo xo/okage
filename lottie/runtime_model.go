@@ -411,6 +411,11 @@ const (
 	// Port: velato gives a solid layer no content. okage fills its
 	// rectangle with its color, as ThorVG does (D43).
 	ContentSolid
+	// ContentText is a text layer.
+	//
+	// Port: velato does not parse a text layer. okage draws its glyphs
+	// (D79).
+	ContentText
 )
 
 // Content is Content in velato src/runtime/model/mod.rs (D27).
@@ -425,6 +430,8 @@ type Content struct {
 	// Color is the color of a solid layer, and Width and Height its size.
 	Color         Color
 	Width, Height float64
+	// Text holds the text documents of a text layer (D79).
+	Text []TextKeyframe
 }
 
 // TrimMode is TrimMode in velato src/runtime/model/mod.rs.

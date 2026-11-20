@@ -31,6 +31,11 @@ type Composition struct {
 	Images map[string]ImageAsset
 	// Collection of layers.
 	Layers []Layer
+	// Fonts holds the fonts of the text layers, by their name, with their
+	// glyphs.
+	//
+	// Port: velato has no text layer (D79).
+	Fonts map[string]*Font
 
 	// Port: velato has no such fields. fsys holds the files of the image
 	// assets, such as the files of a dotLottie archive, or nil. images holds

@@ -132,11 +132,11 @@ func TestImageDeserialize(t *testing.T) {
 	}
 }
 
-// TestUnknownLayerType checks that a layer of another type is an error, as
-// in velato.
+// TestUnknownLayerType checks that a layer of another type, such as an
+// audio layer, is an error, as in velato.
 func TestUnknownLayerType(t *testing.T) {
 	var l AnyLayer
-	if err := json.Unmarshal([]byte(`{"ty": 5, "ip": 0, "op": 1, "ks": {"p": {"k": [0, 0]}}}`), &l); err == nil {
-		t.Error("a text layer gave no error")
+	if err := json.Unmarshal([]byte(`{"ty": 6, "ip": 0, "op": 1, "ks": {"p": {"k": [0, 0]}}}`), &l); err == nil {
+		t.Error("an audio layer gave no error")
 	}
 }

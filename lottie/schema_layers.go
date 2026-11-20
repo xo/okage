@@ -96,6 +96,11 @@ type AnyLayer struct {
 	Shape          *ShapeLayer
 	Null           *NullLayer
 	Image          *ImageLayer
+	// Text is a text layer.
+	//
+	// Port: velato does not parse a text layer, and gives an error for it.
+	// okage parses it (D79).
+	Text *TextLayer
 }
 
 // layerRequired lists the keys that serde requires for each type of layer.
@@ -105,6 +110,8 @@ var layerRequired = map[uint64][]string{
 	2: {"ty", "ip", "op", "ks", "refId"},
 	3: {"ty", "ip", "op", "ks"},
 	4: {"ty", "ip", "op", "ks", "shapes"},
+	// Port: velato has no text layer (D79).
+	5: {"ty", "ip", "op", "ks", "t"},
 }
 
 // UnmarshalJSON reads the layer of the type that "ty" names. Another type is
@@ -141,6 +148,9 @@ func (l *AnyLayer) UnmarshalJSON(data []byte) error {
 	case 4:
 		l.Shape = new(ShapeLayer)
 		target = l.Shape
+	case 5:
+		l.Text = new(TextLayer)
+		target = l.Text
 	}
 	if err := json.Unmarshal(data, target); err != nil {
 		return err
@@ -162,6 +172,8 @@ func (l *AnyLayer) visual() *VisualLayer {
 		return &l.Shape.VisualLayer
 	case l.Null != nil:
 		return &l.Null.VisualLayer
+	case l.Text != nil:
+		return &l.Text.VisualLayer
 	}
 	return &l.Image.VisualLayer
 }
@@ -300,6 +312,11 @@ type Animation struct {
 	Markers          []Marker        `json:"markers,omitempty"`
 	Meta             *Meta           `json:"meta,omitempty"`
 	Metadata         json.RawMessage `json:"metadata,omitempty"`
+
+	// Port: velato does not read the fonts and the glyphs of the text
+	// layers (D79).
+	Fonts *FontList  `json:"fonts,omitempty"`
+	Chars []CharData `json:"chars,omitempty"`
 }
 
 // ParseAnimation is Animation::from_slice in velato

@@ -124,6 +124,8 @@ func convAnimation(source *Animation) (*Composition, error) {
 		Images:    map[string]ImageAsset{},
 	}
 	c := converter{velato: lottiecompat.Velato}
+	// Port: velato reads no font and no glyph (D79).
+	target.Fonts = c.convFonts(source)
 	for _, asset := range source.Assets {
 		switch {
 		case asset.Precomposition != nil:
@@ -181,6 +183,10 @@ func (c *converter) convLayer(source *AnyLayer) layerEntry {
 		if color, ok := parseHexColor(source.Solid.Color); ok && !c.velato {
 			layer.Content = Content{Kind: ContentSolid, Color: color, Width: source.Solid.Width, Height: source.Solid.Height}
 		}
+	case source.Text != nil:
+		// Port: velato does not parse a text layer (D79).
+		e = c.setupLayerBase(visual, &layer, startTime(visual))
+		layer.Content = Content{Kind: ContentText, Text: convText(source.Text)}
 	default:
 		// A null layer has no content.
 		e = c.setupLayerBase(visual, &layer, startTime(visual))

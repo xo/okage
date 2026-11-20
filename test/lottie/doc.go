@@ -15,5 +15,7 @@
 // The test skips when the folder holds no file. TestThorVGImage compares
 // two image assets in the same way, an embedded PNG image and a dotLottie
 // archive with a PNG file, and needs no corpus, because it makes them itself
-// (D75). The package has no code of its own.
+// (D75). TestThorVGText and TestThorVGEffects compare text layers, Gaussian
+// blurs and drop shadows in the same way, with files that they make too
+// (D79). The package has no code of its own.
 package lottie
