@@ -1,6 +1,6 @@
 upstream	date	status	okage	note
 2922c6bc3ed2e5f719e6ad54f05771425a682561	2026-09-17	ported		[shaping] use BIDI level to properly compute visual ordering. It changes shaping
-a0d4802591a51a717c612532238de59dd860b844	2026-09-21	pending		[shaping] expose and document Level fields. It changes shaping
+a0d4802591a51a717c612532238de59dd860b844	2026-09-21	ported		[shaping] expose and document Level fields. It changes shaping
 65027726747f49e63ab76c1d7677cceac654391f	2026-09-21	pending		[opentype] expose flavor when writting a font file. It changes font/opentype
 740c56de5fe91e5778cf8715119b09be35ea9e9a	2026-09-22	pending		[bidi,shaping] better handle input containing multiple paragraphs (#275). It changes bidi, internal/unicodedata, shaping
 0e62b2a5f51dbc83b325c9cf8c1d6d7dd97bcc37	2026-09-22	pending		[shaping] use BIDI level to properly compute visual ordering. It changes shaping
