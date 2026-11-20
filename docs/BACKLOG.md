@@ -342,13 +342,21 @@ func work(x []float32, b []byte) {
 With `x` and `b` of 4096 values, and 200,000 calls of `work` in a row, a call
 took 1.6 µs in the normal build and 6.3 µs in the SIMD build. With a call of
 `archsimd.ClearAVXUpperBits` for each 64 calls of `work`, it took 1.6 µs in
-the SIMD build. Two steps remain:
+the SIMD build.
 
-- The SIMD code of `internal/wide` leaves the upper bits as they are after
-  each method, and the next plain float code of a stage waits. Clear the
-  bits at the end of each method on amd64, and measure the table of
-  `widegen` again. The rule of 1.2 times of that table was measured before
-  this cause was known.
+The SIMD code of `internal/wide` also leaves the upper bits set after each
+method. On 2026-11-21 a clear at the end of each method and a clear at the
+end of each stage were measured, and the table of `widegen` was measured
+again (`docs/SIMD.md`). Neither clear made the root benchmarks of the SIMD
+build faster: +0.4 percent on the geometric mean with the clear in each
+method, and +1.0 percent with the clear at the end of each stage. The hot
+stages run no SIMD code of a method, so okage clears the bits in neither
+place. With the rule of 1.2 times, the table turned the SIMD code of five
+methods off and of no method on: `F32x4.Floor`, `F32x4.Abs`,
+`F32x4.RoundInt`, `F32x8.Floor` and `F32x16.Sqrt`. The geometric mean of
+the root benchmarks of the SIMD build went from 3.491 ms to 3.499 ms, which
+is within the noise. The bytes did not change. One step remains:
+
 - Remove the calls of `wide.ClearUpperBits` if a release of Go clears the
   bits itself, as the documentation of `archsimd.ClearAVXUpperBits` says
   the compiler can do.

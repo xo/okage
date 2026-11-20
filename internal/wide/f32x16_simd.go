@@ -50,9 +50,6 @@ func (v F32x16) Floor() F32x16 {
 // Sqrt is f32x16::sqrt in tiny-skia src/wide/f32x16_t.rs. Each lane is the
 // square root of v.
 func (v F32x16) Sqrt() F32x16 {
-	if useSIMD {
-		return sqrtF32x16SIMD(v)
-	}
 	return sqrtF32x16(v)
 }
 

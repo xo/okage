@@ -119,6 +119,28 @@ amd64 showed it at least 1.2 times as fast as the scalar build. A single
 operation, such as `Add`, is slower in the SIMD build, because the load and
 the store of the arrays cost more than the operation saves.
 
+To measure the table, run `widegen -all`, and run a benchmark of each method
+of the table in both builds, in the form of `bench_test.go`. Then set the
+table and run `widegen` without `-all`. The table was last measured on
+2026-11-21, with Go 1.27.4 on an AMD Ryzen 9 9950X, with 10 runs of each
+benchmark. The SIMD code is on for these methods:
+
+- `F32x4.Round` and `F32x4.Not`.
+- `F32x8.Round`, `RoundInt`, `Fract`, `Normalize`, `IsFinite` and `Powf`.
+- `F32x16.Normalize`, `Floor` and `Round`.
+- `U16x16.Blend`.
+
+That measurement turned the SIMD code of five methods off. The times are the
+median ns for each call:
+
+| Method | Scalar build | SIMD code | Scalar build over SIMD code |
+| --- | --- | --- | --- |
+| `F32x4.Floor` | 13.4 | 14.8 | 0.91 |
+| `F32x4.Abs` | 7.2 | 10.1 | 0.71 |
+| `F32x4.RoundInt` | 17.0 | 18.0 | 0.95 |
+| `F32x8.Floor` | 13.7 | 18.8 | 0.73 |
+| `F32x16.Sqrt` | 16.9 | 14.2 | 1.19 |
+
 The file `<type>_scalar.go` has the tag
 `!goexperiment.simd || okage_scalar || tinygo || !(amd64 || arm64 || wasm)`,
 which is the opposite of the tag of the SIMD implementation. In the SIMD
@@ -142,6 +164,36 @@ whole vector registers. `wide.ClearUpperBits` clears the bits with
 builds. The pipeline calls it once for each row of a rect, and the fast path
 of D53 once for each row of the image (D35). A new loop of plain float code
 that runs for a long time calls it in the same way.
+
+The SIMD code of the methods of `internal/wide` also leaves the upper bits
+set. On 2026-11-21 two places for the clear were measured with the root
+benchmarks of the SIMD build, with 10 runs of each benchmark, on an AMD Ryzen
+9 9950X with Go 1.27.4:
+
+1. At the end of the SIMD code of each method, which `widegen` writes. The
+   geometric mean of the times changed by +0.4 percent.
+2. At the end of each stage, in `nextStage` of `lowp` and of `highp`. The
+   geometric mean changed by +1.0 percent.
+
+Neither place is faster, so okage clears the bits in neither place. The hot
+stages run no SIMD code of a method, because they hold the loops on the
+lanes of D33. A CPU profile of the root benchmarks shows no SIMD code of a
+method. With the SIMD code of every method on, from `widegen -all`, the
+stages call that code, and both places help. The gradients took 11 to 32
+percent less time, and the geometric mean changed by -1.0 percent with the
+clear in each method, and by -0.8 percent with the clear at the end of each
+stage. If the table of `widegen` turns on a method that a hot stage calls,
+measure both places again.
+
+A comparison of two binaries must allow for the place of the code in each
+binary. The loop of `blitRect` that fills a rect with one color has the same
+instructions in each build. It takes 1.5 times as long when it starts 32
+bytes after a boundary of 64 bytes, and five root benchmarks run it:
+`FillSource`, `FillOpaque`, `BlendClear`, `BlendSource` and
+`CompositeBlend/Clear`. On 2026-11-21 that loop started 32 bytes after such
+a boundary in the SIMD build and on the boundary in the scalar build. That
+made the geometric mean of the SIMD build 2.0 percent slower than the
+scalar build. Without those five benchmarks, the difference was 0.1 percent.
 
 ## The operations
 
@@ -211,3 +263,4 @@ When a new release of Go comes out, follow these steps:
 | Release of Go | Date | Result |
 | --- | --- | --- |
 | 1.27.3 | 2026-11-09 | the toolchain of the plan. No code exists yet |
+| 1.27.4 | 2026-11-21 | the table of `widegen` measured again, after the cause in "The upper bits of the vector registers" was found. Five methods turned off, and no method turned on. No change in the bytes |

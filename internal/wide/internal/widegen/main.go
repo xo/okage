@@ -33,8 +33,9 @@
 // the scalar build. A method loads its arrays into vectors and stores the
 // result back, and for a single operation that costs more than the
 // operation saves. arm64 and wasm use the same choice, because they were not
-// measured. To measure again, run widegen with -all, run the benchmarks in
-// both builds, set the table, and run widegen without -all.
+// measured. To measure again, run widegen with -all, run a benchmark of each
+// method of the table in both builds, set the table, and run widegen without
+// -all. docs/SIMD.md gives the last measurement.
 package main
 
 import (
@@ -114,12 +115,13 @@ func ibin(method string, on bool, kind, op string) kernel {
 	return kernel{method: method, on: on, args: kind + kind, ret: kind[0], body: []string{"x." + op + "(y)"}}
 }
 
-// floatKernels gives the kernels that F32x4 and F32x8 share. abs and not say
-// whether Abs and Not are on, because they are faster only for F32x4.
-func floatKernels(abs, not bool) []kernel {
+// floatKernels gives the kernels that F32x4 and F32x8 share. x4 says whether
+// they are the kernels of F32x4, because RoundInt is faster only for F32x8,
+// and Not only for F32x4.
+func floatKernels(x4 bool) []kernel {
 	return []kernel{
-		unary("Floor", true, 'F', "vFloor{W}(x)"),
-		unary("Abs", abs, 'F', "x.ToBits().And(archsimd.BroadcastUint32x{W}(0x7fffffff)).BitsToFloat32()"),
+		unary("Floor", false, 'F', "vFloor{W}(x)"),
+		unary("Abs", false, 'F', "x.ToBits().And(archsimd.BroadcastUint32x{W}(0x7fffffff)).BitsToFloat32()"),
 		{method: "Max", args: "FF", ret: 'F', body: []string{"vMax{W}(x, y)"}},
 		{method: "Min", args: "FF", ret: 'F', body: []string{"vMin{W}(x, y)"}},
 		cmp("CmpEq", false, "Equal"),
@@ -130,7 +132,7 @@ func floatKernels(abs, not bool) []kernel {
 		cmp("CmpLt", false, "Less"),
 		{method: blend, args: "FFF", ret: 'F', body: []string{"z.ToBits().Xor(z.ToBits().Xor(y.ToBits()).And(x.ToBits())).BitsToFloat32()"}},
 		unary("Round", true, 'F', "vRound{W}(x)"),
-		unary("RoundInt", true, 'I', "vTrunc{W}(vRound{W}(x))"),
+		unary("RoundInt", !x4, 'I', "vTrunc{W}(vRound{W}(x))"),
 		unary("TruncInt", false, 'I', "vTrunc{W}(x)"),
 		unary("RecipFast", false, 'F', "archsimd.BroadcastFloat32x{W}(1).Div(x)"),
 		unary("RecipSqrt", false, 'F', "archsimd.BroadcastFloat32x{W}(1).Div(x.Sqrt())"),
@@ -143,14 +145,14 @@ func floatKernels(abs, not bool) []kernel {
 		bit("Or", false, "Or"),
 		bit("Xor", false, "Xor"),
 		unary("Neg", false, 'F', "archsimd.Float32x{W}{}.Sub(x)"),
-		unary("Not", not, 'F', "x.ToBits().Not().BitsToFloat32()"),
+		unary("Not", x4, 'F', "x.ToBits().Not().BitsToFloat32()"),
 	}
 }
 
 // table gives the kernels of each type.
 var table = map[string][]kernel{
-	"F32x4": floatKernels(true, true),
-	"F32x8": append(floatKernels(false, false),
+	"F32x4": floatKernels(true),
+	"F32x8": append(floatKernels(false),
 		unary("Fract", true, 'F', "x.Sub(vFloor{W}(x))"),
 		unary("Normalize", true, 'F', "vMin{W}(vMax{W}(x, archsimd.Float32x{W}{}), archsimd.BroadcastFloat32x{W}(1))"),
 		unary("IsFinite", true, 'F',
@@ -183,7 +185,7 @@ var table = map[string][]kernel{
 		unary("Floor", true, 'F',
 			"rd := vRound{W}(x)",
 			"rd.Sub(maskF{W}(rd.Greater(x)).ToBits().And(archsimd.BroadcastFloat32x{W}(1).ToBits()).BitsToFloat32())"),
-		unary("Sqrt", true, 'F', "x.Sqrt()"),
+		unary("Sqrt", false, 'F', "x.Sqrt()"),
 		unary("Round", true, 'F', "vRound{W}(x)"),
 		{
 			method: "SaveToU16x16", on: false, args: "F", ret: 'I', name: "clampU16F32x16SIMD",

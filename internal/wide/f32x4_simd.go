@@ -13,18 +13,12 @@ package wide
 // the lane. So it is not math.Floor: NaN gives 0, -0 gives 0, and a value out
 // of the range of i32 gives -2147483648 or 2147483648.
 func (v F32x4) Floor() F32x4 {
-	if useSIMD {
-		return floorF32x4SIMD(v)
-	}
 	return floorF32x4(v)
 }
 
 // Abs is f32x4::abs in tiny-skia src/wide/f32x4_t.rs. It clears the sign bit
 // of each lane.
 func (v F32x4) Abs() F32x4 {
-	if useSIMD {
-		return absF32x4SIMD(v)
-	}
 	return absF32x4(v)
 }
 
@@ -108,9 +102,6 @@ func (v F32x4) Round() F32x4 {
 // These technically don't have the same semantics for NaN and out of range
 // values, but it doesn't seem to matter as Skia does it the same way.
 func (v F32x4) RoundInt() I32x4 {
-	if useSIMD {
-		return roundIntF32x4SIMD(v)
-	}
 	return roundIntF32x4(v)
 }
 

@@ -43,20 +43,6 @@ func floorF32x16SIMD(a F32x16) F32x16 {
 	return r
 }
 
-// sqrtF32x16SIMD is the SIMD code of F32x16.Sqrt.
-func sqrtF32x16SIMD(a F32x16) F32x16 {
-	var r F32x16
-	{
-		x := ldF8(a[0][:])
-		x.Sqrt().StoreArray((*[8]float32)(r[0][:]))
-	}
-	{
-		x := ldF8(a[1][:])
-		x.Sqrt().StoreArray((*[8]float32)(r[1][:]))
-	}
-	return r
-}
-
 // roundF32x16SIMD is the SIMD code of F32x16.Round.
 func roundF32x16SIMD(a F32x16) F32x16 {
 	var r F32x16

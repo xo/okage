@@ -12,14 +12,6 @@ import "simd/archsimd"
 // infBits is the bits of +Inf as a float32 value, as in f32x8::powf.
 const infBits = float32(0x7f800000)
 
-// floorF32x8SIMD is the SIMD code of F32x8.Floor.
-func floorF32x8SIMD(a F32x8) F32x8 {
-	var r F32x8
-	x := ldF8(a[:])
-	vFloor8(x).StoreArray((*[8]float32)(r[:]))
-	return r
-}
-
 // fractF32x8SIMD is the SIMD code of F32x8.Fract.
 func fractF32x8SIMD(a F32x8) F32x8 {
 	var r F32x8

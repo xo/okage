@@ -13,9 +13,6 @@ package wide
 // the lane. So it is not math.Floor: NaN gives 0, -0 gives 0, and a value out
 // of the range of i32 gives -2147483648 or 2147483648.
 func (v F32x8) Floor() F32x8 {
-	if useSIMD {
-		return floorF32x8SIMD(v)
-	}
 	return floorF32x8(v)
 }
 
