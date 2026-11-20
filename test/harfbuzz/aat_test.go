@@ -1,6 +1,17 @@
 package harfbuzz_test
 
-import "testing"
+import (
+	"bytes"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"testing"
+
+	"github.com/xo/okage/typesetting/font"
+	"github.com/xo/okage/typesetting/harfbuzz"
+	"github.com/xo/okage/typesetting/language"
+)
 
 // The tests of the audit of D73 of the commits of HarfBuzz after 873dbc1e
 // that change the AAT code. Each test builds a font from
@@ -181,4 +192,82 @@ func TestLookupSegmentsOutOfOrder(t *testing.T) {
 	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
 	morx := morxAuditTable(morxContextualStates(classTable, states, u16s(8, robotoC, 1, robotoD)))
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "bcb", "cccc", "bbbb")
+}
+
+// compareLanguage shapes each text in the font data with harfbuzz and with
+// HarfBuzz, in the language, and fails the test for each difference.
+func compareLanguage(t *testing.T, data []byte, lang string, texts ...string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "font.ttf")
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	want := shapeHarfBuzz(t, path, texts, false, "--language", lang)
+	face, err := font.ParseTTF(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	hf := harfbuzz.NewFont(face)
+	for i, text := range texts {
+		buf := harfbuzz.NewBuffer()
+		buf.AddRunes([]rune(text), 0, -1)
+		buf.Props.Language = language.NewLanguage(lang)
+		buf.GuessSegmentProperties()
+		buf.Shape(hf, nil)
+		var got []string
+		for j, info := range buf.Info {
+			pos := buf.Pos[j]
+			got = append(got, fmt.Sprintf("%d %d %d %d %d %d", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset))
+		}
+		if !slices.Equal(got, want[i].glyphs) {
+			t.Errorf("%+q in %s: got %q, HarfBuzz gives %q", text, lang, got, want[i].glyphs)
+		}
+	}
+}
+
+// ltagTable builds a table ltag with the tags.
+func ltagTable(tags ...string) []byte {
+	out := u32s(1, 0, uint32(len(tags)))
+	offset := 12 + 4*len(tags)
+	var data []byte
+	for _, tag := range tags {
+		out = append(out, u16s(offset+len(data), len(tag))...)
+		data = append(data, tag...)
+	}
+	return append(out, data...)
+}
+
+// morxLanguages builds a table morx with one chain. Its features of the
+// type 39 turn on the flags 2, 4, 8 and 16 for the tags 1, 2, 3 and 9 of
+// the table ltag. The subtable of the flags 2 replaces a with b, the
+// subtable of the flags 4 replaces a with c, the subtable of the flags 8
+// replaces a with d, and the subtable of the flags 16 replaces a with x.
+func morxLanguages() []byte {
+	features := []struct{ setting, flags int }{{1, 2}, {2, 4}, {3, 8}, {9, 16}}
+	replacements := []int{robotoB, robotoC, robotoD, robotoX}
+	length := 16 + 12*len(features) + len(replacements)*(12+8)
+	out := u16s(2, 0)
+	out = append(out, u32s(1, 1, uint32(length), uint32(len(features)), uint32(len(replacements)))...)
+	for _, f := range features {
+		out = append(out, u16s(39, f.setting)...)
+		out = append(out, u32s(uint32(f.flags), 0xFFFFFFFF)...)
+	}
+	for i, glyph := range replacements {
+		out = append(out, u32s(20, 0x20000004, uint32(features[i].flags))...)
+		out = append(out, u16s(8, robotoA, 1, glyph)...)
+	}
+	return out
+}
+
+// TestLtagLanguage: a table morx whose features of the type 39 turn on
+// subtables for the tags sr, Zh_Hant and en@x of the table ltag, and for a
+// tag 9 that the table does not have. From its commit cd570b6f54,
+// HarfBuzz compares the canonical form of a tag with the language of the
+// buffer. The canonical form stops before @. A tag matches the language,
+// or the start of the language up to a '-'.
+func TestLtagLanguage(t *testing.T) {
+	data := robotoWith(t, map[string][]byte{"morx": morxLanguages(), "ltag": ltagTable("sr", "Zh_Hant", "en@x")})
+	for _, lang := range []string{"sr", "SR", "sr-Latn-RS", "srb", "s", "zh-hant", "zh-hant-tw", "zh", "en", "en-us", "enx", "fr"} {
+		compareLanguage(t, data, lang, "a", "aa")
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/xo/okage/typesetting/font/opentype/tables"
+	"github.com/xo/okage/typesetting/language"
 )
 
 // okage: the tests of the audit of D73 of the commits of HarfBuzz after
@@ -244,6 +245,69 @@ func TestLookupSegmentsCollect(t *testing.T) {
 				t.Errorf("%v: glyph %d is in the set: %v, want %v", test.segments, g, got.has(g), want.has(g))
 				break
 			}
+		}
+	}
+}
+
+// ltagTable builds a table ltag with the tags.
+func ltagTable(tags ...string) []byte {
+	out := u32s(1, 0, uint32(len(tags)))
+	offset := 12 + 4*len(tags)
+	var data []byte
+	for _, tag := range tags {
+		out = append(out, u16s(offset+len(data), len(tag))...)
+		data = append(data, tag...)
+	}
+	return append(out, data...)
+}
+
+// morxLanguages builds a table morx with one chain. Its features of the
+// type 39 turn on the flags 2, 4, 8 and 16 for the tags 1, 2, 3 and 9 of
+// the table ltag. The subtable of the flags 2 replaces a with b, the
+// subtable of the flags 4 replaces a with c, the subtable of the flags 8
+// replaces a with d, and the subtable of the flags 16 replaces a with x.
+func morxLanguages() []byte {
+	features := []struct{ setting, flags int }{{1, 2}, {2, 4}, {3, 8}, {9, 16}}
+	replacements := []GID{robotoB, robotoC, robotoD, robotoX}
+	length := 16 + 12*len(features) + len(replacements)*(12+8)
+	out := u16s(2, 0)
+	out = append(out, u32s(1, 1, uint32(length), uint32(len(features)), uint32(len(replacements)))...)
+	for _, f := range features {
+		out = append(out, u16s(39, f.setting)...)
+		out = append(out, u32s(uint32(f.flags), 0xFFFFFFFF)...)
+	}
+	for i, glyph := range replacements {
+		out = append(out, u32s(20, 0x20000004, uint32(features[i].flags))...)
+		out = append(out, u16s(8, int(robotoA), 1, int(glyph))...)
+	}
+	return out
+}
+
+// TestLtagLanguage shapes a in languages with a table morx whose features
+// of the type 39 turn on subtables for the tags sr, Zh_Hant and en@x of
+// the table ltag, and for a tag 9 that the table does not have. As the
+// commit cd570b6f54 of HarfBuzz, in 15.1.0, does, the canonical form of a
+// tag stops before @, and a tag matches the language, or the start of the
+// language up to a '-'. go-text matched the language as the start of the
+// tag, read en@x as en-x, and panicked for the tag 9 (D73).
+func TestLtagLanguage(t *testing.T) {
+	face := fontWithLayout(t, map[string][]byte{"morx": morxLanguages(), "ltag": ltagTable("sr", "Zh_Hant", "en@x")})
+	hf := NewFont(face)
+	for _, test := range []struct {
+		lang string
+		want GID
+	}{
+		{"sr", robotoB}, {"SR", robotoB}, {"sr-Latn-RS", robotoB}, {"srb", robotoA}, {"s", robotoA},
+		{"zh-hant", robotoC}, {"zh-hant-tw", robotoC}, {"zh", robotoA},
+		{"en", robotoD}, {"en-us", robotoD}, {"enx", robotoA}, {"fr", robotoA},
+	} {
+		buf := NewBuffer()
+		buf.AddRunes([]rune("a"), 0, -1)
+		buf.Props.Language = language.NewLanguage(test.lang)
+		buf.GuessSegmentProperties()
+		buf.Shape(hf, nil)
+		if got := buf.Info[0].Glyph; got != test.want {
+			t.Errorf("a in %s: got the glyph %d, want %d", test.lang, got, test.want)
 		}
 	}
 }

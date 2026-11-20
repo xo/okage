@@ -148,7 +148,10 @@ func (mb *aatMapBuilder) compileMorxFlag(chain font.MorxChain) GlyphMask {
 			type_ = aatLayoutFeatureTypeLowerCase
 			setting = aatLayoutFeatureSelectorLowerCaseSmallCaps
 			goto retry
-		} else if type_ == aatLayoutFeatureTypeLanguageTagType && setting != 0 && langMatches(string(mb.tables.Ltag.Language(setting-1)), string(mb.props.Language)) {
+		} else if type_ == aatLayoutFeatureTypeLanguageTagType && setting != 0 &&
+			// okage: the tag matches the language as in HarfBuzz 15.1.0. go-text
+			// matched the language as the start of the tag (D73).
+			mb.tables.Ltag.MatchesLanguage(int(setting)-1, mb.props.Language) {
 			flags &= feature.DisableFlags
 			flags |= feature.EnableFlags
 		}

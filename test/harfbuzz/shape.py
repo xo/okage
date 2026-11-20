@@ -1,13 +1,14 @@
 """Shape texts in a font with uharfbuzz, for the oracle of typesetting/harfbuzz.
 
-Usage: python3 -I shape.py FONT [--flags]
+Usage: python3 -I shape.py FONT [--flags] [--language LANGUAGE]
 
 Each line of the standard input is a text, as the hexadecimal values of its
 characters, separated by spaces. For each text, the script writes one line
 for each glyph, "glyph cluster x_advance y_advance x_offset y_offset", then
 the line "error" when the buffer is in error, then the line "--". With the
 argument --flags, the line of a glyph ends with 1 when the glyph is unsafe
-to break, and with 0 when it is not.
+to break, and with 0 when it is not. With the argument --language, the
+script sets the language of each buffer to LANGUAGE.
 
 The script adds the characters with add_codepoints, as harfbuzz.AddRunes
 does, so that the buffers of HarfBuzz and of harfbuzz grow in the same
@@ -27,12 +28,18 @@ def main():
         print(hb.version_string())
         return
     blob = hb.Blob.from_file_path(sys.argv[1])
-    flags = sys.argv[2:] == ["--flags"]
+    args = sys.argv[2:]
+    flags = "--flags" in args
+    language = None
+    if "--language" in args:
+        language = args[args.index("--language") + 1]
     font = hb.Font(hb.Face(blob))
     out = sys.stdout
     for line in sys.stdin:
         buf = hb.Buffer()
         buf.add_codepoints([int(v, 16) for v in line.split()])
+        if language is not None:
+            buf.language = language
         buf.guess_segment_properties()
         error = False
         try:

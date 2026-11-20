@@ -34,9 +34,10 @@ type shaped struct {
 }
 
 // shapeHarfBuzz shapes each text in the font of the file with shape.py,
-// with the flag unsafe-to-break of each glyph when flags is true. It skips
-// the test when python3 or uharfbuzz with HarfBuzz 15.1.0 is missing.
-func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool) []shaped {
+// with the flag unsafe-to-break of each glyph when flags is true, and with
+// the other arguments of shape.py in args. It skips the test when python3
+// or uharfbuzz with HarfBuzz 15.1.0 is missing.
+func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool, args ...string) []shaped {
 	t.Helper()
 	python, err := exec.LookPath("python3")
 	if err != nil {
@@ -60,7 +61,7 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool) []shap
 		stdin.WriteByte('\n')
 	}
 	var stderr bytes.Buffer
-	args := []string{"-I", "shape.py", path}
+	args = append([]string{"-I", "shape.py", path}, args...)
 	if flags {
 		args = append(args, "--flags")
 	}

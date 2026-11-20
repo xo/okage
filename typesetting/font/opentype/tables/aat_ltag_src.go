@@ -23,3 +23,43 @@ func (lt Ltag) Language(i uint16) language.Language {
 	r := lt.tagRange[i]
 	return language.NewLanguage(string(lt.stringData[r.offset : r.offset+r.length]))
 }
+
+// MatchesLanguage returns true when the tag i matches the language
+// specific. The tag matches when its canonical form is specific, or the
+// start of specific up to a '-'. The canonical form has at most 63 bytes,
+// in lowercase, with '-' for '_', and it stops before the first byte that
+// is not a letter, a digit or '-'.
+//
+// okage: MatchesLanguage follows ltag::matches_language of HarfBuzz
+// 15.1.0, from its commit cd570b6f54. go-text matched a tag when specific
+// was the start of the tag, read the whole tag with language.NewLanguage,
+// which does not stop before such a byte, and panicked for a tag outside
+// the table. Such a tag now matches no language (D73).
+func (lt Ltag) MatchesLanguage(i int, specific language.Language) bool {
+	if i < 0 || i >= len(lt.tagRange) {
+		return false
+	}
+	r := lt.tagRange[i]
+	end := int(r.offset) + int(r.length)
+	if end > len(lt.stringData) {
+		return false
+	}
+	tag, s := lt.stringData[r.offset:end], string(specific)
+	l := 0
+	for ; l < min(len(tag), 63); l++ {
+		c := tag[l]
+		if 'A' <= c && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		if c == '_' {
+			c = '-'
+		}
+		if !('a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '-') {
+			break
+		}
+		if l >= len(s) || c != s[l] {
+			return false
+		}
+	}
+	return l > 0 && (l == len(s) || s[l] == '-')
+}
