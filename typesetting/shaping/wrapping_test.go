@@ -10,6 +10,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/xo/okage/typesetting/bidi"
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/language"
@@ -3519,7 +3520,7 @@ func TestComputeBidiOrdering(t *testing.T) {
 				{Level: 1},
 				{Level: 0},
 			},
-			expectedVisualOrder: []int{0, 4, 5, 3, 2, 1, 6},
+			expectedVisualOrder: []int{0, 5, 4, 3, 1, 2, 6},
 		},
 		{
 			name: "bidi example 3",
@@ -3553,7 +3554,7 @@ func TestComputeBidiOrdering(t *testing.T) {
 				{Level: 1}, // 10
 				{Level: 1}, // 11
 			},
-			expectedVisualOrder: []int{11, 10, 2, 3, 7, 8, 6, 5, 4, 9, 1, 0},
+			expectedVisualOrder: []int{11, 10, 2, 3, 8, 7, 6, 4, 5, 9, 1, 0},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3693,4 +3694,27 @@ func TestWrapping_oneLine_overflow_bug(t *testing.T) {
 	l.Prepare(WrapConfig{BreakPolicy: Never}, textInput, NewSliceIterator(out))
 	_, done := l.WrapNextLine(maxWidth)
 	tu.Assert(t, done)
+}
+
+func TestComputeBidiOrderingLevels(t *testing.T) {
+	for _, tc := range []struct {
+		levels []bidi.Level
+		want   []int32
+	}{
+		{[]bidi.Level{0, 1, 2, 2, 1, 1, 0}, []int32{0, 5, 3, 4, 2, 1, 6}},
+		{[]bidi.Level{0, 2, 2, 0}, []int32{0, 1, 2, 3}},
+		{[]bidi.Level{1, 3, 3, 1}, []int32{3, 2, 1, 0}},
+		{[]bidi.Level{2, 2, 2}, []int32{0, 1, 2}},
+	} {
+		line := make(Line, len(tc.levels))
+		for i, level := range tc.levels {
+			line[i].Level = level
+		}
+		computeBidiOrdering(line)
+		for i, run := range line {
+			if run.VisualIndex != tc.want[i] {
+				t.Errorf("levels %v: logical run %d has visual index %d, want %d", tc.levels, i, run.VisualIndex, tc.want[i])
+			}
+		}
+	}
 }

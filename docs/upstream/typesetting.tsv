@@ -67,7 +67,7 @@ a45265919b9bad03e4aeb6608f67d9bb74bbca01	2026-09-30	ported		[font] gvar: reject 
 001e002b19a055da049dce2bb64946cea19618c2	2026-09-30	ported		[font] gvar: extract checkTupleAxisCount helper. It changes font. Applied out of order for the malformed variable fonts of internal/subsetter (D65)
 7f66441ebcc89567f7ad6a75435484df12927514	2026-10-01	ported		[font] cache the un-compressed SVG document and its viewBox. It changes font
 cf60e2df3e7d1a429d2a6315c221dda9bd7de466	2026-10-01	ported		[bidi] preserve embedding levels at run boundaries. It changes bidi
-5052c255b2c4a7923ff7b8f2cc211ff5cc990a6f	2026-10-01	pending		[shaping] reflect visual indices when reversing an L2 sequence. It changes shaping
+5052c255b2c4a7923ff7b8f2cc211ff5cc990a6f	2026-10-01	ported		[shaping] reflect visual indices when reversing an L2 sequence. It changes shaping
 c4f9c9e6e2a46d4d60da5b722cb4ef4cb9bd67d8	2026-10-01	ported		[harfbuzz] cache the Arabic fallback plan on the shaper plan. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
 09d8f6df1af089b01584b128e6173c9ae5759bde	2026-10-01	ported		[harfbuzz] build context matchers as values instead of closures. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
 11522e5820126ba7e9d2bc153017b30d3d87539a	2026-10-01	ported		[harfbuzz] stop allocating on nested lookup recursion. It changes harfbuzz Applied out of order for the allocations of the shaper (D70).
