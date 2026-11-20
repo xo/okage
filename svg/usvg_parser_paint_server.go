@@ -91,12 +91,13 @@ func convertLinear(node svgNode, state *converterState) (serverOrColor, bool) {
 			state,
 			svgtypes.NewLength(100.0, svgtypes.LengthUnitPercent),
 		),
-		y2:           resolveNumber(node, AIdY2, units, state, svgtypes.LengthZero()),
-		id:           id,
-		units:        units,
-		transform:    transform,
-		spreadMethod: convertSpreadMethod(node),
-		stops:        stops,
+		y2:                 resolveNumber(node, AIdY2, units, state, svgtypes.LengthZero()),
+		id:                 id,
+		units:              units,
+		transform:          transform,
+		spreadMethod:       convertSpreadMethod(node),
+		colorInterpolation: convertColorInterpolation(node),
+		stops:              stops,
 	}
 
 	return serverOrColor{server: gradient}, true
@@ -162,17 +163,18 @@ func convertRadial(node svgNode, state *converterState) (serverOrColor, bool) {
 		frPositive = 0
 	}
 	gradient := &RadialGradient{
-		cx:           cx,
-		cy:           cy,
-		r:            rPositive,
-		fx:           fx,
-		fy:           fy,
-		fr:           frPositive,
-		id:           id,
-		units:        units,
-		transform:    transform,
-		spreadMethod: spreadMethod,
-		stops:        stops,
+		cx:                 cx,
+		cy:                 cy,
+		r:                  rPositive,
+		fx:                 fx,
+		fy:                 fy,
+		fr:                 frPositive,
+		id:                 id,
+		units:              units,
+		transform:          transform,
+		spreadMethod:       spreadMethod,
+		colorInterpolation: convertColorInterpolation(node),
+		stops:              stops,
 	}
 
 	return serverOrColor{server: gradient}, true
@@ -266,6 +268,15 @@ func convertPattern(
 	updatePaintServers(&patt.root, path.DefaultTransform(), nil, nil, cache)
 
 	return serverOrColor{server: patt}, true
+}
+
+// convertColorInterpolation is convert_color_interpolation in usvg
+// src/parser/paint_server.rs.
+func convertColorInterpolation(node svgNode) ColorInterpolationFilter {
+	if v, ok := nodeFindAttribute(node, AIdColorInterpolation, fromValueStr); ok && v == "linearRGB" { //nolint:goconst // an SVG keyword, as upstream writes it
+		return ColorInterpolationFilterLinearRGB
+	}
+	return ColorInterpolationFilterSRGB
 }
 
 // convertSpreadMethod is convert_spread_method in usvg
@@ -955,32 +966,34 @@ func processContextPaint(
 	case *LinearGradient:
 		transform := p.transform.PostConcat(revTransform)
 		newPaint := &LinearGradient{
-			x1:           p.x1,
-			y1:           p.y1,
-			x2:           p.x2,
-			y2:           p.y2,
-			id:           cache.genLinearGradientID(),
-			units:        p.units,
-			transform:    transform,
-			spreadMethod: p.spreadMethod,
-			stops:        p.stops,
+			x1:                 p.x1,
+			y1:                 p.y1,
+			x2:                 p.x2,
+			y2:                 p.y2,
+			id:                 cache.genLinearGradientID(),
+			units:              p.units,
+			transform:          transform,
+			spreadMethod:       p.spreadMethod,
+			colorInterpolation: p.colorInterpolation,
+			stops:              p.stops,
 		}
 		cache.replacePaint(*paint, newPaint)
 		*paint = newPaint
 	case *RadialGradient:
 		transform := p.transform.PostConcat(revTransform)
 		newPaint := &RadialGradient{
-			cx:           p.cx,
-			cy:           p.cy,
-			r:            p.r,
-			fx:           p.fx,
-			fy:           p.fy,
-			fr:           p.fr,
-			id:           cache.genRadialGradientID(),
-			units:        p.units,
-			transform:    transform,
-			spreadMethod: p.spreadMethod,
-			stops:        p.stops,
+			cx:                 p.cx,
+			cy:                 p.cy,
+			r:                  p.r,
+			fx:                 p.fx,
+			fy:                 p.fy,
+			fr:                 p.fr,
+			id:                 cache.genRadialGradientID(),
+			units:              p.units,
+			transform:          transform,
+			spreadMethod:       p.spreadMethod,
+			colorInterpolation: p.colorInterpolation,
+			stops:              p.stops,
 		}
 		cache.replacePaint(*paint, newPaint)
 		*paint = newPaint
@@ -1095,15 +1108,16 @@ func paintToUserCoordinates(paint *Paint, bbox Rect, cache *converterCache) bool
 			p.units = unitsUserSpaceOnUse
 		} else {
 			newPaint := &LinearGradient{
-				x1:           p.x1,
-				y1:           p.y1,
-				x2:           p.x2,
-				y2:           p.y2,
-				id:           cache.genLinearGradientID(),
-				units:        unitsUserSpaceOnUse,
-				transform:    transform,
-				spreadMethod: p.spreadMethod,
-				stops:        p.stops,
+				x1:                 p.x1,
+				y1:                 p.y1,
+				x2:                 p.x2,
+				y2:                 p.y2,
+				id:                 cache.genLinearGradientID(),
+				units:              unitsUserSpaceOnUse,
+				transform:          transform,
+				spreadMethod:       p.spreadMethod,
+				colorInterpolation: p.colorInterpolation,
+				stops:              p.stops,
 			}
 			cache.replacePaint(p, newPaint)
 			*paint = newPaint
@@ -1115,17 +1129,18 @@ func paintToUserCoordinates(paint *Paint, bbox Rect, cache *converterCache) bool
 			p.units = unitsUserSpaceOnUse
 		} else {
 			newPaint := &RadialGradient{
-				cx:           p.cx,
-				cy:           p.cy,
-				r:            p.r,
-				fx:           p.fx,
-				fy:           p.fy,
-				fr:           p.fr,
-				id:           cache.genRadialGradientID(),
-				units:        unitsUserSpaceOnUse,
-				transform:    transform,
-				spreadMethod: p.spreadMethod,
-				stops:        p.stops,
+				cx:                 p.cx,
+				cy:                 p.cy,
+				r:                  p.r,
+				fx:                 p.fx,
+				fy:                 p.fy,
+				fr:                 p.fr,
+				id:                 cache.genRadialGradientID(),
+				units:              unitsUserSpaceOnUse,
+				transform:          transform,
+				spreadMethod:       p.spreadMethod,
+				colorInterpolation: p.colorInterpolation,
+				stops:              p.stops,
 			}
 			cache.replacePaint(p, newPaint)
 			*paint = newPaint

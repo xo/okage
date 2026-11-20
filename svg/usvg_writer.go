@@ -1224,6 +1224,10 @@ func writeBaseGrad(g *BaseGradient, opt *writeOptions, xml svgWriter) {
 		xml.writeSvgAttribute(AIdSpreadMethod, "repeat")
 	}
 
+	if g.colorInterpolation == ColorInterpolationFilterLinearRGB {
+		xml.writeSvgAttribute(AIdColorInterpolation, "linearRGB")
+	}
+
 	for _, s := range g.stops {
 		xml.startSvgElement(EIdStop)
 		xml.writeSvgAttributeF32(AIdOffset, s.offset.Get())

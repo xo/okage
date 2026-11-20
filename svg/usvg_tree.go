@@ -428,11 +428,12 @@ func (m SpreadMethod) String() string {
 // BaseGradient is BaseGradient in usvg src/tree/mod.rs. It is a generic
 // gradient.
 type BaseGradient struct {
-	id           nonEmptyString
-	units        units // used only during parsing
-	transform    Transform
-	spreadMethod SpreadMethod
-	stops        []Stop
+	id                 nonEmptyString
+	units              units // used only during parsing
+	transform          Transform
+	spreadMethod       SpreadMethod
+	colorInterpolation ColorInterpolationFilter
+	stops              []Stop
 }
 
 // ID is BaseGradient::id in usvg src/tree/mod.rs. It returns the element's
@@ -458,6 +459,13 @@ func (g *BaseGradient) Transform() Transform {
 // `spreadMethod` in SVG.
 func (g *BaseGradient) SpreadMethod() SpreadMethod {
 	return g.spreadMethod
+}
+
+// ColorInterpolation is BaseGradient::color_interpolation in usvg
+// src/tree/mod.rs. It returns the color space stop colors are interpolated
+// in.
+func (g *BaseGradient) ColorInterpolation() ColorInterpolationFilter {
+	return g.colorInterpolation
 }
 
 // Stops is BaseGradient::stops in usvg src/tree/mod.rs. It returns a list of

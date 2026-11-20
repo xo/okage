@@ -7,6 +7,7 @@ package svg
 
 import (
 	"github.com/xo/okage"
+	"github.com/xo/okage/internal/crmath"
 	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/path"
 )
@@ -210,7 +211,7 @@ func convertBaseGradient(gradient *BaseGradient, opacity Opacity) (okage.SpreadM
 		mode = okage.SpreadModeRepeat
 	}
 
-	points := make([]okage.GradientStop, 0, len(gradient.Stops()))
+	points := make([]gradientPoint, 0, len(gradient.Stops()))
 	for _, stop := range gradient.Stops() {
 		alpha := stop.Opacity().Mul(opacity)
 		color := okage.ColorFromRGBA8(
@@ -219,10 +220,123 @@ func convertBaseGradient(gradient *BaseGradient, opacity Opacity) (okage.SpreadM
 			stop.Color().Blue,
 			alpha.ToU8(),
 		)
-		points = append(points, okage.NewGradientStop(stop.Offset().Get(), color))
+		points = append(points, gradientPoint{stop.Offset().Get(), color})
 	}
 
-	return mode, points, true
+	if gradient.ColorInterpolation() == ColorInterpolationFilterLinearRGB {
+		points = linearRGBStops(points)
+	}
+
+	stops := make([]okage.GradientStop, 0, len(points))
+	for _, p := range points {
+		stops = append(stops, okage.NewGradientStop(p.offset, p.color))
+	}
+
+	return mode, stops, true
+}
+
+// gradientPoint is the tuple (f32, tiny_skia::Color) of a stop offset and a
+// stop color in resvg src/path.rs.
+type gradientPoint struct {
+	offset float32
+	color  okage.Color
+}
+
+// rgba is the type Rgba of linear_rgb_stops in resvg src/path.rs.
+type rgba = [4]float32
+
+// linearRGBStops is linear_rgb_stops in resvg src/path.rs.
+func linearRGBStops(stops []gradientPoint) []gradientPoint {
+	rgbaOf := func(c okage.Color) rgba { return rgba{c.Red(), c.Green(), c.Blue(), c.Alpha()} }
+
+	out := make([]gradientPoint, 0, len(stops))
+	for i := 0; i+1 < len(stops); i++ {
+		c0, c1 := rgbaOf(stops[i].color), rgbaOf(stops[i+1].color)
+		posA, posB := stops[i].offset, stops[i+1].offset
+		out = append(out, stops[i])
+		if posA < posB {
+			a, b := toLinear(c0), toLinear(c1)
+			out = split(a, b, posA, posB, 0, c0, 1, c1, 0, out)
+		}
+	}
+	if len(stops) != 0 {
+		out = append(out, stops[len(stops)-1])
+	}
+	return out
+}
+
+// mix is the inner function mix of linear_rgb_stops in resvg src/path.rs.
+func mix(a, b rgba, t float32) rgba {
+	var r rgba
+	for i := range r {
+		r[i] = a[i] + float32((b[i]-a[i])*t)
+	}
+	return r
+}
+
+// toLinear is the inner function to_linear of linear_rgb_stops in resvg
+// src/path.rs.
+func toLinear(c rgba) rgba {
+	f := func(v float32) float32 {
+		if v <= 0.04045 {
+			return v / 12.92
+		}
+		return crmath.Pow32((v+0.055)/1.055, 2.4)
+	}
+	return rgba{f(c[0]), f(c[1]), f(c[2]), c[3]}
+}
+
+// toSRGB is the inner function to_srgb of linear_rgb_stops in resvg
+// src/path.rs.
+func toSRGB(c rgba) rgba {
+	f := func(v float32) float32 {
+		if v <= 0.0031308 {
+			return v * 12.92
+		}
+		return float32(1.055*crmath.Pow32(v, 1.0/2.4)) - 0.055
+	}
+	return rgba{f(c[0]), f(c[1]), f(c[2]), c[3]}
+}
+
+// split is the inner function split of linear_rgb_stops in resvg
+// src/path.rs. It appends the stops that bring the interpolation in sRGB
+// within the tolerance of the interpolation in linear RGB, and returns out.
+//
+// Port: the tuples of the arguments become separate arguments, and out is
+// returned, since a Go slice cannot grow through its argument. The constants
+// MAX_DEPTH and TOLERANCE of linear_rgb_stops are constants of split, the one
+// function that reads them.
+func split(
+	a, b rgba,
+	posA, posB float32,
+	t0 float32, c0 rgba,
+	t1 float32, c1 rgba,
+	depth uint8,
+	out []gradientPoint,
+) []gradientPoint {
+	const maxDepth uint8 = 8
+	const tolerance float32 = 0.5 / 255.0
+
+	t := (t0 + t1) / 2.0
+	exact := toSRGB(mix(a, b, t))
+	approx := mix(c0, c1, 0.5)
+	close := true
+	for i := range 3 {
+		if !(abs32(exact[i]-approx[i]) <= tolerance) {
+			close = false
+			break
+		}
+	}
+	if close || depth == maxDepth {
+		return out
+	}
+
+	out = split(a, b, posA, posB, t0, c0, t, exact, depth+1, out)
+	if color, ok := okage.ColorFromRGBA(exact[0], exact[1], exact[2], exact[3]); ok {
+		out = append(out, gradientPoint{posA + float32((posB-posA)*t), color})
+	}
+	out = split(a, b, posA, posB, t, exact, t1, c1, depth+1, out)
+	return out
 }
 
 // renderPatternPixmap is render_pattern_pixmap in resvg src/path.rs.

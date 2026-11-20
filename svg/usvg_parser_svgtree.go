@@ -992,6 +992,7 @@ func (id AId) allowsInheritValue() bool {
 		AIdClipPath,
 		AIdClipRule,
 		AIdColor,
+		AIdColorInterpolation,
 		AIdColorInterpolationFilters,
 		AIdDirection,
 		AIdDisplay,
