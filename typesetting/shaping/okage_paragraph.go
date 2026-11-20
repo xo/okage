@@ -441,9 +441,11 @@ func (p *Paragraph) lineRun(item Input, start, end int) {
 	} else {
 		p.lineGlyphs = append(p.lineGlyphs, p.left...)
 	}
-	for _, g := range p.runGlyphs(run, c1, c2) {
-		g.ClusterIndex -= start
-		p.lineGlyphs = append(p.lineGlyphs, g)
+	// okage: D81. One copy of the glyphs, then the clusters move in place.
+	g1 := len(p.lineGlyphs)
+	p.lineGlyphs = append(p.lineGlyphs, p.runGlyphs(run, c1, c2)...)
+	for i := range p.lineGlyphs[g1:] {
+		p.lineGlyphs[g1+i].ClusterIndex -= start
 	}
 	if run.reverse {
 		p.lineGlyphs = append(p.lineGlyphs, p.left...)

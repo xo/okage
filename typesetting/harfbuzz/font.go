@@ -257,7 +257,13 @@ func (f *Font) getGlyphHOriginWithFallback(glyph GID) (Position, Position) {
 		return x - dx, y - dy
 	}
 
-	x_, y_ := f.emScalefX(float32(x)), f.emScalefY(float32(y))
+	// okage: D81. The faces of go-text always give the origin 0, 0, and
+	// the scale of 0 is 0 for each upem. So skip the two scales and
+	// roundings, which the shaper did three times for each glyph.
+	var x_, y_ Position
+	if x != 0 || y != 0 {
+		x_, y_ = f.emScalefX(float32(x)), f.emScalefY(float32(y))
+	}
 	if f.xEmbolden != 0 {
 		/* Slant is ignored as it does not affect glyph origin */
 

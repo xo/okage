@@ -648,7 +648,7 @@ type Face struct {
 	extentsCache          extentsCache
 	hAdvanceCache         advanceCache // advances of variable fonts without HVAR, allocated on first use
 	vAdvanceCache         advanceCache // advances of variable fonts without VVAR, allocated on first use
-	cmapCache             cache21_19_8 // supported runes, mapping to GID
+	cmapCache             cmapCache4K  // supported runes, mapping to GID. okage: 4096 entries (D81)
 	cmapNotSupportedCache cache21_0_13 // not supported runes
 
 	coords       []tables.Coord

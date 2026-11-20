@@ -1,6 +1,6 @@
 # D72. typesetting skips work that left-to-right Latin text does not need
 
-Status: Decided.
+Status: Decided, amended by D81.
 
 ivy lays out books with `typesetting`, the copy of go-text in okage (D52).
 On 2026-11-20 a profile of ivy put 23% to 26% of the time of its layout in

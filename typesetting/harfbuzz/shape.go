@@ -71,7 +71,10 @@ func (plan *shapePlan) init(copy bool, font *Font, props SegmentProperties,
 	plan.shaper.init(font.face.Font, coords)
 }
 
-func (plan shapePlan) userFeaturesMatch(other shapePlan) bool {
+// okage: D81. userFeaturesMatch and equal take pointers. A shapePlan holds
+// the whole plan of the shaper, and the cache copied each plan that it
+// compared, for each call of Shape.
+func (plan *shapePlan) userFeaturesMatch(other *shapePlan) bool {
 	if len(plan.userFeatures) != len(other.userFeatures) {
 		return false
 	}
@@ -85,7 +88,7 @@ func (plan shapePlan) userFeaturesMatch(other shapePlan) bool {
 	return true
 }
 
-func (plan shapePlan) equal(other shapePlan) bool {
+func (plan *shapePlan) equal(other *shapePlan) bool {
 	return plan.props == other.props && plan.shaper.key == other.shaper.key && plan.userFeaturesMatch(other)
 }
 
@@ -136,7 +139,7 @@ func (b *Buffer) newShapePlanCached(font *Font, props SegmentProperties,
 	plans := b.planCache[font.face]
 
 	for _, plan := range plans {
-		if plan.equal(key) {
+		if plan.equal(&key) {
 			if debugMode {
 				fmt.Printf("\tPLAN %p fulfilled from cache\n", plan)
 			}

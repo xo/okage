@@ -3,6 +3,7 @@
 package tables
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
@@ -127,6 +128,13 @@ func (pp *PairPosData2) Record(class1, class2 uint16) Class2Record {
 	size2 := (pp.ValueFormat1.size() + pp.ValueFormat2.size()) * 2
 	size1 := int(pp.class2Count) * size2
 	offset := headerSize + size1*int(class1) + size2*int(class2)
+	// okage: D81. Most kerning gives only an advance for the first glyph.
+	// Read it alone, as parseValueRecord does, without the other fields.
+	if pp.ValueFormat1 == XAdvance && pp.ValueFormat2 == 0 && offset >= 0 && offset+2 <= len(pp.classData) {
+		var out Class2Record
+		out.ValueRecord1.XAdvance = int16(binary.BigEndian.Uint16(pp.classData[offset:]))
+		return out
+	}
 	v1, newOffset, _ := parseValueRecord(pp.ValueFormat1, pp.classData, offset)
 	v2, _, _ := parseValueRecord(pp.ValueFormat2, pp.classData, newOffset)
 	return Class2Record{v1, v2}
