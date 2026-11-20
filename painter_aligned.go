@@ -1,6 +1,9 @@
 package okage
 
-import "github.com/xo/okage/path"
+import (
+	"github.com/xo/okage/internal/wide"
+	"github.com/xo/okage/path"
+)
 
 // This file ports no upstream file. It holds the fast path of DrawPixmap for
 // an image that is aligned to the pixels and drawn with SourceOver (D53).
@@ -99,6 +102,8 @@ func (m *PixmapMut) drawPixmapAligned(
 	}
 
 	for row := top; row < bottom; row++ {
+		// The loop is plain float code (D35).
+		wide.ClearUpperBits()
 		dstRow := m.data[row*dw*BytesPerPixel : (row+1)*dw*BytesPerPixel]
 		// The pattern pads, so a pixel past the image takes the pixel at
 		// its edge.

@@ -174,6 +174,8 @@ func startHighp(
 	}
 
 	for y := rect.Y(); y < rect.Bottom(); y++ {
+		// Port: the stages hold plain float code (D35).
+		wide.ClearUpperBits()
 		x := int(rect.X())
 		end := int(rect.Right())
 

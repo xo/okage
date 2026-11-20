@@ -77,3 +77,8 @@ func vTrunc4(x archsimd.Float32x4) archsimd.Int32x4 {
 func ldH8(s []uint16) archsimd.Uint16x8 {
 	return archsimd.LoadUint16x8Array((*[8]uint16)(s))
 }
+
+// ClearUpperBits does nothing. On amd64 it clears the upper bits of the
+// vector registers (see wide_simd_amd64.go). arm64 and wasm have no such
+// bits.
+func ClearUpperBits() {}

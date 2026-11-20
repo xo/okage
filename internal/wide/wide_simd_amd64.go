@@ -146,3 +146,23 @@ func vTrunc8(x archsimd.Float32x8) archsimd.Int32x8 {
 func ldH16(s []uint16) archsimd.Uint16x16 {
 	return archsimd.LoadUint16x16Array((*[16]uint16)(s))
 }
+
+// hasAVX reports whether the CPU has AVX, which VZEROUPPER needs.
+var hasAVX = archsimd.X86.AVX()
+
+// ClearUpperBits clears the upper bits of the vector registers, with
+// VZEROUPPER, if the CPU has AVX. It does nothing in the other builds.
+//
+// A plain float operation of Go, such as MULSS, keeps the upper bits of its
+// register. When those bits can be other than 0, the CPU waits for the last
+// write to the whole register first, and plain float code runs slower. Code
+// with archsimd leaves those bits so. In the SIMD build of Go 1.27, the
+// runtime also leaves them so each time that it preempts a goroutine, because
+// it restores the whole vector registers. So a loop of plain float code calls
+// ClearUpperBits from time to time, for example once for each row of pixels.
+// It changes no value of a program.
+func ClearUpperBits() {
+	if hasAVX {
+		archsimd.ClearAVXUpperBits()
+	}
+}
