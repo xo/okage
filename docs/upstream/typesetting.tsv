@@ -123,5 +123,5 @@ b848cc9dcdac977e891a251613fc565a455f8474	2026-10-26	not-applicable		[deps] use l
 45369a0f7e1185c19ad9270d90f3985617e4741f	2026-10-26	ported		[harfbuzz] add upstream version. It changes harfbuzz
 d1c97ede1763503adac4cd65c0571cebaee6f405	2026-11-10	ported		[segmenter] document that iterators only read the Segmenter, add Len. It changes segmenter
 8bc6b0d9bcaef650ea14e9a7cca7cc3938fb2a88	2026-11-10	ported		[shaping] add LineWrapper.PrepareSegmented to reuse break attributes. It changes shaping
-8de3a3a332ed1ddbe4d723891f26ec13b4c17c4a	2026-11-10	pending		[shaping] compute the break attributes once in WrapParagraph. It changes shaping
+8de3a3a332ed1ddbe4d723891f26ec13b4c17c4a	2026-11-10	ported		[shaping] compute the break attributes once in WrapParagraph. It changes shaping
 bafa8730d77efd18e85158ce6b565a8fbda321cc	2026-11-10	pending		wrap-segmented: update to address review comments. It changes segmenter, shaping
