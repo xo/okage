@@ -49,7 +49,7 @@ ec4cfa89e65ff7bf477f72238653320898826100	2026-09-30	ported		[segmenter] restart 
 d373f8ac2945ad8105952f64dd4d3fdbf02f626d	2026-09-30	ported		[segmenter] restart numeric sequences after closing punctuation. It changes segmenter
 897f93006743c0fc1232032fbf0b14e4e3b625d1	2026-09-30	ported		[language] NewLangID: return false for the empty tag. It changes language
 1b47353e0adbaa1d78a14a66f202656126decc76	2026-09-30	ported		[font] cmap4: reject negative index, honor offsets on 0xFFFF segments. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
-71b2f6d135a4636717de8ae530f3a54f2238cd8f	2026-09-30	pending		[font] cmap4: wrap iterator glyph deltas to 16 bits. It changes font
+71b2f6d135a4636717de8ae530f3a54f2238cd8f	2026-09-30	ported		[font] cmap4: wrap iterator glyph deltas to 16 bits. It changes font
 995755fa355a7455cf204dad81b221b4a0ce8b01	2026-09-30	pending		[font] cmap0: skip glyph 0 instead of byte 0. It changes font
 45139db4a4af07d7a89919eff092cfeb8d03c26f	2026-09-30	ported		[font] cmap10: drop subtables whose start code overflows rune. It changes font. Applied out of order for the panics, loops and missing bounds of malformed input (D67). The test file reads typesetting-utils and is left out
 7a608982d4b3f9da5ca310bdd56d28adb3dae7dd	2026-09-30	pending		[font] cmap: exclude glyph 0 from Lookup and RuneRanges. It changes font
