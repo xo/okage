@@ -37,7 +37,7 @@ af1525c14f3f34aab63a22a275abdd4786bffa46	2026-09-29	ported		[bidi] W2/W7: carry 
 753e5ceae7dd87c000b67535c39d46dfdf71bbe4	2026-09-30	not-applicable		[fontscan] SetScript: keep candidates when the script is unchanged. It changes only fontscan, which okage does not copy
 c81624412a695e62f6fd22cc43a90a4f275b31d3	2026-09-30	not-applicable		[fontscan] log an invalid font index cache instead of silent rescan. It changes only fontscan, which okage does not copy
 fff775676a5ef8d55388e1e8803a04b15c287aed	2026-09-30	not-applicable		[fontscan] visited comments: keyed by walk path, symlinks unresolved. It changes only fontscan, which okage does not copy
-5917dc041dd0a0a50e20192c764a75a79cee93ea	2026-09-30	pending		[font, fontscan] include legacy Arabic aliases in rune coverage. It changes font
+5917dc041dd0a0a50e20192c764a75a79cee93ea	2026-09-30	ported		[font, fontscan] include legacy Arabic aliases in rune coverage. It changes font
 4fd1e2b6038b173a7f304f11af4dd1ae7679d408	2026-09-30	not-applicable		[fontscan] substitutions: noGenericFamily.test returns -1 on empty list. It changes only fontscan, which okage does not copy
 5fc0ed6f22c48b7116c3b5067a268456236336df	2026-09-30	not-applicable		[fontscan] lru: length-prefix key families and drop replaced nodes. It changes only fontscan, which okage does not copy
 a23921809ca142514320ea47c514afcdf8b86b18	2026-09-30	not-applicable		[fontscan] retain the result of system font initialization. It changes only fontscan, which okage does not copy
