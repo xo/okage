@@ -367,6 +367,15 @@ func renderPatternPixmap(
 	sx = float32(imgSize.Width()) / rect.Width()
 	sy = float32(imgSize.Height()) / rect.Height()
 	transform = path.TransformFromScale(sx, sy)
+	neededBBox, ok := path.IntRectFromXYWH(0, 0, pixmap.Width(), pixmap.Height())
+	if !ok {
+		return nil, Transform{}, false
+	}
+	ctx = &context{
+		maxBBox:    ctx.maxBBox,
+		neededBBox: neededBBox,
+		opt:        ctx.opt,
+	}
 	m := pixmap.AsMut()
 	renderNodes(pattern.Root(), ctx, transform, &m)
 

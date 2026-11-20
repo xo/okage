@@ -196,7 +196,11 @@ func (d *Document) Render() (*image.RGBA, error) {
 		transform = o.render.transform
 	}
 	mut := pixmap.AsMut()
-	ctx := &context{maxBBox: maxFilterBBox(mut.Width(), mut.Height()), opt: o}
+	ctx := &context{
+		maxBBox:    maxFilterBBox(mut.Width(), mut.Height()),
+		neededBBox: pixmapBBox(&mut),
+		opt:        o,
+	}
 	renderNodes(d.tree.Root(), ctx, transform, &mut)
 	return img, nil
 }

@@ -1124,11 +1124,12 @@ func applyImage(
 		float32(subregion.Y()),
 	)
 
-	maxBBox, ok := path.IntRectFromXYWH(0, 0, region.Width(), region.Height())
+	regionBBox, ok := path.IntRectFromXYWH(0, 0, region.Width(), region.Height())
 	mustOK(ok)
 	ctx := &context{
-		maxBBox: maxBBox,
-		opt:     opt,
+		maxBBox:    regionBBox,
+		neededBBox: regionBBox,
+		opt:        opt,
 	}
 
 	m := pixmap.AsMut()

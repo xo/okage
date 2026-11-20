@@ -375,7 +375,11 @@ func (r *TextRun) RenderColorGlyphs(pixmap *okage.PixmapMut, transform Transform
 		return
 	}
 	g := r.text.flattened
-	ctx := &context{maxBBox: maxFilterBBox(pixmap.Width(), pixmap.Height()), opt: r.opt}
+	ctx := &context{
+		maxBBox:    maxFilterBBox(pixmap.Width(), pixmap.Height()),
+		neededBBox: pixmapBBox(pixmap),
+		opt:        r.opt,
+	}
 	ts := transform.PreConcat(g.Transform())
 	for _, child := range g.Children() {
 		if c, ok := child.(*Group); ok {

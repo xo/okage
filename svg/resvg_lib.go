@@ -37,7 +37,11 @@ func Render(tree *Tree, transform Transform, pixmap *okage.PixmapMut, opts ...Op
 	opt := newOptions(opts...)
 	maxBBox := maxFilterBBox(pixmap.Width(), pixmap.Height())
 
-	ctx := &context{maxBBox: maxBBox, opt: opt}
+	ctx := &context{
+		maxBBox:    maxBBox,
+		neededBBox: pixmapBBox(pixmap),
+		opt:        opt,
+	}
 	renderNodes(tree.Root(), ctx, transform, pixmap)
 }
 
@@ -66,7 +70,11 @@ func RenderNode(node Node, transform Transform, pixmap *okage.PixmapMut, opts ..
 
 	transform = transform.PreTranslate(-bbox.X(), -bbox.Y())
 
-	ctx := &context{maxBBox: maxBBox, opt: opt}
+	ctx := &context{
+		maxBBox:    maxBBox,
+		neededBBox: pixmapBBox(pixmap),
+		opt:        opt,
+	}
 	renderNode(node, ctx, transform, pixmap)
 
 	return true
@@ -118,6 +126,17 @@ func saturatingMulU32(a, b uint32) uint32 {
 		return math.MaxUint32
 	}
 	return uint32(r)
+}
+
+// pixmapBBox is tiny_skia::IntRect::from_xywh(0, 0, pixmap.width(),
+// pixmap.height()).unwrap(), the needed bounding box that render and
+// render_node in resvg src/lib.rs give to the context.
+func pixmapBBox(pixmap *okage.PixmapMut) path.IntRect {
+	r, ok := path.IntRectFromXYWH(0, 0, pixmap.Width(), pixmap.Height())
+	if !ok {
+		panic("svg: called Option::unwrap() on a None value")
+	}
+	return r
 }
 
 // newPixmap is tiny_skia::Pixmap::new, which resvg calls. The pixmap logs to

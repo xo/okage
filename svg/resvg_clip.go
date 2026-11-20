@@ -66,8 +66,9 @@ func drawChildren(
 				panic("svg: called Option::unwrap() on a None value")
 			}
 			ctx := &context{
-				maxBBox: maxBBox,
-				opt:     opt,
+				maxBBox:    maxBBox,
+				neededBBox: maxBBox,
+				opt:        opt,
 			}
 
 			fillPath(c, mode, ctx, transform, pixmap)

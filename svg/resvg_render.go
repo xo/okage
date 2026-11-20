@@ -26,7 +26,9 @@ import (
 // Upstream has no such field, and logs with the crate log.
 type context struct {
 	maxBBox path.IntRect
-	opt     *options
+	// The part of the target pixmap that contributes to the final image.
+	neededBBox path.IntRect
+	opt        *options
 }
 
 // renderNodes is render_nodes in resvg src/render.rs.
@@ -93,7 +95,20 @@ func renderGroup(group *Group, ctx *context, transform Transform, pixmap *okage.
 	if !ok {
 		return false
 	}
-	layer, ibbox, ok := renderLayer(group, &context{maxBBox: maxBBox, opt: ctx.opt}, invRest.PreConcat(transform))
+	neededRect, ok := ctx.neededBBox.ToRect().Transform(invRest)
+	if !ok {
+		return false
+	}
+	neededBBox, ok := neededRect.RoundOut()
+	if !ok {
+		return false
+	}
+	layerCtx := &context{
+		maxBBox:    maxBBox,
+		neededBBox: neededBBox,
+		opt:        ctx.opt,
+	}
+	layer, ibbox, ok := renderLayer(group, layerCtx, invRest.PreConcat(transform))
 	if !ok {
 		return false
 	}
@@ -171,10 +186,10 @@ func renderLayer(group *Group, ctx *context, transform Transform) (*okage.Pixmap
 		}
 	}
 
-	// Make sure our layer is not bigger than 4x the canvas size.
-	// This is required to prevent huge layers.
+	// Without filters, every pixel of the layer only affects the same pixel of the target,
+	// so the parts that don't contribute to the final image can be skipped.
 	if len(group.Filters()) == 0 {
-		ibbox, ok = fitToRect(ibbox, ctx.maxBBox)
+		ibbox, ok = fitToRect(ibbox, ctx.neededBBox)
 		if !ok {
 			return nil, path.IntRect{}, false
 		}
@@ -198,9 +213,14 @@ func renderLayer(group *Group, ctx *context, transform Transform) (*okage.Pixmap
 	if !ok {
 		return nil, path.IntRect{}, false
 	}
+	neededBBox, ok := path.IntRectFromXYWH(0, 0, ibbox.Width(), ibbox.Height())
+	if !ok {
+		return nil, path.IntRect{}, false
+	}
 	ctx = &context{
-		maxBBox: maxBBox,
-		opt:     ctx.opt,
+		maxBBox:    maxBBox,
+		neededBBox: neededBBox,
+		opt:        ctx.opt,
 	}
 
 	subPixmap, ok := newPixmap(ibbox.Width(), ibbox.Height(), ctx.opt)
