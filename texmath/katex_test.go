@@ -52,6 +52,67 @@ func TestCancel(t *testing.T) {
 	}
 }
 
+// TestPhase checks \phase: the tree, and the angle of KaTeX around the body.
+func TestPhase(t *testing.T) {
+	ph := as[Phase](t, mustParse(t, `\phase{x}`)[0])
+	if body := as[List](t, ph.Body); len(body) != 1 || as[Atom](t, body[0]).Text != "x" {
+		t.Errorf(`the body of \phase{x} is %#v`, ph.Body)
+	}
+	if l := mustParse(t, `\phase{x+y}z`); len(l) != 2 || len(as[List](t, as[Phase](t, l[0]).Body)) != 3 {
+		t.Errorf(`\phase{x+y}z does not take its group as its body: %#v`, l)
+	}
+	if _, err := Parse(`\phase`); !errors.Is(err, okage.ErrTeXMathSyntax) {
+		t.Errorf(`\phase with no argument: %v`, err)
+	}
+	const size = 10
+	face := testFace(t)
+	for _, c := range []struct {
+		pre, body string
+		st        Style
+		factor    float64 // the factor of the size of pre
+	}{
+		{``, `x`, Display, 1},
+		{``, `x`, Text, 1},
+		{``, `\frac{a}{b}`, Display, 1},
+		{`\Large`, `x`, Display, 1.44},
+		{`\scriptstyle`, `x`, Text, 1},
+	} {
+		tex := c.pre + `\phase{` + c.body + `}`
+		base := mustLayout(t, c.pre+`{`+c.body+`}`, size, c.st)
+		b := mustLayout(t, tex, size, c.st)
+		// The line is 0.6 pt under any size command, and the space is 0.35
+		// ex of text style at the size in force: the height of the upright
+		// x of the face.
+		lw := 0.06 * size
+		_, ex, _ := glyphMetrics(t, face, 'x', c.factor*size)
+		clear := 0.35 * ex
+		ah := base.Height + base.Depth + lw + clear
+		if !near(b.Width, base.Width+ah/2+lw) || !near(b.Height, base.Height) || !near(b.Depth, base.Depth+lw+clear) {
+			t.Errorf("%s is %v by %v by %v, want %v by %v by %v",
+				tex, b.Width, b.Height, b.Depth, base.Width+ah/2+lw, base.Height, base.Depth+lw+clear)
+		}
+		paths := itemsOf(b, ItemPath)
+		if len(paths) != 1 {
+			t.Fatalf("%s draws %d paths, want 1", tex, len(paths))
+		}
+		// The angle fills the box from its left end to its right end, and
+		// from the top of the body to the bottom of the box.
+		r := paths[0].Path.Bounds()
+		if !near32(r.Left(), 0) || !near32(r.Right(), b.Width) || !near32(r.Top(), -b.Height) || !near32(r.Bottom(), b.Depth) {
+			t.Errorf("the angle of %s has the bounds %v, the box is %v by %v by %v", tex, r, b.Width, b.Height, b.Depth)
+		}
+	}
+	// The box is an Ord, so a binary operator after it keeps its class.
+	if a, b := mustLayout(t, `\phase{x}+y`, size, Text), mustLayout(t, `\phase{x}y`, size, Text); a.Width <= b.Width {
+		t.Errorf(`\phase{x}+y is %v wide, and \phase{x}y %v`, a.Width, b.Width)
+	}
+}
+
+// near32 reports whether the float32 a is b within the rounding of a float32.
+func near32(a float32, b float64) bool {
+	return math.Abs(float64(a)-b) <= 1e-5*max(1, math.Abs(b))
+}
+
 // TestTag checks \tag and \tag*: the label is a quad after the formula, in
 // parentheses for \tag.
 func TestTag(t *testing.T) {

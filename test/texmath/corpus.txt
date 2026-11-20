@@ -1689,7 +1689,7 @@ F=ma
 \scriptscriptstyle\rule{10pt}{10pt}
 \huge\rule{10pt}{10pt}
 
-# The commands of phase 26 of D78: 40 formulas.
+# The commands of phase 26 of D78: 43 formulas.
 \text{if } x > 0 \text{ and } y
 \textbf{bold} + \textit{italic} + \textsf{sans} + \texttt{mono}
 \text{Total: } \textbf{\textit{42}}
@@ -1729,3 +1729,7 @@ a\hspace{1em}b\hspace*{2pt}c
 \smash[t]{y} \smash[b]{y}
 \large x \Large y \huge z
 \tiny a \normalsize b \Huge c
+\phase{x}
+V = 10\,\phase{\frac{\pi}{4}} + \phase{-78^\circ}
+x_{\phase{30^\circ}} \scriptscriptstyle\phase{y}
+\Large\phase{y}

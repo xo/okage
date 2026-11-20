@@ -271,6 +271,8 @@ func countNodes(n Node) int {
 		return 1 + countNodes(n.Body)
 	case Cancel:
 		return 1 + countNodes(n.Body)
+	case Phase:
+		return 1 + countNodes(n.Body)
 	case Tag:
 		return 1 + countNodes(n.Body) + countNodes(n.Label)
 	case Phantom:

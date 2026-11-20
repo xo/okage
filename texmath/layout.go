@@ -302,6 +302,8 @@ func (l *layout) nested(n Node, st Style) *box {
 		return l.layoutChoice(n, st)
 	case Cancel:
 		return l.layoutCancel(n, st)
+	case Phase:
+		return l.layoutPhase(n, st)
 	case SizeChange:
 		return l.layoutSize(n, st)
 	case Tag:

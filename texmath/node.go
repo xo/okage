@@ -321,6 +321,11 @@ type Cancel struct {
 	Up, Down bool
 }
 
+// Phase is \phase: Body with the angle mark of electrical engineering, a line
+// under Body and a slanted line at its left, as KaTeX draws it. Its class is
+// Ord.
+type Phase struct{ Body Node }
+
 // Tag is \tag: Body with the label of an equation at its right, a quad
 // away, as TeX sets an equation number. Label holds the parentheses of
 // \tag, and none for \tag*.
@@ -410,6 +415,7 @@ func (TextRun) node()     {}
 func (Color) node()       {}
 func (SizeChange) node()  {}
 func (Cancel) node()      {}
+func (Phase) node()       {}
 func (Tag) node()         {}
 func (Rule) node()        {}
 func (Phantom) node()     {}

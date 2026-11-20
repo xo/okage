@@ -73,8 +73,10 @@
 // background, in a frame, or both.
 //
 // \cancel, \bcancel and \xcancel draw a line across their argument, as KaTeX
-// does. \tag and \tag* set the label of an equation a quad after the formula,
-// as TeX sets an equation number, because the layout has no line width.
+// does. \phase draws the angle mark of electrical engineering around its
+// argument, a line under it and a slanted line at its left, as KaTeX does.
+// \tag and \tag* set the label of an equation a quad after the formula, as
+// TeX sets an equation number, because the layout has no line width.
 // \hline and \hdashline draw a rule between the rows of array and of the
 // matrices. \cfrac sets a continued fraction in display style. \kern and
 // \hspace give a space of any length, and \llap, \rlap and \clap, with

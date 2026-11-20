@@ -11,9 +11,9 @@ import (
 
 // This file ports no file of go-tex/math. It holds the commands of KaTeX
 // that phase 26 of D78 adds from the missing commands of D78 section 10:
-// \cancel, \bcancel, \xcancel, \tag, \cfrac, \kern, \hspace, \llap, \rlap,
-// \clap and their math forms, with the parse half and the layout half of
-// each. \hline is in parseEnv, \scriptscriptstyle in listCommandOf,
+// \cancel, \bcancel, \xcancel, \phase, \tag, \cfrac, \kern, \hspace, \llap,
+// \rlap, \clap and their math forms, with the parse half and the layout half
+// of each. \hline is in parseEnv, \scriptscriptstyle in listCommandOf,
 // \dddot in the table of the accents, and \newcommand and the macros of
 // KaTeX, such as \R, in macro.go. The source has none of them.
 
@@ -74,6 +74,69 @@ func singleChar(n Node) bool {
 	}
 	a, ok := n.(Atom)
 	return ok && a.Text != "" && len([]rune(a.Text)) == 1
+}
+
+// parsePhase parses \phase, a request of zuzu on 2026-11-20. The layout half
+// is layoutPhase.
+func (p *parser) parsePhase(_ *token, toks []token, st alphabet) (Node, []token, error) {
+	b, r, err := p.parseGroupArg(toks, st)
+	if err != nil {
+		return nil, nil, err
+	}
+	return p.add(Phase{Body: b}), r, nil
+}
+
+// phaseLine and phaseClear are the width of the line of \phase and the space
+// between the line and the body, which KaTeX takes from the package
+// steinmetz: 0.6 pt, which is 0.06 em of the size of the layout, and 0.35 ex
+// of text style.
+const (
+	phaseLine  = 0.06
+	phaseClear = 0.35
+)
+
+// layoutPhase lays out a Phase as KaTeX lays out \phase (enclose.ts and
+// phasePath of svgGeometry.ts). The angle is as high as the body, its line
+// and its space: the box keeps the height of the body, and its depth grows
+// by the line and the space. The body moves right by half that height and
+// the line, so the slanted line goes from the bottom left corner to the top
+// of the body at a slope of 2. KaTeX draws the angle as an SVG path in a
+// view box that is 1000 units for each em of the style at the size of the
+// layout, so the angle keeps its shape under a size command. In those units,
+// the line under the body is 80 high, and the slanted line is 145 wide at
+// the bottom and ends in a cut of 65 by 45 at the top. The view box is a
+// whole number of units high, which scales the units a little.
+//
+//go:noinline
+func (l *layout) layoutPhase(n Node, st Style) *box {
+	ph, _ := n.(Phase)
+	b := l.node(ph.Body, st)
+	lw := float64(phaseLine * l.base)
+	clear := float64(phaseClear * l.exHeight(l.px(Text)))
+	ah := b.h + b.d + lw + clear
+	pad := ah/2 + lw
+	out := newBox(Ord)
+	out.w = b.w + pad
+	out.h, out.d = b.h, b.d+lw+clear
+	place(out, b, pad, 0)
+	em := float64(l.px(st)*l.base) / l.size
+	vb := math.Floor(float64(1000*ah) / em)
+	if !(vb > 0) {
+		return out
+	}
+	u := ah / vb
+	top, bot := -b.h, out.d
+	pb := okage.NewPathBuilder()
+	pb.MoveTo(float32(out.w), float32(bot))
+	pb.LineTo(0, float32(bot))
+	pb.LineTo(float32(float64(vb/2)*u), float32(top))
+	pb.LineTo(float32(float64(float64(vb/2)*u)+float64(65*u)), float32(top+float64(45*u)))
+	pb.LineTo(float32(float64(145*u)), float32(bot-float64(80*u)))
+	pb.LineTo(float32(out.w), float32(bot-float64(80*u)))
+	pb.Close()
+	p, _ := pb.Finish()
+	l.path(out, p)
+	return out
 }
 
 // linePath returns the outline of a line of the width rt from (x0, y0) to

@@ -1194,6 +1194,7 @@ func init() {
 		"cancel":             (*parser).parseCancel,
 		"bcancel":            (*parser).parseCancel,
 		"xcancel":            (*parser).parseCancel,
+		"phase":              (*parser).parsePhase,
 		"cfrac":              (*parser).parseCfrac,
 		"kern":               (*parser).parseKern,
 		"hspace":             (*parser).parseKern,
