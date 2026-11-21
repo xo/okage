@@ -372,7 +372,8 @@ differences stay:
    the soft edges of DrawingML with box blurs of its own, and changes the
    colors of pictures for the picture effects of Word itself. Both are in
    `internal/drawingml` of ivy, in `blur.go` and `recolor.go`. Source: ivy,
-   2026-11-19.
+   2026-11-19. D88 proposes the API, and question 39 at the end of
+   [`PLAN.md`](PLAN.md) asks the maintainers to choose.
 
 ## The PDF writer
 

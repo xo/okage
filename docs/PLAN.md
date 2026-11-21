@@ -1460,3 +1460,27 @@ The recommendation is answer 1. Each change is a few lines with a test, and
 the glyphs of the 413,399 lines of `perf_reference` and the hashes of the
 output of `test/textbench` did not change. If the memory of ivy for many
 fonts matters more than 2% to 3% of the time, answer 2 is the choice.
+
+### Question 39: the public API of the blur and the color matrix of D88
+
+Asked on 2026-11-21, from D88. ivy blurs the masks of the shadows, the glows
+and the soft edges of DrawingML, and changes the colors of pictures, with
+code of its own. okage holds the same work in the filters of `svg`, and none
+of it is public. D88 compares four places for an API. The maintainers can
+choose one of these answers:
+
+1. A new public package `filter` holds `Blur`, `BlurMask`, the four kinds
+   of the color matrix and the five transfer functions of resvg. They work
+   on a `Mask`, a `Pixmap` and an `image.NRGBA`. `internal/boxblur` moves
+   into it, and `svg` and `lottie` call it.
+2. Answer 1 without the transfer functions. ivy then keeps its table of the
+   contrast and the brightness, and its threshold of the black and white.
+3. Methods on `Mask` and `Pixmap` in the root package, as a deliberate
+   addition to the API of tiny-skia.
+4. Functions in `svg`, on the types of the tree of usvg.
+5. No change. ivy keeps its own blur and its own colors.
+
+The recommendation is answer 1. The root package stays the port of
+tiny-skia, and a program imports a small package and not all of `svg`. ivy
+can delete its blur and most of its change of colors. `svg` and `lottie`
+keep their bytes.

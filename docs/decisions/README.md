@@ -107,3 +107,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D85 | [lottie draws text animators, capitals and text on a path](D085-lottie-draws-text-animators-capitals-and-text-on-a-path.md) | Decided, amends D79 |
 | D86 | [A mask can hold a rectangle and no pixels](D086-a-mask-can-hold-a-rectangle-and-no-pixels.md) | Decided, amends D60 |
 | D87 | [typesetting walks the glyphs and splits the lines with less work](D087-typesetting-walks-the-glyphs-and-splits-the-lines-with-less-work.md) | Proposed |
+| D88 | [The blur and the color matrix of the filters get a public API](D088-the-blur-and-the-color-matrix-of-the-filters-get-a-public-api.md) | Proposed, amends D5 and D79 |
