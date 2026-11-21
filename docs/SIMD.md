@@ -195,6 +195,27 @@ a boundary in the SIMD build and on the boundary in the scalar build. That
 made the geometric mean of the SIMD build 2.0 percent slower than the
 scalar build. Without those five benchmarks, the difference was 0.1 percent.
 
+## Copies of a vector
+
+A vector type is an array in both builds (D28). Go copies an array of 32
+bytes with loads and stores of 16 bytes. A stage makes such a copy when it
+assigns a channel, such as `p.dr = p.r`, or passes a vector as a value. It
+also makes one when it takes the vector that a function returns, such as
+`wide.SplatF32x8`. A store buffer holds the stores that a CPU did not write
+to its cache yet, and a load reads from it when it can. If the stage before
+wrote the vector lane by lane, a load of 16 bytes spans 4 stores of 4
+bytes, or 8 stores of 2 bytes for a `U16x16`. An AMD Ryzen 9 9950X cannot
+forward such a load from its store buffer. The load waits until the stores
+are in the cache.
+
+So a hot stage reads and writes the lanes of the channels one by one,
+takes a vector as a pointer, and writes a splat lane by lane. A function
+that returns a vector writes it through a pointer, as `join` of lowp does.
+On 2026-11-21 these changes made the composite of a group 15 to 32 percent
+faster with most blend modes, and `BenchmarkDrawPixmapUpscale` 15 to 23
+percent faster. The geometric mean of the root benchmarks went down by 12
+percent in each build. `docs/BACKLOG.md` holds the numbers.
+
 ## The operations
 
 This table maps each operation that `src/wide` uses to its Go form in each

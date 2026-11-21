@@ -209,13 +209,24 @@ test:
    checks in the stages (`go build -gcflags='-m -d=ssa/check_bce'`). On
    2026-11-20, `colorBurnHighpLane` and `colorDodgeHighpLane` fit the budget
    of 80, and `BenchmarkBlendColorDodge` went from 4.84 ms to 4.65 ms (D35).
-   `setSat` (cost 114), `exclusiveReflect` (91) and `gatherIxLane` (127) are
-   still over the budget. On 2026-11-20 a version of `exclusiveReflect` that
-   takes `limit + limit` and `inv_limit * 0.5` from its caller still cost
-   86, because `wide.LaneFloor` alone costs 44, and it was not kept. The
-   bounds checks that remain in the stages are
-   one for each stage, on the index of the next stage or on the slice of its
-   pixels, and the checks in the loops on `p.tail` of the mask stages.
+   On 2026-11-21, `setSat` writes out its minimum and its maximum, and costs
+   79 in place of 114. The composite with Hue in `BenchmarkCompositeBlend`
+   went from 22.1 ms to 20.5 ms in the scalar build and from 21.8 ms to
+   20.4 ms in the SIMD build. With Saturation it went from 21.2 ms to
+   19.0 ms and from 20.8 ms to 19.5 ms. `gatherIxLane` clamps with
+   `clampIndex` of item 5, and costs 47 in place of 127.
+   `exclusiveReflect` (91), `softLightHighpLane` (163) and `clipColor` (300)
+   are still over the budget. On 2026-11-20 a version of `exclusiveReflect`
+   that takes `limit + limit` and `inv_limit * 0.5` from its caller still
+   cost 86, because `wide.LaneFloor` alone costs 44, and it was not kept. On
+   2026-11-21, `hueK`, `saturationK`, `colorK` and `luminosityK` computed
+   the sums before `rr`, `gg` and `bb` before the call of `clipColor`, so
+   that fewer values lived across the call. The times changed by -4 to +7
+   percent in the scalar build and by -7 to 0 percent in the SIMD build,
+   which is within the noise of the machine, and the change was not kept.
+   The bounds checks that remain in the stages are one for each stage, on
+   the index of the next stage or on the slice of its pixels, and the checks
+   in the loops on `p.tail` of the mask stages.
 3. A copy of the stages that keeps its values in `archsimd` registers through
    a run of stages, written by a tool, for the SIMD build (D17, D28).
 4. The stages of sRGB and `Powf`, which D33 did not change, because no
@@ -239,10 +250,32 @@ test:
    26.2 ms with the bilinear filter, and from 57.8 ms to 53.8 ms with the
    bicubic filter. In the SIMD build it went from 28.1 ms to 25.2 ms and
    from 55.8 ms to 52.4 ms. Each lane still finds its columns, then
-   compares them with the columns of the lane before it. Most of the time
-   that is left is the multiplications and the additions of each lane.
-   Source: the measurement of ivy, 2026-11-18, and `bench_ivy_test.go`,
-   2026-11-20.
+   compares them with the columns of the lane before it. On 2026-11-21 most
+   of the time went to loads that waited for stores. A stage copied a vector
+   that the stage before had written lane by lane ("Copies of a vector" in
+   `docs/SIMD.md`). `seedShader`, `bilinear`, `bicubic` and the samplers
+   now copy no vector, and `clampIndex` clamps a coordinate with two tests
+   in place of five. In the scalar build it went from 25.4 ms to
+   19.9 ms with the bilinear filter, and from 51.9 ms to 44.4 ms with the
+   bicubic filter. In the SIMD build it went from 25.3 ms to 19.5 ms and
+   from 52.1 ms to 43.8 ms. The stage `gather`, which takes the nearest
+   pixel, copies no vector either. `BenchmarkPatternsPlain` went from
+   5.10 ms to 3.73 ms in the scalar build and from 5.07 ms to 3.75 ms in the
+   SIMD build, and `BenchmarkDrawPixmapScaled` from 13.95 ms to 9.97 ms and
+   from 14.27 ms to 10.07 ms. Most of the time that is left is the
+   multiplications and the additions of each lane. A lane adds 16 products
+   with the bilinear filter and 64 with the bicubic filter, and each
+   addition waits for the one before. Two forms of `sampler4x4` were
+   measured on 2026-11-21 and not kept:
+   - Without its loops on the rows and the columns, it was 3.2 percent
+     slower with the bicubic filter in the scalar build.
+   - When two lanes in turn had the same columns, it added the pixels of
+     both lanes in one loop, so that the CPU can add the two lanes at the
+     same time. It was 1.6 percent slower with the bicubic filter, and
+     `BenchmarkPatternsHQ` was 4.7 percent slower, in both builds.
+
+   Source: the measurement of ivy, 2026-11-18, `bench_ivy_test.go`,
+   2026-11-20, and the measurement of 2026-11-21.
 6. The blend modes of highp. On 2026-11-20, each stage of `blend_fn!`,
    `blend_fn2!` and `blend_fn3!` calls its function directly, `store` rounds
    a channel with `LaneRoundIntByte`, and `load_8888`, `mask_u8` and the
@@ -256,8 +289,21 @@ test:
    of GOEXPERIMENT=simd" below gives the cause. Since 2026-11-20 the fast
    path and the pipelines call `wide.ClearUpperBits` for each row. The
    composite with SourceOver went from 9.4 ms to 6.8 ms in the SIMD build,
-   and it takes 6.6 ms in the scalar build. Source: the measurement of ivy,
-   2026-11-18, and `bench_ivy_test.go`, 2026-11-20.
+   and it takes 6.6 ms in the scalar build. On 2026-11-21 each stage of
+   `blend_fn!` and `blend_fn2!` is one loop on the lanes, which calls the
+   function of the stage on one lane of each channel, so that the stage
+   copies no channel ("Copies of a vector" in `docs/SIMD.md`). In the
+   scalar build the composite went from 14.2 ms to 10.0 ms with Multiply,
+   from 17.6 ms to 12.5 ms with Overlay, and from 19.1 ms to 15.5 ms with
+   SoftLight. In the SIMD build it went from 14.0 ms to 9.8 ms, from
+   17.4 ms to 12.4 ms and from 18.8 ms to 15.3 ms. The geometric mean of
+   the 29 composites went down by 18 percent in each build.
+   `BenchmarkBlendColorDodge` went from 4.58 ms to 3.13 ms and from 4.51 ms
+   to 3.12 ms. The stages of `blend_fn3!` already changed the channels in
+   place. With Hue, Saturation, Color and Luminosity the composite now
+   takes the most time, from 16 ms to 20 ms, because `clipColor` is a call
+   for each lane (item 2). Source: the measurement of ivy, 2026-11-18,
+   `bench_ivy_test.go`, 2026-11-20, and the measurement of 2026-11-21.
 7. Make a clip cheaper. Since 2026-11-20, a `Mask` holds only the rows and
    the columns that its paths cover, with a margin of 15 columns on each
    side for the chunks of `maskBounds`. `NewMask` allocates nothing, and
@@ -280,10 +326,25 @@ test:
    about 12 MiB, because the blitter compiles each pipeline a second time
    without `mask_u8`, in place of the pixels of the mask. The fills of the
    cells take most of the time. `BenchmarkClipSpreadsheet`, whose cells are
-   not on the pixel grid, stays at 81 ms in both builds.
+   not on the pixel grid, stayed at 81 ms in both builds. On 2026-11-21 the
+   stages of lowp stopped copying vectors (below), and it went from 77.5 ms
+   to 71.7 ms in the scalar build and from 78.0 ms to 72.3 ms in the SIMD
+   build. `BenchmarkClipGrid` went from 59.2 ms to 54.6 ms and from 59.4 ms
+   to 55.1 ms.
 
    Source: ivy, item 5 of "Left by the speed of 2026-11-18", 2026-11-19,
    `bench_ivy_test.go`, 2026-11-20, and D86, 2026-11-21.
+
+"Copies of a vector" in `docs/SIMD.md` holds for each hot stage, in lowp
+too. On 2026-11-21 `uniformColor`, `seedShader`, `loadMaskU8`, `maskU8`,
+`gradient`, `evenlySpaced2StopGradient` and `load8` of lowp stopped copying
+vectors. From the code before the changes of 2026-11-21 to the code after
+all of them, `BenchmarkFillRect` went from 2.41 ms to 2.15 ms in both
+builds. `BenchmarkClip` went from 3.30 ms to 2.77 ms in the scalar build
+and from 3.29 ms to 2.79 ms in the SIMD build, and
+`BenchmarkGradientsTwoStopsLinearPad` from 6.06 ms to 4.84 ms and from
+6.03 ms to 4.87 ms. The geometric mean of the root benchmarks went down by
+12.0 percent in the scalar build and by 12.1 percent in the SIMD build.
 
 ### Measure the cost of GOEXPERIMENT=simd in each release of Go
 
