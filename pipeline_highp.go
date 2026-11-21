@@ -568,356 +568,432 @@ func (p *highpPipeline) clear() {
 // stage of the macro applies its function to each channel, with the alpha
 // of the source and of the destination, and calls the next stage.
 //
-// Port (D35): each stage of the macro calls its function itself, and does
-// not pass it to a helper as a function value. The Go compiler then inlines
-// most of the functions, and the stage copies no channel for a call. The
-// operations are the same, so the bits are the same.
+// Port (D35): each stage of the macro is one loop on the lanes, and calls
+// the function of its lane for each channel. Upstream computes r, g and b
+// with the alpha of the source, then a. The loop reads the two alphas of a
+// lane before it changes a, so each lane gets the same operations in the
+// same order, and the bits are the same. The stage copies no channel. A
+// copy of a channel that a stage wrote lane by lane is a load of 16 bytes
+// from 4 stores of 4 bytes, which the CPU cannot forward from its store
+// buffer, and the load waits for them.
 
 // sourceAtop is the stage source_atop of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) sourceAtop() {
-	p.r, p.g, p.b, p.a = sourceAtopHighp(p.r, p.dr, p.a, p.da), sourceAtopHighp(p.g, p.dg, p.a, p.da), sourceAtopHighp(p.b, p.db, p.a, p.da), sourceAtopHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = sourceAtopHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = sourceAtopHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = sourceAtopHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = sourceAtopHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // sourceAtopHighp is the function of the stage source_atop in tiny-skia
 // src/pipeline/highp.rs.
-func sourceAtopHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * da + d * inv(sa).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i]*da[i]) + float32(d[i]*invHighp(sa[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s * da + d * inv(sa).
+func sourceAtopHighp(s, d, sa, da float32) float32 {
+	return float32(s*da) + float32(d*invHighp(sa))
 }
 
 // destinationAtop is the stage destination_atop of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) destinationAtop() {
-	p.r, p.g, p.b, p.a = destinationAtopHighp(p.r, p.dr, p.a, p.da), destinationAtopHighp(p.g, p.dg, p.a, p.da), destinationAtopHighp(p.b, p.db, p.a, p.da), destinationAtopHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = destinationAtopHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = destinationAtopHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = destinationAtopHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = destinationAtopHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // destinationAtopHighp is the function of the stage destination_atop in
 // tiny-skia src/pipeline/highp.rs.
-func destinationAtopHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: d * sa + s * inv(da).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(d[i]*sa[i]) + float32(s[i]*invHighp(da[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: d * sa + s * inv(da).
+func destinationAtopHighp(s, d, sa, da float32) float32 {
+	return float32(d*sa) + float32(s*invHighp(da))
 }
 
 // sourceIn is the stage source_in of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) sourceIn() {
-	p.r, p.g, p.b, p.a = sourceInHighp(p.r, p.dr, p.a, p.da), sourceInHighp(p.g, p.dg, p.a, p.da), sourceInHighp(p.b, p.db, p.a, p.da), sourceInHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = sourceInHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = sourceInHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = sourceInHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = sourceInHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // sourceInHighp is the function of the stage source_in in tiny-skia
 // src/pipeline/highp.rs.
-func sourceInHighp(s, _, _, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * da.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i] * da[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s * da.
+func sourceInHighp(s, _, _, da float32) float32 {
+	return float32(s * da)
 }
 
 // destinationIn is the stage destination_in of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) destinationIn() {
-	p.r, p.g, p.b, p.a = destinationInHighp(p.r, p.dr, p.a, p.da), destinationInHighp(p.g, p.dg, p.a, p.da), destinationInHighp(p.b, p.db, p.a, p.da), destinationInHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = destinationInHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = destinationInHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = destinationInHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = destinationInHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
-// destinationInHighp is the function of the stage destination_in in
-// tiny-skia src/pipeline/highp.rs.
-func destinationInHighp(_, d, sa, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: d * sa.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(d[i] * sa[i])
-	}
-	return r
+// destinationInHighp is the function of the stage destination_in in tiny-skia
+// src/pipeline/highp.rs.
+//
+// Port (D33): it works on one lane. Upstream: d * sa.
+func destinationInHighp(_, d, sa, _ float32) float32 {
+	return float32(d * sa)
 }
 
 // sourceOut is the stage source_out of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) sourceOut() {
-	p.r, p.g, p.b, p.a = sourceOutHighp(p.r, p.dr, p.a, p.da), sourceOutHighp(p.g, p.dg, p.a, p.da), sourceOutHighp(p.b, p.db, p.a, p.da), sourceOutHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = sourceOutHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = sourceOutHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = sourceOutHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = sourceOutHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // sourceOutHighp is the function of the stage source_out in tiny-skia
 // src/pipeline/highp.rs.
-func sourceOutHighp(s, _, _, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * inv(da).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i] * invHighp(da[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s * inv(da).
+func sourceOutHighp(s, _, _, da float32) float32 {
+	return float32(s * invHighp(da))
 }
 
 // destinationOut is the stage destination_out of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) destinationOut() {
-	p.r, p.g, p.b, p.a = destinationOutHighp(p.r, p.dr, p.a, p.da), destinationOutHighp(p.g, p.dg, p.a, p.da), destinationOutHighp(p.b, p.db, p.a, p.da), destinationOutHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = destinationOutHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = destinationOutHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = destinationOutHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = destinationOutHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // destinationOutHighp is the function of the stage destination_out in
 // tiny-skia src/pipeline/highp.rs.
-func destinationOutHighp(_, d, sa, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: d * inv(sa).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(d[i] * invHighp(sa[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: d * inv(sa).
+func destinationOutHighp(_, d, sa, _ float32) float32 {
+	return float32(d * invHighp(sa))
 }
 
 // sourceOver is the stage source_over of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) sourceOver() {
-	p.r, p.g, p.b, p.a = sourceOverHighp(p.r, p.dr, p.a, p.da), sourceOverHighp(p.g, p.dg, p.a, p.da), sourceOverHighp(p.b, p.db, p.a, p.da), sourceOverHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = sourceOverHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = sourceOverHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = sourceOverHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = sourceOverHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // sourceOverHighp is the function of the stage source_over in tiny-skia
 // src/pipeline/highp.rs.
-func sourceOverHighp(s, d, sa, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: mad(d, inv(sa), s).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = madHighp(d[i], invHighp(sa[i]), s[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: mad(d, inv(sa), s).
+func sourceOverHighp(s, d, sa, _ float32) float32 {
+	return madHighp(d, invHighp(sa), s)
 }
 
 // destinationOver is the stage destination_over of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) destinationOver() {
-	p.r, p.g, p.b, p.a = destinationOverHighp(p.r, p.dr, p.a, p.da), destinationOverHighp(p.g, p.dg, p.a, p.da), destinationOverHighp(p.b, p.db, p.a, p.da), destinationOverHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = destinationOverHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = destinationOverHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = destinationOverHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = destinationOverHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // destinationOverHighp is the function of the stage destination_over in
 // tiny-skia src/pipeline/highp.rs.
-func destinationOverHighp(s, d, _, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: mad(s, inv(da), d).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = madHighp(s[i], invHighp(da[i]), d[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: mad(s, inv(da), d).
+func destinationOverHighp(s, d, _, da float32) float32 {
+	return madHighp(s, invHighp(da), d)
 }
 
 // modulate is the stage modulate of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) modulate() {
-	p.r, p.g, p.b, p.a = modulateHighp(p.r, p.dr, p.a, p.da), modulateHighp(p.g, p.dg, p.a, p.da), modulateHighp(p.b, p.db, p.a, p.da), modulateHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = modulateHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = modulateHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = modulateHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = modulateHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // modulateHighp is the function of the stage modulate in tiny-skia
 // src/pipeline/highp.rs.
-func modulateHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * d.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i] * d[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s * d.
+func modulateHighp(s, d, _, _ float32) float32 {
+	return float32(s * d)
 }
 
 // multiply is the stage multiply of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) multiply() {
-	p.r, p.g, p.b, p.a = multiplyHighp(p.r, p.dr, p.a, p.da), multiplyHighp(p.g, p.dg, p.a, p.da), multiplyHighp(p.b, p.db, p.a, p.da), multiplyHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = multiplyHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = multiplyHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = multiplyHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = multiplyHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // multiplyHighp is the function of the stage multiply in tiny-skia
 // src/pipeline/highp.rs.
-func multiplyHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * inv(da) + d * inv(sa) + s * d.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i]*invHighp(da[i])) + float32(d[i]*invHighp(sa[i])) + float32(s[i]*d[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream:
+// s * inv(da) + d * inv(sa) + s * d.
+func multiplyHighp(s, d, sa, da float32) float32 {
+	return float32(s*invHighp(da)) + float32(d*invHighp(sa)) + float32(s*d)
 }
 
 // screen is the stage screen of blend_fn! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) screen() {
-	p.r, p.g, p.b, p.a = screenHighp(p.r, p.dr, p.a, p.da), screenHighp(p.g, p.dg, p.a, p.da), screenHighp(p.b, p.db, p.a, p.da), screenHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = screenHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = screenHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = screenHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = screenHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // screenHighp is the function of the stage screen in tiny-skia
 // src/pipeline/highp.rs.
-func screenHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s + d - s * d.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = s[i] + d[i] - float32(s[i]*d[i])
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s + d - s * d.
+func screenHighp(s, d, _, _ float32) float32 {
+	return s + d - float32(s*d)
 }
 
-// xor is the stage xor of blend_fn! in tiny-skia src/pipeline/highp.rs.
+// xor is the stage xor of blend_fn! in tiny-skia
+// src/pipeline/highp.rs.
 func (p *highpPipeline) xor() {
-	p.r, p.g, p.b, p.a = xorHighp(p.r, p.dr, p.a, p.da), xorHighp(p.g, p.dg, p.a, p.da), xorHighp(p.b, p.db, p.a, p.da), xorHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = xorHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = xorHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = xorHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = xorHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // xorHighp is the function of the stage xor in tiny-skia
 // src/pipeline/highp.rs.
-func xorHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s * inv(da) + d * inv(sa).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = float32(s[i]*invHighp(da[i])) + float32(d[i]*invHighp(sa[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s * inv(da) + d * inv(sa).
+func xorHighp(s, d, sa, da float32) float32 {
+	return float32(s*invHighp(da)) + float32(d*invHighp(sa))
 }
 
-// plus is the stage plus of blend_fn! in tiny-skia src/pipeline/highp.rs.
+// plus is the stage plus of blend_fn! in tiny-skia
+// src/pipeline/highp.rs.
 func (p *highpPipeline) plus() {
-	p.r, p.g, p.b, p.a = plusHighp(p.r, p.dr, p.a, p.da), plusHighp(p.g, p.dg, p.a, p.da), plusHighp(p.b, p.db, p.a, p.da), plusHighp(p.a, p.da, p.a, p.da)
+	// Port (D33, D35): one loop on the lanes, as blendFn says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = plusHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = plusHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = plusHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = plusHighp(sa, da, sa, da)
+	}
+
 	p.nextStage()
 }
 
 // plusHighp is the function of the stage plus in tiny-skia
 // src/pipeline/highp.rs.
-func plusHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: (s + d).min(f32x8::splat(1.0)).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = wide.LaneMin(s[i]+d[i], 1.0)
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: (s + d).min(f32x8::splat(1.0)).
+func plusHighp(s, d, _, _ float32) float32 {
+	return wide.LaneMin(s+d, 1.0)
 }
 
 // blendFn2 is the macro blend_fn2! of tiny-skia src/pipeline/highp.rs. A
 // stage of the macro applies its function to each color channel, and
-// source_over to the alpha, and calls the next stage.
+// source_over to the alpha, mad(da, inv(a), a), and calls the next stage.
 //
-// Port (D35): each stage calls its function itself, as the stages of
-// blend_fn! do.
-
-// sourceOverAlpha is the alpha of blend_fn2! in tiny-skia
-// src/pipeline/highp.rs: source_over on the alpha.
-func (p *highpPipeline) sourceOverAlpha() {
-	// Port (D33): one loop on the lanes.
-	for i := range p.a {
-		p.a[i] = madHighp(p.da[i], invHighp(p.a[i]), p.a[i])
-	}
-}
+// Port (D35): each stage is one loop on the lanes, as the stages of
+// blend_fn! are.
 
 // darken is the stage darken of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) darken() {
-	p.r, p.g, p.b = darkenHighp(p.r, p.dr, p.a, p.da), darkenHighp(p.g, p.dg, p.a, p.da), darkenHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = darkenHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = darkenHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = darkenHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // darkenHighp is the function of the stage darken in tiny-skia
 // src/pipeline/highp.rs.
-func darkenHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s + d - (s * da).max(d * sa).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = s[i] + d[i] - wide.LaneMax(float32(s[i]*da[i]), float32(d[i]*sa[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s + d - (s * da).max(d * sa).
+func darkenHighp(s, d, sa, da float32) float32 {
+	return s + d - wide.LaneMax(float32(s*da), float32(d*sa))
 }
 
 // lighten is the stage lighten of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) lighten() {
-	p.r, p.g, p.b = lightenHighp(p.r, p.dr, p.a, p.da), lightenHighp(p.g, p.dg, p.a, p.da), lightenHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = lightenHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = lightenHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = lightenHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // lightenHighp is the function of the stage lighten in tiny-skia
 // src/pipeline/highp.rs.
-func lightenHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s + d - (s * da).min(d * sa).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = s[i] + d[i] - wide.LaneMin(float32(s[i]*da[i]), float32(d[i]*sa[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s + d - (s * da).min(d * sa).
+func lightenHighp(s, d, sa, da float32) float32 {
+	return s + d - wide.LaneMin(float32(s*da), float32(d*sa))
 }
 
 // difference is the stage difference of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) difference() {
-	p.r, p.g, p.b = differenceHighp(p.r, p.dr, p.a, p.da), differenceHighp(p.g, p.dg, p.a, p.da), differenceHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = differenceHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = differenceHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = differenceHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // differenceHighp is the function of the stage difference in tiny-skia
 // src/pipeline/highp.rs.
-func differenceHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s + d - two((s * da).min(d * sa)).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = s[i] + d[i] - two(wide.LaneMin(float32(s[i]*da[i]), float32(d[i]*sa[i])))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream:
+// s + d - two((s * da).min(d * sa)).
+func differenceHighp(s, d, sa, da float32) float32 {
+	return s + d - two(wide.LaneMin(float32(s*da), float32(d*sa)))
 }
 
 // exclusion is the stage exclusion of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) exclusion() {
-	p.r, p.g, p.b = exclusionHighp(p.r, p.dr, p.a, p.da), exclusionHighp(p.g, p.dg, p.a, p.da), exclusionHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = exclusionHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = exclusionHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = exclusionHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // exclusionHighp is the function of the stage exclusion in tiny-skia
 // src/pipeline/highp.rs.
-func exclusionHighp(s, d, _, _ wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream: s + d - two(s * d).
-	var r wide.F32x8
-	for i := range r {
-		r[i] = s[i] + d[i] - two(float32(s[i]*d[i]))
-	}
-	return r
+//
+// Port (D33): it works on one lane. Upstream: s + d - two(s * d).
+func exclusionHighp(s, d, _, _ float32) float32 {
+	return s + d - two(float32(s*d))
 }
 
 // colorBurn is the stage color_burn of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) colorBurn() {
-	p.r, p.g, p.b = colorBurnHighp(p.r, p.dr, p.a, p.da), colorBurnHighp(p.g, p.dg, p.a, p.da), colorBurnHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = colorBurnHighpLane(p.r[i], p.dr[i], sa, da)
+		p.g[i] = colorBurnHighpLane(p.g[i], p.dg[i], sa, da)
+		p.b[i] = colorBurnHighpLane(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
-// colorBurnHighp is the function of the stage color_burn in tiny-skia
-// src/pipeline/highp.rs.
-func colorBurnHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes, with colorBurnHighpLane for each
-	// lane.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = colorBurnHighpLane(s[i], d[i], sa[i], da[i])
-	}
-	return r
-}
-
-// colorBurnHighpLane is colorBurnHighp on one lane (D33). Upstream:
+// colorBurnHighpLane is the function of the stage color_burn in tiny-skia
+// src/pipeline/highp.rs, on one lane (D33). Upstream:
 //
 //	d.cmp_eq(da).blend(
 //	    d + s * inv(da),
@@ -943,24 +1019,20 @@ func colorBurnHighpLane(s, d, sa, da float32) float32 {
 // colorDodge is the stage color_dodge of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) colorDodge() {
-	p.r, p.g, p.b = colorDodgeHighp(p.r, p.dr, p.a, p.da), colorDodgeHighp(p.g, p.dg, p.a, p.da), colorDodgeHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = colorDodgeHighpLane(p.r[i], p.dr[i], sa, da)
+		p.g[i] = colorDodgeHighpLane(p.g[i], p.dg[i], sa, da)
+		p.b[i] = colorDodgeHighpLane(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
-// colorDodgeHighp is the function of the stage color_dodge in tiny-skia
-// src/pipeline/highp.rs.
-func colorDodgeHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes, with colorDodgeHighpLane for each
-	// lane.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = colorDodgeHighpLane(s[i], d[i], sa[i], da[i])
-	}
-	return r
-}
-
-// colorDodgeHighpLane is colorDodgeHighp on one lane (D33). Upstream:
+// colorDodgeHighpLane is the function of the stage color_dodge in tiny-skia
+// src/pipeline/highp.rs, on one lane (D33). Upstream:
 //
 //	d.cmp_eq(f32x8::default()).blend(
 //	    s * inv(da),
@@ -986,87 +1058,89 @@ func colorDodgeHighpLane(s, d, sa, da float32) float32 {
 // hardLight is the stage hard_light of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) hardLight() {
-	p.r, p.g, p.b = hardLightHighp(p.r, p.dr, p.a, p.da), hardLightHighp(p.g, p.dg, p.a, p.da), hardLightHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = hardLightHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = hardLightHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = hardLightHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // hardLightHighp is the function of the stage hard_light in tiny-skia
 // src/pipeline/highp.rs.
-func hardLightHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream:
-	//
-	//	s * inv(da) + d * inv(sa) + two(s).cmp_le(sa).blend(
-	//	    two(s * d),
-	//	    sa * da - two((da - d) * (sa - s)),
-	//	)
-	var r wide.F32x8
-	for i := range r {
-		si, di, sai, dai := s[i], d[i], sa[i], da[i]
-		var v float32
-		if two(si) <= sai {
-			v = two(float32(si * di))
-		} else {
-			v = float32(sai*dai) - two(float32((dai-di)*(sai-si)))
-		}
-		r[i] = float32(si*invHighp(dai)) + float32(di*invHighp(sai)) + v
+//
+// Port (D33): it works on one lane. Upstream:
+//
+//	s * inv(da) + d * inv(sa) + two(s).cmp_le(sa).blend(
+//	    two(s * d),
+//	    sa * da - two((da - d) * (sa - s)),
+//	)
+func hardLightHighp(s, d, sa, da float32) float32 {
+	var v float32
+	if two(s) <= sa {
+		v = two(float32(s * d))
+	} else {
+		v = float32(sa*da) - two(float32((da-d)*(sa-s)))
 	}
-	return r
+	return float32(s*invHighp(da)) + float32(d*invHighp(sa)) + v
 }
 
 // overlay is the stage overlay of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) overlay() {
-	p.r, p.g, p.b = overlayHighp(p.r, p.dr, p.a, p.da), overlayHighp(p.g, p.dg, p.a, p.da), overlayHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = overlayHighp(p.r[i], p.dr[i], sa, da)
+		p.g[i] = overlayHighp(p.g[i], p.dg[i], sa, da)
+		p.b[i] = overlayHighp(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
 // overlayHighp is the function of the stage overlay in tiny-skia
 // src/pipeline/highp.rs.
-func overlayHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes. Upstream:
-	//
-	//	s * inv(da) + d * inv(sa) + two(d).cmp_le(da).blend(
-	//	    two(s * d),
-	//	    sa * da - two((da - d) * (sa - s)),
-	//	)
-	var r wide.F32x8
-	for i := range r {
-		si, di, sai, dai := s[i], d[i], sa[i], da[i]
-		var v float32
-		if two(di) <= dai {
-			v = two(float32(si * di))
-		} else {
-			v = float32(sai*dai) - two(float32((dai-di)*(sai-si)))
-		}
-		r[i] = float32(si*invHighp(dai)) + float32(di*invHighp(sai)) + v
+//
+// Port (D33): it works on one lane. Upstream:
+//
+//	s * inv(da) + d * inv(sa) + two(d).cmp_le(da).blend(
+//	    two(s * d),
+//	    sa * da - two((da - d) * (sa - s)),
+//	)
+func overlayHighp(s, d, sa, da float32) float32 {
+	var v float32
+	if two(d) <= da {
+		v = two(float32(s * d))
+	} else {
+		v = float32(sa*da) - two(float32((da-d)*(sa-s)))
 	}
-	return r
+	return float32(s*invHighp(da)) + float32(d*invHighp(sa)) + v
 }
 
 // softLight is the stage soft_light of blend_fn2! in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) softLight() {
-	p.r, p.g, p.b = softLightHighp(p.r, p.dr, p.a, p.da), softLightHighp(p.g, p.dg, p.a, p.da), softLightHighp(p.b, p.db, p.a, p.da)
-	p.sourceOverAlpha()
+	// Port (D33, D35): one loop on the lanes, as blendFn2 says.
+	for i := range p.r {
+		sa, da := p.a[i], p.da[i]
+		p.r[i] = softLightHighpLane(p.r[i], p.dr[i], sa, da)
+		p.g[i] = softLightHighpLane(p.g[i], p.dg[i], sa, da)
+		p.b[i] = softLightHighpLane(p.b[i], p.db[i], sa, da)
+		p.a[i] = madHighp(da, invHighp(sa), sa)
+	}
+
 	p.nextStage()
 }
 
-// softLightHighp is the function of the stage soft_light in tiny-skia
-// src/pipeline/highp.rs.
-func softLightHighp(s, d, sa, da wide.F32x8) wide.F32x8 {
-	// Port (D33): one loop on the lanes, with softLightHighpLane for each
-	// lane.
-	var r wide.F32x8
-	for i := range r {
-		r[i] = softLightHighpLane(s[i], d[i], sa[i], da[i])
-	}
-	return r
-}
-
-// softLightHighpLane is softLightHighp on one lane (D33). It computes only
-// the branch that the lane takes. Upstream:
+// softLightHighpLane is the function of the stage soft_light in tiny-skia
+// src/pipeline/highp.rs, on one lane (D33). It computes only the branch
+// that the lane takes. Upstream:
 //
 //	let m = da.cmp_gt(f32x8::default()).blend(d / da, f32x8::default());
 //	let s2 = two(s);
