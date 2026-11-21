@@ -106,3 +106,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D84 | [typesetting computes the deltas of variable fonts in fixed point](D084-typesetting-computes-the-deltas-of-variable-fonts-in-fixed-point.md) | Decided, amends D65 |
 | D85 | [lottie draws text animators, capitals and text on a path](D085-lottie-draws-text-animators-capitals-and-text-on-a-path.md) | Decided, amends D79 |
 | D86 | [A mask can hold a rectangle and no pixels](D086-a-mask-can-hold-a-rectangle-and-no-pixels.md) | Decided, amends D60 |
+| D87 | [typesetting walks the glyphs and splits the lines with less work](D087-typesetting-walks-the-glyphs-and-splits-the-lines-with-less-work.md) | Proposed |

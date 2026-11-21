@@ -78,13 +78,24 @@ From D52.
    accepted on 2026-11-21: one table for the Unicode properties that the
    segmenter reads, and caches of the kerning and of the glyph properties
    of GDEF. Together they make `BenchmarkEndToEndOnce` 10% faster on
-   `pg24264` and 17% on `pg1342`, with the same output. Next, try the
-   candidates of "What remains" in D83. Keep the output of each test and
-   the hashes of ivy the same.
+   `pg24264` and 17% on `pg1342`, with the same output. D87 proposes eight
+   more changes for the candidates of "What remains" in D83, and question
+   38 of `PLAN.md` asks the maintainers to accept them. They make the loop
+   over the glyphs for each lookup do less work, skip two loops over the
+   origins of the glyphs, keep the scaled extents of 4096 glyphs in a cache
+   for each `harfbuzz.Font`, and skip the runes of each line that cannot
+   change the split of `Paragraph.Line`. On 2026-11-21 `test/textbench`
+   measured them together with 10 pairs on 4 CPUs.
+   `BenchmarkEndToEndOnce` went from 151 to 135 ns/char on `pg24264`
+   (-10.2%) and from 160 to 137 ns/char on `pg1342` (-14.1%).
+   `BenchmarkEndToEnd` went from 226 to 212 ns/char on `pg24264` (-6.4%)
+   and from 261 to 234 ns/char on `pg1342` (-10.1%). The output is the
+   same. Next, try the candidates of "What remains" in D87. Keep the
+   output of each test and the hashes of ivy the same.
    A change to the copy of go-text needs a decision first, as D65, D67, D70,
-   D72, D77, D81 and D83 had. A change at the calls in `shaping` keeps the
-   copy closer to go-text. Source: D72, D77, D81, D83, `test/textbench`,
-   2026-11-20.
+   D72, D77, D81, D83 and D87 had. A change at the calls in `shaping` keeps
+   the copy closer to go-text. Source: D72, D77, D81, D83, D87,
+   `test/textbench`, 2026-11-20 and 2026-11-21.
 2. Use SIMD in `typesetting` where the work is a scan or a loop over an array
    (D17, D28). Most of the text code is a table lookup or a state machine for
    each rune, and SIMD does not help there. These places can use it:
@@ -113,6 +124,13 @@ From D52.
    flags and glyphs, so `Paragraph.Line` of D77 inherits a fault of HarfBuzz,
    as D70 records for U+01EC. The fuzz target of `Paragraph` leaves the
    tatweel out of its alphabet. Source: D77, 2026-11-20.
+6. `FuzzParagraphLine` finds an input where `Paragraph.Line` gives another
+   advance than a new shaping: the text `fAbb !Z`, the cuts `0` and the
+   direction from left to right. For the runes 0 to 5, `(٢'')`, the first
+   glyph of the third output has the advance 1:62, and a new shaping gives
+   2:51. The input fails before the changes of D87 too. Find the cause, fix
+   it, and add the input to the seed corpus of the fuzz target. Source:
+   D87, 2026-11-21.
 
 
 ## lottie
