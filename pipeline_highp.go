@@ -1358,9 +1358,25 @@ func lum(r, g, b float32) float32 {
 //
 // Port (D33): it works on one lane, as sat does. Upstream changes r, g and b
 // in place. Go returns them.
+//
+// Port (D35): upstream computes mn = r.min(g.min(b)) and mx = r.max(g.max(b)).
+// Go writes the minimum and the maximum out with the rules of wide.LaneMin and
+// wide.LaneMax, which give the same bits, so that the Go compiler inlines the
+// function.
 func setSat(r, g, b, s float32) (float32, float32, float32) {
-	mn := wide.LaneMin(r, wide.LaneMin(g, b))
-	mx := wide.LaneMax(r, wide.LaneMax(g, b))
+	mn, mx := g, g
+	if b < mn {
+		mn = b
+	}
+	if !(mn < r) {
+		mn = r
+	}
+	if mx < b {
+		mx = b
+	}
+	if !(r < mx) {
+		mx = r
+	}
 	sat := mx - mn
 
 	// Map min channel to 0, max channel to s, and scale the middle proportionally.
