@@ -266,10 +266,13 @@ func (p *highpPipeline) clampA() {
 // uniformColor is uniform_color in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) uniformColor() {
 	ctx := &p.ctx.uniformColor
-	p.r = wide.SplatF32x8(ctx.r)
-	p.g = wide.SplatF32x8(ctx.g)
-	p.b = wide.SplatF32x8(ctx.b)
-	p.a = wide.SplatF32x8(ctx.a)
+
+	// Port (D35): one loop on the lanes. Upstream: f32x8::splat of each
+	// channel. The loop copies no splat, as seedShader says.
+	r, g, b, a := ctx.r, ctx.g, ctx.b, ctx.a
+	for i := range p.r {
+		p.r[i], p.g[i], p.b[i], p.a[i] = r, g, b, a
+	}
 
 	p.nextStage()
 }
@@ -350,9 +353,29 @@ func (*highpPipeline) storeU8Tail() {
 
 // gather is gather in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) gather() {
-	ix := gatherIx(p.pixmapSrc, p.r, p.g)
-	pixels := p.pixmapSrc.gather(ix)
-	load8888Highp(&pixels, &p.r, &p.g, &p.b, &p.a)
+	// Port (D33, D35): one loop on the lanes. Upstream:
+	// load_8888(&p.pixmap_src.gather(gather_ix(p.pixmap_src, p.r, p.g)), ...).
+	// The loop finds the index of each lane with gatherIxLane, reads the
+	// pixel, and makes its bytes floats as load8888Highp does. A lane of r
+	// and g changes only after the loop reads it, so the result is the same.
+	// The stage copies no vector: a copy of a vector that a stage wrote lane
+	// by lane is a load of 16 bytes from stores of 4 bytes, which the CPU
+	// cannot forward from its store buffer, and the load waits for them. An
+	// index out of range panics, as the index of a Rust slice does.
+	src := p.pixmapSrc
+	// Exclusive -> inclusive.
+	w := ulpSub(float32(src.Width()))
+	h := ulpSub(float32(src.Height()))
+	lastX, lastY := wide.TruncI32(w), wide.TruncI32(h)
+	width := int32(src.Width())
+	for i := range p.r {
+		j := int(gatherIxLane(p.r[i], p.g[i], w, h, lastX, lastY, width)) * BytesPerPixel
+		px := (*[BytesPerPixel]byte)(src.data[j : j+BytesPerPixel])
+		p.r[i] = byteUnit[px[0]]
+		p.g[i] = byteUnit[px[1]]
+		p.b[i] = byteUnit[px[2]]
+		p.a[i] = byteUnit[px[3]]
+	}
 
 	p.nextStage()
 }
@@ -424,20 +447,23 @@ func gatherIx(pixmap PixmapRef, x, y wide.F32x8) wide.U32x8 {
 
 	// Port (D33): one loop on the lanes, with gatherIxLane for each lane.
 	width := int32(pixmap.Width())
+	lastX, lastY := wide.TruncI32(w), wide.TruncI32(h)
 	var ix wide.U32x8
 	for i := range ix {
-		ix[i] = gatherIxLane(x[i], y[i], w, h, width)
+		ix[i] = gatherIxLane(x[i], y[i], w, h, lastX, lastY, width)
 	}
 	return ix
 }
 
 // gatherIxLane is gatherIx on one lane (D33), with w and h already made
-// inclusive. Upstream: x.max(0).min(w), y.max(0).min(h), and then
+// inclusive, and lastX and lastY their truncations. Upstream:
+// x.max(0).min(w), y.max(0).min(h), and then
 // (y.trunc_int() * width + x.trunc_int()).to_u32x8_bitcast().
-func gatherIxLane(x, y, w, h float32, width int32) uint32 {
-	x = wide.LaneMin(wide.LaneMax(x, 0), w)
-	y = wide.LaneMin(wide.LaneMax(y, 0), h)
-	return uint32(wide.TruncI32(y)*width + wide.TruncI32(x))
+//
+// Port (D35): clampIndex clamps and truncates each coordinate, with the same
+// result and fewer tests, so that the Go compiler inlines the function.
+func gatherIxLane(x, y, w, h float32, lastX, lastY, width int32) uint32 {
+	return uint32(clampIndex(y, h, lastY)*width + clampIndex(x, w, lastX))
 }
 
 // ulpSub is ulp_sub in tiny-skia src/pipeline/highp.rs.
@@ -1877,7 +1903,10 @@ func (p *highpPipeline) gradient() {
 	ctx := &p.ctx.gradient
 
 	// N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
-	t := p.r
+	//
+	// Port (D35): the stage reads t from r, and copies no vector, as gather
+	// says.
+	t := &p.r
 	var idx wide.U32x8
 	for i := 1; i < ctx.len; i++ {
 		tt := ctx.tValues[i].Get()
@@ -1886,7 +1915,7 @@ func (p *highpPipeline) gradient() {
 			idx[j] += b2u32(t[j] >= tt)
 		}
 	}
-	gradientLookupHighp(ctx, &idx, p.r, &p.r, &p.g, &p.b, &p.a)
+	gradientLookupHighp(ctx, &idx, t, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
@@ -1901,8 +1930,12 @@ func b2u32(b bool) uint32 {
 }
 
 // gradientLookupHighp is gradient_lookup in tiny-skia src/pipeline/highp.rs.
+//
+// Port (D35): upstream takes t as a value. Go takes a pointer, which can be
+// r. A lane of r changes only after the loop reads the same lane of t, so
+// the result is the same.
 func gradientLookupHighp(
-	ctx *gradientCtx, idx *wide.U32x8, t wide.F32x8,
+	ctx *gradientCtx, idx *wide.U32x8, t *wide.F32x8,
 	r, g, b, a *wide.F32x8,
 ) {
 	// Surprisingly, but bound checking does not affect the performance.
