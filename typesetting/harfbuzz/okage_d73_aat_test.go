@@ -560,12 +560,21 @@ func lookup10(size int, first GID, values ...uint32) []byte {
 // kerxFormat6 builds a subtable of format 6 of kerx with values of two
 // bytes, the lookups of the rows and the columns, and the kerning array.
 func kerxFormat6(rows, columns []byte, array ...int) kerxSubtable {
-	data := u32s(0)
-	data = append(data, u16s(2, 2)...)
-	data = append(data, u32s(36, uint32(36+len(rows)), uint32(36+len(rows)+len(columns)), 0)...)
+	return kerxFormat6Data(0, 2, rows, columns, u16s(array...), nil)
+}
+
+// kerxFormat6Data builds a subtable of format 6 of kerx with the flags, the
+// counts of the rows and the columns, the lookups, the kerning array and
+// the values of the tuples. The vector of the tuples follows the array.
+func kerxFormat6Data(flags uint32, count int, rows, columns, array, vector []byte) kerxSubtable {
+	data := u32s(flags)
+	data = append(data, u16s(count, count)...)
+	arrayOffset := uint32(36 + len(rows) + len(columns))
+	data = append(data, u32s(36, uint32(36+len(rows)), arrayOffset, arrayOffset+uint32(len(array)))...)
 	data = append(data, rows...)
 	data = append(data, columns...)
-	data = append(data, u16s(array...)...)
+	data = append(data, array...)
+	data = append(data, vector...)
 	return kerxSubtable{coverage: 6, data: data}
 }
 
@@ -756,5 +765,44 @@ func TestKerxFormat4Actions(t *testing.T) {
 	kerx = kerxTable(kerxFormat4Actions(2, nil), kerxPairs(int(robotoA), int(robotoC), -300))
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
 		{"ac", []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoC, 1, 922, -150, 0}}},
+	})
+}
+
+// TestKerxFormat6Values shapes texts with subtables of format 6 of kerx,
+// whose rows give 0 to a and 2 to b, and whose columns give 0 to a and 1 to
+// b. As in HarfBuzz 15.1.0, the value at the sum of a row and a column is
+// read when the subtable applies, and is 0 when it is not in the subtable.
+// The counts of the rows and the columns do not bound it. Long values
+// have 32 bits, and so do the values of their lookups of format 8. With a
+// tuple count, a value is a byte offset from the vector of the tuples:
+//   - The kerning array 0, -100, -50, with counts of 1, kerns a, b and b,
+//     a, and not b, b.
+//   - The long values 0, -100, -50, -20, with lookups of format 8.
+//   - The long values 0, 2, 4, 6, which are offsets to the tuples -10, -20,
+//     -30 and -40, with a tuple count of 1.
+//
+// go-text read rowCount × columnCount values, and the values of a lookup
+// of format 8 with long values as 16 bits. It read the values of the tuples
+// when it parsed the table (D73).
+func TestKerxFormat6Values(t *testing.T) {
+	rows, columns := lookup8(robotoA, 0, 2), lookup8(robotoA, 0, 1)
+	kerx := kerxTable(kerxFormat6Data(0, 1, rows, columns, u16s(0, -100, -50), nil))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1064, 0, 0}, {robotoB, 1, 1099, -50, 0}}},
+		{"ba", []shapedGlyph{{robotoB, 0, 1124, 0, 0}, {robotoA, 1, 1089, -25, 0}}},
+		{"bb", []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
+	})
+
+	rows = append(u16s(8, int(robotoA), 2), u32s(0, 2)...)
+	columns = append(u16s(8, int(robotoA), 2), u32s(0, 1)...)
+	kerx = kerxTable(kerxFormat6Data(1, 2, rows, columns, u32s(0, 0xFFFFFF9C, 0xFFFFFFCE, 0xFFFFFFEC), nil))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"bb", []shapedGlyph{{robotoB, 0, 1139, 0, 0}, {robotoB, 1, 1139, -10, 0}}},
+	})
+
+	tuples := kerxFormat6Data(1, 2, rows, columns, u32s(0, 2, 4, 6), u16s(-10, -20, -30, -40))
+	tuples.tuples = 1
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(tuples)}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1104, 0, 0}, {robotoB, 1, 1139, -10, 0}}},
 	})
 }

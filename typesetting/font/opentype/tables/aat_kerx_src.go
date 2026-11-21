@@ -5,6 +5,7 @@ package tables
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 )
 
 // Kerx is the extended kerning table
@@ -139,7 +140,7 @@ func (ks *KerxSubtable) readKerx0Tuples(src []byte) {
 		return
 	}
 	for i, pair := range kd.Pairs {
-		kd.Pairs[i].Value = KerxTupleKern(src, pair.Value, int(ks.TupleCount))
+		kd.Pairs[i].Value = KerxTupleKern(src, int32(pair.Value), int(ks.TupleCount))
 	}
 }
 
@@ -149,8 +150,8 @@ func (ks *KerxSubtable) readKerx0Tuples(src []byte) {
 //
 // okage: this is kerxTupleKern of HarfBuzz 15.1.0, for a subtable of kerx
 // with a tuple count (D73).
-func KerxTupleKern(src []byte, value int16, tupleCount int) int16 {
-	offset := uint64(uint32(int32(value)))
+func KerxTupleKern(src []byte, value int32, tupleCount int) int16 {
+	offset := uint64(uint32(value))
 	if uint64(len(src)) < offset+2*uint64(tupleCount) {
 		return 0
 	}
@@ -289,9 +290,13 @@ type KerxData6 struct {
 	kerningVectorOffset    uint32         // Offset from beginning of this subtable to the start of the kerning vectors. This value is only present if the tupleCount for this subtable is 1 or more.
 	Row                    AatLookupMixed `isOpaque:"" offsetRelativeTo:"Parent"` // Values are pre-multiplied by `columnCount`
 	Column                 AatLookupMixed `isOpaque:"" offsetRelativeTo:"Parent"`
-	// with rowCount * columnCount
-	// for tuples the values are estParseKerx (Not yet run).the first element of the tuple
-	Kernings []int16 `isOpaque:""  offsetRelativeTo:"Parent"`
+	// okage: data holds the subtable, up to its end, or up to the end of
+	// the table for the last subtable, and tupleCount is the tuple count of
+	// the subtable. Kerning reads a value from them, as HarfBuzz 15.1.0
+	// does. go-text read rowCount × columnCount values into Kernings, and
+	// refused the table when they were not in the subtable (D73).
+	data       []byte `isOpaque:"" offsetRelativeTo:"Parent"`
+	tupleCount int
 }
 
 func (kd *KerxData6) parseRow(_, parentSrc []byte, _, valuesCount int) error {
@@ -322,47 +327,57 @@ func (kd *KerxData6) parseColumn(_, parentSrc []byte, _, valuesCount int) error 
 	return err
 }
 
-func (kd *KerxData6) parseKernings(_, parentSrc []byte, tupleCount, _ int) error {
-	isExtended := kd.flags&1 != 0
-
-	length := int(kd.rowCount) * int(kd.columnCount)
-	var tmp []uint32
-	if isExtended {
-		if L, E := len(parentSrc), int(kd.kerningArrayOffset)+length*4; L < E {
-			return fmt.Errorf("EOF: expected length: %d, got %d", E, L)
-		}
-		tmp = make([]uint32, length)
-		for i := range tmp {
-			tmp[i] = binary.BigEndian.Uint32(parentSrc[int(kd.kerningArrayOffset)+4*i:])
-		}
-	} else {
-		if L, E := len(parentSrc), int(kd.kerningArrayOffset)+length*2; L < E {
-			return fmt.Errorf("EOF: expected length: %d, got %d", E, L)
-		}
-		tmp = make([]uint32, length)
-		for i := range tmp {
-			tmp[i] = uint32(binary.BigEndian.Uint16(parentSrc[int(kd.kerningArrayOffset)+2*i:]))
-		}
+// parseData keeps the subtable for Kerning. parentSrc starts at the start
+// of the subtable, and ends at the end of the subtable, or at the end of
+// the table for the last subtable.
+//
+// okage: HarfBuzz 15.1.0 refuses the table when the kerning array starts
+// after the end of the subtable, or when the vector of the tuples does, for
+// a subtable with a tuple count (D73).
+func (kd *KerxData6) parseData(_, parentSrc []byte, tupleCount, _ int) error {
+	if L := len(parentSrc); L < int(kd.kerningArrayOffset) {
+		return fmt.Errorf("EOF: expected length: %d, got %d", kd.kerningArrayOffset, L)
 	}
-
-	kd.Kernings = make([]int16, len(tmp))
-	if tupleCount != 0 { // interpret kern values as offset
-		// If the tupleCount is 1 or more, then the kerning array contains offsets from the beginning
-		// of the kerningVectors table to a tupleCount-dimensional vector of FUnits controlling the kerning.
-		for i, v := range tmp {
-			kerningOffset := int(kd.kerningVectorOffset) + int(v)
-			if L := len(parentSrc); L < kerningOffset+2 {
-				return fmt.Errorf("EOF: expected length: %d, got %d", kerningOffset+2, L)
-			}
-			kd.Kernings[i] = int16(binary.BigEndian.Uint16(parentSrc[kerningOffset:]))
-		}
-	} else {
-		// a kerning value greater than an int16 should not happen
-		for i, v := range tmp {
-			kd.Kernings[i] = int16(v)
-		}
+	if L := len(parentSrc); tupleCount != 0 && L < int(kd.kerningVectorOffset) {
+		return fmt.Errorf("EOF: expected length: %d, got %d", kd.kerningVectorOffset, L)
 	}
+	kd.data = parentSrc
+	kd.tupleCount = tupleCount
 	return nil
+}
+
+// Kerning returns the kerning value for the pair, or 0.
+//
+// okage: Kerning follows KerxSubTableFormat6::get_kerning of HarfBuzz
+// 15.1.0. The value is at the sum of the row and the column, in the
+// kerning array, which has values of 32 bits for long values. The counts
+// of the rows and the columns do not bound it, and the value is 0 when it
+// is not in the subtable. With a tuple count, the value is a byte offset
+// from the vector of the tuples, as for KerxTupleKern (D73).
+func (kd KerxData6) Kerning(left, right GlyphID) int32 {
+	l, r := uint64(kd.Row.ClassUint32(left)), uint64(kd.Column.ClassUint32(right))
+	offset, size := l+r, uint64(2)
+	if kd.flags&1 != 0 {
+		size = 4
+		// HarfBuzz gives 0 when the sum or the byte offset overflows 32 bits.
+		if offset*size > math.MaxUint32 {
+			return 0
+		}
+	}
+	pos := uint64(kd.kerningArrayOffset) + offset*size
+	if uint64(len(kd.data)) < pos+size {
+		return 0
+	}
+	var v int32
+	if size == 4 {
+		v = int32(binary.BigEndian.Uint32(kd.data[pos:]))
+	} else {
+		v = int32(int16(binary.BigEndian.Uint16(kd.data[pos:])))
+	}
+	if kd.tupleCount == 0 {
+		return v
+	}
+	return int32(KerxTupleKern(kd.data[kd.kerningVectorOffset:], v, kd.tupleCount))
 }
 
 //lint:ignore U1000 this type is required so that the code generator add a ParseAATLookupExt function

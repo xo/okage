@@ -294,7 +294,7 @@ func (kd Kern2) KernPair(left, right GID) int16 {
 	// tuples, as kerxTupleKern of HarfBuzz 15.1.0. go-text ignored the
 	// tuple count (D73).
 	if kd.extended && kd.tupleCount != 0 {
-		return tables.KerxTupleKern(kd.KerningData, kernVal, kd.tupleCount)
+		return tables.KerxTupleKern(kd.KerningData, int32(kernVal), kd.tupleCount)
 	}
 	return kernVal
 }
@@ -359,14 +359,12 @@ func (k Kern4) Action(index uint16) (values [4]int16, ok bool) {
 
 type Kern6 tables.KerxData6
 
+// KernPair returns the kern value for the given pair, or zero.
+//
+// okage: tables.KerxData6.Kerning reads the value as HarfBuzz 15.1.0 does.
+// KernPair keeps its low 16 bits, as go-text did (D73).
 func (kd Kern6) KernPair(left, right GID) int16 {
-	l := kd.Row.ClassUint32(tables.GlyphID(left))
-	r := kd.Column.ClassUint32(tables.GlyphID(right))
-	index := int(l) + int(r)
-	if len(kd.Kernings) <= index {
-		return 0
-	}
-	return kd.Kernings[index]
+	return int16(tables.KerxData6(kd).Kerning(tables.GlyphID(left), tables.GlyphID(right)))
 }
 
 // --------------------------------------- state machine ---------------------------------------

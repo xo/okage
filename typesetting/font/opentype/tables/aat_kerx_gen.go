@@ -230,22 +230,27 @@ func ParseAATLoopkupExt6(src []byte) (AATLoopkupExt6, int, error) {
 func ParseAATLoopkupExt8(src []byte) (AATLoopkupExt8, int, error) {
 	var item AATLoopkupExt8
 	n := 0
-	if L := len(src); L < 2 {
-		return item, 0, fmt.Errorf("reading AATLoopkupExt8: "+"EOF: expected length: 2, got %d", L)
+	if L := len(src); L < 6 {
+		return item, 0, fmt.Errorf("reading AATLoopkupExt8: "+"EOF: expected length: 6, got %d", L)
 	}
+	_ = src[5] // early bound checking
 	item.version = binary.BigEndian.Uint16(src[0:])
-	n += 2
+	item.FirstGlyph = binary.BigEndian.Uint16(src[2:])
+	arrayLengthValues := int(binary.BigEndian.Uint16(src[4:]))
+	n += 6
 
 	{
-		var (
-			err  error
-			read int
-		)
-		item.AATLoopkup8Data, read, err = ParseAATLoopkup8Data(src[2:])
-		if err != nil {
-			return item, 0, fmt.Errorf("reading AATLoopkupExt8: %s", err)
+		// okage: the values have 32 bits, as in HarfBuzz 15.1.0. go-text
+		// read them as 16 bits (D73).
+		if L := len(src); L < 6+arrayLengthValues*4 {
+			return item, 0, fmt.Errorf("reading AATLoopkupExt8: "+"EOF: expected length: %d, got %d", 6+arrayLengthValues*4, L)
 		}
-		n += read
+
+		item.Values = make([]uint32, arrayLengthValues) // allocation guarded by the previous check
+		for i := range item.Values {
+			item.Values[i] = binary.BigEndian.Uint32(src[6+i*4:])
+		}
+		n += arrayLengthValues * 4
 	}
 	return item, n, nil
 }
@@ -597,7 +602,7 @@ func ParseKerxData6(src []byte, parentSrc []byte, tupleCount int, valuesCount in
 	}
 	{
 
-		err := item.parseKernings(src[:], parentSrc, tupleCount, valuesCount)
+		err := item.parseData(src[:], parentSrc, tupleCount, valuesCount)
 		if err != nil {
 			return item, 0, fmt.Errorf("reading KerxData6: %s", err)
 		}

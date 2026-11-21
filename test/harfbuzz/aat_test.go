@@ -499,12 +499,21 @@ func lookup10(size, first int, values ...uint32) []byte {
 // kerxFormat6 builds a subtable of format 6 of kerx with values of two
 // bytes, the lookups of the rows and the columns, and the kerning array.
 func kerxFormat6(rows, columns []byte, array ...int) kerxSubtable {
-	data := u32s(0)
-	data = append(data, u16s(2, 2)...)
-	data = append(data, u32s(36, uint32(36+len(rows)), uint32(36+len(rows)+len(columns)), 0)...)
+	return kerxFormat6Data(0, 2, rows, columns, u16s(array...), nil)
+}
+
+// kerxFormat6Data builds a subtable of format 6 of kerx with the flags, the
+// counts of the rows and the columns, the lookups, the kerning array and
+// the values of the tuples. The vector of the tuples follows the array.
+func kerxFormat6Data(flags uint32, count int, rows, columns, array, vector []byte) kerxSubtable {
+	data := u32s(flags)
+	data = append(data, u16s(count, count)...)
+	arrayOffset := uint32(36 + len(rows) + len(columns))
+	data = append(data, u32s(36, uint32(36+len(rows)), arrayOffset, arrayOffset+uint32(len(array)))...)
 	data = append(data, rows...)
 	data = append(data, columns...)
-	data = append(data, u16s(array...)...)
+	data = append(data, array...)
+	data = append(data, vector...)
 	return kerxSubtable{coverage: 6, data: data}
 }
 
@@ -664,4 +673,63 @@ func TestKerxFormat4Actions(t *testing.T) {
 	}
 	kerx := kerxTable(kerxFormat4Actions(2, nil), kerxPairs(robotoA, robotoC, -300))
 	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, texts...)
+}
+
+// TestKerxFormat6Values: subtables of format 6 of kerx, whose rows give 0
+// to a and 2 to b, and whose columns give 0 to a and 1 to b. HarfBuzz reads
+// the value at the sum of a row and a column when it applies the subtable,
+// and gives 0 when the value is not in the subtable, or not in the table
+// for the last subtable. It ignores the counts of the rows and the
+// columns. Long values have 32 bits, and so do the values of their
+// lookups. With a tuple count, a value is a byte offset from the vector of
+// the tuples. HarfBuzz refuses the table when the kerning array or the
+// vector starts after the end of the subtable:
+//   - A kerning array of three values 0, -100, -50, without the value of
+//     b, b, with counts of 1 and 2, in a subtable before a subtable that
+//     kerns x, y, and as the last subtable.
+//   - Long values 0, -100, -50, -20 with lookups of format 8, 2, 4 and 6,
+//     with counts of 2.
+//   - Long values that are the offsets 0, 2, 4 and 6 to the tuples -10,
+//     -20, -30 and -40, with a tuple count of 1, and the same with offsets
+//     after the tuples.
+//   - A subtable whose kerning array starts after its end, and a subtable
+//     with a tuple count whose vector starts after its end, then a subtable
+//     that kerns a, b.
+func TestKerxFormat6Values(t *testing.T) {
+	texts := []string{"ab", "ba", "bb", "aa", "abba"}
+	rows, columns := lookup8(robotoA, 0, 2), lookup8(robotoA, 0, 1)
+	for _, count := range []int{1, 2} {
+		short := kerxFormat6Data(0, count, rows, columns, u16s(0, -100, -50), nil)
+		for _, kerx := range [][]byte{kerxTable(short, kerxPairs(robotoX, robotoY, -300)), kerxTable(short)} {
+			testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, texts...)
+		}
+	}
+
+	long := u32s(0, 0xFFFFFF9C, 0xFFFFFFCE, 0xFFFFFFEC)
+	for _, lookups := range [][2][]byte{
+		{append(u16s(8, robotoA, 2), u32s(0, 2)...), append(u16s(8, robotoA, 2), u32s(0, 1)...)},
+		{binSearchLookup(2, 8, [][]int{{robotoA, robotoA, 0, 0}, {robotoB, robotoB, 0, 2}}),
+			binSearchLookup(2, 8, [][]int{{robotoB, robotoA, 0, 0}}, 0)},
+		{binSearchLookup(4, 6, [][]int{{robotoB, robotoA, 18}}, 0, 0, 0, 2), binSearchLookup(4, 6, [][]int{{robotoB, robotoA, 18}}, 0, 0, 0, 1)},
+		{binSearchLookup(6, 6, [][]int{{robotoA, 0, 0}, {robotoB, 0, 2}}), binSearchLookup(6, 6, [][]int{{robotoA, 0, 0}, {robotoB, 0, 1}})},
+	} {
+		kerx := kerxTable(kerxFormat6Data(1, 2, lookups[0], lookups[1], long, nil))
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, texts...)
+	}
+
+	long8 := [2][]byte{append(u16s(8, robotoA, 2), u32s(0, 2)...), append(u16s(8, robotoA, 2), u32s(0, 1)...)}
+	for _, offsets := range [][]byte{u32s(0, 2, 4, 6), u32s(2, 4, 6, 8)} {
+		st := kerxFormat6Data(1, 2, long8[0], long8[1], offsets, u16s(-10, -20, -30, -40))
+		st.tuples = 1
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(st)}), false, texts...)
+	}
+
+	late := kerxFormat6Data(0, 2, rows, columns, nil, nil)
+	copy(late.data[16:], u32s(1000))
+	vector := kerxFormat6Data(0, 2, rows, columns, u16s(0, -100, -50, -20), nil)
+	copy(vector.data[20:], u32s(1000))
+	vector.tuples = 1
+	for _, st := range []kerxSubtable{late, vector} {
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(st, kerxPairs(robotoA, robotoB, -300))}), false, "ab")
+	}
 }

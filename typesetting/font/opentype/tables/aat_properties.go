@@ -178,8 +178,10 @@ func (lk AATLoopkupExt6) Class(g GlyphID) (uint32, bool) {
 }
 
 func (lk AATLoopkupExt8) Class(g GlyphID) (uint32, bool) {
-	v, ok := AATLoopkup8(lk).Class(g)
-	return uint32(v), ok
+	if g < lk.FirstGlyph || g >= lk.FirstGlyph+GlyphID(len(lk.Values)) {
+		return 0, false
+	}
+	return lk.Values[g-lk.FirstGlyph], true
 }
 
 // Class returns (0, false) for each glyph, as AATLoopkup10.Class.

@@ -409,7 +409,16 @@ type loopkupRecordExt6 struct {
 	Value uint32
 }
 
-type AATLoopkupExt8 AATLoopkup8
+// AATLoopkupExt8 is a lookup of format 8 with values of 32 bits.
+//
+// okage: go-text declared it as AATLoopkup8, with values of 16 bits, and
+// read the lookups of the rows and the columns of kerx format 6 with long
+// values wrongly (D73).
+type AATLoopkupExt8 struct {
+	version    uint16 `unionTag:"8"`
+	FirstGlyph GlyphID
+	Values     []uint32 `arrayCount:"FirstUint16"`
+}
 
 type AATLoopkupExt10 struct {
 	version    uint16 `unionTag:"10"`
