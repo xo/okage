@@ -1,6 +1,6 @@
 """Shape texts in a font with uharfbuzz, for the oracle of typesetting/harfbuzz.
 
-Usage: python3 -I shape.py FONT [--flags] [--language LANGUAGE] [--ranged TAG PERIOD] [--off TAG]
+Usage: python3 -I shape.py FONT [--flags] [--language LANGUAGE] [--ranged TAG PERIOD] [--off TAG] [--scale SCALE]
 
 Each line of the standard input is a text, as the hexadecimal values of its
 characters, separated by spaces. For each text, the script writes one line
@@ -11,7 +11,9 @@ to break, and with 0 when it is not. With the argument --language, the
 script sets the language of each buffer to LANGUAGE. With the argument
 --ranged, each character i of a text has the feature TAG in a range of its
 own, on when i is not a multiple of PERIOD and off when it is. With the
-argument --off, the feature TAG is off for the whole text.
+argument --off, the feature TAG is off for the whole text. With the argument
+--scale, the scale of the font is SCALE on both axes, in place of the units
+per em of the font.
 
 The script adds the characters with add_codepoints, as harfbuzz.AddRunes
 does, so that the buffers of HarfBuzz and of harfbuzz grow in the same
@@ -44,6 +46,9 @@ def main():
     if "--off" in args:
         off = args[args.index("--off") + 1]
     font = hb.Font(hb.Face(blob))
+    if "--scale" in args:
+        scale = int(args[args.index("--scale") + 1])
+        font.scale = (scale, scale)
     out = sys.stdout
     for line in sys.stdin:
         buf = hb.Buffer()

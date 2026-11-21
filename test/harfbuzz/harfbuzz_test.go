@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -95,14 +96,18 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool, args .
 }
 
 // shapeOkage shapes each text in the font data with harfbuzz, with the
-// flag unsafe-to-break of each glyph when flags is true.
-func shapeOkage(t *testing.T, data []byte, texts []string, flags bool) [][]string {
+// flag unsafe-to-break of each glyph when flags is true. When scale is not
+// 0, the font has that scale on both axes, in place of its units per em.
+func shapeOkage(t *testing.T, data []byte, texts []string, flags bool, scale int32) [][]string {
 	t.Helper()
 	face, err := font.ParseTTF(bytes.NewReader(data))
 	if err != nil {
 		t.Fatal(err)
 	}
 	hf := harfbuzz.NewFont(face)
+	if scale != 0 {
+		hf.XScale, hf.YScale = scale, scale
+	}
 	buf := harfbuzz.NewBuffer()
 	out := make([][]string, len(texts))
 	for i, text := range texts {
@@ -133,12 +138,23 @@ func shapeOkage(t *testing.T, data []byte, texts []string, flags bool) [][]strin
 // of HarfBuzz.
 func compareShaping(t *testing.T, data []byte, texts []string, flags bool) []shaped {
 	t.Helper()
+	return compareShapingAt(t, data, texts, flags, 0)
+}
+
+// compareShapingAt is compareShaping with the scale of the font on both
+// axes, when scale is not 0.
+func compareShapingAt(t *testing.T, data []byte, texts []string, flags bool, scale int32) []shaped {
+	t.Helper()
 	path := filepath.Join(t.TempDir(), "font.ttf")
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	want := shapeHarfBuzz(t, path, texts, flags)
-	got := shapeOkage(t, data, texts, flags)
+	var args []string
+	if scale != 0 {
+		args = []string{"--scale", strconv.Itoa(int(scale))}
+	}
+	want := shapeHarfBuzz(t, path, texts, flags, args...)
+	got := shapeOkage(t, data, texts, flags, scale)
 	for i, text := range texts {
 		if slices.Equal(got[i], want[i].glyphs) {
 			continue
