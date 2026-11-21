@@ -953,3 +953,33 @@ func TestAATClassOffsetZero(t *testing.T) {
 	kern := kernOT(format2, kernPairs(20, int(robotoA), int(robotoB), -300))
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), plain)
 }
+
+// TestAATTableVersions shapes texts with tables whose version HarfBuzz
+// 15.1.0 refuses, or reads in another way. As in HarfBuzz:
+//   - A table morx of version 0, whose subtable replaces a with b, is
+//     refused.
+//   - A table kerx of version 1, which kerns a, b, is refused.
+//   - A table kern whose major version is 1 has a count of subtables of 32
+//     bits. Here the count is the length of the subtable, and the table is
+//     refused.
+//
+// go-text read these tables. It read a count of 16 bits in a table kern
+// when the next 16 bits were not 0 (D73).
+func TestAATTableVersions(t *testing.T) {
+	morx := morxAuditTable(morxAuditSubtable{4, lookup8(robotoA, int(robotoB))})
+	morx[1] = 0
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"a", []shapedGlyph{{robotoA, 0, 1114, 0, 0}}},
+	})
+
+	plain := []shapedText{{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}}}
+	kerx := kerxTable(kerxPairs(int(robotoA), int(robotoB), -300))
+	kerx[1] = 1
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), plain)
+
+	pairs := u16s(1, 6, 0, 0, int(robotoA), int(robotoB), -300)
+	kern := u16s(1, 1)
+	kern = append(kern, u32s(uint32(8+len(pairs)), 0)...)
+	kern = append(kern, pairs...)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), plain)
+}

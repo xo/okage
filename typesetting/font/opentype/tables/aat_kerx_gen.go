@@ -317,6 +317,10 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 	item.padding = binary.BigEndian.Uint16(src[2:])
 	item.nTables = binary.BigEndian.Uint32(src[4:])
 	n += 8
+	// okage: HarfBuzz 15.1.0 refuses a table of a version before 2 (D73).
+	if item.version < 2 {
+		return item, 0, fmt.Errorf("reading Kerx: invalid version %d", item.version)
+	}
 
 	{
 		arrayLength := int(item.nTables)

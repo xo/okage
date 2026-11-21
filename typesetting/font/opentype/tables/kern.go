@@ -43,8 +43,8 @@ const aatMaxSubtables = 1024
 // We apply the following logic:
 //   - read the first uint16 -> it's always the major version
 //   - if it's 0, we have a Miscrosoft table
-//   - if it's 1, we have an Apple table. We read the next uint16,
-//     to differentiate between the old and the new Apple format.
+//   - if it's 1, we have an Apple table, with a version and a count of
+//     32 bits, as HarfBuzz 15.1.0 reads it (okage: D73).
 func ParseKern(src []byte) (Kern, int, error) {
 	if L := len(src); L < 4 {
 		return Kern{}, 0, fmt.Errorf("reading Kern: "+"EOF: expected length: 4, got %d", L)
@@ -58,19 +58,14 @@ func ParseKern(src []byte) (Kern, int, error) {
 		numTables = uint32(binary.BigEndian.Uint16(src[2:]))
 		src = src[4:]
 	case 1:
-		nextUint16 := binary.BigEndian.Uint16(src[2:])
-		if nextUint16 == 0 {
-			// either new format or old format with 0 subtables, the later being invalid (or at least useless)
-			if len(src) < 8 {
-				return Kern{}, 0, errors.New("invalid kern table version 1 (EOF)")
-			}
-			numTables = binary.BigEndian.Uint32(src[4:])
-			src = src[8:]
-		} else {
-			// old format
-			numTables = uint32(nextUint16)
-			src = src[4:]
+		// okage: HarfBuzz 15.1.0 reads a version and a count of 32 bits when
+		// the major version is 1. go-text read a count of 16 bits when the
+		// next 16 bits were not 0 (D73).
+		if len(src) < 8 {
+			return Kern{}, 0, errors.New("invalid kern table version 1 (EOF)")
 		}
+		numTables = binary.BigEndian.Uint32(src[4:])
+		src = src[8:]
 
 	default:
 		return Kern{}, 0, fmt.Errorf("unsupported kern table version: %d", major)

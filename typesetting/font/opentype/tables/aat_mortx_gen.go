@@ -30,6 +30,10 @@ func ParseMorx(src []byte, valuesCount int) (Morx, int, error) {
 	item.unused = binary.BigEndian.Uint16(src[2:])
 	item.nChains = binary.BigEndian.Uint32(src[4:])
 	n += 8
+	// okage: HarfBuzz 15.1.0 refuses a table of version 0 (D73).
+	if item.version == 0 {
+		return item, 0, fmt.Errorf("reading Morx: invalid version %d", item.version)
+	}
 
 	{
 		arrayLength := int(item.nChains)

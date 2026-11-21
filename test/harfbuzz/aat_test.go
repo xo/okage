@@ -874,3 +874,29 @@ func TestAATClassOffsetZero(t *testing.T) {
 	kern := kernOT(format2, kernPairs(20, robotoA, robotoB, -300))
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab")
 }
+
+// TestAATTableVersions: tables with a version that HarfBuzz refuses, or
+// reads in another way. HarfBuzz refuses a table morx of version 0 and a
+// table kerx of version 1, and then shapes the text without them. A table
+// kern whose major version is 1 has a version and a count of subtables of
+// 32 bits, also when the next 16 bits are not 0:
+//   - A table morx of version 0 whose subtable replaces a with b.
+//   - A table kerx of version 1 that kerns a, b.
+//   - A table kern of version 1 with a count of 16 bits, 1, and a subtable
+//     that kerns a, b. HarfBuzz reads the length of the subtable as the
+//     count of subtables, and refuses the table.
+func TestAATTableVersions(t *testing.T) {
+	morx := morxAuditTable(morxAuditSubtable{4, lookup8(robotoA, robotoB)})
+	morx[1] = 0
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "a", "ab")
+
+	kerx := kerxTable(kerxPairs(robotoA, robotoB, -300))
+	kerx[1] = 1
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab")
+
+	pairs := u16s(1, 6, 0, 0, robotoA, robotoB, -300)
+	kern := u16s(1, 1)
+	kern = append(kern, u32s(uint32(8+len(pairs)), 0)...)
+	kern = append(kern, pairs...)
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab")
+}
