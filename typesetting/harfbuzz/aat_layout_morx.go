@@ -305,8 +305,11 @@ type driverContextLigature struct {
 
 func (driverContextLigature) inPlace() bool { return false }
 
+// okage: an entry has an action when it has the flag PerformAction, as in
+// HarfBuzz 15.1.0. go-text took any bit of the mask 0x3FFF, the offset of
+// an entry of the table mort, which typesetting does not read (D73).
 func (driverContextLigature) isActionable(entry tables.AATStateEntry) bool {
-	return entry.Flags&tables.MLOffset != 0
+	return entry.Flags&tables.MLPerformAction != 0
 }
 
 func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDriver, entry tables.AATStateEntry) {

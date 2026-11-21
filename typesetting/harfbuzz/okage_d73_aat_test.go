@@ -56,9 +56,15 @@ func morxLigature() morxAuditSubtable {
 // morxLigatureAt builds the subtable of morxLigature, whose first action
 // reads the component at glyph minus the glyph on the stack.
 func morxLigatureAt(glyph GID) morxAuditSubtable {
+	return morxLigatureFlags(glyph, 0xA000)
+}
+
+// morxLigatureFlags builds the subtable of morxLigatureAt, where the entry
+// of b has the flags.
+func morxLigatureFlags(glyph GID, flags int) morxAuditSubtable {
 	classTable := u16s(8, int(robotoA), 2, 4, 5)
 	states := u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2)
-	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, 0xA000, 0)
+	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, flags, 0)
 	actions := u32s(ligatureOffset(glyph), 0xC0000000|ligatureOffset(robotoA))
 	components := u16s(0)
 	ligatures := u16s(int(robotoX))
@@ -409,5 +415,22 @@ func TestMorxLigatureNegativeComponent(t *testing.T) {
 				t.Fatalf("%s: got the glyphs %v, want %v", text, got, want)
 			}
 		}
+	}
+}
+
+// TestMorxLigaturePerformAction shapes ab with a ligature subtable that
+// replaces a, b with x, where the entry of b has the flag SetComponent and
+// other flags. As in HarfBuzz 15.1.0, the entry has an action only when it
+// has the flag PerformAction, 0x2000. go-text took any bit of the mask
+// 0x3FFF, and replaced a, b with x for the reserved bits 0x1FFF (D73).
+func TestMorxLigaturePerformAction(t *testing.T) {
+	ligature := []shapedGlyph{{robotoX, 0, 1015, 0, 0}}
+	plain := []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}
+	for _, test := range []struct {
+		flags int
+		want  []shapedGlyph
+	}{{0xA000, ligature}, {0x8001, plain}, {0x9000, plain}, {0x8FFF, plain}, {0xB000, ligature}} {
+		face := fontWithLayout(t, map[string][]byte{"morx": morxAuditTable(morxLigatureFlags(robotoB, test.flags))})
+		testShapedFace(t, face, []shapedText{{"ab", test.want}})
 	}
 }

@@ -61,9 +61,15 @@ func morxLigature() morxAuditSubtable {
 // morxLigatureAt builds the subtable of morxLigature, whose first action
 // reads the component at glyph minus the glyph on the stack.
 func morxLigatureAt(glyph int) morxAuditSubtable {
+	return morxLigatureFlags(glyph, 0xA000)
+}
+
+// morxLigatureFlags builds the subtable of morxLigatureAt, where the entry
+// of b has the flags.
+func morxLigatureFlags(glyph, flags int) morxAuditSubtable {
 	classTable := u16s(8, robotoA, 2, 4, 5)
 	states := u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2)
-	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, 0xA000, 0)
+	entries := u16s(0, 0, 0, 2, 0x8000, 0, 0, flags, 0)
 	actions := u32s(ligatureOffset(glyph), 0xC0000000|ligatureOffset(robotoA))
 	components := u16s(0)
 	ligatures := u16s(robotoX)
@@ -370,4 +376,15 @@ func TestMorxMapBudget(t *testing.T) {
 func TestMorxLigatureNegativeComponent(t *testing.T) {
 	morx := morxAuditTable(morxLigatureAt(robotoB + 1))
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ab", "abc", "cab")
+}
+
+// TestMorxLigaturePerformAction shapes texts with a ligature subtable that
+// replaces a, b with x, where the entry of b has the flag SetComponent and
+// other flags. HarfBuzz performs the action of an entry only when it has
+// the flag PerformAction, 0x2000, and ignores the reserved bits 0x1FFF.
+func TestMorxLigaturePerformAction(t *testing.T) {
+	for _, flags := range []int{0xA000, 0x8001, 0x9000, 0x8FFF, 0xB000} {
+		morx := morxAuditTable(morxLigatureFlags(robotoB, flags))
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ab", "abc", "cab", "aab")
+	}
 }
