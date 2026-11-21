@@ -349,8 +349,13 @@ func (dc *driverContextLigature) transition(buffer *Buffer, driver stateTableDri
 		}
 		cursor := dc.matchLength
 
-		actionIdx := entry.AsMorxLigature()
-		actionData := dc.table.LigatureAction[actionIdx:]
+		// okage: an action that is not in the table ends the list, as in
+		// HarfBuzz 15.1.0 (D73).
+		actionIdx := int(entry.AsMorxLigature())
+		var actionData []uint32
+		if actionIdx < len(dc.table.LigatureAction) {
+			actionData = dc.table.LigatureAction[actionIdx:]
+		}
 
 		ligatureIdx := 0
 		var action uint32
@@ -522,8 +527,13 @@ func (dc *driverContextInsertion) transition(buffer *Buffer, driver stateTableDr
 		if buffer.maxOps <= 0 {
 			return
 		}
-		start := markedInsertIndex
-		glyphs := dc.insertionAction[start:]
+		// okage: insertions that are not in the table insert no glyph, as
+		// in HarfBuzz 15.1.0 (D73).
+		start := int(markedInsertIndex)
+		if start+count > len(dc.insertionAction) {
+			count = 0
+		}
+		glyphs := dc.insertionAction[min(start, len(dc.insertionAction)):]
 
 		before := flags&miMarkedInsertBefore != 0
 
@@ -566,8 +576,12 @@ func (dc *driverContextInsertion) transition(buffer *Buffer, driver stateTableDr
 		if buffer.maxOps <= 0 {
 			return
 		}
-		start := currentInsertIndex
-		glyphs := dc.insertionAction[start:]
+		// okage: as for the marked glyph (D73).
+		start := int(currentInsertIndex)
+		if start+count > len(dc.insertionAction) {
+			count = 0
+		}
+		glyphs := dc.insertionAction[min(start, len(dc.insertionAction)):]
 
 		before := flags&miCurrentInsertBefore != 0
 

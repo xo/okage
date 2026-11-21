@@ -200,7 +200,16 @@ const (
 
 // the LigActions length is not specified. Instead, we have to parse uint32 one by one
 // until we reach last action or reach EOF
+//
+// okage: HarfBuzz 15.1.0 refuses the subtable when the offset of the
+// actions, of the components or of the ligatures is 0, and reads an action
+// when it applies the subtable. It skips an action that is not in the
+// table. go-text refused the table when the actions of the largest index
+// of an entry were not in the table (D73).
 func (lig *MorxSubtableLigature) parseLigActions(src []byte, _ int) error {
+	if lig.ligActionOffset == 0 || lig.componentOffset == 0 || lig.ligatureOffset == 0 {
+		return errors.New("invalid null offset in morx ligature subtable")
+	}
 	// fetch the maximum start index
 	maxIndex := -1
 	for _, entry := range lig.Entries {
@@ -212,8 +221,8 @@ func (lig *MorxSubtableLigature) parseLigActions(src []byte, _ int) error {
 		}
 	}
 
-	if L := len(src); L < int(lig.ligActionOffset)+4*int(maxIndex+1) {
-		return fmt.Errorf("EOF: expected length: %d, got %d", lig.ligActionOffset, L)
+	if L := len(src); L < int(lig.ligActionOffset) {
+		return nil
 	}
 
 	// fetch the action table, up to the last entry
@@ -230,26 +239,26 @@ func (lig *MorxSubtableLigature) parseLigActions(src []byte, _ int) error {
 	return nil
 }
 
+// okage: the components go up to the end of the table, as HarfBuzz 15.1.0
+// reads them. go-text read them up to the ligatures, and refused the table
+// when the ligatures came before the components (D73).
 func (lig *MorxSubtableLigature) parseComponents(src []byte, _ int) error {
-	// we rely on offset being sorted, which seems to be the case in practice
-	if lig.componentOffset > lig.ligatureOffset {
-		return errors.New("unsupported non sorted offsets")
-	}
 	if L := len(src); L < int(lig.componentOffset) {
-		return fmt.Errorf("EOF: expected length: %d, got %d", lig.componentOffset, L)
+		return nil
 	}
 	src = src[lig.componentOffset:]
-	componentCount := (lig.ligatureOffset - lig.componentOffset) / 2
-	lig.Components = make([]uint16, componentCount)
+	lig.Components = make([]uint16, len(src)/2)
 	for i := range lig.Components {
 		lig.Components[i] = binary.BigEndian.Uint16(src[2*i:])
 	}
 	return nil
 }
 
+// okage: HarfBuzz 15.1.0 reads a ligature when it applies the subtable, so
+// ligatures that start after the end of the table are not an error (D73).
 func (lig *MorxSubtableLigature) parseLigatures(src []byte, _ int) error {
 	if L := len(src); L < int(lig.ligatureOffset) {
-		return fmt.Errorf("EOF: expected length: %d, got %d", lig.ligatureOffset, L)
+		return nil
 	}
 	src = src[lig.ligatureOffset:]
 	ligatureCount := len(src) / 2

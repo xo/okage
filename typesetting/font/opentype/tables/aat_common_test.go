@@ -259,7 +259,10 @@ func TestMorxLigature(t *testing.T) {
 		1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007,
 	}
 	tu.Assert(t, reflect.DeepEqual(lig.LigActions, expLigActions))
-	tu.Assert(t, reflect.DeepEqual(lig.Components, expComponents))
+	// okage: the components go up to the end of the table, and the
+	// ligatures follow them here (D73).
+	tu.Assert(t, reflect.DeepEqual(lig.Components[:len(expComponents)], expComponents))
+	tu.Assert(t, len(lig.Components) == len(expComponents)+len(expLigatures))
 	tu.Assert(t, reflect.DeepEqual(lig.Ligatures, expLigatures))
 }
 

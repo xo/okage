@@ -3,6 +3,7 @@
 package harfbuzz
 
 import (
+	"encoding/binary"
 	"slices"
 	"strings"
 	"testing"
@@ -805,4 +806,66 @@ func TestKerxFormat6Values(t *testing.T) {
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(tuples)}), []shapedText{
 		{"ab", []shapedGlyph{{robotoA, 0, 1104, 0, 0}, {robotoB, 1, 1139, -10, 0}}},
 	})
+}
+
+// morxField gives the subtable with the 32-bit value v at the byte offset
+// at of its data.
+func morxField(st morxAuditSubtable, at int, v uint32) morxAuditSubtable {
+	st.data = slices.Clone(st.data)
+	copy(st.data[at:], u32s(v))
+	return st
+}
+
+// TestMorxLazyData shapes abc with subtables of morx, then a noncontextual
+// subtable that replaces c with x. As in HarfBuzz 15.1.0, the data of a
+// subtable is read when the subtable applies:
+//   - The ligature subtable of morxLigature, whose actions start after the
+//     end of the table, does not replace a, b with x. When its components
+//     follow its ligatures, it does. When the offset of its components is
+//     0, the table is refused.
+//   - An insertion subtable whose insertion after a is after the end of the
+//     table inserts no glyph. When the offset of its insertions is 0, the
+//     table is refused.
+//   - A contextual subtable that replaces a with d, whose substitutions are
+//     at the offset 0, or whose one substitution is at the offset 0, which
+//     is the start of the offsets.
+//
+// go-text refused the table for an action, a component or an insertion
+// that it could not read, and ignored the offsets 0. It panicked when an
+// entry read a substitution or an insertion at such an offset (D73).
+func TestMorxLazyData(t *testing.T) {
+	cx := morxAuditSubtable{4, lookup8(robotoC, int(robotoX))}
+	ligature := morxLigature()
+	sorted := slices.Clone(ligature.data)
+	n := len(sorted)
+	sorted[n-4], sorted[n-3], sorted[n-2], sorted[n-1] = sorted[n-2], sorted[n-1], sorted[n-4], sorted[n-3]
+	components := binary.BigEndian.Uint32(sorted[20:])
+	unsorted := morxField(morxField(morxAuditSubtable{2, sorted}, 20, components+2), 24, components)
+
+	insertion := stateMachine{
+		lookup:   lookup8(robotoA, 4),
+		nClasses: 5,
+		states:   [][]int{{0, 0, 0, 0, 1}, {0, 0, 0, 0, 1}},
+		entries:  [][]int{{0, 0, insertNone, insertNone}, {0, insertCurrentOne, 100, insertNone}},
+	}
+	far := morxAuditSubtable{5, insertion.bytes([]uint32{0}, u16s(int(robotoB)))}
+
+	contextual := morxContextualStates(u16s(8, int(robotoA), 1, 4), u16s(0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2), u16s(8, int(robotoA), 1, int(robotoD)))
+	contextual = morxField(contextual, 0, 5)
+	a, b, c, x := shapedGlyph{robotoA, 0, 1114, 0, 0}, shapedGlyph{robotoB, 1, 1149, 0, 0}, shapedGlyph{robotoC, 2, 1072, 0, 0}, shapedGlyph{robotoX, 2, 1015, 0, 0}
+	refused := []shapedGlyph{a, b, c}
+	for _, test := range []struct {
+		st   morxAuditSubtable
+		want []shapedGlyph
+	}{
+		{morxField(ligature, 16, 10000), []shapedGlyph{a, b, x}},
+		{unsorted, []shapedGlyph{{robotoX, 0, 1015, 0, 0}, x}},
+		{morxField(ligature, 20, 0), refused},
+		{far, []shapedGlyph{a, b, x}},
+		{morxField(far, 16, 0), refused},
+		{morxField(contextual, 16, 0), refused},
+		{morxField(contextual, int(binary.BigEndian.Uint32(contextual.data[16:])), 0), refused},
+	} {
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morxAuditTable(test.st, cx)}), []shapedText{{"abc", test.want}})
+	}
 }

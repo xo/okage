@@ -2,6 +2,7 @@ package harfbuzz_test
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -731,5 +732,66 @@ func TestKerxFormat6Values(t *testing.T) {
 	vector.tuples = 1
 	for _, st := range []kerxSubtable{late, vector} {
 		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(st, kerxPairs(robotoA, robotoB, -300))}), false, "ab")
+	}
+}
+
+// TestMorxLazyData: subtables of morx whose data HarfBuzz reads when it
+// applies the subtable, then a noncontextual subtable that replaces c with
+// x. HarfBuzz skips an action, an insertion or a component that is not in
+// the table. It refuses the table when the offset of the actions, of the
+// components, of the ligatures or of the insertions is 0. The offset 0 of
+// the substitutions of a contextual subtable, and of one substitution, is
+// the start of the table that holds it:
+//   - The ligature subtable of morxLigature, whose actions start after the
+//     end of the table, or whose components follow its ligatures, or whose
+//     offset of the actions, of the components or of the ligatures is 0.
+//   - An insertion subtable that inserts b after a, with an insertion
+//     after the end of the table, or with the offset 0.
+//   - A contextual subtable whose substitutions are at the offset 0, or
+//     whose one substitution is at the offset 0.
+func TestMorxLazyData(t *testing.T) {
+	cx := morxAuditSubtable{4, lookup8(robotoC, robotoX)}
+	texts := []string{"abc", "ab", "c", "aab"}
+	ligature := morxLigature()
+	field := func(st morxAuditSubtable, at int, v uint32) morxAuditSubtable {
+		st.data = slices.Clone(st.data)
+		copy(st.data[at:], u32s(v))
+		return st
+	}
+	sorted := slices.Clone(ligature.data)
+	n := len(sorted)
+	sorted[n-4], sorted[n-3], sorted[n-2], sorted[n-1] = sorted[n-2], sorted[n-1], sorted[n-4], sorted[n-3]
+	components := binary.BigEndian.Uint32(sorted[20:])
+	unsorted := field(morxAuditSubtable{2, sorted}, 20, components+2)
+	unsorted = field(unsorted, 24, components)
+	for _, st := range []morxAuditSubtable{
+		field(ligature, 16, 10000), unsorted,
+		field(ligature, 16, 0), field(ligature, 20, 0), field(ligature, 24, 0),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morxAuditTable(st, cx)}), false, texts...)
+	}
+
+	for _, index := range []int{0, 100} {
+		insertion := stateMachine{
+			lookup:   lookup8(robotoA, 4),
+			nClasses: 5,
+			states:   [][]int{{0, 0, 0, 0, 1}, {0, 0, 0, 0, 1}},
+			entries:  [][]int{{0, 0, insertNone, insertNone}, {0, insertCurrentOne, index, insertNone}},
+		}
+		data := insertion.bytes([]uint32{0}, u16s(robotoB))
+		for _, st := range []morxAuditSubtable{{5, data}, field(morxAuditSubtable{5, data}, 16, 0)} {
+			testCase(t, robotoWith(t, map[string][]byte{"morx": morxAuditTable(st, cx)}), false, texts...)
+		}
+	}
+
+	contextual := morxContextualStates(u16s(8, robotoA, 1, 4), u16s(0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2), u16s(8, robotoA, 1, robotoD))
+	contextual.data = slices.Clone(contextual.data)
+	copy(contextual.data[0:], u32s(5))
+	for _, st := range []morxAuditSubtable{
+		contextual,
+		field(contextual, 16, 0),
+		field(contextual, int(binary.BigEndian.Uint32(contextual.data[16:])), 0),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morxAuditTable(st, cx)}), false, texts...)
 	}
 }

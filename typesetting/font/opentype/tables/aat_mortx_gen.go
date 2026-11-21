@@ -175,7 +175,10 @@ func ParseMorxSubtableContextual(src []byte, valuesCount int) (MorxSubtableConte
 	n += 4
 
 	{
-		if offsetSubstitutions != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the state table, as in
+		// HarfBuzz 15.1.0. go-text ignored it, and panicked when an entry
+		// read a substitution (D73).
+		{
 			if L := len(src); L < offsetSubstitutions {
 				return item, 0, fmt.Errorf("reading MorxSubtableContextual: "+"EOF: expected length: %d, got %d", offsetSubstitutions, L)
 			}
@@ -212,15 +215,19 @@ func ParseMorxSubtableInsertion(src []byte, valuesCount int) (MorxSubtableInsert
 	n += 4
 
 	{
-		if offsetInsertions != 0 { // ignore null offset
-			if L := len(src); L < offsetInsertions {
-				return item, 0, fmt.Errorf("reading MorxSubtableInsertion: "+"EOF: expected length: %d, got %d", offsetInsertions, L)
-			}
-
-			arrayLength := int(item.nInsertions())
-
-			if L := len(src); L < offsetInsertions+arrayLength*2 {
-				return item, 0, fmt.Errorf("reading MorxSubtableInsertion: "+"EOF: expected length: %d, got %d", offsetInsertions+arrayLength*2, L)
+		// okage: HarfBuzz 15.1.0 refuses the subtable when the offset of the
+		// insertions is 0, and reads an insertion when it applies the
+		// subtable. It skips an insertion that is not in the table, so
+		// Insertions stops at the end of the table. go-text ignored the
+		// offset 0, and refused the table when an insertion was not in the
+		// table (D73).
+		if offsetInsertions == 0 {
+			return item, 0, fmt.Errorf("reading MorxSubtableInsertion: invalid null offset")
+		}
+		{
+			arrayLength := 0
+			if offsetInsertions <= len(src) {
+				arrayLength = min(int(item.nInsertions()), (len(src)-offsetInsertions)/2)
 			}
 
 			item.Insertions = make([]uint16, arrayLength) // allocation guarded by the previous check
@@ -326,10 +333,9 @@ func ParseSubstitutionsTable(src []byte, substitutionsCount int, valuesCount int
 		item.Substitutions = make([]AATLookup, substitutionsCount) // allocation guarded by the previous check
 		for i := range item.Substitutions {
 			offset := int(binary.BigEndian.Uint32(src[i*4:]))
-			// ignore null offsets
-			if offset == 0 {
-				continue
-			}
+			// okage: the offset 0 is the start of the offsets, as in
+			// HarfBuzz 15.1.0. go-text ignored it, and panicked when an
+			// entry read the substitution (D73).
 
 			if L := len(src); L < offset {
 				return item, 0, fmt.Errorf("reading SubstitutionsTable: "+"EOF: expected length: %d, got %d", offset, L)
