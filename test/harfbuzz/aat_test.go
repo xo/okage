@@ -611,3 +611,20 @@ func TestKerxTupleCount(t *testing.T) {
 		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab")
 	}
 }
+
+// TestLtagRange: the table of TestLtagLanguage, with a table ltag whose
+// third tag ends after the end of the table, or whose version is 0.
+// HarfBuzz refuses the whole table ltag, so that no tag matches a
+// language.
+func TestLtagRange(t *testing.T) {
+	long := ltagTable("sr", "Zh_Hant", "en@x")
+	copy(long[12+2*4+2:], u16s(100))
+	version0 := ltagTable("sr", "Zh_Hant", "en@x")
+	version0[3] = 0
+	for _, ltag := range [][]byte{long, version0} {
+		data := robotoWith(t, map[string][]byte{"morx": morxLanguages(), "ltag": ltag})
+		for _, lang := range []string{"sr", "zh-hant", "en"} {
+			compareOptions(t, data, shapeOptions{language: lang}, "a")
+		}
+	}
+}

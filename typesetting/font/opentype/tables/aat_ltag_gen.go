@@ -27,7 +27,7 @@ func ParseLtag(src []byte) (Ltag, int, error) {
 		arrayLength := int(item.numTags)
 
 		if L := len(src); L < 12+arrayLength*4 {
-			return item, 0, fmt.Errorf("reading Ltag: "+"EOF: expected length: %d, got %d", 12+arrayLength*4, L)
+			return Ltag{}, 0, fmt.Errorf("reading Ltag: "+"EOF: expected length: %d, got %d", 12+arrayLength*4, L)
 		}
 
 		item.tagRange = make([]stringRange, arrayLength) // allocation guarded by the previous check
@@ -40,6 +40,17 @@ func ParseLtag(src []byte) (Ltag, int, error) {
 
 		item.stringData = src[0:]
 		n = len(src)
+	}
+	// okage: HarfBuzz 15.1.0 refuses the whole table when its version is
+	// 0, or when the string of a tag is outside the table. go-text kept the
+	// table, and MatchesLanguage refused only such a tag (D73).
+	if item.version < 1 {
+		return Ltag{}, 0, fmt.Errorf("reading Ltag: invalid version %d", item.version)
+	}
+	for _, r := range item.tagRange {
+		if L, E := len(src), int(r.offset)+int(r.length); L < E {
+			return Ltag{}, 0, fmt.Errorf("reading Ltag: "+"EOF: expected length: %d, got %d", E, L)
+		}
 	}
 	return item, n, nil
 }

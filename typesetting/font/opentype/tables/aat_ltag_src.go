@@ -34,7 +34,8 @@ func (lt Ltag) Language(i uint16) language.Language {
 // 15.1.0, from its commit cd570b6f54. go-text matched a tag when specific
 // was the start of the tag, read the whole tag with language.NewLanguage,
 // which does not stop before such a byte, and panicked for a tag outside
-// the table. Such a tag now matches no language (D73).
+// the table. Such a tag now matches no language. ParseLtag refuses a table
+// with a string outside the table, as HarfBuzz does (D73).
 func (lt Ltag) MatchesLanguage(i int, specific language.Language) bool {
 	if i < 0 || i >= len(lt.tagRange) {
 		return false

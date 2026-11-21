@@ -686,3 +686,26 @@ func TestKerxTupleCount(t *testing.T) {
 		{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
 	})
 }
+
+// TestLtagRange shapes a in sr with the table of TestLtagLanguage, whose
+// table ltag has a third tag that ends after the end of the table, or has
+// the version 0. As in HarfBuzz 15.1.0, the whole table ltag is refused, so
+// that no tag matches the language. go-text refused only the third tag,
+// and gave b for sr (D73).
+func TestLtagRange(t *testing.T) {
+	long := ltagTable("sr", "Zh_Hant", "en@x")
+	copy(long[12+2*4+2:], u16s(100))
+	version0 := ltagTable("sr", "Zh_Hant", "en@x")
+	version0[3] = 0
+	for _, ltag := range [][]byte{long, version0} {
+		hf := NewFont(fontWithLayout(t, map[string][]byte{"morx": morxLanguages(), "ltag": ltag}))
+		buf := NewBuffer()
+		buf.AddRunes([]rune("a"), 0, -1)
+		buf.Props.Language = language.NewLanguage("sr")
+		buf.GuessSegmentProperties()
+		buf.Shape(hf, nil)
+		if got := buf.Info[0].Glyph; got != robotoA {
+			t.Errorf("a in sr: got the glyph %d, want %d", got, robotoA)
+		}
+	}
+}
