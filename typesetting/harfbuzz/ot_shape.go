@@ -651,9 +651,15 @@ func (c *otContext) positionDefault() {
 	pos := c.buffer.Pos
 
 	if direction.isHorizontal() {
+		// okage: an origin of 0, 0 gives the offsets 0, 0 (D87).
+		zeroOrigin := c.font.hOriginIsZero()
 		for i, inf := range info {
 			pos[i].XAdvance, pos[i].YAdvance = c.font.GlyphHAdvance(inf.Glyph), 0
-			pos[i].XOffset, pos[i].YOffset = c.font.subtractGlyphHOrigin(inf.Glyph, 0, 0)
+			if zeroOrigin {
+				pos[i].XOffset, pos[i].YOffset = 0, 0
+			} else {
+				pos[i].XOffset, pos[i].YOffset = c.font.subtractGlyphHOrigin(inf.Glyph, 0, 0)
+			}
 		}
 	} else {
 		for i, inf := range info {
@@ -684,8 +690,13 @@ func (c *otContext) positionComplex() {
 
 	// we change glyph origin to what GPOS expects (horizontal), apply GPOS, change it back.
 
-	for i, inf := range info {
-		pos[i].XOffset, pos[i].YOffset = c.font.addGlyphHOrigin(inf.Glyph, pos[i].XOffset, pos[i].YOffset)
+	// okage: an origin of 0, 0 does not change the offsets, so skip the
+	// two loops over the glyphs (D87).
+	zeroOrigin := c.font.hOriginIsZero()
+	if !zeroOrigin {
+		for i, inf := range info {
+			pos[i].XOffset, pos[i].YOffset = c.font.addGlyphHOrigin(inf.Glyph, pos[i].XOffset, pos[i].YOffset)
+		}
 	}
 
 	otLayoutPositionStart(c.font, c.buffer)
@@ -709,8 +720,10 @@ func (c *otContext) positionComplex() {
 	zeroWidthDefaultIgnorables(c.buffer)
 	otLayoutPositionFinishOffsets(c.font, c.buffer)
 
-	for i, inf := range info {
-		pos[i].XOffset, pos[i].YOffset = c.font.subtractGlyphHOrigin(inf.Glyph, pos[i].XOffset, pos[i].YOffset)
+	if !zeroOrigin {
+		for i, inf := range info {
+			pos[i].XOffset, pos[i].YOffset = c.font.subtractGlyphHOrigin(inf.Glyph, pos[i].XOffset, pos[i].YOffset)
+		}
 	}
 
 	if c.plan.fallbackMarkPositioning {

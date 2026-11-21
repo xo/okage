@@ -314,6 +314,14 @@ func (f *Font) hasGlyph(ch rune) bool {
 	return ok
 }
 
+// hOriginIsZero reports whether getGlyphHOriginWithFallback gives 0, 0
+// for each glyph. The faces of go-text always give the origin 0, 0, so
+// only the embolden moves the origin.
+//
+// okage: the shaper skips its loops over the origins of the glyphs when
+// they are 0, 0 (D87).
+func (f *Font) hOriginIsZero() bool { return f.xEmbolden == 0 }
+
 func (f *Font) subtractGlyphHOrigin(glyph GID, x, y Position) (Position, Position) {
 	originX, originY := f.getGlyphHOriginWithFallback(glyph)
 	return x - originX, y - originY

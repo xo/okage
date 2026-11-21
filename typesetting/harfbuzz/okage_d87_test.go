@@ -5,6 +5,8 @@ package harfbuzz
 import (
 	"math/rand/v2"
 	"testing"
+
+	"github.com/xo/okage/typesetting/font"
 )
 
 // okage: the tests of D87.
@@ -28,6 +30,23 @@ func TestSetDigestMayHave(t *testing.T) {
 				d[2]&(one<<((gID(g)>>shift2)&mb1)) != 0
 			if got := d.mayHave(gID(g)); got != want {
 				t.Fatalf("digest %x: mayHave(%d) = %v, want %v", d, g, got, want)
+			}
+		}
+	}
+}
+
+// TestGlyphHOriginIsZero makes sure that the faces give the origin 0, 0
+// for each glyph, which hOriginIsZero trusts.
+func TestGlyphHOriginIsZero(t *testing.T) {
+	for _, name := range []string{"common/Roboto-BoldItalic.ttf", "common/mplus-1p-regular.ttf", "common/Selawik-VF.ttf"} {
+		ft := openFontFileTT(t, name)
+		f := NewFont(font.NewFace(ft))
+		if !f.hOriginIsZero() {
+			t.Fatalf("%s: hOriginIsZero is false for a font with no embolden", name)
+		}
+		for g := range GID(1 << 16) {
+			if x, y := f.getGlyphHOriginWithFallback(g); x != 0 || y != 0 {
+				t.Fatalf("%s: the origin of glyph %d is %d, %d, want 0, 0", name, g, x, y)
 			}
 		}
 	}
