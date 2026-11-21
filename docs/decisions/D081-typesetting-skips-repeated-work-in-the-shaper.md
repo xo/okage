@@ -1,6 +1,6 @@
 # D81. typesetting skips repeated work in the shaper
 
-Status: Decided, amends D72, amended by D83.
+Status: Decided, amends D72, amended by D83 and D90.
 
 D72 and D77 made the text code of `typesetting`, the copy of go-text in
 okage (D52), faster for the books that ivy lays out. Item 1 of
@@ -56,7 +56,8 @@ is work for ivy, not for `typesetting`.
    because the conversion of such a value depends on the platform. D16 and
    D71 hold: no multiply joins the add. A test compares the two on one
    float32 in 97 and on the values next to each half and each limit. A run
-   over all 2^32 values on amd64 found no difference.
+   over all 2^32 values on amd64 found no difference. D90 changes the
+   rounding of a half to `floor(x + .5)`, as HarfBuzz 15.1.0 does.
 3. `equal` and `userFeaturesMatch` of the shape plan take pointers.
 4. The cache of the cmap of a `Face` holds 4096 runes, in a type of okage,
    `cmapCache4K`, which is `cache21_19_8` of go-text with more entries. It

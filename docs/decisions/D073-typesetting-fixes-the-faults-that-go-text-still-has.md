@@ -176,10 +176,11 @@ On 2026-11-20 okage fixed faults 7 and 8:
    other. `TestShapeWithoutOperations` now shapes one of the 12, because
    its earlier text no longer runs out. Each nested lookup now costs an
    operation, so a hostile font with deep nesting stops at the limit of
-   operations. Item 4 of "typesetting" in `docs/BACKLOG.md` lists the
-   differences from HarfBuzz that remain, which no test text shows. With
+   operations. Item 4 of "typesetting" in `docs/BACKLOG.md` listed the
+   differences from HarfBuzz that remained, which no test text shows. With
    the flags of HarfBuzz, `FuzzParagraphLine` of `shaping` finds a
-   difference in the flag unsafe-to-break, which item 5 records.
+   difference in the flag unsafe-to-break, which item 4 of "typesetting"
+   in `docs/BACKLOG.md` records.
 
 On 2026-11-20 okage made `harfbuzz` follow HarfBuzz 15.1.0 at the five
 places that the fix of faults 7 and 8 found different:
@@ -228,7 +229,7 @@ The test module compares the font of each of these tests with
 uharfbuzz 15.1.0, in `test/harfbuzz`. Each of the 413,399 lines of
 `perf_reference` still gives the same glyphs, clusters, advances and
 offsets as HarfBuzz. The work found three more differences, which
-item 4 of "typesetting" in `docs/BACKLOG.md` records.
+item 4 of "typesetting" in `docs/BACKLOG.md` recorded.
 
 On 2026-11-20 the maintainers decided one of the three: when the Indic
 shaper asks whether a context or a chained context of format 2 or 3
@@ -277,7 +278,7 @@ format 1 of kerx, with the flags Push, Reset and DontAdvance, and lists
 of random values and ends. `harfbuzz` and HarfBuzz gave the same glyphs,
 clusters, advances, offsets and flags unsafe-to-break for each text. The
 comparison left out the subtables that HarfBuzz skips and `harfbuzz`
-does not, which item 4 of "typesetting" in `docs/BACKLOG.md` records. No
+does not, which item 4 of "typesetting" in `docs/BACKLOG.md` recorded. No
 workload of `test/textbench` uses a table kern, kerx or morx, so their
 times do not change.
 
@@ -361,7 +362,7 @@ the cost of `harfbuzz`, so okage applied each one:
     A later subtable that only the deleted glyph starts then applies.
     `TestMorxDeletedGlyphSet` tests it. The font of the test of HarfBuzz
     also needs the collection of only the glyphs that can start an
-    action, which item 4 of "typesetting" in `docs/BACKLOG.md` lists.
+    action, which item 4 of "typesetting" in `docs/BACKLOG.md` listed.
 21. 88e5077a80: in a subtable of format 2 of kerx, the sum of the classes
     is a byte offset from the kerning array, rounded down to a value of
     two bytes. A value is read up to the end of the subtable, and up to
@@ -559,9 +560,9 @@ HarfBuzz 15.1.0 gives the same glyphs, clusters, advances and offsets, and
 each test fails before its fix. Each of the 413,399 lines of
 `perf_reference` still gives the same output as HarfBuzz. No workload of
 `test/textbench` uses a table kern, kerx, morx, ltag or ankr. One
-difference remains: a long value of kerx format 6 has 32 bits in
-HarfBuzz, and `KernPair` of `font.SimpleKerns` keeps its low 16 bits.
-Item 4 of "typesetting" in `docs/BACKLOG.md` records it.
+difference remained: a long value of kerx format 6 has 32 bits in
+HarfBuzz, and `KernPair` of `font.SimpleKerns` kept its low 16 bits. D90
+gives it its 32 bits.
 
 ## When upstream changes
 

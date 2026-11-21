@@ -111,20 +111,13 @@ From D52.
    shaper inside `shaping.Paragraph` sets `ProduceUnsafeToConcat`, and
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
-4. Give a long value of a subtable of format 6 of kerx its 32 bits, as
-   HarfBuzz 15.1.0 does. `Kerning` of `tables.KerxData6` reads the 32
-   bits, and `KernPair` of `font.SimpleKerns` keeps the low 16 bits, as
-   go-text did. The fix needs a change to `SimpleKerns`, or a path of 32
-   bits in the kerning of `harfbuzz`, which the other formats share. A
-   maintainer chooses. No text of `perf_reference` and no font of the
-   tests has such a value. Source: fix 37 of D73, 2026-11-21.
-5. In a run of only tatweels and spaces, which has the script Common, Amiri
+4. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
    mark that cluster as unsafe to break. uharfbuzz 0.57.0 gives the same
    flags and glyphs, so `Paragraph.Line` of D77 inherits a fault of HarfBuzz,
    as D70 records for U+01EC. The fuzz target of `Paragraph` leaves the
    tatweel out of its alphabet. Source: D77, 2026-11-20.
-6. `FuzzParagraphLine` finds an input where `Paragraph.Line` gives another
+5. `FuzzParagraphLine` finds an input where `Paragraph.Line` gives another
    advance than a new shaping: the text `fAbb !Z`, the cuts `0` and the
    direction from left to right. For the runes 0 to 5, `(٢'')`, the first
    glyph of the third output has the advance 1:62, and a new shaping gives

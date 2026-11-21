@@ -100,7 +100,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13 |
 | D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82 and D85 |
 | D80 | [pdf draws a font as paths when its subset fails](D080-pdf-draws-a-font-as-paths-when-its-subset-fails.md) | Decided, amends D62 |
-| D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72, amended by D83 |
+| D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72, amended by D83 and D90 |
 | D82 | [lottie follows ThorVG at the edges and in the tracking](D082-lottie-follows-thorvg-at-the-edges-and-in-the-tracking.md) | Decided, amends D41, D75 and D79 |
 | D83 | [typesetting reads the Unicode tables and the layout tables faster](D083-typesetting-reads-the-unicode-tables-and-the-layout-tables-faster.md) | Decided, amends D81 |
 | D84 | [typesetting computes the deltas of variable fonts in fixed point](D084-typesetting-computes-the-deltas-of-variable-fonts-in-fixed-point.md) | Decided, amends D65 |
@@ -109,3 +109,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D87 | [typesetting walks the glyphs and splits the lines with less work](D087-typesetting-walks-the-glyphs-and-splits-the-lines-with-less-work.md) | Decided |
 | D88 | [The blur and the color matrix of the filters get a public API](D088-the-blur-and-the-color-matrix-of-the-filters-get-a-public-api.md) | Proposed, amends D5 and D79 |
 | D89 | [pdf makes a Type 3 font from images that the caller gives](D089-pdf-makes-a-type-3-font-from-images-that-the-caller-gives.md) | Proposed, amends D62 and D68 |
+| D90 | [harfbuzz scales the values of a font as HarfBuzz does, in 32 bits](D090-harfbuzz-scales-the-values-of-a-font-as-harfbuzz-does-in-32-bits.md) | Decided, amends D81 |

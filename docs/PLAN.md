@@ -1109,8 +1109,9 @@ D70 answers question 30, on 2026-11-19. D71 answers question 31, on
 answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. D83
 answers question 35 with answer 1, D84 answers question 36 with answer 1,
 and D85 answers question 37 with answer 1, on 2026-11-21. D87 answers
-question 38 with answer 1, on 2026-11-21. Questions 39 and 40 are open, from
-D88 and D89. The next question is question 41.
+question 38 with answer 1, and D90 answers question 41 with answer 1, on
+2026-11-21. Questions 39 and 40 are open, from D88 and D89. The next question
+is question 42.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
