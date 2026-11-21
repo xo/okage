@@ -135,10 +135,9 @@ func (c *aatApplyContext) applyKerxSubtable(st font.KernSubtable) bool {
 		}
 		kern(data, st.IsCrossStream(), c.font, c.buffer, c.plan.kernMask, true)
 	case font.Kern4:
-		crossStream := st.IsCrossStream()
-		if !c.plan.requestedKerning && !crossStream {
-			return false
-		}
+		// okage: a subtable of format 4 applies also when the feature kern
+		// is off and the subtable is not cross-stream, as in HarfBuzz
+		// 15.1.0. go-text did not apply it (D73).
 		dc := driverContextKerx4{c: c, table: data, actionType: data.ActionType()}
 		driver := newStateTableDriver(data.Machine, c.face)
 		driver.drive(&dc, c)

@@ -1,6 +1,6 @@
 """Shape texts in a font with uharfbuzz, for the oracle of typesetting/harfbuzz.
 
-Usage: python3 -I shape.py FONT [--flags] [--language LANGUAGE] [--ranged TAG PERIOD]
+Usage: python3 -I shape.py FONT [--flags] [--language LANGUAGE] [--ranged TAG PERIOD] [--off TAG]
 
 Each line of the standard input is a text, as the hexadecimal values of its
 characters, separated by spaces. For each text, the script writes one line
@@ -10,7 +10,8 @@ argument --flags, the line of a glyph ends with 1 when the glyph is unsafe
 to break, and with 0 when it is not. With the argument --language, the
 script sets the language of each buffer to LANGUAGE. With the argument
 --ranged, each character i of a text has the feature TAG in a range of its
-own, on when i is not a multiple of PERIOD and off when it is.
+own, on when i is not a multiple of PERIOD and off when it is. With the
+argument --off, the feature TAG is off for the whole text.
 
 The script adds the characters with add_codepoints, as harfbuzz.AddRunes
 does, so that the buffers of HarfBuzz and of harfbuzz grow in the same
@@ -39,6 +40,9 @@ def main():
     if "--ranged" in args:
         i = args.index("--ranged")
         ranged = (args[i + 1], int(args[i + 2]))
+    off = None
+    if "--off" in args:
+        off = args[args.index("--off") + 1]
     font = hb.Font(hb.Face(blob))
     out = sys.stdout
     for line in sys.stdin:
@@ -52,6 +56,8 @@ def main():
         if ranged is not None:
             tag, period = ranged
             features[tag] = [(i, i + 1, i % period != 0) for i in range(len(codepoints))]
+        if off is not None:
+            features[off] = False
         error = False
         try:
             hb.shape(font, buf, features)

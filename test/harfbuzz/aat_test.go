@@ -212,11 +212,13 @@ func TestLookupSegmentsOutOfOrder(t *testing.T) {
 // shapeOptions are the options of compareOptions. When language is not
 // empty, it is the language of the buffer. When ranged is not empty, each
 // character i of a text has the feature ranged in a range of its own, on
-// when i is not a multiple of period and off when it is.
+// when i is not a multiple of period and off when it is. When off is not
+// empty, the feature off is off for the whole text.
 type shapeOptions struct {
 	language string
 	ranged   string
 	period   int
+	off      string
 }
 
 // compareOptions shapes each text in the font data with harfbuzz and with
@@ -233,6 +235,9 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 	}
 	if opts.ranged != "" {
 		args = append(args, "--ranged", opts.ranged, strconv.Itoa(opts.period))
+	}
+	if opts.off != "" {
+		args = append(args, "--off", opts.off)
 	}
 	want := shapeHarfBuzz(t, path, texts, false, args...)
 	face, err := font.ParseTTF(bytes.NewReader(data))
@@ -258,6 +263,9 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 				}
 				features = append(features, harfbuzz.Feature{Tag: tag, Value: value, Start: j, End: j + 1})
 			}
+		}
+		if opts.off != "" {
+			features = append(features, harfbuzz.Feature{Tag: ot.MustNewTag(opts.off), End: harfbuzz.FeatureGlobalEnd})
 		}
 		buf.Shape(hf, features)
 		var got []string
@@ -386,5 +394,25 @@ func TestMorxLigaturePerformAction(t *testing.T) {
 	for _, flags := range []int{0xA000, 0x8001, 0x9000, 0x8FFF, 0xB000} {
 		morx := morxAuditTable(morxLigatureFlags(robotoB, flags))
 		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ab", "abc", "cab", "aab")
+	}
+}
+
+// TestKerxFormat4KernOff: the table of TestKerxFormat4CrossOffset, and a
+// table with only its subtable of format 4, with the feature kern off.
+// HarfBuzz applies a subtable of format 4 of kerx when the feature kern is
+// off, also when the subtable is not cross-stream.
+func TestKerxFormat4KernOff(t *testing.T) {
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 2}, {0, 0, 0, 0, 1, 2}},
+		entries:  [][]int{{0, 0, kerx4NoActionData}, {0, kerxMark, kerx4NoActionData}, {0, 0, 0}},
+	}
+	only := kerxTable(kerxSubtable{coverage: kerxFormat4, data: marks.bytes([]uint32{kerx4Coordinates}, u16s(50, 60, 10, 20))})
+	for _, kerx := range [][]byte{kerxMarks(kerxFormat4, []int{100}, []int{50, 60, 10, 20}), only} {
+		data := robotoWith(t, map[string][]byte{"kerx": kerx})
+		for _, off := range []string{"", "kern"} {
+			compareOptions(t, data, shapeOptions{off: off}, "ab", "aab", "abb", "ba")
+		}
 	}
 }

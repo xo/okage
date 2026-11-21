@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/xo/okage/typesetting/font"
 	ot "github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
 	"github.com/xo/okage/typesetting/language"
@@ -433,4 +434,41 @@ func TestMorxLigaturePerformAction(t *testing.T) {
 		face := fontWithLayout(t, map[string][]byte{"morx": morxAuditTable(morxLigatureFlags(robotoB, test.flags))})
 		testShapedFace(t, face, []shapedText{{"ab", test.want}})
 	}
+}
+
+// testShapedFeatures shapes the text in the face with the features, and
+// compares the glyphs with the glyphs of HarfBuzz.
+func testShapedFeatures(t *testing.T, face *font.Face, features []Feature, test shapedText) {
+	t.Helper()
+	buf := NewBuffer()
+	buf.AddRunes([]rune(test.text), 0, -1)
+	buf.GuessSegmentProperties()
+	buf.Shape(NewFont(face), features)
+	if len(buf.Info) != len(test.want) {
+		t.Fatalf("%q: got %d glyphs, want %d", test.text, len(buf.Info), len(test.want))
+	}
+	for i, want := range test.want {
+		info, pos := buf.Info[i], buf.Pos[i]
+		if got := (shapedGlyph{info.Glyph, info.Cluster, pos.XAdvance, pos.XOffset, pos.YOffset}); got != want {
+			t.Errorf("%q, glyph %d: got %+v, want %+v", test.text, i, got, want)
+		}
+	}
+}
+
+// TestKerxFormat4KernOff shapes ab with the feature kern off, and with a
+// table kerx whose subtable of format 4 attaches b to a with the anchors
+// (50, 60) and (10, 20). As in HarfBuzz 15.1.0, the subtable applies when
+// the feature kern is off, also when it is not cross-stream. go-text did
+// not apply it (D73).
+func TestKerxFormat4KernOff(t *testing.T) {
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5),
+		nClasses: 6,
+		states:   [][]int{{0, 0, 0, 0, 1, 2}, {0, 0, 0, 0, 1, 2}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxMark, kerxEnd}, {0, 0, 0}},
+	}
+	kerx := kerxTable(kerxSubtable{coverage: kerxFormat4, data: marks.bytes([]uint32{kerx4Coordinates}, u16s(50, 60, 10, 20))})
+	kernOff := []Feature{{Tag: ot.NewTag('k', 'e', 'r', 'n'), End: FeatureGlobalEnd}}
+	testShapedFeatures(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), kernOff,
+		shapedText{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, -1074, 40}}})
 }
