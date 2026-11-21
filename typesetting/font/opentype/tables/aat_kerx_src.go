@@ -40,6 +40,7 @@ func (ks *KerxSubtable) parseEnd(src []byte, _ int) (int, error) {
 	}
 	ks.readKerx1Values(src[:ks.length])
 	ks.readKerx2Data(src[:ks.length])
+	ks.readKerx4Data(src[:ks.length])
 	return int(ks.length), nil
 }
 
@@ -199,45 +200,48 @@ type KerxData2 struct {
 type KerxData4 struct {
 	AATStateTableExt `arguments:"valuesCount=valuesCount,entryDataSize=2"`
 	Flags            uint32
-	Anchors          KerxAnchors `isOpaque:""`
+	// okage: AnchorData holds the bytes from the control point table to the
+	// end of the subtable, or to the end of the table for the last
+	// subtable, as HarfBuzz 15.1.0 reads them. It is nil when the table
+	// starts after that end. KerxSubtable.readKerx4Data sets it. go-text
+	// read the actions of the largest index of an entry into Anchors, and
+	// refused the table when they were not in the subtable, or when the
+	// action type was 3 (D73).
+	AnchorData []byte `isOpaque:""`
 }
 
-func (kd KerxData4) nAnchors() int {
-	// find the maximum index need in the actions array
-	var maxi uint16
-	for _, entry := range kd.Entries {
-		if index := entry.AsKernxIndex(); index != 0xFFFF && index > maxi {
-			maxi = index
-		}
+// okage: KerxSubtable.readKerx4Data reads the actions (D73).
+func (kd *KerxData4) parseAnchors(_ []byte, _ int) error {
+	return nil
+}
+
+// readKerx4Data sets the data of the actions of a subtable of format 4.
+// src starts at the start of the subtable.
+//
+// okage: HarfBuzz 15.1.0 reads an action when it applies the subtable, and
+// skips the action when it is not in the subtable, or not in the table for
+// the last subtable. ParseKerx sets the data of the last subtable again, up
+// to the end of the table (D73).
+func (ks *KerxSubtable) readKerx4Data(src []byte) {
+	kd, ok := ks.Data.(KerxData4)
+	if !ok {
+		return
 	}
-	return int(maxi) + 1
-}
-
-func (kd *KerxData4) parseAnchors(src []byte, _ int) error {
-	nAnchors := kd.nAnchors()
 	const Offset = 0x00FFFFFF // Masks the offset in bytes from the beginning of the subtable to the beginning of the control point table.
-	controlOffset := int(kd.Flags & Offset)
-	if L := len(src); L < controlOffset {
-		return fmt.Errorf("EOF: expected length: %d, got %d", controlOffset, L)
+	kd.AnchorData = nil
+	// The offset starts at the state table, after the header of 12 bytes.
+	if start := 12 + int(kd.Flags&Offset); start <= len(src) {
+		kd.AnchorData = src[start:]
 	}
-	var err error
-	switch kd.ActionType() {
-	case 0:
-		kd.Anchors, _, err = ParseKerxAnchorControls(src[controlOffset:], nAnchors)
-	case 1:
-		kd.Anchors, _, err = ParseKerxAnchorAnchors(src[controlOffset:], nAnchors)
-	case 2:
-		kd.Anchors, _, err = ParseKerxAnchorCoordinates(src[controlOffset:], nAnchors)
-	default:
-		return fmt.Errorf("invalid Kerx4 anchor format %d", kd.ActionType())
-	}
-	return err
+	ks.Data = kd
 }
 
-// ActionType returns 0, 1 or 2, according to the anchor format :
+// ActionType returns 0 to 3, according to the anchor format :
 //   - 0 : KerxAnchorControls
 //   - 1 : KerxAnchorAnchors
 //   - 2 : KerxAnchorCoordinates
+//   - 3 : no action data. okage: HarfBuzz 15.1.0 accepts it, and still
+//     attaches the glyph (D73).
 func (kd KerxData4) ActionType() uint8 {
 	const ActionType = 0xC0000000 // A two-bit field containing the action type.
 	return uint8((kd.Flags & ActionType) >> 30)

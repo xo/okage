@@ -392,7 +392,8 @@ func TestParseKerx(t *testing.T) {
 				tu.Assert(t, data.Right != nil)
 				tu.Assert(t, int(data.KerningStart) <= len(data.KerningData))
 			case KerxData4:
-				tu.Assert(t, data.Anchors != nil)
+				// okage: the actions are read when the subtable applies (D73).
+				tu.Assert(t, data.AnchorData != nil)
 			}
 		}
 	}

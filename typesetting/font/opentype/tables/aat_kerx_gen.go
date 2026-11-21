@@ -338,6 +338,7 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 				data = src[offset:]
 				elem.readKerx1Values(data)
 				elem.readKerx2Data(data)
+				elem.readKerx4Data(data)
 			}
 			elem.readKerx0Tuples(data)
 			// okage: HarfBuzz 15.1.0 refuses the table when the kerning

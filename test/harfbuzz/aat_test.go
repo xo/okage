@@ -628,3 +628,40 @@ func TestLtagRange(t *testing.T) {
 		}
 	}
 }
+
+// kerxFormat4Actions builds a subtable of format 4 of kerx with the action
+// type, whose class table gives the classes 4, 5 and 6 to a, b and c. a
+// marks itself, b marks itself and applies the action 1, and c applies the
+// action 0. The actions follow the state table.
+func kerxFormat4Actions(actionType uint32, actions []byte) kerxSubtable {
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5, 6),
+		nClasses: 7,
+		states:   [][]int{{0, 0, 0, 0, 1, 2, 3}, {0, 0, 0, 0, 1, 2, 3}},
+		entries:  [][]int{{0, 0, kerx4NoActionData}, {0, kerxMark, kerx4NoActionData}, {0, kerxMark, 1}, {0, 0, 0}},
+	}
+	return kerxSubtable{coverage: kerxFormat4, data: marks.bytes([]uint32{actionType << 30}, actions)}
+}
+
+// TestKerxFormat4Actions: subtables of kerxFormat4Actions. HarfBuzz reads
+// an action when it applies the subtable. When the action is not in the
+// subtable, or not in the table for the last subtable, it stops the
+// transition, which does not take the flag Mark. An action of the type 3
+// has no data, and the glyph is still attached:
+//   - Subtables of the action types 0, 1 and 2 with only the action 0.
+//   - A subtable of the action type 3.
+//   - A subtable of the action type 2 whose actions start at its end, then
+//     a subtable that kerns a, c.
+func TestKerxFormat4Actions(t *testing.T) {
+	texts := []string{"ac", "abc", "bc", "abac", "acb", "cc"}
+	for _, st := range []kerxSubtable{
+		kerxFormat4Actions(0, u16s(0, 1)),
+		kerxFormat4Actions(1, u16s(0, 1)),
+		kerxFormat4Actions(2, u16s(50, 60, 10, 20)),
+		kerxFormat4Actions(3, nil),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(st)}), false, texts...)
+	}
+	kerx := kerxTable(kerxFormat4Actions(2, nil), kerxPairs(robotoA, robotoC, -300))
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, texts...)
+}

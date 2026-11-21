@@ -375,6 +375,12 @@ func (driverContextKerx4) isActionable(entry tables.AATStateEntry) bool {
 	return entry.AsKernxIndex() != 0xFFFF
 }
 
+// okage: transition reads an action when it applies it, as HarfBuzz 15.1.0
+// does. When the action is not in the subtable, or not in the table for
+// the last subtable, the transition stops, and does not take the flag
+// Mark. An action of the type 3 has no data, and still attaches the glyph.
+// go-text read the actions when it parsed the table, and refused the table
+// for these actions (D73).
 func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver, entry tables.AATStateEntry) {
 	ankrActionIndex := entry.AsKernxIndex()
 	if dc.markSet && ankrActionIndex != 0xFFFF && buffer.idx < len(buffer.Pos) {
@@ -382,7 +388,10 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 		switch dc.actionType {
 		case 0: /* Control Point Actions.*/
 			/* Indexed into glyph outline. */
-			action := dc.table.Anchors.(tables.KerxAnchorControls).Anchors[ankrActionIndex]
+			action, ok := dc.table.Action(ankrActionIndex)
+			if !ok {
+				return
+			}
 			// okage: the two lookups of contour points take 2 × 256
 			// operations, as in HarfBuzz 15.1.0 (D73).
 			buffer.maxOps -= 2 * 256
@@ -391,9 +400,9 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 			}
 
 			markX, markY, okMark := dc.c.font.getGlyphContourPointForOrigin(dc.c.buffer.Info[dc.mark].Glyph,
-				action.Mark, LeftToRight)
+				uint16(action[0]), LeftToRight)
 			currX, currY, okCurr := dc.c.font.getGlyphContourPointForOrigin(dc.c.buffer.cur(0).Glyph,
-				action.Current, LeftToRight)
+				uint16(action[1]), LeftToRight)
 			if !okMark || !okCurr {
 				return
 			}
@@ -405,18 +414,24 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 
 		case 1: /* Anchor Point Actions. */
 			/* Indexed into 'ankr' table. */
-			action := dc.table.Anchors.(tables.KerxAnchorAnchors).Anchors[ankrActionIndex]
+			action, ok := dc.table.Action(ankrActionIndex)
+			if !ok {
+				return
+			}
 
-			markAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.Info[dc.mark].Glyph), int(action.Mark))
-			currAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.cur(0).Glyph), int(action.Current))
+			markAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.Info[dc.mark].Glyph), int(uint16(action[0])))
+			currAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.cur(0).Glyph), int(uint16(action[1])))
 
 			o.XOffset = saturateSub(dc.c.font.emScaleX(markAnchor.X), dc.c.font.emScaleX(currAnchor.X))
 			o.YOffset = saturateSub(dc.c.font.emScaleY(markAnchor.Y), dc.c.font.emScaleY(currAnchor.Y))
 
 		case 2: /* Control Point Coordinate Actions. */
-			action := dc.table.Anchors.(tables.KerxAnchorCoordinates).Anchors[ankrActionIndex]
-			o.XOffset = saturateSub(dc.c.font.emScaleX(action.MarkX), dc.c.font.emScaleX(action.CurrentX))
-			o.YOffset = saturateSub(dc.c.font.emScaleY(action.MarkY), dc.c.font.emScaleY(action.CurrentY))
+			action, ok := dc.table.Action(ankrActionIndex)
+			if !ok {
+				return
+			}
+			o.XOffset = saturateSub(dc.c.font.emScaleX(action[0]), dc.c.font.emScaleX(action[2]))
+			o.YOffset = saturateSub(dc.c.font.emScaleY(action[1]), dc.c.font.emScaleY(action[3]))
 		}
 		// okage: the mark takes the offset of its base across the line, as
 		// in the merge 436f067b20 of HarfBuzz 15.1.0 (D73).

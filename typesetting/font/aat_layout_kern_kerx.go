@@ -312,23 +312,49 @@ func (kd Kern3) KernPair(left, right GID) int16 {
 }
 
 type Kern4 struct {
-	Anchors tables.KerxAnchors
-	Machine AATStateTable
-	flags   uint32
+	// okage: AnchorData holds the data of the actions, from the control
+	// point table to the end of the subtable, or to the end of the table
+	// for the last subtable. Action reads an action from it, as HarfBuzz
+	// 15.1.0 does when it applies the subtable. go-text read the actions
+	// into Anchors when it parsed the table (D73).
+	AnchorData []byte
+	Machine    AATStateTable
+	flags      uint32
 }
 
 func newKern4(k tables.KerxData4) Kern4 {
 	return Kern4{
-		Machine: newAATStableTable(k.AATStateTableExt),
-		Anchors: k.Anchors,
-		flags:   k.Flags,
+		Machine:    newAATStableTable(k.AATStateTableExt),
+		AnchorData: k.AnchorData,
+		flags:      k.Flags,
 	}
 }
 
-// ActionType returns 0, 1 or 2 .
+// ActionType returns 0, 1, 2 or 3. An action of the type 3 has no data.
 func (k Kern4) ActionType() uint8 {
 	const ActionType = 0xC0000000 // A two-bit field containing the action type.
 	return uint8(k.flags & ActionType >> 30)
+}
+
+// Action returns the values of the action at the index: the two points of
+// the action types 0 and 1, or the four coordinates of the action type 2.
+// It returns false when the data does not hold the action.
+//
+// okage: HarfBuzz 15.1.0 reads an action in the same way, and skips the
+// transition when the action is not in the subtable (D73).
+func (k Kern4) Action(index uint16) (values [4]int16, ok bool) {
+	n := 2
+	if k.ActionType() == 2 {
+		n = 4
+	}
+	start := int(index) * 2 * n
+	if start+2*n > len(k.AnchorData) {
+		return values, false
+	}
+	for i := range n {
+		values[i] = int16(binary.BigEndian.Uint16(k.AnchorData[start+2*i:]))
+	}
+	return values, true
 }
 
 type Kern6 tables.KerxData6

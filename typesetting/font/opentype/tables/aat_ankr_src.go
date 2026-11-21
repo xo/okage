@@ -17,7 +17,13 @@ type Ankr struct {
 }
 
 // GetAnchor return the i-th anchor for `glyph`, or {0,0} if not found.
+//
+// okage: a font without a table ankr gives {0,0}, as in HarfBuzz 15.1.0.
+// go-text panicked on its nil lookup table (D73).
 func (ank Ankr) GetAnchor(glyph GlyphID, index int) (anchor AnkrAnchor) {
+	if ank.lookupTable == nil {
+		return anchor
+	}
 	offset, ok := ank.lookupTable.Class(glyph)
 	if !ok || int(offset)+4 >= len(ank.glyphDataTable) {
 		return anchor

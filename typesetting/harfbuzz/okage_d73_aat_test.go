@@ -709,3 +709,52 @@ func TestLtagRange(t *testing.T) {
 		}
 	}
 }
+
+// kerxFormat4Actions builds a subtable of format 4 of kerx with the action
+// type, whose class table gives the classes 4, 5 and 6 to a, b and c. a
+// marks itself, b marks itself and applies the action 1, and c applies the
+// action 0. The actions follow the state table.
+func kerxFormat4Actions(actionType uint32, actions []byte) kerxSubtable {
+	marks := stateMachine{
+		lookup:   lookup8(robotoA, 4, 5, 6),
+		nClasses: 7,
+		states:   [][]int{{0, 0, 0, 0, 1, 2, 3}, {0, 0, 0, 0, 1, 2, 3}},
+		entries:  [][]int{{0, 0, kerxEnd}, {0, kerxMark, kerxEnd}, {0, kerxMark, 1}, {0, 0, 0}},
+	}
+	return kerxSubtable{coverage: kerxFormat4, data: marks.bytes([]uint32{actionType << 30}, actions)}
+}
+
+// TestKerxFormat4Actions shapes texts with subtables of
+// kerxFormat4Actions. As in HarfBuzz 15.1.0, an action is read when the
+// subtable applies it:
+//   - In a subtable of the action type 2 with only the action 0, the
+//     action 1 of b is not in the subtable. The transition of b stops, and
+//     b does not mark itself, so c attaches to a.
+//   - A subtable of the action type 1, and no table ankr. The anchors are
+//     at (0, 0).
+//   - A subtable of the action type 3 has no data. c attaches to a.
+//   - A subtable of the action type 2 whose actions start at its end, then
+//     a subtable that kerns a, c. No action applies.
+//
+// go-text required the action of the largest index of an entry in the
+// subtable, and the action types 0 to 2. It refused the table for these
+// subtables, and panicked for an action of the type 1 without a table
+// ankr (D73).
+func TestKerxFormat4Actions(t *testing.T) {
+	kerx := kerxTable(kerxFormat4Actions(2, u16s(50, 60, 10, 20)))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"abc", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoC, 2, 1072, -2223, 40}}},
+	})
+	kerx = kerxTable(kerxFormat4Actions(1, u16s(0, 1, 0, 1)))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ac", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoC, 1, 1072, -1114, 0}}},
+	})
+	kerx = kerxTable(kerxFormat4Actions(3, nil))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ac", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoC, 1, 1072, -1114, 0}}},
+	})
+	kerx = kerxTable(kerxFormat4Actions(2, nil), kerxPairs(int(robotoA), int(robotoC), -300))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ac", []shapedGlyph{{robotoA, 0, 964, 0, 0}, {robotoC, 1, 922, -150, 0}}},
+	})
+}
