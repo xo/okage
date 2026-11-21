@@ -216,7 +216,7 @@ func TestKerx1(t *testing.T) {
 	kt, _, err := tables.ParseKern(b)
 	tu.AssertNoErr(t, err)
 
-	kerx := newKernxFromKern(kt)
+	kerx := newKernxFromKern(kt, 0)
 	tu.Assert(t, len(kerx) == 12)
 
 	expectedEntriesLength := []int{79, 31, 25, 14, 45, 32, 37, 30, 37, 16, 31, 16}

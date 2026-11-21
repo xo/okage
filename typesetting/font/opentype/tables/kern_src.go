@@ -4,7 +4,6 @@ package tables
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 )
 
@@ -174,22 +173,9 @@ type KernData3 struct {
 
 func (kd *KernData3) nKernIndex() int { return int(kd.leftClassCount) * int(kd.RightClassCount) }
 
-// sanitize index and class values
+// okage: HarfBuzz 15.1.0 reads the classes and the indexes of a subtable of
+// format 3 when it applies the subtable, and gives no kerning for a class
+// or an index out of range. go-text refused the table for them here (D73).
 func (kd *KernData3) parseEnd(_ []byte) (int, error) {
-	for _, index := range kd.KernIndex {
-		if index >= kd.kernValueCount {
-			return 0, errors.New("invalid kern subtable format 3 index value")
-		}
-	}
-
-	for i := range kd.LeftClass {
-		if kd.LeftClass[i] >= kd.leftClassCount {
-			return 0, errors.New("invalid kern subtable format 3 left class value")
-		}
-		if kd.RightClass[i] >= kd.RightClassCount {
-			return 0, errors.New("invalid kern subtable format 3 right class value")
-		}
-	}
-
 	return 0, nil
 }

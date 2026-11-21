@@ -384,7 +384,7 @@ func NewFont(ld *ot.Loader) (*Font, error) {
 
 	raw, _ = ld.RawTable(ot.MustNewTag("kern"))
 	kern, _, _ := tables.ParseKern(raw)
-	out.Kern = newKernxFromKern(kern)
+	out.Kern = newKernxFromKern(kern, out.nGlyphs)
 
 	raw, _ = ld.RawTable(ot.MustNewTag("ankr"))
 	out.Ankr, _, _ = tables.ParseAnkr(raw, out.nGlyphs)

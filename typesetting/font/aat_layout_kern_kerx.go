@@ -34,13 +34,20 @@ func newKernxFromKerx(kerx tables.Kerx) Kernx {
 	return out
 }
 
-func newKernxFromKern(kern tables.Kern) Kernx {
+// newKernxFromKern converts the table kern of a font of nGlyphs glyphs.
+//
+// okage: a subtable of format 3 takes the number of glyphs of the font
+// (D73).
+func newKernxFromKern(kern tables.Kern, nGlyphs int) Kernx {
 	if len(kern.Tables) == 0 {
 		return nil
 	}
 	out := make(Kernx, len(kern.Tables))
 	for i, ta := range kern.Tables {
 		out[i] = newKernSubtable(ta)
+		if kd, ok := out[i].Data.(Kern3); ok {
+			out[i].Data = kd.withGlyphs(nGlyphs)
+		}
 	}
 	return out
 }
@@ -301,14 +308,47 @@ func (kd Kern2) KernPair(left, right GID) int16 {
 
 type Kern3 tables.KernData3
 
+// withGlyphs gives the subtable with the classes of nGlyphs glyphs, when it
+// has classes. A glyph after the glyphs of the subtable has the class 0.
+//
+// okage: HarfBuzz 15.1.0 gives the class 0 to such a glyph, and the
+// subtable applies to each glyph of the font. go-text applied the subtable
+// only to its glyphs (D73).
+func (kd Kern3) withGlyphs(nGlyphs int) Kern3 {
+	if len(kd.LeftClass) == 0 || nGlyphs <= 0 {
+		return kd
+	}
+	resize := func(classes []uint8) []uint8 {
+		out := make([]uint8, nGlyphs)
+		copy(out, classes)
+		return out
+	}
+	kd.LeftClass, kd.RightClass = resize(kd.LeftClass), resize(kd.RightClass)
+	return kd
+}
+
+// KernPair returns the kern value for the given pair, or zero.
+//
+// okage: as in HarfBuzz 15.1.0, a glyph that the subtable does not hold has
+// the class 0, and a class or an index out of range gives no kerning.
+// go-text refused the table for a class or an index out of range (D73).
 func (kd Kern3) KernPair(left, right GID) int16 {
-	if int(left) >= len(kd.LeftClass) || int(right) >= len(kd.RightClass) { // should not happend
+	var lc, rc int
+	if int(left) < len(kd.LeftClass) {
+		lc = int(kd.LeftClass[left])
+	}
+	if int(right) < len(kd.RightClass) {
+		rc = int(kd.RightClass[right])
+	}
+	rightCount := int(kd.RightClassCount)
+	if rc >= rightCount || (lc+1)*rightCount > len(kd.KernIndex) {
 		return 0
 	}
-
-	lc, rc := int(kd.LeftClass[left]), int(kd.RightClass[right])
-	index := kd.KernIndex[lc*int(kd.RightClassCount)+rc] // sanitized during parsing
-	return kd.Kernings[index]                            // sanitized during parsing
+	index := int(kd.KernIndex[lc*rightCount+rc])
+	if index >= len(kd.Kernings) {
+		return 0
+	}
+	return kd.Kernings[index]
 }
 
 type Kern4 struct {

@@ -869,3 +869,37 @@ func TestMorxLazyData(t *testing.T) {
 		testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morxAuditTable(test.st, cx)}), []shapedText{{"abc", test.want}})
 	}
 }
+
+// kernFormat3 builds a table kern of Apple with a subtable of format 3 for
+// the glyphs 0 to 70, which leaves out c. The left classes give 1 to a and
+// b, and 7 to the glyph 10, more than the 2 left classes. The right classes
+// give 1 to b and 2 to the glyph 50. The kerning values are 0 and -100,
+// and the indexes of the classes are 0, 1, 5, then 0, 1, 0, where 5 is not
+// a kerning value.
+func kernFormat3() []byte {
+	const glyphs = robotoC
+	data := u16s(int(glyphs))
+	data = append(data, 2, 2, 3, 0)
+	data = append(data, u16s(0, -100)...)
+	left := make([]byte, glyphs)
+	left[robotoA], left[robotoB], left[10] = 1, 1, 7
+	right := make([]byte, glyphs)
+	right[robotoB], right[50] = 1, 2
+	data = append(data, left...)
+	data = append(data, right...)
+	data = append(data, 0, 1, 5, 0, 1, 0)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00030000)
+	return append(kern, data...)
+}
+
+// TestKernFormat3 shapes texts with kernFormat3. As in HarfBuzz 15.1.0, the
+// classes and the kerning values are read when the subtable applies, so a
+// class or an index out of range is not an error. c, after the glyphs of
+// the subtable, has the class 0, and the subtable applies to it. go-text
+// refused the table, and did not kern c (D73).
+func TestKernFormat3(t *testing.T) {
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernFormat3()}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1064, 0, 0}, {robotoB, 1, 1099, -50, 0}}},
+		{"cb", []shapedGlyph{{robotoC, 0, 1022, 0, 0}, {robotoB, 1, 1099, -50, 0}}},
+	})
+}
