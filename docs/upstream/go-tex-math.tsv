@@ -1,1 +1,2 @@
 upstream	date	status	okage	note
+6bf53a13bf8b52262e1f61568963fa56d6bfd27c	2026-11-20	not-applicable		chore(deps): update dependency ruby to v4.0.10 (#67). It changes .github/workflows/ci.yml only
