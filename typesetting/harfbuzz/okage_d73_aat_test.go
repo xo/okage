@@ -983,3 +983,40 @@ func TestAATTableVersions(t *testing.T) {
 	kern = append(kern, pairs...)
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kern}), plain)
 }
+
+// ankrTable builds a table ankr with the version and the lookup, whose
+// values are offsets in the glyph data. The glyph data holds the anchor
+// (100, 200) at the offset 0 and the anchor (10, 20) at the offset 8.
+func ankrTable(version int, lookup []byte) []byte {
+	out := u16s(version, 0)
+	out = append(out, u32s(12, uint32(12+len(lookup)))...)
+	out = append(out, lookup...)
+	out = append(out, u32s(1)...)
+	out = append(out, u16s(100, 200)...)
+	out = append(out, u32s(1)...)
+	return append(out, u16s(10, 20)...)
+}
+
+// TestAnkr shapes ac with a subtable of format 4 of kerx with anchor point
+// actions, where c attaches to a with the anchor 0 of each glyph, and
+// tables ankr whose lookup gives a the anchor (100, 200) and c the anchor
+// (10, 20). As in HarfBuzz 15.1.0, a table ankr is refused when its version
+// is not 0, when the anchors of a value of the lookup are not in the table,
+// here for b, or when the lookup has the format 10. The anchors are then at
+// (0, 0). go-text kept these tables (D73).
+func TestAnkr(t *testing.T) {
+	kerx := kerxTable(kerxFormat4Actions(1, u16s(0, 0)))
+	a := shapedGlyph{robotoA, 0, 1114, 0, 0}
+	refused := []shapedGlyph{a, {robotoC, 1, 1072, -1114, 0}}
+	for _, test := range []struct {
+		ankr []byte
+		want []shapedGlyph
+	}{
+		{ankrTable(0, lookup8(robotoA, 0, 8, 8)), []shapedGlyph{a, {robotoC, 1, 1072, -1024, 180}}},
+		{ankrTable(1, lookup8(robotoA, 0, 8, 8)), refused},
+		{ankrTable(0, lookup8(robotoA, 0, 1000, 8)), refused},
+		{ankrTable(0, lookup10(2, robotoA, 0, 8, 8)), refused},
+	} {
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx, "ankr": test.ankr}), []shapedText{{"ac", test.want}})
+	}
+}

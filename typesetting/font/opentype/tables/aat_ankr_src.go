@@ -2,7 +2,11 @@
 
 package tables
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+)
 
 // Ankr is the anchor point table
 // See - https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6ankr.html
@@ -47,4 +51,54 @@ func (ank Ankr) GetAnchor(glyph GlyphID, index int) (anchor AnkrAnchor) {
 // independent of the control points used to render the glyph
 type AnkrAnchor struct {
 	X, Y int16
+}
+
+// checkAnchors checks that the glyph data holds the anchors of each value
+// of the lookup table.
+//
+// okage: this is the sanitizer of ankr of HarfBuzz 15.1.0. It refuses the
+// table when the anchors of a value are not in the table, and when the
+// lookup has the format 10. go-text checked the anchors of a glyph only
+// when it read them (D73).
+func (ank Ankr) checkAnchors() error {
+	check := func(offset uint16) error {
+		start := int(offset)
+		if len(ank.glyphDataTable) < start+4 {
+			return fmt.Errorf("EOF: expected length: %d, got %d", start+4, len(ank.glyphDataTable))
+		}
+		count := uint64(binary.BigEndian.Uint32(ank.glyphDataTable[start:]))
+		if uint64(len(ank.glyphDataTable)) < uint64(start)+4+4*count {
+			return fmt.Errorf("EOF: expected length: %d, got %d", uint64(start)+4+4*count, len(ank.glyphDataTable))
+		}
+		return nil
+	}
+	var values []uint16
+	switch lk := ank.lookupTable.(type) {
+	case nil:
+		return nil
+	case AATLoopkup0:
+		values = lk.Values
+	case AATLoopkup2:
+		for _, r := range lk.Records {
+			values = append(values, r.Value)
+		}
+	case AATLoopkup4:
+		for _, r := range lk.Records {
+			values = append(values, r.Values...)
+		}
+	case AATLoopkup6:
+		for _, r := range lk.Records {
+			values = append(values, r.Value)
+		}
+	case AATLoopkup8:
+		values = lk.Values
+	case AATLoopkup10:
+		return errors.New("unsupported lookup format 10")
+	}
+	for _, v := range values {
+		if err := check(v); err != nil {
+			return err
+		}
+	}
+	return nil
 }

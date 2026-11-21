@@ -304,6 +304,16 @@ func ParseAATLoopkup8Data(src []byte) (AATLoopkup8Data, int, error) {
 }
 
 func ParseAnkr(src []byte, valuesCount int) (Ankr, int, error) {
+	item, n, err := parseAnkr(src, valuesCount)
+	if err != nil {
+		// okage: an error refuses the whole table, as in HarfBuzz 15.1.0.
+		// go-text gave the part of the table that it read (D73).
+		return Ankr{}, 0, err
+	}
+	return item, n, nil
+}
+
+func parseAnkr(src []byte, valuesCount int) (Ankr, int, error) {
 	var item Ankr
 	n := 0
 	if L := len(src); L < 12 {
@@ -315,6 +325,10 @@ func ParseAnkr(src []byte, valuesCount int) (Ankr, int, error) {
 	offsetLookupTable := int(binary.BigEndian.Uint32(src[4:]))
 	offsetGlyphDataTable := int(binary.BigEndian.Uint32(src[8:]))
 	n += 12
+	// okage: HarfBuzz 15.1.0 refuses a table whose version is not 0 (D73).
+	if item.version != 0 {
+		return item, 0, fmt.Errorf("reading Ankr: invalid version %d", item.version)
+	}
 
 	{
 		if offsetLookupTable != 0 { // ignore null offset
@@ -334,13 +348,18 @@ func ParseAnkr(src []byte, valuesCount int) (Ankr, int, error) {
 		}
 	}
 	{
-		if offsetGlyphDataTable != 0 { // ignore null offset
+		// okage: the offset of the glyph data is never null, as in HarfBuzz
+		// 15.1.0, where the offset 0 is the start of the table (D73).
+		{
 			if L := len(src); L < offsetGlyphDataTable {
 				return item, 0, fmt.Errorf("reading Ankr: "+"EOF: expected length: %d, got %d", offsetGlyphDataTable, L)
 			}
 
 			item.glyphDataTable = src[offsetGlyphDataTable:]
 		}
+	}
+	if err := item.checkAnchors(); err != nil {
+		return item, 0, fmt.Errorf("reading Ankr: %s", err)
 	}
 	return item, n, nil
 }

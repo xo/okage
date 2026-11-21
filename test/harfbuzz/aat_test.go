@@ -900,3 +900,37 @@ func TestAATTableVersions(t *testing.T) {
 	kern = append(kern, pairs...)
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab")
 }
+
+// ankrTable builds a table ankr with the version and the lookup, whose
+// values are offsets in the glyph data. The glyph data holds the anchor
+// (100, 200) at the offset 0 and the anchor (10, 20) at the offset 8.
+func ankrTable(version int, lookup []byte) []byte {
+	out := u16s(version, 0)
+	out = append(out, u32s(12, uint32(12+len(lookup)))...)
+	out = append(out, lookup...)
+	out = append(out, u32s(1)...)
+	out = append(out, u16s(100, 200)...)
+	out = append(out, u32s(1)...)
+	return append(out, u16s(10, 20)...)
+}
+
+// TestAnkr: a subtable of format 4 of kerx with anchor point actions,
+// where c attaches to a with the anchor 0 of each glyph, and tables ankr.
+// HarfBuzz refuses a table ankr whose version is not 0, whose lookup has
+// the format 10, or where the anchors of a value of the lookup are not in
+// the table. The anchors are then at (0, 0):
+//   - A table ankr whose lookup gives the offset 0 to a and 8 to c.
+//   - The same table with the version 1.
+//   - The same table, where the lookup gives b the offset 1000.
+//   - The same table, with a lookup of format 10.
+func TestAnkr(t *testing.T) {
+	kerx := kerxTable(kerxFormat4Actions(1, u16s(0, 0)))
+	for _, ankr := range [][]byte{
+		ankrTable(0, lookup8(robotoA, 0, 8, 8)),
+		ankrTable(1, lookup8(robotoA, 0, 8, 8)),
+		ankrTable(0, lookup8(robotoA, 0, 1000, 8)),
+		ankrTable(0, lookup10(2, robotoA, 0, 8, 8)),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx, "ankr": ankr}), false, "ac", "abc", "cc")
+	}
+}
