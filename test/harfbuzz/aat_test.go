@@ -416,3 +416,72 @@ func TestKerxFormat4KernOff(t *testing.T) {
 		}
 	}
 }
+
+// binSearchLookup builds a lookup of format 2, 4 or 6 with the units, each
+// padded to unitSize bytes, then the tail.
+func binSearchLookup(format, unitSize int, units [][]int, tail ...int) []byte {
+	out := u16s(format, unitSize, len(units), 0, 0, 0)
+	for _, unit := range units {
+		out = append(out, u16s(unit...)...)
+		out = append(out, make([]byte, unitSize-2*len(unit))...)
+	}
+	return append(out, u16s(tail...)...)
+}
+
+// TestLookupBinarySearchUnits: lookups of format 2, 4 and 6, as HarfBuzz
+// reads VarSizedBinSearchArrayOf. It drops the last unit only when that
+// unit ends the search, with two words 0xFFFF in formats 2 and 4, and one
+// word in format 6. The units are unitSize bytes apart. It refuses a
+// segment of format 4 whose first glyph is after its last glyph, and reads
+// the values of the offset 0 at the start of the lookup:
+//   - The class table of a contextual subtable is a lookup of format 4
+//     that gives the class 1 to c, without a unit that ends the search,
+//     with one, and with units of 8 bytes. In each state, the class 1
+//     replaces c with d.
+//   - In a chain of morx, the first subtable is noncontextual with a
+//     lookup of format 4 with no unit, with a segment whose first glyph is
+//     after its last glyph, or with a segment that replaces a, b with x, y.
+//     The second subtable replaces a with b.
+//   - In a chain of morx, a noncontextual subtable deletes a, then a
+//     noncontextual subtable replaces c with x, and its last unit, which
+//     ends the search, gives c to the glyph 0xFFFF. A contextual subtable
+//     then replaces b with d after the deleted glyph.
+//   - A noncontextual subtable whose lookup of format 4 has a segment for
+//     c with the offset 0.
+func TestLookupBinarySearchUnits(t *testing.T) {
+	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
+	cd := u16s(8, robotoC, 1, robotoD)
+	for _, classTable := range [][]byte{
+		binSearchLookup(4, 6, [][]int{{robotoC, robotoC, 18}}, 1),
+		binSearchLookup(4, 6, [][]int{{robotoC, robotoC, 24}, {0xFFFF, 0xFFFF, 0}}, 1),
+		binSearchLookup(4, 8, [][]int{{robotoC, robotoC, 28}, {0xFFFF, 0xFFFF, 0}}, 1),
+	} {
+		morx := morxAuditTable(morxContextualStates(classTable, states, cd))
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "bcb", "cccc")
+	}
+
+	ab := morxAuditSubtable{4, lookup8(robotoA, robotoB)}
+	for _, lookup := range [][]byte{
+		binSearchLookup(4, 6, nil),
+		binSearchLookup(4, 6, [][]int{{robotoA, robotoB, 18}}, robotoX, robotoY),
+		binSearchLookup(4, 6, [][]int{{robotoB, robotoA, 18}}, robotoX, robotoY),
+		binSearchLookup(4, 6, [][]int{{robotoB, robotoA, 24}, {0xFFFF, 0xFFFF, 0}}, robotoX, robotoY),
+	} {
+		morx := morxAuditTable(morxAuditSubtable{4, lookup}, ab)
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "a", "ab", "ba")
+	}
+
+	deleteA := morxAuditSubtable{4, lookup8(robotoA, 0xFFFF)}
+	afterDeleted := morxContextual(u16s(8, 0xFFFE, 2, 1, 1), u16s(8, robotoB, 1, robotoD))
+	for _, lookup := range [][]byte{
+		binSearchLookup(2, 6, [][]int{{robotoC, robotoC, robotoX}, {0xFFFF, 0xFFFF, robotoC}}),
+		binSearchLookup(6, 4, [][]int{{robotoC, robotoX}, {0xFFFF, robotoC}}),
+		binSearchLookup(6, 6, [][]int{{robotoC, robotoX}, {0xFFFF, robotoC}}),
+	} {
+		morx := morxAuditTable(deleteA, morxAuditSubtable{4, lookup}, afterDeleted)
+		testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ab", "ba", "abab", "b", "abc")
+	}
+
+	morx := morxAuditTable(morxAuditSubtable{4, binSearchLookup(4, 6, [][]int{{robotoC, robotoC, 0}})})
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "ac")
+}

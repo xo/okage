@@ -230,6 +230,40 @@ type binSearchHeader struct {
 	rangeShift    uint16 // The value of unitSize times the difference of the value of nUnits minus the largest power of 2 less than or equal to the value of nUnits.
 }
 
+// units gives the number of units of the binary search array of a lookup
+// of format 2, 4 or 6, and checks that the array is in src, which starts
+// at the start of the lookup. A unit holds recordSize bytes, and the
+// header gives its size in the array. terminationWords is the number of
+// words of 0xFFFF at the start of the last unit when that unit ends the
+// search.
+//
+// okage: this is VarSizedBinSearchArrayOf of HarfBuzz 15.1.0. The array
+// drops its last unit only when that unit ends the search, and the units
+// are unitSize bytes apart. go-text read the units recordSize bytes apart,
+// and dropped the last unit of a lookup of format 4 in each case. It kept
+// the last unit of the other lookups, also when that unit ended the
+// search, so the glyph 0xFFFF had a value (D73).
+func (h binSearchHeader) units(src []byte, recordSize, terminationWords int) (int, error) {
+	const start = 12 // the format and the header
+	unitSize, n := int(h.unitSize), int(h.nUnits)
+	if unitSize < recordSize {
+		return 0, fmt.Errorf("invalid lookup unit size %d", unitSize)
+	}
+	if L, E := len(src), start+n*unitSize; L < E {
+		return 0, fmt.Errorf("EOF: expected length: %d, got %d", E, L)
+	}
+	if n == 0 {
+		return 0, nil
+	}
+	last := src[start+(n-1)*unitSize:]
+	for i := range terminationWords {
+		if binary.BigEndian.Uint16(last[2*i:]) != 0xFFFF {
+			return n, nil
+		}
+	}
+	return n - 1, nil
+}
+
 // AATLookup is conceptually a map[GlyphID]uint16, but it may
 // be implemented more efficiently.
 type AATLookup interface {
@@ -269,7 +303,8 @@ type LookupRecord2 struct {
 type AATLoopkup4 struct {
 	version uint16 `unionTag:"4"`
 	binSearchHeader
-	// Do not include the termination segment
+	// okage: Records does not include the segment that ends the search.
+	// ParseAATLoopkup4 drops only that segment (D73).
 	Records []AATLookupRecord4 `arrayCount:"ComputedField-nUnits-1"`
 }
 

@@ -472,3 +472,76 @@ func TestKerxFormat4KernOff(t *testing.T) {
 	testShapedFeatures(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), kernOff,
 		shapedText{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, -1074, 40}}})
 }
+
+// binSearchLookup builds a lookup of format 2, 4 or 6 with the units, each
+// padded to unitSize bytes, then the tail.
+func binSearchLookup(format, unitSize int, units [][]int, tail ...int) []byte {
+	out := u16s(format, unitSize, len(units), 0, 0, 0)
+	for _, unit := range units {
+		out = append(out, u16s(unit...)...)
+		out = append(out, make([]byte, unitSize-2*len(unit))...)
+	}
+	return append(out, u16s(tail...)...)
+}
+
+// TestLookupBinarySearchUnits shapes texts with lookups of format 2, 4 and
+// 6. As VarSizedBinSearchArrayOf of HarfBuzz 15.1.0 reads them, the last
+// unit is dropped only when it ends the search, and the units are unitSize
+// bytes apart. A segment of format 4 whose first glyph is after its last
+// glyph is an error, and the offset 0 gives the values at the start of the
+// lookup:
+//   - A contextual subtable replaces c with d. Its class table is a lookup
+//     of format 4 whose one segment gives the class 1 to c. go-text dropped
+//     the segment, and did not replace c.
+//   - In a chain of morx, a noncontextual subtable has a lookup of format 4
+//     with no unit, a segment of a, b whose first glyph is after its last
+//     glyph, or a segment that replaces a, b with x, y. A second subtable
+//     replaces a with b. go-text read 65,535 segments for no unit, and
+//     refused the table. It made an array of a negative length for the
+//     segment of b, a.
+//   - In a chain of morx, a noncontextual subtable deletes a. Then a
+//     noncontextual subtable, whose lookup of format 2 replaces c with x,
+//     has a last unit that ends the search and gives c to the glyph
+//     0xFFFF. A contextual subtable then replaces b with d after the
+//     deleted glyph. go-text replaced the deleted glyph with c, so b was
+//     not after the deleted glyph.
+//   - A noncontextual subtable has a lookup of format 4 whose segment of c
+//     has the offset 0. HarfBuzz reads the value 4, the format of the
+//     lookup. go-text gave the segment no values.
+//
+// (D73)
+func TestLookupBinarySearchUnits(t *testing.T) {
+	cd := u16s(8, int(robotoC), 1, int(robotoD))
+	classTable := binSearchLookup(4, 6, [][]int{{int(robotoC), int(robotoC), 18}}, 1)
+	morx := morxAuditTable(morxContextualStates(classTable, u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0), cd))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"c", []shapedGlyph{{robotoD, 0, 1155, 0, 0}}},
+	})
+
+	ab := morxAuditSubtable{4, lookup8(robotoA, int(robotoB))}
+	for _, test := range []struct {
+		lookup []byte
+		want   []shapedGlyph
+	}{
+		{binSearchLookup(4, 6, nil), []shapedGlyph{{robotoB, 0, 1149, 0, 0}}},
+		{binSearchLookup(4, 6, [][]int{{int(robotoA), int(robotoB), 18}}, int(robotoX), int(robotoY)),
+			[]shapedGlyph{{robotoA, 0, 1114, 0, 0}}},
+		{binSearchLookup(4, 6, [][]int{{int(robotoB), int(robotoA), 18}}, int(robotoX), int(robotoY)),
+			[]shapedGlyph{{robotoX, 0, 1015, 0, 0}}},
+	} {
+		morx := morxAuditTable(morxAuditSubtable{4, test.lookup}, ab)
+		testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{{"a", test.want}})
+	}
+
+	cx := binSearchLookup(2, 6, [][]int{{int(robotoC), int(robotoC), int(robotoX)}, {0xFFFF, 0xFFFF, int(robotoC)}})
+	morx = morxAuditTable(morxAuditSubtable{4, lookup8(robotoA, 0xFFFF)}, morxAuditSubtable{4, cx},
+		morxContextual(u16s(8, 0xFFFE, 2, 1, 1), u16s(8, int(robotoB), 1, int(robotoD))))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"abc", []shapedGlyph{{robotoD, 0, 1155, 0, 0}, {robotoX, 2, 1015, 0, 0}}},
+	})
+
+	morx = morxAuditTable(morxAuditSubtable{4, binSearchLookup(4, 6, [][]int{{int(robotoC), int(robotoC), 0}})})
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"c", []shapedGlyph{{4, 0, 507, 0, 0}}},
+	})
+}

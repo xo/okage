@@ -142,17 +142,19 @@ func ParseAATLoopkupExt2(src []byte) (AATLoopkupExt2, int, error) {
 	n += 12
 
 	{
-		arrayLength := int(item.nUnits)
-
-		if L := len(src); L < 12+arrayLength*8 {
-			return item, 0, fmt.Errorf("reading AATLoopkupExt2: "+"EOF: expected length: %d, got %d", 12+arrayLength*8, L)
+		// okage: the units are unitSize bytes apart, and the last unit is
+		// dropped only when it ends the search, as in HarfBuzz 15.1.0
+		// (D73).
+		arrayLength, err := item.binSearchHeader.units(src, 8, 2)
+		if err != nil {
+			return item, 0, fmt.Errorf("reading AATLoopkupExt2: %s", err)
 		}
 
 		item.Records = make([]lookupRecordExt2, arrayLength) // allocation guarded by the previous check
 		for i := range item.Records {
-			item.Records[i].mustParse(src[12+i*8:])
+			item.Records[i].mustParse(src[12+i*int(item.unitSize):])
 		}
-		n += arrayLength * 8
+		n += int(item.nUnits) * int(item.unitSize)
 	}
 	return item, n, nil
 }
@@ -169,18 +171,22 @@ func ParseAATLoopkupExt4(src []byte) (AATLoopkupExt4, int, error) {
 	n += 12
 
 	{
-		arrayLength := int(item.nUnits)
+		// okage: the units are unitSize bytes apart, and the last unit is
+		// dropped only when it ends the search, as in HarfBuzz 15.1.0
+		// (D73).
+		arrayLength, err := item.binSearchHeader.units(src, 6, 2)
+		if err != nil {
+			return item, 0, fmt.Errorf("reading AATLoopkupExt4: %s", err)
+		}
 
-		offset := 12
 		for i := 0; i < arrayLength; i++ {
-			elem, read, err := parseLoopkupRecordExt4(src[offset:], src)
+			elem, _, err := parseLoopkupRecordExt4(src[12+i*int(item.unitSize):], src)
 			if err != nil {
 				return item, 0, fmt.Errorf("reading AATLoopkupExt4: %s", err)
 			}
 			item.Records = append(item.Records, elem)
-			offset += read
 		}
-		n = offset
+		n = 12 + int(item.nUnits)*int(item.unitSize)
 	}
 	return item, n, nil
 }
@@ -197,17 +203,19 @@ func ParseAATLoopkupExt6(src []byte) (AATLoopkupExt6, int, error) {
 	n += 12
 
 	{
-		arrayLength := int(item.nUnits)
-
-		if L := len(src); L < 12+arrayLength*6 {
-			return item, 0, fmt.Errorf("reading AATLoopkupExt6: "+"EOF: expected length: %d, got %d", 12+arrayLength*6, L)
+		// okage: the units are unitSize bytes apart, and the last unit is
+		// dropped only when it ends the search, as in HarfBuzz 15.1.0
+		// (D73).
+		arrayLength, err := item.binSearchHeader.units(src, 6, 1)
+		if err != nil {
+			return item, 0, fmt.Errorf("reading AATLoopkupExt6: %s", err)
 		}
 
 		item.Records = make([]loopkupRecordExt6, arrayLength) // allocation guarded by the previous check
 		for i := range item.Records {
-			item.Records[i].mustParse(src[12+i*6:])
+			item.Records[i].mustParse(src[12+i*int(item.unitSize):])
 		}
-		n += arrayLength * 6
+		n += int(item.nUnits) * int(item.unitSize)
 	}
 	return item, n, nil
 }
@@ -651,9 +659,16 @@ func parseLoopkupRecordExt4(src []byte, parentSrc []byte) (loopkupRecordExt4, in
 	item.FirstGlyph = binary.BigEndian.Uint16(src[2:])
 	offsetValues := int(binary.BigEndian.Uint16(src[4:]))
 	n += 6
+	// okage: the first glyph of a segment is not after its last glyph, and
+	// its offset is never null, as in HarfBuzz 15.1.0. go-text made an
+	// array of a negative length, and gave no values to the offset 0, so
+	// that a glyph of the segment had an index out of range (D73).
+	if item.FirstGlyph > item.LastGlyph {
+		return item, 0, fmt.Errorf("reading loopkupRecordExt4: invalid segment %d-%d", item.FirstGlyph, item.LastGlyph)
+	}
 
 	{
-		if offsetValues != 0 { // ignore null offset
+		{
 			if L := len(parentSrc); L < offsetValues {
 				return item, 0, fmt.Errorf("reading loopkupRecordExt4: "+"EOF: expected length: %d, got %d", offsetValues, L)
 			}
