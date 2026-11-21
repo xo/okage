@@ -1484,3 +1484,27 @@ The recommendation is answer 1. The root package stays the port of
 tiny-skia, and a program imports a small package and not all of `svg`. ivy
 can delete its blur and most of its change of colors. `svg` and `lottie`
 keep their bytes.
+
+### Question 40: the Type 3 font of images of D89
+
+Asked on 2026-11-21, from D89. `pdf` makes a Type 3 font only from the
+glyphs of a font file. ivy writes the bitmap glyphs of the Type 3 fonts of
+the PDF files that it reads as image masks of the page. It writes a color
+glyph or a bitmap glyph of its layout as an image. Neither has text in the
+written file, and each viewer scales an image of a page down in another way
+than a glyph. The maintainers can choose one of these answers:
+
+1. `NewImageFont` returns a `*Font` whose glyphs the caller adds with
+   `AddImageGlyph`, each a mask or an image with its advance. `DrawGlyphs`
+   draws them into Type 3 fonts with their text. A mask glyph is a shape
+   glyph with `d1`, which takes the fill of the text.
+2. A separate type `Type3Font`, with its own call `DrawType3Glyphs`.
+3. A `*Font` whose glyphs the caller draws as streams of `pdf`, each a
+   colored glyph with `d0`.
+4. No change. ivy keeps the image masks of the page, and can draw the text
+   again as invisible text.
+
+The recommendation is answer 1. A caller draws such a font with the calls
+that it already makes, and gets the text code of krilla with no copy of it.
+A shape glyph takes one code for every color of the text, as the bitmap
+fonts of the source files do.

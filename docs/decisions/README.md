@@ -108,3 +108,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D86 | [A mask can hold a rectangle and no pixels](D086-a-mask-can-hold-a-rectangle-and-no-pixels.md) | Decided, amends D60 |
 | D87 | [typesetting walks the glyphs and splits the lines with less work](D087-typesetting-walks-the-glyphs-and-splits-the-lines-with-less-work.md) | Proposed |
 | D88 | [The blur and the color matrix of the filters get a public API](D088-the-blur-and-the-color-matrix-of-the-filters-get-a-public-api.md) | Proposed, amends D5 and D79 |
+| D89 | [pdf makes a Type 3 font from images that the caller gives](D089-pdf-makes-a-type-3-font-from-images-that-the-caller-gives.md) | Proposed, amends D62 and D68 |

@@ -385,4 +385,5 @@ From D62.
    masks of the page, which each viewer scales down in another way, and it
    writes a color glyph or a bitmap glyph, such as an emoji, as an image
    without its text. Source: ivy, "Left by phase 7a" item 3 and "Left by
-   phase 7b" item 2, 2026-11-19.
+   phase 7b" item 2, 2026-11-19. D89 proposes the API, and question 40 at
+   the end of [`PLAN.md`](PLAN.md) asks the maintainers to choose.
