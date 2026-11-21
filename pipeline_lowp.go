@@ -258,10 +258,15 @@ func (p *lowpPipeline) premultiply() {
 // uniformColor is uniform_color in tiny-skia src/pipeline/lowp.rs.
 func (p *lowpPipeline) uniformColor() {
 	ctx := &p.ctx.uniformColor
-	p.r = wide.SplatU16x16(ctx.rgba[0])
-	p.g = wide.SplatU16x16(ctx.rgba[1])
-	p.b = wide.SplatU16x16(ctx.rgba[2])
-	p.a = wide.SplatU16x16(ctx.rgba[3])
+
+	// Port (D35): one loop on the lanes. Upstream: u16x16::splat of each
+	// channel. A copy of a splat is a load of 16 bytes from stores of 2
+	// bytes, which the CPU cannot forward from its store buffer, and the load
+	// waits for them. The stages after this one read the lanes one by one.
+	r, g, b, a := ctx.rgba[0], ctx.rgba[1], ctx.rgba[2], ctx.rgba[3]
+	for i := range lowpStageWidth {
+		p.r[i], p.g[i], p.b[i], p.a[i] = r, g, b, a
+	}
 
 	p.nextStage()
 }
@@ -273,10 +278,18 @@ func (p *lowpPipeline) seedShader() {
 		wide.F32x8{8.5, 9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5},
 	}
 
-	x := wide.SplatF32x16(float32(p.dx)).Add(iota)
-	y := wide.SplatF32x16(float32(p.dy) + 0.5)
-	split(&x, &p.r, &p.g)
-	split(&y, &p.b, &p.a)
+	// Port (D33, D35): one loop on the lanes, with splitLane. Upstream:
+	// x = f32x16::splat(dx as f32) + iota, y = f32x16::splat(dy as f32 +
+	// 0.5), split(&x, &mut p.r, &mut p.g) and split(&y, &mut p.b, &mut p.a).
+	// The loop copies no vector, as uniformColor says.
+	dx := float32(p.dx)
+	ylo, yhi := splitLane(float32(p.dy) + 0.5)
+	for i := range 8 {
+		p.r[2*i], p.r[2*i+1] = splitLane(dx + iota[0][i])
+		p.g[2*i], p.g[2*i+1] = splitLane(dx + iota[1][i])
+		p.b[2*i], p.b[2*i+1] = ylo, yhi
+		p.a[2*i], p.a[2*i+1] = ylo, yhi
+	}
 
 	p.nextStage()
 }
@@ -374,15 +387,15 @@ func (p *lowpPipeline) storeU8Tail() {
 func (p *lowpPipeline) loadMaskU8() {
 	offset := p.maskCtx.offset(p.dx, p.dy)
 
-	var c wide.U16x16
-	for i := range p.tail {
-		c[i] = uint16(p.maskCtx.data[offset+i])
-	}
-
+	// Port (D35): the loop writes the mask into a lane by lane, in place of
+	// a copy of c, as uniformColor says.
 	p.r = wide.SplatU16x16(0)
 	p.g = wide.SplatU16x16(0)
 	p.b = wide.SplatU16x16(0)
-	p.a = c
+	p.a = wide.U16x16{}
+	for i := range p.tail {
+		p.a[i] = uint16(p.maskCtx.data[offset+i])
+	}
 
 	p.nextStage()
 }
@@ -391,12 +404,18 @@ func (p *lowpPipeline) loadMaskU8() {
 func (p *lowpPipeline) maskU8() {
 	offset := p.maskCtx.offset(p.dx, p.dy)
 
+	// Port (D35): the loop also finds whether a lane of c is not 0, in place
+	// of c == u16x16::default(). A comparison of c, which the loop wrote
+	// lane by lane, is a load of more bytes than one store holds, and the
+	// load waits for the stores.
 	var c wide.U16x16
+	var nonZero uint16
 	for i := range p.tail {
 		c[i] = uint16(p.maskCtx.data[offset+i])
+		nonZero |= c[i]
 	}
 
-	if c.Equal(wide.U16x16{}) {
+	if nonZero == 0 {
 		return
 	}
 
@@ -931,7 +950,8 @@ func (p *lowpPipeline) gradient() {
 	ctx := &p.ctx.gradient
 
 	// N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
-	t := join(&p.r, &p.g)
+	var t wide.F32x16
+	join(&p.r, &p.g, &t)
 	var idx wide.U16x16
 	for i := 1; i < ctx.len; i++ {
 		tt := ctx.tValues[i].Get()
@@ -954,7 +974,7 @@ func (p *lowpPipeline) gradient() {
 		idx[14] += b2u16(t1[6] >= tt)
 		idx[15] += b2u16(t1[7] >= tt)
 	}
-	gradientLookupLowp(ctx, &idx, t, &p.r, &p.g, &p.b, &p.a)
+	gradientLookupLowp(ctx, &idx, &t, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
@@ -976,7 +996,8 @@ func (p *lowpPipeline) evenlySpaced2StopGradient() {
 	// Port (D33): one loop on the lanes after join. Upstream:
 	// round_f32_to_u16 of mad(t, factor.r, bias.r), and the same for g, b
 	// and a.
-	t := join(&p.r, &p.g)
+	var t wide.F32x16
+	join(&p.r, &p.g, &t)
 	f := ctx.factor
 	c := ctx.bias
 	for i := range lowpStageWidth {
@@ -1015,8 +1036,11 @@ func (p *lowpPipeline) xyToRadius() {
 //
 // We are using u16 for index, not u32 as Skia, to simplify the code a bit.
 // The gradient creation code does not allow that many stops anyway.
+//
+// Port (D35): upstream takes t as a value. Go takes a pointer, so that the
+// caller copies no vector, as join says.
 func gradientLookupLowp(
-	ctx *gradientCtx, idx *wide.U16x16, t wide.F32x16,
+	ctx *gradientCtx, idx *wide.U16x16, t *wide.F32x16,
 	r, g, b, a *wide.U16x16,
 ) {
 	// Surprisingly, but bound checking does not affect the performance.
@@ -1136,11 +1160,10 @@ func store8888TailLowp(
 
 // load8 is load_8 in tiny-skia src/pipeline/lowp.rs.
 func load8(data *[lowpStageWidth]uint8, a *wide.U16x16) {
-	*a = wide.U16x16{
-		uint16(data[0]), uint16(data[1]), uint16(data[2]), uint16(data[3]),
-		uint16(data[4]), uint16(data[5]), uint16(data[6]), uint16(data[7]),
-		uint16(data[8]), uint16(data[9]), uint16(data[10]), uint16(data[11]),
-		uint16(data[12]), uint16(data[13]), uint16(data[14]), uint16(data[15]),
+	// Port (D35): one loop on the lanes writes a, in place of a copy of a
+	// u16x16 that the function built, as join says.
+	for i := range lowpStageWidth {
+		a[i] = uint16(data[i])
 	}
 }
 
@@ -1206,27 +1229,14 @@ func lerpl(from, to, t uint16) uint16 {
 	return div255l(from*invl(t) + to*t)
 }
 
-// split is split in tiny-skia src/pipeline/lowp.rs.
+// splitLane is split in tiny-skia src/pipeline/lowp.rs on one lane (D33).
+// It gives the low and the high half of the bits of v.
 //
 // Port: upstream casts the bytes with bytemuck, in the byte order of the
 // machine. Go stores the low half of the bits of each float first. Only join
-// reads them, so the order does not change a result.
-func split(v *wide.F32x16, lo, hi *wide.U16x16) {
-	// We are splitting f32x16 (512bit) into two u16x16 (256 bit).
-	for i := range 8 {
-		bits := math.Float32bits(v[0][i])
-		lo[2*i] = uint16(bits)
-		lo[2*i+1] = uint16(bits >> 16)
-	}
-	for i := range 8 {
-		bits := math.Float32bits(v[1][i])
-		hi[2*i] = uint16(bits)
-		hi[2*i+1] = uint16(bits >> 16)
-	}
-}
-
-// splitLane is split on one lane (D33). It gives the low and the high half
-// of the bits of v.
+// and joinLane read them, so the order does not change a result. Port
+// (D35): the stages call splitLane in their loops on the lanes, so split
+// for a whole f32x16 has no caller, and Go does not have it.
 func splitLane(v float32) (uint16, uint16) {
 	bits := math.Float32bits(v)
 	return uint16(bits), uint16(bits >> 16)
@@ -1234,17 +1244,19 @@ func splitLane(v float32) (uint16, uint16) {
 
 // join is join in tiny-skia src/pipeline/lowp.rs.
 //
-// Port: see split.
-func join(lo, hi *wide.U16x16) wide.F32x16 {
+// Port: see splitLane. Port (D35): upstream returns the f32x16. Go writes it to
+// v, so that the caller copies no vector. A copy of a vector that join
+// wrote lane by lane is a load of 16 bytes from stores of 4 bytes, which
+// the CPU cannot forward from its store buffer, and the load waits for
+// them.
+func join(lo, hi *wide.U16x16, v *wide.F32x16) {
 	// We are joining two u16x16 (256 bit) into f32x16 (512bit).
-	var v wide.F32x16
 	for i := range 8 {
 		v[0][i] = math.Float32frombits(uint32(lo[2*i]) | uint32(lo[2*i+1])<<16)
 	}
 	for i := range 8 {
 		v[1][i] = math.Float32frombits(uint32(hi[2*i]) | uint32(hi[2*i+1])<<16)
 	}
-	return v
 }
 
 // madLowp is mad in tiny-skia src/pipeline/lowp.rs.
