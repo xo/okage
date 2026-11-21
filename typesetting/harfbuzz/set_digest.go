@@ -105,10 +105,11 @@ func (sd *setDigest) addArray(arr []setType) {
 // is `false`, then it is certain that `g` is not in the set.
 // Otherwise, we don't kwow, it might be a false positive.
 // Note that runes in the set are certain to return `true`.
+//
+// okage: the three tests are one expression with no branch, which the loops
+// over the glyphs run faster. The result is the same (D87).
 func (sd setDigest) mayHave(g setType) bool {
-	return sd[0]&(one<<((g>>shift0)&mb1)) != 0 &&
-		sd[1]&(one<<((g>>shift1)&mb1)) != 0 &&
-		sd[2]&(one<<((g>>shift2)&mb1)) != 0
+	return (sd[0]>>((g>>shift0)&mb1))&(sd[1]>>((g>>shift1)&mb1))&(sd[2]>>((g>>shift2)&mb1))&1 != 0
 }
 
 func (sd setDigest) mayIntersects(o setDigest) bool {

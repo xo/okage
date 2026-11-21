@@ -47,9 +47,11 @@ func (ac *otLayoutLookupAccelerator) init(lookup layoutLookup) {
 }
 
 // apply the subtables and stops at the first success.
+//
+// okage: the loop does not copy each subtable (D87).
 func (ac *otLayoutLookupAccelerator) apply(c *otApplyContext) bool {
-	for _, table := range ac.subtables {
-		if table.apply(c) {
+	for i := range ac.subtables {
+		if ac.subtables[i].apply(c) {
 			return true
 		}
 	}
@@ -76,7 +78,9 @@ func newGPOSApplicable(table tables.GPOSLookup, cache *pairPosCache) applicable 
 	return ap
 }
 
-func (ap applicable) apply(c *otApplyContext) bool {
+// okage: apply takes a pointer, so that a call does not copy the subtable
+// (D87).
+func (ap *applicable) apply(c *otApplyContext) bool {
 	return ap.digest.mayHave(gID(c.buffer.cur(0).Glyph)) && ap.objApply(c)
 }
 
@@ -208,7 +212,9 @@ func (m *otApplyContextMatcher) mayMatch(info *GlyphInfo, glyphData []uint16) ui
 	return maybe
 }
 
-func (m otApplyContextMatcher) maySkip(c *otApplyContext, info *GlyphInfo) uint8 {
+// okage: maySkip takes a pointer, so that a call does not copy the matcher
+// (D87).
+func (m *otApplyContextMatcher) maySkip(c *otApplyContext, info *GlyphInfo) uint8 {
 	if !c.checkGlyphProperty(info, m.lookupProps) {
 		return yes
 	}

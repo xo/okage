@@ -69,6 +69,12 @@ func (c *otApplyContext) applyString(proxy otProxyMeta, accel *otLayoutLookupAcc
 func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 	buffer := c.buffer
 	ret := false
+	// okage: the loop keeps the digest, the mask and the properties of the
+	// lookup in local variables, so it does not read them again from
+	// memory for each glyph. It does the first test of checkGlyphProperty
+	// itself, which the Go compiler does not inline (D87).
+	digest, lookupMask, lookupProps := accel.digest, c.lookupMask, c.lookupProps
+	ignored := uint16(lookupProps) & ignoreFlags
 	// okage: stop when the buffer is in error, as HarfBuzz stops when
 	// buffer->successful is false. A context lookup can then apply without
 	// a move of buffer.idx, and the loop did not end (D73).
@@ -76,11 +82,14 @@ func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 		// nested lookups may reallocate buffer.Info, so read it again on every pass
 		info := buffer.Info
 		j := buffer.idx
-		for j < len(info) &&
-			!(accel.digest.mayHave(gID(info[j].Glyph)) &&
-				(info[j].Mask&c.lookupMask) != 0 &&
-				c.checkGlyphProperty(&info[j], c.lookupProps)) {
-			j++
+		for ; j < len(info); j++ {
+			g := &info[j]
+			if !digest.mayHave(gID(g.Glyph)) || g.Mask&lookupMask == 0 || g.glyphProps&ignored != 0 {
+				continue
+			}
+			if g.glyphProps&tables.GPMark == 0 || c.matchPropertiesMark(g, g.glyphProps, lookupProps) {
+				break
+			}
 		}
 		if j > buffer.idx && !buffer.nextGlyphs(j-buffer.idx) {
 			break
