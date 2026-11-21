@@ -1108,8 +1108,9 @@ D70 answers question 30, on 2026-11-19. D71 answers question 31, on
 2026-11-20. D78 answers question 32 with answer 1, D81 answers question 33 with
 answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. D83
 answers question 35 with answer 1, D84 answers question 36 with answer 1,
-and D85 answers question 37 with answer 1, on 2026-11-21. No question is
-open. The next question is question 38.
+and D85 answers question 37 with answer 1, on 2026-11-21. D87 answers
+question 38 with answer 1, on 2026-11-21. Questions 39 and 40 are open, from
+D88 and D89. The next question is question 41.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
@@ -1434,32 +1435,6 @@ these answers:
 The recommendation is answer 1. Each part makes a test against ThorVG pass
 that fails without it, and it follows the reference of D43. A file without
 these keys draws the same bytes as before.
-
-### Question 38: the changes of D87 to the lookups, the extents and the lines of typesetting
-
-Asked on 2026-11-21, from D87. After D83, a profile of `test/textbench`
-found more work that does not change the glyphs: the loop over the glyphs
-for each lookup, two loops over the origins of the glyphs that are always
-0, 0, the scale of the extents of each glyph, and the split of each line
-of `Paragraph.Line` rune by rune. D87 proposes eight changes in four
-commits: the lookups (changes 1, 2, 7 and 8), the origins (3), a cache of
-the scaled extents (4) and `Paragraph` (5 and 6). Changes 1 to 4, 7 and 8
-change the copy of go-text, which needs the approval of the maintainers
-(D52). Together they make the path of ivy with `Paragraph` 10% faster on
-`pg24264` and 14% faster on `pg1342`. The maintainers can choose one of
-these answers:
-
-1. Accept all eight changes of D87.
-2. Accept all of them but change 4. Change 4 takes 144 KiB of memory for
-   each `harfbuzz.Font`, and gave 2% to 3% on each book.
-3. Accept changes 5 and 6 alone, which change okage's own code of
-   `Paragraph` and not the copy of go-text.
-4. Accept none of them.
-
-The recommendation is answer 1. Each change is a few lines with a test, and
-the glyphs of the 413,399 lines of `perf_reference` and the hashes of the
-output of `test/textbench` did not change. If the memory of ivy for many
-fonts matters more than 2% to 3% of the time, answer 2 is the choice.
 
 ### Question 39: the public API of the blur and the color matrix of D88
 

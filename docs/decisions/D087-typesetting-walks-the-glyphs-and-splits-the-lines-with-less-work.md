@@ -1,16 +1,17 @@
 # D87. typesetting walks the glyphs and splits the lines with less work
 
-Status: Proposed.
+Status: Decided.
 
 D81 and D83 made the text code of `typesetting`, the copy of go-text in
 okage (D52), faster for the books that ivy lays out. "What remains" in D83
 named three candidates: the loop of `applyForward` over the glyphs for each
 lookup, the split of each line in `Paragraph.Line`, and the scale and the
-rounding of the advances and the extents. This decision proposes eight
+rounding of the advances and the extents. This decision makes eight
 changes that follow these candidates. Six of them change the copy of
-go-text, so they need the approval of the maintainers (D52). Question 38 of
-[`../PLAN.md`](../PLAN.md) asks for it. Changes 5 and 6 change okage's own
-code of `Paragraph` (D72, D77).
+go-text, so they need the approval of the maintainers (D52). Changes 5 and 6
+change okage's own code of `Paragraph` (D72, D77). On 2026-11-21 the
+maintainers accepted all eight changes, answer 1 of question 38 of
+[`../PLAN.md`](../PLAN.md).
 
 ## What the profiles found
 

@@ -78,9 +78,9 @@ From D52.
    accepted on 2026-11-21: one table for the Unicode properties that the
    segmenter reads, and caches of the kerning and of the glyph properties
    of GDEF. Together they make `BenchmarkEndToEndOnce` 10% faster on
-   `pg24264` and 17% on `pg1342`, with the same output. D87 proposes eight
-   more changes for the candidates of "What remains" in D83, and question
-   38 of `PLAN.md` asks the maintainers to accept them. They make the loop
+   `pg24264` and 17% on `pg1342`, with the same output. D87 makes eight
+   more changes for the candidates of "What remains" in D83, which the
+   maintainers accepted on 2026-11-21. They make the loop
    over the glyphs for each lookup do less work, skip two loops over the
    origins of the glyphs, keep the scaled extents of 4096 glyphs in a cache
    for each `harfbuzz.Font`, and skip the runes of each line that cannot
@@ -167,7 +167,9 @@ ThorVG. These parts of Lottie are not done:
    mermaid-go-renderer need, the last of them `\phase`, at the request of
    zuzu. This work is left:
 
-   - Phase 27, the commits of go-tex/math after the base commit.
+   - Phase 27, the commits of go-tex/math after the base commit. On
+     2026-11-21 the one commit after it changes only the CI, and the
+     ledger records it as not applicable. Follow each new commit.
    - The helpers `KernPair` and `LigaturePair` of D78 section 8, if ivy asks
      for them.
    - `\underrightarrow`, `\sideset` and the environments `align`,
