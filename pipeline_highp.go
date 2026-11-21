@@ -279,14 +279,20 @@ func (p *highpPipeline) seedShader() {
 	iota := wide.F32x8{0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5}
 
 	// Port (D33): one loop on the lanes. Upstream: f32x8::splat(dx as f32) +
-	// iota.
+	// iota, f32x8::splat(dy as f32 + 0.5), f32x8::splat(1.0) and
+	// f32x8::default().
+	//
+	// Port (D35): the loop writes g, b and a lane by lane too. A copy of a
+	// splat is a load of 16 bytes from 4 stores of 4 bytes, which the CPU
+	// cannot forward from its store buffer, and the load waits for them.
 	dx := float32(p.dx)
+	dy := float32(p.dy) + 0.5
 	for i := range p.r {
 		p.r[i] = dx + iota[i]
+		p.g[i] = dy
+		p.b[i] = 1.0
+		p.a[i] = 0
 	}
-	p.g = wide.SplatF32x8(float32(p.dy) + 0.5)
-	p.b = wide.SplatF32x8(1.0)
-	p.a = wide.F32x8{}
 
 	p.dr = wide.F32x8{}
 	p.dg = wide.F32x8{}
@@ -1424,68 +1430,66 @@ func exclusiveRepeat(v, limit, invLimit float32) float32 {
 
 // bilinear is bilinear in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) bilinear() {
-	x := p.r
-	y := p.g
-
 	// Port (D33): one loop on the lanes. Upstream: fx = (x + 0.5).fract(),
-	// wx = [1.0 - fx, fx], and the same for y.
+	// wx = [1.0 - fx, fx], and the same for y, with x = r and y = g.
 	//
 	// Port (D35): if the lanes share their row, as they do when the
 	// transform has no rotation and no skew, the weights and the rows of y
-	// are found once, from lane 0. Each lane gets the same bits.
-	row := sameLanes(&y)
+	// are found once, from lane 0. Each lane gets the same bits. The stage
+	// does not copy r and g, and the weights of y are copied lane by lane,
+	// as seedShader says.
+	row := sameLanes(&p.g)
 	var wx, wy [2]wide.F32x8
-	for i := range x {
-		fx := x[i] + 0.5
+	for i := range p.r {
+		fx := p.r[i] + 0.5
 		fx -= wide.LaneFloor(fx)
 		wx[0][i], wx[1][i] = 1.0-fx, fx
 	}
-	for i := range y {
-		fy := y[i] + 0.5
+	for i := range p.g {
+		fy := p.g[i] + 0.5
 		fy -= wide.LaneFloor(fy)
 		wy[0][i], wy[1][i] = 1.0-fy, fy
 		if row {
-			wy[0], wy[1] = wide.SplatF32x8(wy[0][0]), wide.SplatF32x8(wy[1][0])
+			for k := 1; k < highpStageWidth; k++ {
+				wy[0][k], wy[1][k] = wy[0][0], wy[1][0]
+			}
 			break
 		}
 	}
 
-	sampler2x2(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
+	sampler2x2(p.pixmapSrc, &p.ctx.sampler, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
 
 // bicubic is bicubic in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) bicubic() {
-	x := p.r
-	y := p.g
-
 	// Port (D33): one loop on the lanes. Upstream: fx = (x + 0.5).fract(),
 	// wx = [bicubic_far(1.0 - fx), bicubic_near(1.0 - fx), bicubic_near(fx),
-	// bicubic_far(fx)], and the same for y.
+	// bicubic_far(fx)], and the same for y, with x = r and y = g.
 	//
 	// Port (D35): if the lanes share their row, the weights and the rows of
 	// y are found once, as bilinear does.
-	row := sameLanes(&y)
+	row := sameLanes(&p.g)
 	var wx, wy [4]wide.F32x8
-	for i := range x {
-		fx := x[i] + 0.5
+	for i := range p.r {
+		fx := p.r[i] + 0.5
 		fx -= wide.LaneFloor(fx)
 		wx[0][i], wx[1][i], wx[2][i], wx[3][i] = bicubicFar(1.0-fx), bicubicNear(1.0-fx), bicubicNear(fx), bicubicFar(fx)
 	}
-	for i := range y {
-		fy := y[i] + 0.5
+	for i := range p.g {
+		fy := p.g[i] + 0.5
 		fy -= wide.LaneFloor(fy)
 		wy[0][i], wy[1][i], wy[2][i], wy[3][i] = bicubicFar(1.0-fy), bicubicNear(1.0-fy), bicubicNear(fy), bicubicFar(fy)
 		if row {
-			for j := range wy {
-				wy[j] = wide.SplatF32x8(wy[j][0])
+			for k := 1; k < highpStageWidth; k++ {
+				wy[0][k], wy[1][k], wy[2][k], wy[3][k] = wy[0][0], wy[1][0], wy[2][0], wy[3][0]
 			}
 			break
 		}
 	}
 
-	sampler4x4(p.pixmapSrc, &p.ctx.sampler, x, y, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
+	sampler4x4(p.pixmapSrc, &p.ctx.sampler, &wx, &wy, row, &p.r, &p.g, &p.b, &p.a)
 
 	p.nextStage()
 }
@@ -1535,15 +1539,20 @@ func bicubicFar(t float32) float32 {
 // lane 0. Then a lane whose columns are the columns of the lane before it,
 // as in an image that is scaled up, takes the pixels of that lane, which
 // are already floats.
+//
+// Upstream takes cx and cy as values. Go reads them from r and g, which
+// hold cx and cy when the sampler starts. A lane of r and g changes only
+// after the sampler reads its cx and cy, so the result is the same, and no
+// channel is copied (D35).
 func sampler2x2(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
-	cx, cy wide.F32x8,
 	wx, wy *[2]wide.F32x8,
 	row bool,
 	r, g, b, a *wide.F32x8,
 ) {
-	s := newSampleCtx(pixmap, ctx)
+	var s sampleCtx
+	s.init(pixmap, ctx)
 	const start = -0.5
 	var ys [2]int32
 	// block holds the channels of the pixels of the lane as floats. The
@@ -1552,27 +1561,27 @@ func sampler2x2(
 	var prevXs [2]int32
 	for l := range highpStageWidth {
 		if l == 0 || !row {
-			y := cy[l] + start
+			y := g[l] + start
 			for j := range ys {
 				yt := y
 				if !s.pad {
 					yt = tile(yt, s.mode, s.height, s.invH)
 				}
-				ys[j] = clampIndex(yt, s.h) * s.stride
+				ys[j] = clampIndex(yt, s.h, s.lastY) * s.stride
 				y += 1.0
 			}
 		}
 		var xs [2]int32
-		x := cx[l] + start
+		x := r[l] + start
 		for i := range xs {
 			xt := x
 			if !s.pad {
 				xt = tile(xt, s.mode, s.width, s.invW)
 			}
-			xs[i] = clampIndex(xt, s.w)
+			xs[i] = clampIndex(xt, s.w, s.lastX)
 			x += 1.0
 		}
-		if l == 0 || !row || xs != prevXs {
+		if l == 0 || !row || xs[0] != prevXs[0] || xs[1] != prevXs[1] {
 			for j := range ys {
 				for i := range xs {
 					px := s.pixel(ys[j] + xs[i])
@@ -1581,19 +1590,25 @@ func sampler2x2(
 			}
 			prevXs = xs
 		}
+		// The pixels add in the order of upstream: the rows j, and in each
+		// row the columns i.
+		wx0, wx1 := wx[0][l], wx[1][l]
+		wy0, wy1 := wy[0][l], wy[1][l]
 		var rl, gl, bl, al float32
-		for j := range ys {
-			for i := range xs {
-				w := float32(wx[i][l] * wy[j][l])
-				c := &block[j][i]
-				rl = madHighp(w, c[0], rl)
-				gl = madHighp(w, c[1], gl)
-				bl = madHighp(w, c[2], bl)
-				al = madHighp(w, c[3], al)
-			}
-		}
+		rl, gl, bl, al = madPixel(float32(wx0*wy0), &block[0][0], rl, gl, bl, al)
+		rl, gl, bl, al = madPixel(float32(wx1*wy0), &block[0][1], rl, gl, bl, al)
+		rl, gl, bl, al = madPixel(float32(wx0*wy1), &block[1][0], rl, gl, bl, al)
+		rl, gl, bl, al = madPixel(float32(wx1*wy1), &block[1][1], rl, gl, bl, al)
 		r[l], g[l], b[l], a[l] = rl, gl, bl, al
 	}
+}
+
+// madPixel adds the channels c of a pixel with the weight w to r, g, b and
+// a, as mad(w, rr, r) of sampler_2x2 and sampler_4x4 in tiny-skia
+// src/pipeline/highp.rs does for each channel. It ports no upstream
+// function (D35).
+func madPixel(w float32, c *[BytesPerPixel]float32, r, g, b, a float32) (float32, float32, float32, float32) {
+	return madHighp(w, c[0], r), madHighp(w, c[1], g), madHighp(w, c[2], b), madHighp(w, c[3], a)
 }
 
 // sampler4x4 is sampler_4x4 in tiny-skia src/pipeline/highp.rs.
@@ -1603,12 +1618,12 @@ func sampler2x2(
 func sampler4x4(
 	pixmap PixmapRef,
 	ctx *samplerCtx,
-	cx, cy wide.F32x8,
 	wx, wy *[4]wide.F32x8,
 	row bool,
 	r, g, b, a *wide.F32x8,
 ) {
-	s := newSampleCtx(pixmap, ctx)
+	var s sampleCtx
+	s.init(pixmap, ctx)
 	const start = -1.5
 	var ys [4]int32
 	// block holds the channels of the pixels of the lane as floats. The
@@ -1617,27 +1632,27 @@ func sampler4x4(
 	var prevXs [4]int32
 	for l := range highpStageWidth {
 		if l == 0 || !row {
-			y := cy[l] + start
+			y := g[l] + start
 			for j := range ys {
 				yt := y
 				if !s.pad {
 					yt = tile(yt, s.mode, s.height, s.invH)
 				}
-				ys[j] = clampIndex(yt, s.h) * s.stride
+				ys[j] = clampIndex(yt, s.h, s.lastY) * s.stride
 				y += 1.0
 			}
 		}
 		var xs [4]int32
-		x := cx[l] + start
+		x := r[l] + start
 		for i := range xs {
 			xt := x
 			if !s.pad {
 				xt = tile(xt, s.mode, s.width, s.invW)
 			}
-			xs[i] = clampIndex(xt, s.w)
+			xs[i] = clampIndex(xt, s.w, s.lastX)
 			x += 1.0
 		}
-		if l == 0 || !row || xs != prevXs {
+		if l == 0 || !row || xs[0] != prevXs[0] || xs[1] != prevXs[1] || xs[2] != prevXs[2] || xs[3] != prevXs[3] {
 			for j := range ys {
 				for i := range xs {
 					px := s.pixel(ys[j] + xs[i])
@@ -1680,36 +1695,52 @@ type sampleCtx struct {
 	pixels        []byte
 	width, height float32
 	w, h          float32
+	lastX, lastY  int32
 	invW, invH    float32
 	stride        int32
 	pad           bool
 	mode          SpreadMode
 }
 
-// newSampleCtx returns the sampleCtx of pixmap and ctx.
-func newSampleCtx(pixmap PixmapRef, ctx *samplerCtx) sampleCtx {
+// init sets s to the sampleCtx of pixmap and ctx.
+//
+// It sets the fields of s one by one, and returns no sampleCtx. A copy of
+// a struct that was just stored field by field is a load of 16 bytes from
+// smaller stores, which the CPU cannot forward from its store buffer (D35).
+func (s *sampleCtx) init(pixmap PixmapRef, ctx *samplerCtx) {
 	width := float32(pixmap.Width())
 	height := float32(pixmap.Height())
-	return sampleCtx{
-		pixels: pixmap.Data(),
-		width:  width,
-		height: height,
-		// Exclusive -> inclusive.
-		w:      ulpSub(width),
-		h:      ulpSub(height),
-		invW:   ctx.invWidth,
-		invH:   ctx.invHeight,
-		stride: int32(pixmap.Width()),
-		pad:    ctx.spreadMode == SpreadModePad,
-		mode:   ctx.spreadMode,
-	}
+	s.pixels = pixmap.Data()
+	s.width = width
+	s.height = height
+	// Exclusive -> inclusive.
+	s.w = ulpSub(width)
+	s.h = ulpSub(height)
+	s.lastX = wide.TruncI32(s.w)
+	s.lastY = wide.TruncI32(s.h)
+	s.invW = ctx.invWidth
+	s.invH = ctx.invHeight
+	s.stride = int32(pixmap.Width())
+	s.pad = ctx.spreadMode == SpreadModePad
+	s.mode = ctx.spreadMode
 }
 
 // clampIndex returns the column or the row of the pixel at v, as gather_ix
-// clamps v to limit and truncates it. The samplers tile v first, as sample
-// does, if the spread mode is not pad.
-func clampIndex(v, limit float32) int32 {
-	return wide.TruncI32(wide.LaneMin(wide.LaneMax(v, 0), limit))
+// clamps v to limit and truncates it. last is the truncation of limit. The
+// samplers tile v first, as sample does, if the spread mode is not pad.
+//
+// Port (D35): gather_ix computes v.max(0).min(limit).trunc_int(). The
+// branches give the same result with fewer tests. If v is NaN, 0, -0 or
+// less than 0, the result is 0. If v is limit or more, the result is last.
+// Else v is in (0, limit), and a bare conversion truncates it.
+func clampIndex(v, limit float32, last int32) int32 {
+	if !(v > 0) {
+		return 0
+	}
+	if v < limit {
+		return int32(v)
+	}
+	return last
 }
 
 // pixel returns the bytes of the pixel at index ix, the sum of a rowOffset
