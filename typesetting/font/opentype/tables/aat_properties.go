@@ -88,7 +88,17 @@ func (lk AATLoopkup8Data) Class(g GlyphID) (uint16, bool) {
 	return lk.Values[g-lk.FirstGlyph], true
 }
 
-func (lk AATLoopkup10) Class(g GlyphID) (uint16, bool) {
+// Class returns (0, false) for each glyph.
+//
+// okage: HarfBuzz 15.1.0 finds no value in a lookup of format 10 for a
+// class table, a substitution of morx or the classes of kerx format 2.
+// Only the rows and the columns of kerx format 6 read its values, with
+// ClassUint32. go-text gave the values in each place (D73).
+func (lk AATLoopkup10) Class(GlyphID) (uint16, bool) { return 0, false }
+
+// value gives the value of the glyph, or (0, false) for a glyph that the
+// lookup does not cover.
+func (lk AATLoopkup10) value(g GlyphID) (uint16, bool) {
 	if g < lk.FirstGlyph || g >= lk.FirstGlyph+GlyphID(len(lk.Values)) {
 		return 0, false
 	}
@@ -172,7 +182,14 @@ func (lk AATLoopkupExt8) Class(g GlyphID) (uint32, bool) {
 	return uint32(v), ok
 }
 
-func (lk AATLoopkupExt10) Class(g GlyphID) (uint32, bool) {
+// Class returns (0, false) for each glyph, as AATLoopkup10.Class.
+//
+// okage: as in HarfBuzz 15.1.0 (D73).
+func (lk AATLoopkupExt10) Class(GlyphID) (uint32, bool) { return 0, false }
+
+// value gives the value of the glyph, or (0, false) for a glyph that the
+// lookup does not cover.
+func (lk AATLoopkupExt10) value(g GlyphID) (uint32, bool) {
 	if g < lk.FirstGlyph || g >= lk.FirstGlyph+GlyphID(len(lk.Values)) {
 		return 0, false
 	}
@@ -213,8 +230,12 @@ func (lk AATLoopkup8) ClassUint32(g GlyphID) uint32 {
 	return uint32(v)
 }
 
+// ClassUint32 returns the value of the glyph, or 0.
+//
+// okage: the rows and the columns of kerx format 6 read the values of a
+// lookup of format 10, as in HarfBuzz 15.1.0 (D73).
 func (lk AATLoopkup10) ClassUint32(g GlyphID) uint32 {
-	v, _ := lk.Class(g)
+	v, _ := lk.value(g)
 	return uint32(v)
 }
 
@@ -243,8 +264,12 @@ func (lk AATLoopkupExt8) ClassUint32(g GlyphID) uint32 {
 	return v
 }
 
+// ClassUint32 returns the value of the glyph, or 0, as
+// AATLoopkup10.ClassUint32.
+//
+// okage: as in HarfBuzz 15.1.0 (D73).
 func (lk AATLoopkupExt10) ClassUint32(g GlyphID) uint32 {
-	v, _ := lk.Class(g)
+	v, _ := lk.value(g)
 	return v
 }
 

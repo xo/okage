@@ -162,13 +162,13 @@ func TestKerxFormat2(t *testing.T) {
 // lookup of format 10 for its left classes, then a subtable of format 0
 // that kerns a, b. HarfBuzz refuses a lookup of format 10 whose values
 // have 0 bytes, from its commit a763a612d1, or more than 4 bytes, and then
-// refuses the whole table. The test shapes only a, b, because HarfBuzz
-// reads no class from a lookup of format 10, and harfbuzz does.
+// refuses the whole table. HarfBuzz reads no class from a lookup of format
+// 10 in a subtable of format 2.
 func TestLookupFormat10ValueSize(t *testing.T) {
 	for _, size := range []int{0, 1, 2, 4, 5} {
 		left := u16s(10, size, robotoA, 3, 0, 6, 12)
 		kerx := kerxTable(kerxFormat2Lookups(left, u16s(8, robotoA, 3, 0, 2, 4)), kerxPairs(robotoA, robotoB, -300))
-		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "aab")
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "aab", "bb", "cb", "bc")
 	}
 }
 
@@ -484,4 +484,61 @@ func TestLookupBinarySearchUnits(t *testing.T) {
 
 	morx := morxAuditTable(morxAuditSubtable{4, binSearchLookup(4, 6, [][]int{{robotoC, robotoC, 0}})})
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "c", "ac")
+}
+
+// lookup10 builds a lookup of format 10 whose values have size bytes, for
+// the glyphs from first on.
+func lookup10(size, first int, values ...uint32) []byte {
+	out := u16s(10, size, first, len(values))
+	for _, v := range values {
+		out = append(out, u32s(v)[4-size:]...)
+	}
+	return out
+}
+
+// kerxFormat6 builds a subtable of format 6 of kerx with values of two
+// bytes, the lookups of the rows and the columns, and the kerning array.
+func kerxFormat6(rows, columns []byte, array ...int) kerxSubtable {
+	data := u32s(0)
+	data = append(data, u16s(2, 2)...)
+	data = append(data, u32s(36, uint32(36+len(rows)), uint32(36+len(rows)+len(columns)), 0)...)
+	data = append(data, rows...)
+	data = append(data, columns...)
+	data = append(data, u16s(array...)...)
+	return kerxSubtable{coverage: 6, data: data}
+}
+
+// TestLookupFormat10: lookups of format 10. HarfBuzz reads a value from
+// such a lookup only for the rows and the columns of kerx format 6, with
+// the size that the lookup gives, and keeps the low 16 bits of a value.
+// For a class table, a substitution of morx or the classes of kerx format
+// 2, it finds no value. It still collects the glyphs of the lookup, with
+// their values for the class table of a state machine:
+//   - The class table of a contextual subtable gives b the class 1, and c
+//     the class 3. HarfBuzz gives both the class 1, which replaces c with
+//     d.
+//   - A noncontextual subtable replaces a with b.
+//   - A subtable of format 2 of kerx, whose left classes give 6 to b, then
+//     a subtable that kerns b, c.
+//   - A subtable of format 6 of kerx, whose rows give 0 to a and 2 to b,
+//     and whose columns give 0 to a and 1 to b, with values of 1 to 4
+//     bytes. The kerning array is 0, -100, -50, -20.
+func TestLookupFormat10(t *testing.T) {
+	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
+	morx := morxAuditTable(morxContextualStates(lookup10(1, robotoB, 1, 3), states, u16s(8, robotoC, 1, robotoD)))
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "bc", "cb", "c", "b")
+
+	morx = morxAuditTable(morxAuditSubtable{4, lookup10(2, robotoA, robotoB)})
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "a", "ab")
+
+	left := lookup10(2, robotoB, 6)
+	kerx := kerxTable(kerxFormat2Lookups(left, u16s(8, robotoA, 3, 0, 2, 4)), kerxPairs(robotoB, robotoC, -300))
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "bb", "bc", "ba")
+
+	for _, size := range []int{1, 2, 3, 4} {
+		rows := lookup10(size, robotoA, 0, 0x10002)
+		columns := lookup10(size, robotoA, 0x30000, 1)
+		kerx := kerxTable(kerxFormat6(rows, columns, 0, -100, -50, -20))
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "ba", "bb", "aa")
+	}
 }

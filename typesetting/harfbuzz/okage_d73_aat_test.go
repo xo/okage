@@ -545,3 +545,64 @@ func TestLookupBinarySearchUnits(t *testing.T) {
 		{"c", []shapedGlyph{{4, 0, 507, 0, 0}}},
 	})
 }
+
+// lookup10 builds a lookup of format 10 whose values have size bytes, for
+// the glyphs from first on.
+func lookup10(size int, first GID, values ...uint32) []byte {
+	out := u16s(10, size, int(first), len(values))
+	for _, v := range values {
+		out = append(out, u32s(v)[4-size:]...)
+	}
+	return out
+}
+
+// kerxFormat6 builds a subtable of format 6 of kerx with values of two
+// bytes, the lookups of the rows and the columns, and the kerning array.
+func kerxFormat6(rows, columns []byte, array ...int) kerxSubtable {
+	data := u32s(0)
+	data = append(data, u16s(2, 2)...)
+	data = append(data, u32s(36, uint32(36+len(rows)), uint32(36+len(rows)+len(columns)), 0)...)
+	data = append(data, rows...)
+	data = append(data, columns...)
+	data = append(data, u16s(array...)...)
+	return kerxSubtable{coverage: 6, data: data}
+}
+
+// TestLookupFormat10 shapes texts with lookups of format 10. As in
+// HarfBuzz 15.1.0, only the rows and the columns of kerx format 6 read a
+// value from such a lookup, with the size that the lookup gives, and keep
+// the low 16 bits of a value. A class table, a substitution of morx and
+// the classes of kerx format 2 find no value:
+//   - The class table of a contextual subtable gives b the class 1, and c
+//     the class 3. Both have the class 1, which replaces c with d.
+//   - A noncontextual subtable does not replace a with b.
+//   - A subtable of format 2 of kerx, whose left classes give 6 to b, does
+//     not kern b, b.
+//   - A subtable of format 6 of kerx, whose rows give 0 to a and 2 to b,
+//     and whose columns give 0 to a and 1 to b, with values of 4 bytes.
+//
+// go-text read each value as 2 bytes, and in each place (D73).
+func TestLookupFormat10(t *testing.T) {
+	states := u16s(0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0)
+	morx := morxAuditTable(morxContextualStates(lookup10(1, robotoB, 1, 3), states, u16s(8, int(robotoC), 1, int(robotoD))))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"bc", []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoD, 1, 1155, 0, 0}}},
+	})
+
+	morx = morxAuditTable(morxAuditSubtable{4, lookup10(2, robotoA, uint32(robotoB))})
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"morx": morx}), []shapedText{
+		{"a", []shapedGlyph{{robotoA, 0, 1114, 0, 0}}},
+	})
+
+	kerx := kerxTable(kerxFormat2Lookups(lookup10(2, robotoB, 6), u16s(8, int(robotoA), 3, 0, 2, 4)))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"bb", []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
+	})
+
+	kerx = kerxTable(kerxFormat6(lookup10(4, robotoA, 0, 0x10002), lookup10(4, robotoA, 0x30000, 1), 0, -100, -50, -20))
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerx}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1064, 0, 0}, {robotoB, 1, 1099, -50, 0}}},
+		{"ba", []shapedGlyph{{robotoB, 0, 1124, 0, 0}, {robotoA, 1, 1089, -25, 0}}},
+		{"bb", []shapedGlyph{{robotoB, 0, 1139, 0, 0}, {robotoB, 1, 1139, -10, 0}}},
+	})
+}

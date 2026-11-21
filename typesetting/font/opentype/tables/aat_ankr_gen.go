@@ -143,16 +143,23 @@ func ParseAATLoopkup10(src []byte) (AATLoopkup10, int, error) {
 	}
 
 	{
-
-		if L := len(src); L < 8+arrayLengthValues*2 {
-			return item, 0, fmt.Errorf("reading AATLoopkup10: "+"EOF: expected length: %d, got %d", 8+arrayLengthValues*2, L)
+		// okage: each value has unitSize bytes, as in HarfBuzz 15.1.0,
+		// which keeps the low 16 bits of a value. go-text read each value
+		// as 2 bytes (D73).
+		size := int(item.unitSize)
+		if L := len(src); L < 8+arrayLengthValues*size {
+			return item, 0, fmt.Errorf("reading AATLoopkup10: "+"EOF: expected length: %d, got %d", 8+arrayLengthValues*size, L)
 		}
 
 		item.Values = make([]uint16, arrayLengthValues) // allocation guarded by the previous check
 		for i := range item.Values {
-			item.Values[i] = binary.BigEndian.Uint16(src[8+i*2:])
+			var v uint32
+			for _, b := range src[8+i*size : 8+(i+1)*size] {
+				v = v<<8 | uint32(b)
+			}
+			item.Values[i] = uint16(v)
 		}
-		n += arrayLengthValues * 2
+		n += arrayLengthValues * size
 	}
 	return item, n, nil
 }
