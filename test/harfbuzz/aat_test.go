@@ -570,8 +570,19 @@ func kernFormat2() []byte {
 // TestKernFormat2: the subtable of kernFormat2. HarfBuzz reads the sum of
 // the classes as a byte offset from the start of the subtable, and rounds
 // its distance from the kerning array down to a value of two bytes.
+// A second table has a subtable of format 2 whose kerning array starts
+// after its end, then a subtable that kerns a, b. HarfBuzz refuses that
+// table.
 func TestKernFormat2(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kernFormat2()}), false, "ab", "ac", "bb", "bc", "cb", "cc", "ba", "abc")
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kernOT(kernLateArray(), kernPairs(20, robotoA, robotoB, -300))}), false, "ab")
+}
+
+// kernLateArray builds a subtable of format 2 of a table kern of Microsoft
+// whose kerning array starts after its end.
+func kernLateArray() []byte {
+	data := u16s(0, 6+8+6, 2<<8|1, 6, 14, 14, 100)
+	return append(data, u16s(robotoA, 1, 0)...)
 }
 
 // TestKerxTupleCount: subtables of format 0 and 2 of kerx with a tuple

@@ -154,7 +154,13 @@ type KernData2 struct {
 	KerningData  []byte          `isOpaque:"" offsetRelativeTo:"Parent"` // indexed by Left + Right
 }
 
+// okage: HarfBuzz 15.1.0 refuses the table when the kerning array starts
+// after the end of the subtable, or of the table for the last subtable
+// (D73).
 func (kd *KernData2) parseKerningData(_ []byte, parentSrc []byte) error {
+	if L := len(parentSrc); L < int(kd.KerningStart) {
+		return fmt.Errorf("EOF: expected length: %d, got %d", kd.KerningStart, L)
+	}
 	kd.KerningData = parentSrc
 	return nil
 }

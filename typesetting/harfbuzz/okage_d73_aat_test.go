@@ -637,10 +637,19 @@ func kernFormat2() []byte {
 // its distance from the kerning array is rounded down to a value of two
 // bytes. go-text read the value at an odd distance, from the bytes of two
 // values (D73).
+//
+// A second table has a subtable of format 2 whose kerning array starts
+// after its end, then a subtable that kerns a, b. As in HarfBuzz, the table
+// is refused. go-text kept it (D73).
 func TestKernFormat2(t *testing.T) {
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernFormat2()}), []shapedText{
 		{"bb", []shapedGlyph{{robotoB, 0, 1109, 0, 0}, {robotoB, 1, 1109, -40, 0}}},
 		{"cc", []shapedGlyph{{robotoC, 0, 1062, 0, 0}, {robotoC, 1, 1062, -10, 0}}},
+	})
+	late := u16s(0, 6+8+6, 2<<8|1, 6, 14, 14, 100)
+	late = append(late, u16s(int(robotoA), 1, 0)...)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernOT(late, kernPairs(20, int(robotoA), int(robotoB), -300))}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
 	})
 }
 
