@@ -29,6 +29,11 @@ type Font struct {
 	// okage: as glyph_props_cache of HarfBuzz (D83).
 	glyphPropsCache glyphPropsCache
 
+	// scaledExtents holds the scaled extents of some glyphs.
+	//
+	// okage: D87.
+	scaledExtents extentsCache
+
 	// Point size of the font. Set to zero to unset.
 	// This is used in AAT layout, when applying 'trak' table.
 	Ptem float32
@@ -184,12 +189,22 @@ func (f *Font) GlyphExtents(glyph GID) (out GlyphExtents, ok bool) {
 		return out, false
 	}
 
+	// okage: take the scaled extents from the cache when it holds them
+	// (D87).
+	f.scaledExtents.sync(f)
+	raw := extentsBits(&ext)
+	item, hit := f.scaledExtents.item(glyph, raw)
+	if hit {
+		return item.out, true
+	}
+
 	syntheticGlyphExtents(&ext, f.slant, f.xEmbolden)
 
 	out.XBearing = f.emScalefX(ext.XBearing)
 	out.Width = f.emScalefX(ext.Width)
 	out.YBearing = f.emScalefY(ext.YBearing)
 	out.Height = f.emScalefY(ext.Height)
+	*item = scaledExtents{gen: f.scaledExtents.gen, raw: raw, out: out}
 	return out, true
 }
 
