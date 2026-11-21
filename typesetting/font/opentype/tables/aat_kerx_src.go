@@ -116,17 +116,44 @@ type KerxData0 struct {
 	Pairs         []Kernx0Record `arrayCount:"ComputedField-nPairs"`
 }
 
-// resolve offset for variable fonts
-func (kd *KerxData0) parseEnd(src []byte, tupleCount int) (int, error) {
-	if tupleCount != 0 { // interpret values as offset
-		for i, pair := range kd.Pairs {
-			if L, E := len(src), int(uint16(pair.Value))+2; L < E {
-				return 0, fmt.Errorf("EOF: expected length: %d, got %d", E, L)
-			}
-			kd.Pairs[i].Value = int16(binary.BigEndian.Uint16(src[pair.Value:]))
-		}
-	}
+// okage: go-text read each value of a subtable with a tuple count here, as
+// an offset from the end of the header of the subtable, and refused the
+// table when the value was not in the subtable. ParseKerx now reads it
+// with KerxSubtable.readKerx0Tuples (D73).
+func (kd *KerxData0) parseEnd(src []byte, _ int) (int, error) {
 	return len(src), nil
+}
+
+// readKerx0Tuples reads the value of each pair of a subtable of format 0
+// with a tuple count, with KerxTupleKern. src starts at the start of the
+// subtable, and ends at the end of the subtable, or at the end of the table
+// for the last subtable.
+//
+// okage: HarfBuzz 15.1.0 reads a value as a byte offset from the start of
+// the subtable to the values of the tuples, and gives 0 when they are not
+// in the subtable, or not in the table for the last subtable (D73).
+func (ks *KerxSubtable) readKerx0Tuples(src []byte) {
+	kd, ok := ks.Data.(KerxData0)
+	if !ok || ks.TupleCount == 0 {
+		return
+	}
+	for i, pair := range kd.Pairs {
+		kd.Pairs[i].Value = KerxTupleKern(src, pair.Value, int(ks.TupleCount))
+	}
+}
+
+// KerxTupleKern gives the first value of the tuples at the byte offset
+// value in src, or 0 when src does not hold tupleCount values there. A
+// negative value is an offset after the end of src.
+//
+// okage: this is kerxTupleKern of HarfBuzz 15.1.0, for a subtable of kerx
+// with a tuple count (D73).
+func KerxTupleKern(src []byte, value int16, tupleCount int) int16 {
+	offset := uint64(uint32(int32(value)))
+	if uint64(len(src)) < offset+2*uint64(tupleCount) {
+		return 0
+	}
+	return int16(binary.BigEndian.Uint16(src[offset:]))
 }
 
 type Kernx0Record struct {

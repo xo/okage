@@ -563,3 +563,51 @@ func kernFormat2() []byte {
 func TestKernFormat2(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kernFormat2()}), false, "ab", "ac", "bb", "bc", "cb", "cc", "ba", "abc")
 }
+
+// TestKerxTupleCount: subtables of format 0 and 2 of kerx with a tuple
+// count. HarfBuzz reads each value as a byte offset from the start of the
+// subtable to the values of the tuples, and gives 0 when the tuples are not
+// in the subtable, or not in the table for the last subtable. In format 2,
+// it refuses the table when the kerning array starts after the end of the
+// subtable:
+//   - A subtable of format 0 kerns a, b with the offset 52, a, c with the
+//     offset 54, b, c with the offset -2 and c, c with the offset 56. Its
+//     values of the tuples follow its pairs: -100, -60, then -40 for the
+//     last subtable, which ends there.
+//   - A subtable of format 2, whose kerning array gives the offsets 58 and
+//     60, to the values -80 and -50 after the array.
+//   - A subtable of format 2 whose kerning array starts after its end,
+//     then a subtable that kerns a, b.
+func TestKerxTupleCount(t *testing.T) {
+	pairs := kerxPairs(robotoA, robotoB, 52, robotoA, robotoC, 54, robotoB, robotoC, -2, robotoC, robotoC, 56)
+	pairs.data = append(pairs.data, u16s(-100, -60)...)
+	for _, count := range []int{1, 2} {
+		first := pairs
+		first.tuples = count
+		last := first
+		last.data = append(slices.Clone(last.data), u16s(-40)...)
+		for _, kerx := range [][]byte{kerxTable(first), kerxTable(first, kerxPairs()), kerxTable(last)} {
+			testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "ac", "bc", "cc", "abc")
+		}
+	}
+
+	left := u16s(8, robotoA, 3, 0, 6, 6)
+	right := u16s(8, robotoA, 3, 0, 2, 4)
+	array := u16s(0, 58, 60)
+	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
+	data = append(data, left...)
+	data = append(data, right...)
+	data = append(data, array...)
+	data = append(data, u16s(-80, -50)...)
+	format2 := kerxSubtable{coverage: 2, data: data, tuples: 1}
+	testCase(t, robotoWith(t, map[string][]byte{"kerx": kerxTable(format2)}), false, "ab", "ac", "bb", "bc", "abc")
+
+	late := kerxSubtable{coverage: 2, data: u32s(6, 28, 28, 100)}
+	late.data = append(late.data, u16s(8, robotoA, 1, 0)...)
+	for _, kerx := range [][]byte{
+		kerxTable(late, kerxPairs(robotoA, robotoB, -300)),
+		kerxTable(kerxPairs(robotoA, robotoB, -300), late),
+	} {
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab")
+	}
+}

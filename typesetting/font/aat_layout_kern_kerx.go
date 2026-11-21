@@ -102,7 +102,7 @@ func newKerxSubtable(table tables.KerxSubtable) (out KernSubtable) {
 	case tables.KerxData1:
 		out.Data = newKern1x(data)
 	case tables.KerxData2:
-		out.Data = newKern2x(data)
+		out.Data = newKern2x(data, out.TupleCount)
 	case tables.KerxData4:
 		out.Data = newKern4(data)
 	case tables.KerxData6:
@@ -237,7 +237,8 @@ type Kern2 struct {
 	KerningStart tables.Offset32  // Offset from beginning of this subtable to the start of the kerning array.
 	KerningData  []byte           // The data of the subtable, from its start.
 
-	extended bool // true for a subtable of kerx
+	extended   bool // true for a subtable of kerx
+	tupleCount int  // the tuple count of a subtable of kerx
 }
 
 // convert from non extended to extended
@@ -250,13 +251,14 @@ func newKern2(k tables.KernData2) Kern2 {
 	}
 }
 
-func newKern2x(k tables.KerxData2) Kern2 {
+func newKern2x(k tables.KerxData2, tupleCount int) Kern2 {
 	return Kern2{
 		Left:         k.Left,
 		Right:        k.Right,
 		KerningStart: k.KerningStart,
 		KerningData:  k.KerningData,
 		extended:     true,
+		tupleCount:   tupleCount,
 	}
 }
 
@@ -286,8 +288,15 @@ func (kd Kern2) KernPair(left, right GID) int16 {
 	if uint64(len(kd.KerningData)) < index+2 {
 		return 0
 	}
-	kernVal := binary.BigEndian.Uint16(kd.KerningData[index:])
-	return int16(kernVal)
+	kernVal := int16(binary.BigEndian.Uint16(kd.KerningData[index:]))
+	// okage: in kerx, a subtable with a tuple count reads the value as a
+	// byte offset from the start of the subtable to the values of the
+	// tuples, as kerxTupleKern of HarfBuzz 15.1.0. go-text ignored the
+	// tuple count (D73).
+	if kd.extended && kd.tupleCount != 0 {
+		return tables.KerxTupleKern(kd.KerningData, kernVal, kd.tupleCount)
+	}
+	return kernVal
 }
 
 type Kern3 tables.KernData3

@@ -3,6 +3,7 @@
 package harfbuzz
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -630,5 +631,58 @@ func TestKernFormat2(t *testing.T) {
 	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernFormat2()}), []shapedText{
 		{"bb", []shapedGlyph{{robotoB, 0, 1109, 0, 0}, {robotoB, 1, 1109, -40, 0}}},
 		{"cc", []shapedGlyph{{robotoC, 0, 1062, 0, 0}, {robotoC, 1, 1062, -10, 0}}},
+	})
+}
+
+// TestKerxTupleCount shapes texts with subtables of format 0 and 2 of kerx
+// with a tuple count of 1. As in HarfBuzz 15.1.0, a value is a byte offset
+// from the start of the subtable to the values of the tuples, and gives 0
+// when the tuples are not in the subtable, or not in the table for the
+// last subtable. In format 2, a kerning array that starts after the end of
+// the subtable is an error:
+//   - A subtable of format 0 kerns a, b with the offset 52, b, c with the
+//     offset -2 and c, c with the offset 56. Its values of the tuples follow
+//     its pairs: -100, -60, then -40 for the last subtable, which ends
+//     there.
+//   - A subtable of format 2, whose kerning array gives the offset 58 to
+//     a, b, to the value -80 after the array.
+//   - A subtable of format 2 whose kerning array starts after its end,
+//     then a subtable that kerns a, b.
+//
+// go-text read a value of format 0 as an offset from the end of the header
+// of the subtable, and refused the table when the offset was outside the
+// subtable. It ignored the tuple count in format 2, and the start of the
+// kerning array (D73).
+func TestKerxTupleCount(t *testing.T) {
+	pairs := kerxPairs(int(robotoA), int(robotoB), 52, int(robotoA), int(robotoC), 54,
+		int(robotoB), int(robotoC), -2, int(robotoC), int(robotoC), 56)
+	pairs.data = append(pairs.data, u16s(-100, -60)...)
+	pairs.tuples = 1
+	last := pairs
+	last.data = append(slices.Clone(last.data), u16s(-40)...)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(last)}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1064, 0, 0}, {robotoB, 1, 1099, -50, 0}}},
+		{"bc", []shapedGlyph{{robotoB, 0, 1149, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+		{"cc", []shapedGlyph{{robotoC, 0, 1052, 0, 0}, {robotoC, 1, 1052, -20, 0}}},
+	})
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(pairs, kerxPairs())}), []shapedText{
+		{"cc", []shapedGlyph{{robotoC, 0, 1072, 0, 0}, {robotoC, 1, 1072, 0, 0}}},
+	})
+
+	left := u16s(8, int(robotoA), 3, 0, 6, 6)
+	right := u16s(8, int(robotoA), 3, 0, 2, 4)
+	data := u32s(6, 28, uint32(28+len(left)), uint32(28+len(left)+len(right)))
+	data = append(data, left...)
+	data = append(data, right...)
+	data = append(data, u16s(0, 58, 60, -80, -50)...)
+	format2 := kerxSubtable{coverage: 2, data: data, tuples: 1}
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(format2)}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1074, 0, 0}, {robotoB, 1, 1109, -40, 0}}},
+	})
+
+	late := kerxSubtable{coverage: 2, data: u32s(6, 28, 28, 100)}
+	late.data = append(late.data, u16s(8, int(robotoA), 1, 0)...)
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kerx": kerxTable(late, kerxPairs(int(robotoA), int(robotoB), -300))}), []shapedText{
+		{"ab", []shapedGlyph{{robotoA, 0, 1114, 0, 0}, {robotoB, 1, 1149, 0, 0}}},
 	})
 }

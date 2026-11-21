@@ -331,10 +331,20 @@ func ParseKerx(src []byte, valuesCount int) (Kerx, int, error) {
 			}
 			// okage: the values of the last subtable of format 1 go up to
 			// the end of the table, as in HarfBuzz 15.1.0 (D73). The same
-			// is true for the kerning array of format 2.
+			// is true for the kerning array of format 2, and for the values
+			// of the tuples.
+			data := src[offset : offset+read]
 			if i == arrayLength-1 {
-				elem.readKerx1Values(src[offset:])
-				elem.readKerx2Data(src[offset:])
+				data = src[offset:]
+				elem.readKerx1Values(data)
+				elem.readKerx2Data(data)
+			}
+			elem.readKerx0Tuples(data)
+			// okage: HarfBuzz 15.1.0 refuses the table when the kerning
+			// array of format 2 starts after the end of the subtable, or
+			// of the table for the last subtable (D73).
+			if kd, ok := elem.Data.(KerxData2); ok && uint64(kd.KerningStart) > uint64(len(data)) {
+				return item, 0, fmt.Errorf("reading Kerx: kerning array at %d, after the end of the subtable", kd.KerningStart)
 			}
 			item.Tables = append(item.Tables, elem)
 			offset += read

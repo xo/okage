@@ -553,11 +553,12 @@ func TestIndicFirstGlyphCoverage(t *testing.T) {
 // kerxSubtable is a subtable of a table kerx: its coverage, with the format
 // in the low byte, and its data after its header of 12 bytes. When length
 // is not 0, it is the length that the header gives, in place of the real
-// length.
+// length. tuples is its tuple count.
 type kerxSubtable struct {
 	coverage uint32
 	data     []byte
 	length   int
+	tuples   int
 }
 
 // kerxTable builds a table kerx of version 2 with the subtables.
@@ -569,7 +570,7 @@ func kerxTable(subtables ...kerxSubtable) []byte {
 		if st.length != 0 {
 			length = st.length
 		}
-		out = append(out, u32s(uint32(length), st.coverage, 0)...)
+		out = append(out, u32s(uint32(length), st.coverage, uint32(st.tuples))...)
 		out = append(out, st.data...)
 	}
 	return out
