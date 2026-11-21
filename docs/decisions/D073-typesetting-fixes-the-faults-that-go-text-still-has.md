@@ -442,6 +442,127 @@ On 2026-11-21 okage also made the attachments of GPOS follow HarfBuzz
     scale of the font units, no test reaches the clamps of the cursive
     attachment.
 
+On 2026-11-21 okage made `harfbuzz` and `font` follow HarfBuzz 15.1.0 at
+the places of item 4 of "typesetting" in `docs/BACKLOG.md`, and at more
+places of the same code that the work found:
+
+29. In a ligature subtable of morx, an entry has an action only when it
+    has the flag PerformAction, 0x2000. go-text took any bit of the mask
+    0x3FFF, which is the offset of an entry of the table mort.
+    `TestMorxLigaturePerformAction` tests it.
+30. A subtable of format 4 of kerx applies also when the feature kern is
+    off and the subtable is not cross-stream. go-text did not apply it.
+    `TestKerxFormat4KernOff` tests it. `shape.py` of `test/harfbuzz` takes
+    the argument `--off`, which turns a feature off for the whole text.
+31. A lookup of format 2, 4 or 6 reads its units as
+    `VarSizedBinSearchArrayOf`. It drops the last unit only when that unit
+    ends the search: two words 0xFFFF in formats 2 and 4, and one word in
+    format 6. The units are unitSize bytes apart. A segment of format 4
+    whose first glyph is after its last glyph is an error, and the offset
+    0 of a segment is the start of the lookup. go-text dropped the last
+    segment of format 4 in each case, and read 65,535 segments for a
+    lookup with none. It kept the last unit of the other formats, so the
+    glyph 0xFFFF had a value. It also made an array of a negative length
+    for a segment out of order, and gave no values to the offset 0.
+    `TestLookupBinarySearchUnits` tests it.
+32. Only the rows and the columns of kerx format 6 read a value from a
+    lookup of format 10. They read each value with the size that the
+    lookup gives, and keep its low 16 bits for a lookup of 16-bit values.
+    A class table, a substitution of morx and the classes of kerx format 2
+    find no value. The glyphs of the lookup still go into the set of a
+    subtable, with their values for the class table of a state machine.
+    go-text read each value as 2 bytes, or 4 bytes for long values, in
+    each place. `TestLookupFormat10` tests it.
+33. In a subtable of format 2 of kern, the distance of the sum of the
+    classes from the kerning array is rounded down to a value of two
+    bytes. go-text read a value at an odd distance. `TestKernFormat2`
+    tests it.
+34. In a subtable of kerx with a tuple count, a value of format 0 or 2 is
+    a byte offset from the start of the subtable to the values of the
+    tuples, as `kerxTupleKern`. The value is 0 when the tuples are not in
+    the subtable, or not in the table for the last subtable. A kerning
+    array of format 2 that starts after the end of the subtable refuses
+    the table. go-text read a value of format 0 as an offset from the end
+    of the header, and refused the table when the offset was outside the
+    subtable. It ignored the tuple count of format 2.
+    `tables.KerxTupleKern` reads a value. `TestKerxTupleCount` tests it.
+35. A table ltag of version 0, or with the string of a tag outside the
+    table, is refused, so no tag matches a language. go-text refused only
+    the tag outside the table. `TestLtagRange` tests it.
+36. An action of a subtable of format 4 of kerx is read when the subtable
+    applies it. When the action is not in the subtable, or not in the
+    table for the last subtable, the transition stops, and does not take
+    the flag Mark. An action of the type 3 has no data, and the glyph is
+    still attached. go-text read the actions when it parsed the table,
+    and refused the table for these actions. `KerxData4` and `Kern4` now
+    hold the data of the actions in `AnchorData`, in place of `Anchors`,
+    and `Kern4.Action` reads an action. `GetAnchor` of `tables.Ankr` gives
+    (0, 0) for a font without a table ankr, where go-text panicked.
+    `TestKerxFormat4Actions` tests it.
+37. A value of a subtable of format 6 of kerx is read when the subtable
+    applies. It is at the sum of the row and the column, and it is 0 when
+    it is not in the subtable. The counts of the rows and the columns do
+    not bound it. With a tuple count, the value is a byte offset from the
+    vector of the tuples. A kerning array or a vector that starts after
+    the end of the subtable refuses the table. A lookup of format 8 for
+    long values has values of 32 bits, which go-text read as 16 bits.
+    go-text read rowCount × columnCount values when it parsed the table,
+    and refused the table when they were not in the subtable. The method
+    `Kerning` of `tables.KerxData6` reads a value, in place of the field
+    `Kernings`. `TestKerxFormat6Values` tests it.
+38. The actions, the components and the ligatures of a ligature subtable
+    of morx, and the glyphs of an insertion subtable, are read when the
+    subtable applies. An action, a component or an insertion that is not
+    in the table is skipped, and the components go up to the end of the
+    table. The offset 0 of the actions, of the components, of the
+    ligatures or of the insertions refuses the table. The offset 0 of the
+    substitutions of a contextual subtable, and of one substitution, is
+    the start of the table that holds it. go-text refused the table for
+    data that it did not find, and for components after the ligatures.
+    It ignored the offsets 0, and then panicked when an entry read such a
+    substitution or insertion. `TestMorxLazyData` tests it.
+39. In a subtable of format 3 of kern, a class or an index out of range
+    gives no kerning, and a glyph after the glyphs of the subtable has the
+    class 0. The subtable applies to each glyph of the font. go-text
+    refused the table for a class or an index out of range, and did not
+    kern a glyph after the glyphs of the subtable. `TestKernFormat3` tests
+    it.
+40. A kerning array of a subtable of format 2 of kern that starts after
+    the end of the subtable, or of the table for the last subtable,
+    refuses the table, as in kerx. go-text kept the table.
+    `TestKernFormat2` tests it.
+41. The offset of the class table of a state table, and of the classes of
+    a subtable of format 2 of kerx or kern, is never null. The offset 0 is
+    the start of the state table or of the subtable. go-text ignored it.
+    It then panicked on the nil lookup of kerx format 2, and applied the
+    other subtables with no classes. `TestAATClassOffsetZero` tests it.
+42. A table morx of version 0 and a table kerx of a version before 2 are
+    refused, and the text is shaped without them. A table kern whose
+    major version is 1 has a version and a count of subtables of 32 bits.
+    go-text read these tables, and read a count of 16 bits in a table kern
+    when the next 16 bits were not 0. `TestAATTableVersions` tests it.
+43. A table ankr is refused when its version is not 0, when its lookup
+    has the format 10, or when the anchors of a value of the lookup are
+    not in the table. The anchors are then at (0, 0). The offset 0 of the
+    glyph data is the start of the table. go-text kept such a table, and
+    looked for the anchors of a glyph only when it read them. `TestAnkr`
+    tests it.
+
+Item 4 also said that HarfBuzz accepts rows of a state table of kern in
+the header of the subtable. This is not true. An entry gives its new
+state as a byte offset from the start of the state table, and the state
+is rounded toward 0. So a row never starts before the state table, in
+HarfBuzz or in `typesetting`, and the code does not change.
+
+Each test of fixes 29 to 43 is in `harfbuzz` and in `test/harfbuzz`, where
+HarfBuzz 15.1.0 gives the same glyphs, clusters, advances and offsets, and
+each test fails before its fix. Each of the 413,399 lines of
+`perf_reference` still gives the same output as HarfBuzz. No workload of
+`test/textbench` uses a table kern, kerx, morx, ltag or ankr. One
+difference remains: a long value of kerx format 6 has 32 bits in
+HarfBuzz, and `KernPair` of `font.SimpleKerns` keeps its low 16 bits.
+Item 4 of "typesetting" in `docs/BACKLOG.md` records it.
+
 ## When upstream changes
 
 If go-text fixes one of these faults, follow these steps:

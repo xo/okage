@@ -840,7 +840,7 @@ func morxField(st morxAuditSubtable, at int, v uint32) morxAuditSubtable {
 //     is the start of the offsets.
 //
 // go-text refused the table for an action, a component or an insertion
-// that it could not read, and ignored the offsets 0. It panicked when an
+// that it did not find, and ignored the offsets 0. It panicked when an
 // entry read a substitution or an insertion at such an offset (D73).
 func TestMorxLazyData(t *testing.T) {
 	cx := morxAuditSubtable{4, lookup8(robotoC, int(robotoX))}

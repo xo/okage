@@ -100,45 +100,13 @@ From D52.
    shaper inside `shaping.Paragraph` sets `ProduceUnsafeToConcat`, and
    `Paragraph` removes the flag from the glyphs that it gives (D77).
    Source: D70.
-4. Make `harfbuzz` follow HarfBuzz 15.1.0 in the tables kern, kerx and
-   morx at the places that the work on fixes 13 to 27 of D73 found. No
-   text of `perf_reference` and no workload of `test/textbench` uses these
-   tables:
-   - The parse of `typesetting` refuses some data of a subtable that
-     HarfBuzz reads only when it applies the subtable. Since fix 19 of D73,
-     such an error refuses the whole table kerx or morx, where HarfBuzz
-     applies the table. For example, `typesetting` requires the anchor of
-     each entry of a subtable of format 4 of kerx, an action type from 0
-     to 2, and the whole kerning array of a subtable of format 6. When an
-     anchor is not in the subtable, HarfBuzz skips the transition, and
-     does not take the flag Mark.
-   - In a ligature subtable of morx, an entry has an action when a bit of
-     the mask 0x3FFF of its flags is set. In HarfBuzz, it has an action
-     only when its flag PerformAction, 0x2000, is set.
-   - A subtable of format 4 of kerx does not apply when the feature kern
-     is off and the subtable is not cross-stream. HarfBuzz applies it.
-   - A lookup of format 4 in the class table of a state machine drops its
-     last segment, also when that segment is not the segment 0xFFFF that
-     ends the search. HarfBuzz drops only that segment.
-   - A lookup of format 10: HarfBuzz 15.1.0 reads a value from it only for
-     the row and column tables of kerx format 6, and reads each value with
-     the size that the lookup gives. For a class table, a substitution of
-     morx or the classes of kerx format 2, HarfBuzz finds no value.
-     `typesetting` reads each value as 2 bytes, or 4 bytes for long
-     values, and uses it in each place. So `TestLookupFormat10ValueSize`
-     of `test/harfbuzz` shapes only a, b.
-   - A subtable of kerx format 2 with a tuple count reads its value through
-     the offset of `kerxTupleKern` in HarfBuzz, and `font.Kern2` ignores
-     the tuple count. HarfBuzz also refuses the table when the kerning
-     array starts after the end of the subtable.
-   - In a subtable of kern format 2, HarfBuzz rounds the offset from the
-     kerning array down to a value of two bytes. go-text reads the value
-     at an odd offset.
-   - HarfBuzz refuses the whole table ltag when the range of a tag is
-     outside the table. `MatchesLanguage` refuses only that tag. HarfBuzz
-     also accepts rows of a state table of kern that start in the header
-     of the subtable, and `typesetting` requires them to start after it.
-   Source: D73, 2026-11-20 and 2026-11-21.
+4. Give a long value of a subtable of format 6 of kerx its 32 bits, as
+   HarfBuzz 15.1.0 does. `Kerning` of `tables.KerxData6` reads the 32
+   bits, and `KernPair` of `font.SimpleKerns` keeps the low 16 bits, as
+   go-text did. The fix needs a change to `SimpleKerns`, or a path of 32
+   bits in the kerning of `harfbuzz`, which the other formats share. A
+   maintainer chooses. No text of `perf_reference` and no font of the
+   tests has such a value. Source: fix 37 of D73, 2026-11-21.
 5. In a run of only tatweels and spaces, which has the script Common, Amiri
    forms a ligature of tatweels where a run starts, and the shaper does not
    mark that cluster as unsafe to break. uharfbuzz 0.57.0 gives the same
