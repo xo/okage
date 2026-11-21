@@ -606,3 +606,29 @@ func TestLookupFormat10(t *testing.T) {
 		{"bb", []shapedGlyph{{robotoB, 0, 1139, 0, 0}, {robotoB, 1, 1139, -10, 0}}},
 	})
 }
+
+// kernFormat2 builds a table kern of Apple with a subtable of format 2 for
+// a, b and c. The rows of the left classes are 36, 42 and 48 bytes from the
+// start of the subtable, where the kerning array starts at 36, and the
+// right classes are 0, 3 and 5 bytes. The array has three rows: 0, 0, 0,
+// then 0, -80, 30, then 0, -50, -20.
+func kernFormat2() []byte {
+	data := u16s(6, 16, 26, 36)
+	data = append(data, u16s(int(robotoA), 3, 36, 42, 48)...)
+	data = append(data, u16s(int(robotoA), 3, 0, 3, 5)...)
+	data = append(data, u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00020000)
+	return append(kern, data...)
+}
+
+// TestKernFormat2 shapes texts with kernFormat2. As in HarfBuzz 15.1.0, the
+// sum of the classes is a byte offset from the start of the subtable, and
+// its distance from the kerning array is rounded down to a value of two
+// bytes. go-text read the value at an odd distance, from the bytes of two
+// values (D73).
+func TestKernFormat2(t *testing.T) {
+	testShapedFace(t, fontWithLayout(t, map[string][]byte{"kern": kernFormat2()}), []shapedText{
+		{"bb", []shapedGlyph{{robotoB, 0, 1109, 0, 0}, {robotoB, 1, 1109, -40, 0}}},
+		{"cc", []shapedGlyph{{robotoC, 0, 1062, 0, 0}, {robotoC, 1, 1062, -10, 0}}},
+	})
+}

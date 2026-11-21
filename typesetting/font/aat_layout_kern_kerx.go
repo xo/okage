@@ -265,18 +265,23 @@ func newKern2x(k tables.KerxData2) Kern2 {
 // okage: in kerx, the sum of the classes is a byte offset from the start of
 // the kerning array, rounded down to a value of two bytes, as the commit
 // 88e5077a80 of HarfBuzz, in 15.1.0, reads it. In kern, the sum is still a
-// byte offset from the start of the subtable. go-text read the sum in kerx
-// as an offset from the end of the header of the subtable, and required it
-// to be after the start of the kerning array (D73).
+// byte offset from the start of the subtable, and its distance from the
+// kerning array is rounded down to a value of two bytes, as in HarfBuzz.
+// go-text read the sum in kerx as an offset from the end of the header of
+// the subtable, and required it to be after the start of the kerning
+// array. In kern, it read a value at an odd distance (D73).
 func (kd Kern2) KernPair(left, right GID) int16 {
 	l, _ := kd.Left.Class(tables.GlyphID(left))
 	r, _ := kd.Right.Class(tables.GlyphID(right))
 	sum := uint64(l) + uint64(r)
-	index := sum
+	start := uint64(kd.KerningStart)
+	var index uint64
 	if kd.extended {
-		index = uint64(kd.KerningStart) + sum/2*2
-	} else if sum < uint64(kd.KerningStart) {
+		index = start + sum/2*2
+	} else if sum < start {
 		return 0
+	} else {
+		index = start + (sum-start)/2*2
 	}
 	if uint64(len(kd.KerningData)) < index+2 {
 		return 0

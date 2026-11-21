@@ -542,3 +542,24 @@ func TestLookupFormat10(t *testing.T) {
 		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "ba", "bb", "aa")
 	}
 }
+
+// kernFormat2 builds a table kern of Apple with a subtable of format 2 for
+// a, b and c. The rows of the left classes are 36, 42 and 48 bytes from the
+// start of the subtable, where the kerning array starts at 36, and the
+// right classes are 0, 3 and 5 bytes. The array has three rows: 0, 0, 0,
+// then 0, -80, 30, then 0, -50, -20.
+func kernFormat2() []byte {
+	data := u16s(6, 16, 26, 36)
+	data = append(data, u16s(robotoA, 3, 36, 42, 48)...)
+	data = append(data, u16s(robotoA, 3, 0, 3, 5)...)
+	data = append(data, u16s(0, 0, 0, 0, -80, 30, 0, -50, -20)...)
+	kern := u32s(0x00010000, 1, uint32(8+len(data)), 0x00020000)
+	return append(kern, data...)
+}
+
+// TestKernFormat2: the subtable of kernFormat2. HarfBuzz reads the sum of
+// the classes as a byte offset from the start of the subtable, and rounds
+// its distance from the kerning array down to a value of two bytes.
+func TestKernFormat2(t *testing.T) {
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kernFormat2()}), false, "ab", "ac", "bb", "bc", "cb", "cc", "ba", "abc")
+}
