@@ -3,6 +3,9 @@
 package shaping
 
 import (
+	"math"
+
+	"github.com/xo/okage/typesetting/font"
 	"github.com/xo/okage/typesetting/language"
 )
 
@@ -33,21 +36,84 @@ func (p *Paragraph) initSplit() {
 		p.info = make([]runeInfo, len(p.text))
 	}
 	p.info = p.info[:len(p.text)]
+	// okage: D87. The loop also marks the runes that can change the split,
+	// as initNext says.
+	p.nextScript = resized(p.nextScript, len(p.text))
+	p.nextFace = resized(p.nextFace, len(p.text))
+	lastScript := language.Common
+	var lastFace *font.Face
+	hasFace := false
 	for i, r := range p.text {
 		info := runeInfo{script: language.LookupScript(r), delim: -1, ignore: ignoreFaceChange(r)}
-		if !info.script.Strong() {
+		strong := info.script.Strong()
+		if !strong {
 			info.delim = int16(lookupDelimIndex(r))
 		}
 		if !info.ignore {
 			info.face = p.faces.ResolveFace(r)
 		}
 		p.info[i] = info
+		p.nextScript[i], p.nextFace[i] = noChange, noChange
+		if info.delim >= 0 || strong && info.script != lastScript {
+			p.nextScript[i] = int32(i)
+		}
+		if strong {
+			lastScript = info.script
+		}
+		if !info.ignore {
+			if !hasFace || info.face != lastFace {
+				p.nextFace[i] = int32(i)
+			}
+			lastFace, hasFace = info.face, true
+		}
 	}
+	p.initNext()
 	lang := p.input.Language
 	if lang == "" {
 		lang = "en"
 	}
 	p.lang, p.langOK = language.NewLangID(lang)
+}
+
+// noChange marks a rune that cannot change the split in p.nextScript and
+// p.nextFace, before initNext.
+//
+// okage: D87.
+const noChange = int32(math.MaxInt32)
+
+// initNext sets p.nextScript and p.nextFace for each rune to the first
+// rune from it that can change the split by script or the split by face,
+// or to the end of the text. On entry, they hold the index of each rune
+// that can change the split, and noChange for each other rune.
+//
+// A rune can change the split by script when it is a paired delimiter, or
+// when its script is strong and is not the script of the last rune before
+// it with a strong script. Each other rune with a strong script has the
+// script of the run of splitRange when the run has the script of the last
+// strong rune, so it does not change the run, and no other rune does.
+//
+// A rune can change the split by face when it can change the face, and the
+// last rune before it that can change the face has another face. A rune
+// that cannot change the face does not change the run while the run has a
+// face, and each other rune has the face of the run when the run has the
+// face of the last rune that can change the face.
+//
+// okage: D87.
+func (p *Paragraph) initNext() {
+	nextScript, nextFace := int32(len(p.text)), int32(len(p.text))
+	for i := len(p.text) - 1; i >= 0; i-- {
+		nextScript = min(nextScript, p.nextScript[i])
+		nextFace = min(nextFace, p.nextFace[i])
+		p.nextScript[i], p.nextFace[i] = nextScript, nextFace
+	}
+}
+
+// resized returns s with length n, and reuses its memory when it can.
+func resized(s []int32, n int) []int32 {
+	if cap(s) < n {
+		return make([]int32, n)
+	}
+	return s[:n]
 }
 
 // splitRange returns the runs that [Segmenter.Split] gives for the runes
@@ -78,7 +144,16 @@ func (p *Paragraph) splitRange(start, end int) []Input {
 	p.delims = p.delims[:0]
 	current := in
 	current.Script = language.Common
+	// okage: D87. When synced is true, current has the script of the last
+	// strong rune before i, so the runes before p.nextScript[i] do not
+	// change the runs, and the loop skips them.
+	last, known, synced := language.Common, false, false
 	for i := start; i < end; i++ {
+		if synced {
+			if i = int(p.nextScript[i]); i >= end {
+				break
+			}
+		}
 		info := &p.info[i]
 		rScript := info.script
 		if info.delim >= 0 {
@@ -115,6 +190,10 @@ func (p *Paragraph) splitRange(start, end int) []Input {
 			current.RunStart = i - start
 			current.Script = rScript
 		}
+		if info.script.Strong() {
+			last, known = info.script, true
+		}
+		synced = known && current.Script == last
 	}
 	current.RunEnd = end - start
 	p.scriptRuns = append(p.scriptRuns, current)
@@ -154,11 +233,22 @@ func (p *Paragraph) splitRange(start, end int) []Input {
 // okage: D72.
 func (p *Paragraph) splitRunByFace(input Input, start int, isLast bool) {
 	current := input
+	// okage: D87. When synced is true, current has the face of the last
+	// rune that can change the face, and that face is not nil. So the runes
+	// before p.nextFace do not change the runs, and the loop skips them.
+	synced := false
 	for i := input.RunStart; i < input.RunEnd; i++ {
+		if synced {
+			if i = int(p.nextFace[start+i]) - start; i >= input.RunEnd {
+				break
+			}
+		}
 		info := &p.info[start+i]
 		if info.ignore && (current.Face != nil || !isLast || i < input.RunEnd-1) {
 			continue
 		}
+		// After a rune that can change the face, current has its face.
+		synced = !info.ignore && info.face != nil
 		selectedFace := info.face
 		if info.ignore {
 			selectedFace = p.faces.ResolveFace(input.Text[i])

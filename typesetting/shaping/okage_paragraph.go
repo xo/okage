@@ -76,8 +76,12 @@ type Paragraph struct {
 	// with [Segmenter.Split]. lang and langOK are the language of the
 	// input as Split resolves it. scriptRuns, faceRuns and delims are the
 	// memory of splitRange.
-	ownSplit             bool
-	info                 []runeInfo
+	ownSplit bool
+	info     []runeInfo
+	// okage: D87. nextScript and nextFace hold, for each rune, the next
+	// rune from it that can change the split by script or the split by
+	// face, or the end of the text. splitRange skips the runes before it.
+	nextScript, nextFace []int32
 	lang                 language.LangID
 	langOK               bool
 	scriptRuns, faceRuns []Input
@@ -447,6 +451,7 @@ func (p *Paragraph) lineRun(item Input, start, end int) {
 	for i := range p.lineGlyphs[g1:] {
 		p.lineGlyphs[g1+i].ClusterIndex -= start
 	}
+	g2 := len(p.lineGlyphs)
 	if run.reverse {
 		p.lineGlyphs = append(p.lineGlyphs, p.left...)
 	} else {
@@ -456,11 +461,40 @@ func (p *Paragraph) lineRun(item Input, start, end int) {
 	out.Glyphs = p.lineGlyphs[g0:]
 	out.Runes = Range{Offset: item.RunStart, Count: item.RunEnd - item.RunStart}
 	out.Level = item.Level
-	countClusters(out.Glyphs, item.RunEnd, item.Direction.Progression())
+	countLineClusters(out.Glyphs, g1-g0, g2-g0, c1-start, &item, run.reverse)
 	out.RecalculateAll()
 	out.Glyphs = nil
 	p.outs = append(p.outs, out)
 	p.ends = append(p.ends, len(p.lineGlyphs))
+}
+
+// countLineClusters sets the counts of the clusters of the glyphs of a run
+// of Line, as countClusters does for the whole run. glyphs[g1:g2] are the
+// glyphs that Line takes from the paragraph, from the cluster c1, which
+// counts from the start of the line. The glyphs before and after them are
+// the parts that Line shaped again.
+//
+// The glyphs from the paragraph keep the counts that countClusters gave
+// them in the paragraph. Each of their clusters is whole, and the cluster
+// next to each end starts at the same rune as in the paragraph, so
+// countClusters gives them the same counts again. So only the parts at the
+// ends need countClusters, each with the cluster next to it.
+//
+// okage: D87.
+func countLineClusters(glyphs []Glyph, g1, g2, c1 int, item *Input, reverse bool) {
+	dir := item.Direction.Progression()
+	if g1 == g2 || reverse != (dir == di.TowardTopLeft) {
+		countClusters(glyphs, item.RunEnd, dir)
+		return
+	}
+	// The left part holds the clusters before c1, and the glyphs from the
+	// paragraph start at c1. The right part ends at the end of the run.
+	left, right := glyphs[:g1], glyphs[g2:]
+	if reverse {
+		left, right = right, left
+	}
+	countClusters(left, c1, dir)
+	countClusters(right, item.RunEnd, dir)
 }
 
 // spliceLeft shapes the start of the part a to b of a run, which starts
