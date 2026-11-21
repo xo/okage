@@ -70,7 +70,10 @@ func ParseAATStateTable(src []byte) (AATStateTable, int, error) {
 	n += 8
 
 	{
-		if offsetClassTable != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and gave
+		// no classes (D73).
+		{
 			if L := len(src); L < offsetClassTable {
 				return item, 0, fmt.Errorf("reading AATStateTable: "+"EOF: expected length: %d, got %d", offsetClassTable, L)
 			}
@@ -197,7 +200,10 @@ func ParseKernData2(src []byte, parentSrc []byte) (KernData2, int, error) {
 	n += 8
 
 	{
-		if offsetLeft != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and gave
+		// no classes (D73).
+		{
 			if L := len(parentSrc); L < offsetLeft {
 				return item, 0, fmt.Errorf("reading KernData2: "+"EOF: expected length: %d, got %d", offsetLeft, L)
 			}
@@ -211,7 +217,10 @@ func ParseKernData2(src []byte, parentSrc []byte) (KernData2, int, error) {
 		}
 	}
 	{
-		if offsetRight != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and gave
+		// no classes (D73).
+		{
 			if L := len(parentSrc); L < offsetRight {
 				return item, 0, fmt.Errorf("reading KernData2: "+"EOF: expected length: %d, got %d", offsetRight, L)
 			}

@@ -269,7 +269,10 @@ func ParseAATStateTableExt(src []byte, valuesCount int, entryDataSize int) (AATS
 	n += 16
 
 	{
-		if offsetClass != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and
+		// panicked on the nil lookup (D73).
+		{
 			if L := len(src); L < offsetClass {
 				return item, 0, fmt.Errorf("reading AATStateTableExt: "+"EOF: expected length: %d, got %d", offsetClass, L)
 			}
@@ -500,7 +503,10 @@ func ParseKerxData2(src []byte, parentSrc []byte, valuesCount int) (KerxData2, i
 	n += 16
 
 	{
-		if offsetLeft != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and
+		// panicked on the nil lookup (D73).
+		{
 			if L := len(parentSrc); L < offsetLeft {
 				return item, 0, fmt.Errorf("reading KerxData2: "+"EOF: expected length: %d, got %d", offsetLeft, L)
 			}
@@ -517,7 +523,10 @@ func ParseKerxData2(src []byte, parentSrc []byte, valuesCount int) (KerxData2, i
 		}
 	}
 	{
-		if offsetRight != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the base, as in HarfBuzz
+		// 15.1.0, whose offset is never null here. go-text ignored it, and
+		// panicked on the nil lookup (D73).
+		{
 			if L := len(parentSrc); L < offsetRight {
 				return item, 0, fmt.Errorf("reading KerxData2: "+"EOF: expected length: %d, got %d", offsetRight, L)
 			}

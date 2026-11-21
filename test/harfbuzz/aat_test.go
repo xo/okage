@@ -837,3 +837,40 @@ func kernFormat3() []byte {
 func TestKernFormat3(t *testing.T) {
 	testCase(t, robotoWith(t, map[string][]byte{"kern": kernFormat3()}), false, "ab", "bb", "cb", "xb", "ba", "abc", "aa")
 }
+
+// TestAATClassOffsetZero: subtables whose class table is at the offset 0,
+// which HarfBuzz reads at the start of the state table, or of the
+// subtable for kerx format 2 and kern format 2, then a subtable that
+// replaces c with x, or kerns a, b. Here HarfBuzz cannot read such a class
+// table, and refuses the table:
+//   - An insertion subtable of morx.
+//   - A subtable of format 2 of kerx, with the offset 0 for the left or the
+//     right classes.
+//   - A subtable of format 2 of a table kern of Microsoft, with the offset
+//     0 for the left classes.
+func TestAATClassOffsetZero(t *testing.T) {
+	insertion := stateMachine{
+		lookup:   lookup8(robotoA, 4),
+		nClasses: 5,
+		states:   [][]int{{0, 0, 0, 0, 1}, {0, 0, 0, 0, 1}},
+		entries:  [][]int{{0, 0, insertNone, insertNone}, {0, insertCurrentOne, 0, insertNone}},
+	}
+	st := morxAuditSubtable{5, insertion.bytes([]uint32{0}, u16s(robotoB))}
+	st.data = slices.Clone(st.data)
+	copy(st.data[4:], u32s(0))
+	morx := morxAuditTable(st, morxAuditSubtable{4, lookup8(robotoC, robotoX)})
+	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), false, "ac", "c")
+
+	for _, at := range []int{4, 8} {
+		format2 := kerxFormat2()
+		format2.data = slices.Clone(format2.data)
+		copy(format2.data[at:], u32s(0))
+		kerx := kerxTable(format2, kerxPairs(robotoA, robotoB, -300))
+		testCase(t, robotoWith(t, map[string][]byte{"kerx": kerx}), false, "ab", "bc")
+	}
+
+	format2 := u16s(0, 6+8+6+2, 2<<8|1, 6, 0, 14, 20)
+	format2 = append(format2, u16s(robotoA, 1, 0, 0)...)
+	kern := kernOT(format2, kernPairs(20, robotoA, robotoB, -300))
+	testCase(t, robotoWith(t, map[string][]byte{"kern": kern}), false, "ab")
+}
