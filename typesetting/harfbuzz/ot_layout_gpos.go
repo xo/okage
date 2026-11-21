@@ -267,23 +267,23 @@ func (c *otApplyContext) applyGPOSValueRecord(format tables.ValueFormat, v table
 	horizontal := c.direction.isHorizontal()
 
 	if format&tables.XPlacement != 0 {
-		glyphPos.XOffset += font.emScaleX(v.XPlacement)
+		glyphPos.XOffset += font.emScaleX(int32(v.XPlacement))
 		ret = ret || v.XPlacement != 0
 	}
 	if format&tables.YPlacement != 0 {
-		glyphPos.YOffset += font.emScaleY(v.YPlacement)
+		glyphPos.YOffset += font.emScaleY(int32(v.YPlacement))
 		ret = ret || v.YPlacement != 0
 	}
 	if format&tables.XAdvance != 0 {
 		if horizontal {
-			glyphPos.XAdvance += font.emScaleX(v.XAdvance)
+			glyphPos.XAdvance += font.emScaleX(int32(v.XAdvance))
 			ret = ret || v.XAdvance != 0
 		}
 	}
 	/* YAdvance values grow downward but font-space grows upward, hence negation */
 	if format&tables.YAdvance != 0 {
 		if !horizontal {
-			glyphPos.YAdvance -= font.emScaleY(v.YAdvance)
+			glyphPos.YAdvance -= font.emScaleY(int32(v.YAdvance))
 			ret = ret || v.YAdvance != 0
 		}
 	}

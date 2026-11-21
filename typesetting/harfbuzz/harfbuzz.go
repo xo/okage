@@ -506,18 +506,22 @@ const maxInt = int(^uint(0) >> 1)
 // bitStorage returns the number of bits needed to store the number.
 func bitStorage(v uint32) int { return 32 - bits.LeadingZeros32(v) }
 
-// okage: D81. roundf adds one half away from zero and truncates, for a
-// value that converts to an int32. A float32 has 24 bits, so the sum in a
-// float64 is exact, and the conversion truncates as math.Round does. A
-// value that does not fit, NaN and the infinities take math.Round, as
-// before. A test compares it with math.Round.
+// okage: roundf rounds as _hb_roundf of HarfBuzz 15.1.0, which hb-algs.hh
+// puts in place of roundf: floor((double) x + .5). So a half rounds toward
+// +infinity, and -25.5 gives -25. go-text rounded a half away from 0, as
+// math.Round does (D90). A float32 has 24 bits, so the sum in a float64 is
+// exact. For a sum that converts to an int32, the conversion truncates
+// toward 0, and a negative sum with a fraction then takes one less, as
+// floor does, without a call (D81). A value that does not fit, NaN and the
+// infinities take math.Floor. A test compares it with math.Floor.
 func roundf(f float32) Position {
-	d := float64(f)
-	if d >= 0 && d < 1<<31 {
-		return Position(d + 0.5)
+	d := float64(f) + 0.5
+	if d > -(1<<31) && d < 1<<31 {
+		p := Position(d)
+		if float64(p) > d {
+			p--
+		}
+		return p
 	}
-	if d < 0 && d > -(1<<31) {
-		return Position(d - 0.5)
-	}
-	return Position(math.Round(d))
+	return Position(math.Floor(d))
 }

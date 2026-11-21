@@ -25,7 +25,7 @@ func TestKern0(t *testing.T) {
 
 	expecteds := []struct { // value extracted from harfbuzz run
 		left, right GID
-		kerning     int16
+		kerning     int32
 	}{
 		{104, 504, -42},
 		{504, 1108, 0},
@@ -116,7 +116,7 @@ func TestKern2(t *testing.T) {
 
 	type2, ok := k1.(Kern2)
 	tu.Assert(t, ok)
-	expectedSubtable := map[[2]GID]int16{
+	expectedSubtable := map[[2]GID]int32{
 		{67, 68}: 0,
 		{68, 69}: 0,
 		{69, 70}: -30,
@@ -141,7 +141,7 @@ func TestKern2(t *testing.T) {
 
 	type2, ok = k2.(Kern2)
 	tu.Assert(t, ok)
-	expectedSubtable = map[[2]GID]int16{
+	expectedSubtable = map[[2]GID]int32{
 		{36, 57}: -80,
 	}
 	for k, exp := range expectedSubtable {
@@ -164,7 +164,7 @@ func TestKerx6(t *testing.T) {
 
 	expecteds := []struct { // value extracted from harfbuzz run
 		left, right GID
-		kerning     int16
+		kerning     int32
 	}{
 		{283, 659, -270},
 		{659, 3, 0},

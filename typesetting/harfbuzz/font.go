@@ -34,6 +34,14 @@ type Font struct {
 	// okage: D87.
 	scaledExtents extentsCache
 
+	// xMult and yMult are the multipliers of emScaleX and emScaleY for the
+	// scales xMultScale and yMultScale. The zero values hold for a scale
+	// of 0.
+	//
+	// okage: as x_mult and y_mult of hb_font_t of HarfBuzz 15.1.0 (D90).
+	xMult, yMult           int64
+	xMultScale, yMultScale int32
+
 	// Point size of the font. Set to zero to unset.
 	// This is used in AAT layout, when applying 'trak' table.
 	Ptem float32
@@ -158,19 +166,54 @@ func (f *Font) xStrength() Position { return roundf(float32(f.XScale) * f.xEmbol
 
 // ---- Convert from font-space to user-space ----
 
-func (f *Font) emScaleX(v int16) Position    { return Position(v) * f.XScale / f.faceUpem }
-func (f *Font) emScaleY(v int16) Position    { return Position(v) * f.YScale / f.faceUpem }
+// okage: emScaleX and emScaleY take 32 bits and round to the nearest unit,
+// as em_scale_x, em_scale_y and em_mult of HarfBuzz 15.1.0 do. go-text took
+// 16 bits and rounded toward 0, so at a scale other than the units per em a
+// value could differ from HarfBuzz by one unit (D90).
+func (f *Font) emScaleX(v int32) Position {
+	if f.XScale != f.xMultScale {
+		f.xMult, f.xMultScale = emMultiplier(f.XScale, f.faceUpem), f.XScale
+	}
+	return emMult(v, f.xMult)
+}
+
+func (f *Font) emScaleY(v int32) Position {
+	if f.YScale != f.yMultScale {
+		f.yMult, f.yMultScale = emMultiplier(f.YScale, f.faceUpem), f.YScale
+	}
+	return emMult(v, f.yMult)
+}
+
+// emMultiplier gives the multiplier of emMult for the scale, as
+// hb_font_t::changed of HarfBuzz 15.1.0 computes x_mult and y_mult. Font
+// keeps XScale and YScale public, and shaping sets them before each shape,
+// so emScaleX and emScaleY compute it again when the scale changes (D90).
+func emMultiplier(scale, faceUpem int32) int64 {
+	return int64(scale) * 0x10000 / int64(faceUpem)
+}
+
+// emMult scales v from the units of the font with the multiplier, as
+// em_mult of HarfBuzz 15.1.0 does (D90).
+func emMult(v int32, mult int64) Position {
+	return Position((int64(v)*mult + 32768) >> 16)
+}
+
 func (f *Font) emScalefX(v float32) Position { return emScalef(v, f.XScale, f.faceUpem) }
 func (f *Font) emScalefY(v float32) Position { return emScalef(v, f.YScale, f.faceUpem) }
 func (f *Font) emFscaleX(v int16) float32    { return emFscale(v, f.XScale, f.faceUpem) }
 func (f *Font) emFscaleY(v int16) float32    { return emFscale(v, f.YScale, f.faceUpem) }
 
+// okage: emScalef and emFscale multiply v by the scale divided by the units
+// per em in float32, as em_multf and em_fmult of HarfBuzz 15.1.0 do with
+// x_multf and y_multf. go-text multiplied v by the scale first, which
+// rounds otherwise for a font whose units per em are not a power of 2
+// (D90).
 func emScalef(v float32, scale, faceUpem int32) Position {
-	return roundf(v * float32(scale) / float32(faceUpem))
+	return roundf(v * (float32(scale) / float32(faceUpem)))
 }
 
 func emFscale(v int16, scale, faceUpem int32) float32 {
-	return float32(v) * float32(scale) / float32(faceUpem)
+	return float32(v) * (float32(scale) / float32(faceUpem))
 }
 
 // GlyphExtents is the same as fonts.GlyphExtents but with int type
@@ -222,9 +265,14 @@ func (f *Font) GlyphAdvanceForDirection(glyph GID, dir Direction) (x, y Position
 
 // GlyphHAdvance fetches the advance for a glyph ID in the font,
 // for horizontal text segments.
+//
+// okage: as hb_ot_get_glyph_h_advances of HarfBuzz 15.1.0, the advance in
+// the units of the font is rounded with roundf and clamped at 0, then
+// scaled with em_scale_x. go-text scaled the advance as a float, which
+// rounds otherwise for a font whose units per em are not a power of 2
+// (D90).
 func (f *Font) GlyphHAdvance(glyph GID) Position {
-	adv := f.face.HorizontalAdvance(glyph)
-	out := f.emScalefX(adv)
+	out := f.emScaleX(int32(max(roundf(f.face.HorizontalAdvance(glyph)), 0)))
 	if f.xEmbolden != 0 && out != 0 {
 		out += f.xStrength()
 	}
@@ -235,8 +283,9 @@ func (f *Font) GlyphHAdvance(glyph GID) Position {
 // for vertical text segments.
 func (f *Font) getGlyphVAdvance(glyph GID) Position {
 	if f.face.HasVerticalMetrics() {
-		adv := f.face.VerticalAdvance(glyph)
-		return f.emScalefY(adv)
+		// okage: as hb_ot_get_glyph_v_advances of HarfBuzz 15.1.0, with the
+		// advance of vmtx rounded, clamped at 0 and negated (D90).
+		return f.emScaleY(-int32(max(roundf(-f.face.VerticalAdvance(glyph)), 0)))
 	} else {
 		fontExtents := f.fontHExtentsWithFallback()
 		advance := Position(-(fontExtents.Ascender - fontExtents.Descender))
@@ -491,9 +540,9 @@ func (f *Font) getCaretValue(caret tables.CaretValue, direction Direction, glyph
 	switch caret := caret.(type) {
 	case tables.CaretValue1:
 		if direction.isHorizontal() {
-			return f.emScaleX(int16(caret.Coordinate))
+			return f.emScaleX(int32(int16(caret.Coordinate)))
 		} else {
-			return f.emScaleY(int16(caret.Coordinate))
+			return f.emScaleY(int32(int16(caret.Coordinate)))
 		}
 	case tables.CaretValue2:
 		x, y, _ := f.getGlyphContourPointForOrigin(glyph, uint16(caret.CaretValuePointIndex), direction)
@@ -504,9 +553,9 @@ func (f *Font) getCaretValue(caret tables.CaretValue, direction Direction, glyph
 		}
 	case tables.CaretValue3:
 		if direction.isHorizontal() {
-			return f.emScaleX(caret.Coordinate) + f.getXDelta(varStore, caret.Device)
+			return f.emScaleX(int32(caret.Coordinate)) + f.getXDelta(varStore, caret.Device)
 		} else {
-			return f.emScaleY(caret.Coordinate) + f.getYDelta(varStore, caret.Device)
+			return f.emScaleY(int32(caret.Coordinate)) + f.getYDelta(varStore, caret.Device)
 		}
 	default:
 		return 0

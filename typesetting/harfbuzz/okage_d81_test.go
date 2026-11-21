@@ -9,13 +9,14 @@ import (
 
 // okage: the tests of D81.
 
-// TestRoundf compares roundf with math.Round on one float32 in 97, on the
-// values next to each half and to each limit of an int32, and on NaN and
-// the infinities. A run over every float32 gave no difference.
+// TestRoundf compares roundf with floor(x + .5), the roundf of HarfBuzz
+// 15.1.0 (D90), on one float32 in 97, on the values next to each half and
+// to each limit of an int32, and on NaN and the infinities. A run over
+// every float32 gave no difference.
 func TestRoundf(t *testing.T) {
 	check := func(f float32) {
 		t.Helper()
-		if got, want := roundf(f), Position(math.Round(float64(f))); got != want {
+		if got, want := roundf(f), Position(math.Floor(float64(f)+0.5)); got != want {
 			t.Fatalf("roundf(%v), bits %#x: got %d, want %d", f, math.Float32bits(f), got, want)
 		}
 	}

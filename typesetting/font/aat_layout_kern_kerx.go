@@ -140,7 +140,11 @@ type SimpleKerns interface {
 	// KernPair return the kern value for the given pair, or zero.
 	// The value is expressed in glyph units and
 	// is negative when glyphs should be closer.
-	KernPair(left, right GID) int16
+	//
+	// okage: the value has 32 bits, as get_kerning of HarfBuzz 15.1.0
+	// returns, so a long value of kerx format 6 keeps all its bits. go-text
+	// returned 16 bits (D90).
+	KernPair(left, right GID) int32
 }
 
 // kernx coverage flags
@@ -168,7 +172,7 @@ type Kern0 []tables.Kernx0Record
 func newKern0(k tables.KernData0) Kern0  { return k.Pairs }
 func newKern0x(k tables.KerxData0) Kern0 { return k.Pairs }
 
-func kernPair(records []tables.Kernx0Record, left, right GID) int16 {
+func kernPair(records []tables.Kernx0Record, left, right GID) int32 {
 	key := uint32(left)<<16 | uint32(right)
 	low, high := 0, len(records)
 	for low < high {
@@ -179,7 +183,7 @@ func kernPair(records []tables.Kernx0Record, left, right GID) int16 {
 		} else if key > p {
 			low = mid + 1
 		} else {
-			return records[mid].Value
+			return int32(records[mid].Value)
 		}
 	}
 	return 0
@@ -187,7 +191,7 @@ func kernPair(records []tables.Kernx0Record, left, right GID) int16 {
 
 func recordKey(kp tables.Kernx0Record) uint32 { return uint32(kp.Left)<<16 | uint32(kp.Right) }
 
-func (kd Kern0) KernPair(left, right GID) int16 { return kernPair(kd, left, right) }
+func (kd Kern0) KernPair(left, right GID) int32 { return kernPair(kd, left, right) }
 
 type Kern1 struct {
 	// okage: Values holds the values up to the end of the subtable, or up
@@ -279,7 +283,7 @@ func newKern2x(k tables.KerxData2, tupleCount int) Kern2 {
 // go-text read the sum in kerx as an offset from the end of the header of
 // the subtable, and required it to be after the start of the kerning
 // array. In kern, it read a value at an odd distance (D73).
-func (kd Kern2) KernPair(left, right GID) int16 {
+func (kd Kern2) KernPair(left, right GID) int32 {
 	l, _ := kd.Left.Class(tables.GlyphID(left))
 	r, _ := kd.Right.Class(tables.GlyphID(right))
 	sum := uint64(l) + uint64(r)
@@ -301,9 +305,9 @@ func (kd Kern2) KernPair(left, right GID) int16 {
 	// tuples, as kerxTupleKern of HarfBuzz 15.1.0. go-text ignored the
 	// tuple count (D73).
 	if kd.extended && kd.tupleCount != 0 {
-		return tables.KerxTupleKern(kd.KerningData, int32(kernVal), kd.tupleCount)
+		return int32(tables.KerxTupleKern(kd.KerningData, int32(kernVal), kd.tupleCount))
 	}
-	return kernVal
+	return int32(kernVal)
 }
 
 type Kern3 tables.KernData3
@@ -332,7 +336,7 @@ func (kd Kern3) withGlyphs(nGlyphs int) Kern3 {
 // okage: as in HarfBuzz 15.1.0, a glyph that the subtable does not hold has
 // the class 0, and a class or an index out of range gives no kerning.
 // go-text refused the table for a class or an index out of range (D73).
-func (kd Kern3) KernPair(left, right GID) int16 {
+func (kd Kern3) KernPair(left, right GID) int32 {
 	var lc, rc int
 	if int(left) < len(kd.LeftClass) {
 		lc = int(kd.LeftClass[left])
@@ -348,7 +352,7 @@ func (kd Kern3) KernPair(left, right GID) int16 {
 	if index >= len(kd.Kernings) {
 		return 0
 	}
-	return kd.Kernings[index]
+	return int32(kd.Kernings[index])
 }
 
 type Kern4 struct {
@@ -401,10 +405,11 @@ type Kern6 tables.KerxData6
 
 // KernPair returns the kern value for the given pair, or zero.
 //
-// okage: tables.KerxData6.Kerning reads the value as HarfBuzz 15.1.0 does.
-// KernPair keeps its low 16 bits, as go-text did (D73).
-func (kd Kern6) KernPair(left, right GID) int16 {
-	return int16(tables.KerxData6(kd).Kerning(tables.GlyphID(left), tables.GlyphID(right)))
+// okage: tables.KerxData6.Kerning reads the value as HarfBuzz 15.1.0 does
+// (D73), and KernPair keeps all its bits. go-text kept the low 16 bits of a
+// long value (D90).
+func (kd Kern6) KernPair(left, right GID) int32 {
+	return tables.KerxData6(kd).Kerning(tables.GlyphID(left), tables.GlyphID(right))
 }
 
 // --------------------------------------- state machine ---------------------------------------

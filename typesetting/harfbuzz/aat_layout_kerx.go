@@ -159,7 +159,7 @@ type kern0Accelerator struct {
 	context *aatApplyContext
 }
 
-func (k0 kern0Accelerator) KernPair(left, right GID) int16 {
+func (k0 kern0Accelerator) KernPair(left, right GID) int32 {
 	if !k0.context.firstSet.hasGlyph(left) || !k0.context.secondSet.hasGlyph(right) {
 		return 0
 	}
@@ -303,11 +303,11 @@ func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver
 					o.attachChain = 0
 					o.YOffset = 0
 				} else if o.attachType != 0 {
-					o.YOffset = saturateAdd(o.YOffset, dc.c.font.emScaleY(v))
+					o.YOffset = saturateAdd(o.YOffset, dc.c.font.emScaleY(int32(v)))
 					buffer.scratchFlags |= bsfHasGPOSAttachment
 				}
 			} else if buffer.Info[idx].Mask&kernMask != 0 {
-				scaled := dc.c.font.emScaleX(v)
+				scaled := dc.c.font.emScaleX(int32(v))
 				o.XAdvance = saturateAdd(o.XAdvance, scaled)
 				o.XOffset = saturateAdd(o.XOffset, scaled)
 			}
@@ -319,11 +319,11 @@ func (dc *driverContextKerx1) transition(buffer *Buffer, driver stateTableDriver
 					o.attachChain = 0
 					o.XOffset = 0
 				} else if o.attachType != 0 {
-					o.XOffset = saturateAdd(o.XOffset, dc.c.font.emScaleX(v))
+					o.XOffset = saturateAdd(o.XOffset, dc.c.font.emScaleX(int32(v)))
 					buffer.scratchFlags |= bsfHasGPOSAttachment
 				}
 			} else if buffer.Info[idx].Mask&kernMask != 0 {
-				scaled := dc.c.font.emScaleY(v)
+				scaled := dc.c.font.emScaleY(int32(v))
 				o.YAdvance = saturateAdd(o.YAdvance, scaled)
 				o.YOffset = saturateAdd(o.YOffset, scaled)
 			}
@@ -354,7 +354,7 @@ type kern2Accelerator struct {
 	context *aatApplyContext
 }
 
-func (k2 kern2Accelerator) KernPair(left, right GID) int16 {
+func (k2 kern2Accelerator) KernPair(left, right GID) int32 {
 	if !k2.context.firstSet.hasGlyph(left) || !k2.context.secondSet.hasGlyph(right) {
 		return 0
 	}
@@ -422,16 +422,16 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 			markAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.Info[dc.mark].Glyph), int(uint16(action[0])))
 			currAnchor := dc.c.ankrTable.GetAnchor(gID(dc.c.buffer.cur(0).Glyph), int(uint16(action[1])))
 
-			o.XOffset = saturateSub(dc.c.font.emScaleX(markAnchor.X), dc.c.font.emScaleX(currAnchor.X))
-			o.YOffset = saturateSub(dc.c.font.emScaleY(markAnchor.Y), dc.c.font.emScaleY(currAnchor.Y))
+			o.XOffset = saturateSub(dc.c.font.emScaleX(int32(markAnchor.X)), dc.c.font.emScaleX(int32(currAnchor.X)))
+			o.YOffset = saturateSub(dc.c.font.emScaleY(int32(markAnchor.Y)), dc.c.font.emScaleY(int32(currAnchor.Y)))
 
 		case 2: /* Control Point Coordinate Actions. */
 			action, ok := dc.table.Action(ankrActionIndex)
 			if !ok {
 				return
 			}
-			o.XOffset = saturateSub(dc.c.font.emScaleX(action[0]), dc.c.font.emScaleX(action[2]))
-			o.YOffset = saturateSub(dc.c.font.emScaleY(action[1]), dc.c.font.emScaleY(action[3]))
+			o.XOffset = saturateSub(dc.c.font.emScaleX(int32(action[0])), dc.c.font.emScaleX(int32(action[2])))
+			o.YOffset = saturateSub(dc.c.font.emScaleY(int32(action[1])), dc.c.font.emScaleY(int32(action[3])))
 		}
 		// okage: the mark takes the offset of its base across the line, as
 		// in the merge 436f067b20 of HarfBuzz 15.1.0 (D73).
@@ -461,7 +461,7 @@ type kern6Accelerator struct {
 	context *aatApplyContext
 }
 
-func (k6 kern6Accelerator) KernPair(left, right GID) int16 {
+func (k6 kern6Accelerator) KernPair(left, right GID) int32 {
 	if !k6.context.firstSet.hasGlyph(left) || !k6.context.secondSet.hasGlyph(right) {
 		return 0
 	}
