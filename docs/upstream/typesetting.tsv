@@ -125,3 +125,4 @@ d1c97ede1763503adac4cd65c0571cebaee6f405	2026-11-10	ported	f56abd9	[segmenter] d
 8bc6b0d9bcaef650ea14e9a7cca7cc3938fb2a88	2026-11-10	ported	e261296	[shaping] add LineWrapper.PrepareSegmented to reuse break attributes. It changes shaping
 8de3a3a332ed1ddbe4d723891f26ec13b4c17c4a	2026-11-10	ported	f320ca3	[shaping] compute the break attributes once in WrapParagraph. It changes shaping
 bafa8730d77efd18e85158ce6b565a8fbda321cc	2026-11-10	ported	57a96bc	wrap-segmented: update to address review comments. It changes segmenter, shaping
+79cc91bedf96d5936d21ecd73e573539ef683269	2026-11-20	ported	eebdb2a	fix(bidi): skip past each run of European terminators in rule W5. It changes bidi

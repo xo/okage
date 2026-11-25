@@ -868,3 +868,16 @@ e638bf45dad386b68b622ab3bf507ff287f68050	2026-11-18	not-applicable		[skera] Boun
 12cf8178b8872e04fa33988830af9330a0bd7888	2026-11-18	not-applicable		[skera] Bound what the lookup walks read through shared offsets. It changes only skera
 9b99e7255420c8dbf8d57567895511233108a641	2026-11-18	not-applicable		Merge pull request #2462 from googlefonts/fix_oss_scanner_issues_2. A merge commit. Each commit that it merges has a line of its own
 7eec1e18b6dcb2cbb77a805f280825c075a388c6	2026-11-18	not-applicable		Merge pull request #2468 from googlefonts/fix_oss_scanner_issues. A merge commit. Each commit that it merges has a line of its own
+8402abb4ccc68377deffde06019a0105d20c967c	2026-11-09	not-applicable		[skera] Share one condition budget per FeatureVariations table. It changes only skera
+6d1103bb45b01b066ae78a97fdefda82c02bc45e	2026-11-09	not-applicable		[skera] Bound what the cmap UVS walks read through shared offsets. It changes only skera
+4fa9f4cf81e3c37a6180329224e4b2f44fc54dd0	2026-11-09	not-applicable		[skera] Bound what the BASE walks read through shared offsets. It changes only skera
+5b25b99ddb523e7a2eacf94a9c93a6dc069a9c1d	2026-11-18	not-applicable		[skera] Pass a context to CollectVariationIndices. It changes only skera
+ee7559d53abf51c0e49b71c942e17cb0f09e7d47	2026-11-18	not-applicable		[read-fonts] Charge the active glyphs of revisited sequence indices. It changes only read-fonts
+ebd2980f6757be7d3e31488ae7221cf94ea70f04	2026-11-09	not-applicable		[skera] Bound the work of subsetting shared CBLC index subtables. It changes only skera
+e60344d2c80de0f8a0aaef98a230ce210c8fe6d9	2026-11-19	not-applicable		[skera] Bound the COLR paint walk like HarfBuzz's sanitizer. It changes only skera
+2bdcb51897fd5d65d459eed3fae87a7634a48b62	2026-11-19	not-applicable		[skera] Look up the clip of each retained glyph as skrifa does. It changes only skera, read-fonts
+eabe8cb06ce3da3315a2fd10757284ac2d3712dd	2026-11-19	not-applicable		[skera] Don't panic on a cmap that maps past the glyph count. It changes only skera
+f9e95c6a3e1e4d01b5b67959ebf340fae55cacdb	2026-11-19	not-applicable		[read-fonts] Bound the GSUB closure by the sanitizer's budget too. It changes only read-fonts
+4733d8f26b50ae1cfcf980dfaa5d51a3279e6159	2026-11-19	not-applicable		[skera] Bound the MAXP glyph count by the size of the font. It changes only skera
+1cf96a60b5800b6a460a01fa3c2712304dfb508d	2026-11-23	not-applicable		Merge pull request #2476 from googlefonts/fix_oss_scanner_issues_3. A merge commit. Each commit that it merges has a line of its own
+4f115482ebf24d1989e2c4446bf877d4812a268b	2026-11-23	not-applicable		Merge pull request #2477 from googlefonts/fixes_1. A merge commit. Each commit that it merges has a line of its own

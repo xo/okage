@@ -1,7 +1,7 @@
 repository	url	checkout	crates	okage	policy	base	matched
 tiny-skia	https://github.com/linebender/tiny-skia	upstream/tiny-skia	tiny-skia 0.12.0, tiny-skia-path 0.12.0	., path	port	e48b9027762d33731e60e40eb17eaa4f583b0185	5d4754777746eef0828be166896eaf482c49f8f2
 strict-num	https://github.com/RazrFalcon/strict-num	upstream/strict-num	strict-num 0.1.1	path	port	edf5020c215063c3a9eb8fcac463c82eaceba6df	76d36febdb73e875ae3e0c6ae1310a084a7860c7
-resvg	https://github.com/linebender/resvg	upstream/resvg	usvg 0.49.0, resvg 0.49.0	svg	port	66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba	433d0213a98d611793d105e08e141325e13720e3
+resvg	https://github.com/linebender/resvg	upstream/resvg	usvg 0.49.0, resvg 0.49.0	svg	port	66ee0dc7d787d7e0b0ab3085b7849f78838cf2ba	1938e970a643b0585dea33f47b3a33d85f5f8b36
 svgtypes	https://github.com/linebender/svgtypes	upstream/svgtypes	svgtypes 0.16.2	internal/svgtypes	port	fa62387aea54d7af49ad65b47bca8d731136dd56	723dad9c3cd9e12cd9c9e5c240a63114999934a1
 roxmltree	https://github.com/RazrFalcon/roxmltree	upstream/roxmltree	roxmltree 0.21.1	roxmltree	port	67644e16f43c34cadc9e163163dd1aaf7ebe205e	
 simplecss	https://github.com/linebender/simplecss	upstream/simplecss	simplecss 0.2.2	internal/simplecss	port	6eacb39ca5c4c2390bfde374ed0651f0e35c9d8d	
@@ -11,10 +11,10 @@ velato	https://github.com/linebender/velato	upstream/velato	velato 0.12.0	lottie
 tinyhtml5	https://github.com/CourtBouillon/tinyhtml5	upstream/tinyhtml5	tinyhtml5 2.1.0	html	port	2a933f5b7baaf1592aa2b3779c798575db82511f	2a933f5b7baaf1592aa2b3779c798575db82511f
 tinycss2	https://github.com/Kozea/tinycss2	upstream/tinycss2	tinycss2 1.5.1	tinycss2	port	2cab2705158e2b9131e0e8537b8c62b4fb5619f5	2cab2705158e2b9131e0e8537b8c62b4fb5619f5
 cssselect2	https://github.com/Kozea/cssselect2	upstream/cssselect2	cssselect2 0.10.1	cssselect2	port	fc22accd5fdba764d95263fa8e6c97ce24f75f3e	fc22accd5fdba764d95263fa8e6c97ce24f75f3e
-typesetting	https://github.com/go-text/typesetting	upstream/typesetting	github.com/go-text/typesetting v0.3.5	typesetting	copy	19482bd51f2338e34bacd8cfd3288a04bbadc598	bafa8730d77efd18e85158ce6b565a8fbda321cc
-krilla	https://github.com/LaurenzV/krilla	upstream/krilla	krilla 0.8.2, krilla-svg 0.8.1	pdf, pdfsvg	port	e3459d0650682441894feec76603d92487d8510b	7d36506c9d566ffe265fe898dc4f64d4b150bdb0
+typesetting	https://github.com/go-text/typesetting	upstream/typesetting	github.com/go-text/typesetting v0.3.5	typesetting	copy	19482bd51f2338e34bacd8cfd3288a04bbadc598	79cc91bedf96d5936d21ecd73e573539ef683269
+krilla	https://github.com/LaurenzV/krilla	upstream/krilla	krilla 0.8.2, krilla-svg 0.8.1	pdf, pdfsvg	port	e3459d0650682441894feec76603d92487d8510b	7b15610d6e016298989ba8d5298ca93ec16dcc4e
 pdf-writer	https://github.com/typst/pdf-writer	upstream/pdf-writer	pdf-writer 0.15.0	internal/pdfwriter	subset	fdf090125f1e7209fa630c4ca1f5f29910c87c93	
-subsetter	https://github.com/typst/subsetter	upstream/subsetter	subsetter 0.2.6	internal/subsetter	port	c3f23c67bc0190587f639bda84dc0005ca3f54d5	
+subsetter	https://github.com/typst/subsetter	upstream/subsetter	subsetter 0.2.6	internal/subsetter	port	c3f23c67bc0190587f639bda84dc0005ca3f54d5	8221117c99ef413f327a0834aa70779c48d4cb1a
 siphasher	https://github.com/jedisct1/rust-siphash	upstream/siphasher	siphasher 1.0.2	internal/siphasher	subset	db8172048a1c9bdef0dcec782d965c236161af13	
 write-fonts	https://github.com/googlefonts/fontations	upstream/write-fonts	write-fonts 0.48.0	internal/subsetter	subset	9af3f3188ab5522e23446a1fb98135cb3f7d96b6	
-go-tex-math	https://github.com/go-tex/math	upstream/go-tex-math	github.com/go-tex/math v0.50.0+11	texmath, texmath/stixtwomath, typesetting/font	port	6a6d2729f3b41117158da5b67fbaf3dbce2d84aa	6bf53a13bf8b52262e1f61568963fa56d6bfd27c
+go-tex-math	https://github.com/go-tex/math	upstream/go-tex-math	github.com/go-tex/math v0.50.0+11	texmath, texmath/stixtwomath, typesetting/font	port	6a6d2729f3b41117158da5b67fbaf3dbce2d84aa	e33cf138b505a657a20d2af9dcf46e8b47a6ca65

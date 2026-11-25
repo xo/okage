@@ -40,3 +40,4 @@ d45af96e2991ef4f5465a8cd1e506f739374621e	2026-11-14	ported	fb7a357	Support `x`, 
 9e24e7b3ffa576ca07ed9be6a5ed16b6ecc69a7c	2026-11-14	ported	8658f7e	Limit layers without filters to the part of the canvas they contribute to (#1239). Port: resvg, tests
 deda5edb2d32e8810a3e6a13be289bed73097a62	2026-11-15	ported	3e1a5f4	Filters: Implement default primitive subregion (#1243). Port: usvg, resvg, tests
 433d0213a98d611793d105e08e141325e13720e3	2026-11-17	not-applicable		Use ubuntu-24.04 for linux-x86_64 release binaries (#1248). It changes only the runner of the release workflow in .github
+1938e970a643b0585dea33f47b3a33d85f5f8b36	2026-11-23	not-applicable		Upgrade harfrust to 0.16 and skrifa to 0.50 (#1254). It changes Cargo.toml and Cargo.lock only, and okage shapes text with typesetting (D9)

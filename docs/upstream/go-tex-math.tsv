@@ -1,2 +1,3 @@
 upstream	date	status	okage	note
 6bf53a13bf8b52262e1f61568963fa56d6bfd27c	2026-11-20	not-applicable		chore(deps): update dependency ruby to v4.0.10 (#67). It changes .github/workflows/ci.yml only
+e33cf138b505a657a20d2af9dcf46e8b47a6ca65	2026-11-22	not-applicable		fix(deps): update module github.com/go-opentype/opentype to v0.25.0 (#68). It changes go.mod and go.sum only, and texmath reads fonts with typesetting (D78)
