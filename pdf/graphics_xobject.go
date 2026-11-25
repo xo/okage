@@ -7,12 +7,40 @@ package pdf
 
 import "github.com/xo/okage/internal/pdfwriter"
 
+// groupColorSpace is GroupColorSpace in krilla src/graphics/xobject.rs: the
+// color space of a transparency group. The zero value groupColorSpaceNone is
+// None, where upstream has an Option<GroupColorSpace>.
+type groupColorSpace uint8
+
+// The values of groupColorSpace.
+const (
+	groupColorSpaceNone groupColorSpace = iota
+	groupColorSpaceRGB
+	groupColorSpaceLuma
+)
+
+// hash is the derived Hash of GroupColorSpace, which writes its
+// discriminant. g must not be groupColorSpaceNone.
+func (g groupColorSpace) hash(h *hasher) {
+	h.usize(int(g - groupColorSpaceRGB))
+}
+
+// hashOption is the derived Hash of an Option<GroupColorSpace>.
+func (g groupColorSpace) hashOption(h *hasher) {
+	if g == groupColorSpaceNone {
+		h.usize(0)
+		return
+	}
+	h.usize(1)
+	g.hash(h)
+}
+
 // xObjectRepr is Repr in krilla src/graphics/xobject.rs. customBBox is nil
 // for None.
 type xObjectRepr struct {
 	stream                      *Stream
 	isolated                    bool
-	transparencyGroupColorSpace bool
+	transparencyGroupColorSpace groupColorSpace
 	customBBox                  *Rect
 	// knockout is the flag K of the group. It is not in krilla, and only
 	// Surface.PushGroup sets it (D68).
@@ -26,7 +54,7 @@ func (xObjectRepr) typeID() string { return "xObjectRepr" }
 func (r xObjectRepr) hash(h *hasher) {
 	r.stream.hash(h)
 	h.bool(r.isolated)
-	h.bool(r.transparencyGroupColorSpace)
+	r.transparencyGroupColorSpace.hashOption(h)
 	if r.customBBox == nil {
 		h.usize(0)
 	} else {
@@ -46,9 +74,10 @@ type xObject struct {
 	p prehashed[xObjectRepr]
 }
 
-// newXObject is XObject::new in krilla src/graphics/xobject.rs. A nil
-// customBBox is None.
-func newXObject(stream *Stream, isolated, transparencyGroupColorSpace bool, customBBox *Rect) xObject {
+// newXObject is XObject::new in krilla src/graphics/xobject.rs. A
+// transparencyGroupColorSpace of groupColorSpaceNone and a nil customBBox are
+// None.
+func newXObject(stream *Stream, isolated bool, transparencyGroupColorSpace groupColorSpace, customBBox *Rect) xObject {
 	// In case a mask was invoked in the content stream, we _always_ create a
 	// new transparency group. Please see
 	// <https://github.com/typst/typst/issues/5509>. Just to provide a brief
@@ -59,7 +88,9 @@ func newXObject(stream *Stream, isolated, transparencyGroupColorSpace bool, cust
 	// gets applied twice to the mask, resulting in rendering issues. Using a
 	// transparency group in this case seems to fix the issue.
 	// TODO: Apply group transparency to page as well.
-	transparencyGroupColorSpace = transparencyGroupColorSpace || stream.usesMask
+	if stream.usesMask && transparencyGroupColorSpace == groupColorSpaceNone {
+		transparencyGroupColorSpace = groupColorSpaceRGB
+	}
 
 	if customBBox != nil {
 		r := *customBBox
@@ -105,7 +136,7 @@ func (x xObject) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdf
 		sc.registerValidationError(validationError)
 	}
 
-	useTransparencyGroup := r.isolated || r.transparencyGroupColorSpace
+	useTransparencyGroup := r.isolated || r.transparencyGroupColorSpace != groupColorSpaceNone
 
 	if useTransparencyGroup {
 		sc.registerValidationError(validationError{kind: validationTransparency, location: sc.location})
@@ -124,8 +155,21 @@ func (x xObject) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdf
 	// transparency group.
 	var transparencyGroupCS *maybeDeviceColorSpace
 	if useTransparencyGroup {
-		cs := sc.registerColorSpace(cc, colorSpaceRGB(serializeSettings.noDeviceCS))
-		transparencyGroupCS = &cs
+		noDeviceCS := serializeSettings.noDeviceCS
+		groupCS := r.transparencyGroupColorSpace
+		if groupCS == groupColorSpaceNone {
+			groupCS = groupColorSpaceRGB
+		}
+		var cs colorSpace
+		switch groupCS {
+		case groupColorSpaceLuma:
+			cs = colorSpaceLuma(noDeviceCS)
+		default:
+			cs = colorSpaceRGB(noDeviceCS)
+		}
+
+		mcs := sc.registerColorSpace(cc, cs)
+		transparencyGroupCS = &mcs
 	}
 
 	// okage: the resources come first, so that Document.Finish can write
@@ -157,17 +201,7 @@ func (x xObject) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdf
 			}
 
 			if transparencyGroupCS != nil {
-				pdfCS := transparency.Insert(pdfwriter.Name("CS"))
-
-				switch transparencyGroupCS.kind {
-				case maybeDeviceRGB:
-					pdfCS.Primitive(pdfwriter.Name(deviceRGB))
-				case maybeDeviceResource:
-					// Can only be SRGB.
-					pdfCS.Primitive(transparencyGroupCS.cs.getRef())
-				default:
-					panic("unreachable")
-				}
+				transparencyGroupCS.write(transparency.Insert(pdfwriter.Name("CS")))
 			}
 
 			// Upstream also finishes transparency, which is a reference to

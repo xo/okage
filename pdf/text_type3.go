@@ -179,7 +179,7 @@ func (t *type3Font) serialize(sc *serializeContext, cc *chunkContainer, rootRef 
 		// like that, and emojis look messed up. Using XObjects seems like
 		// the best choice here.
 		content.StartColorGlyph(t.widths[index])
-		xObject := newXObject(stream, false, false, nil)
+		xObject := newXObject(stream, false, groupColorSpaceNone, nil)
 		if !xObject.isEmpty() {
 			rectExpand(&fontBBox, xObject.bbox())
 			xName := rdBuilder.registerResource(registerResourceable(sc, cc, xObject))

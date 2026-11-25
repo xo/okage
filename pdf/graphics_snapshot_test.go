@@ -112,6 +112,29 @@ func TestPatternLumaStops(t *testing.T) {
 	checkSnapshot(t, "pattern_luma_stops", d)
 }
 
+// TestPatternLinearGradientWithOpacityICC is the snapshot test
+// pattern_linear_gradient_with_opacity_icc of krilla tests/src/pattern.rs,
+// with settings_2. The mask of the opacities is a transparency group in the
+// sGray color space.
+func TestPatternLinearGradientWithOpacityICC(t *testing.T) {
+	d := NewDocument(append(settings1(), WithNoDeviceCS(true))...)
+	ps, _ := PageSettingsFromWH(200, 200)
+	surface := d.StartPage(ps).Surface()
+	// linear_gradient_with_opacity of krilla tests/src/pattern.rs.
+	gradient := LinearGradient{
+		X1: 20, Y1: 0, X2: 180, Y2: 0,
+		Transform:    path.IdentityTransform(),
+		SpreadMethod: SpreadMethodPad,
+		Stops: []Stop{
+			{Offset: 0, Color: NewColorRGB(255, 0, 0), Opacity: 0.5},
+			{Offset: 1, Color: NewColorRGB(255, 0, 0), Opacity: 0.2},
+		},
+	}
+	surface.SetFill(&Fill{Paint: gradient, Opacity: 1})
+	surface.DrawPath(rectToPath(t, 20, 20, 180, 180))
+	checkSnapshotDecoded(t, "pattern_linear_gradient_with_opacity_icc", d)
+}
+
 // snapshotStream matches a stream object of a snapshot: its dictionary and
 // its data.
 var snapshotStream = regexp.MustCompile(`(?s)<<\n([^\n]*(?:\n  [^\n]*)*)\n>>\nstream\n(.*?)\nendstream`)

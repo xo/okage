@@ -25,6 +25,9 @@ type Mask struct {
 	// to manually set the bbox of the underlying XObject to match the shape
 	// that the gradient is being applied to.
 	customBBox *Rect
+	// groupColorSpace is the color space of the transparency group of the
+	// mask.
+	groupColorSpace groupColorSpace
 
 	// backdrop is the backdrop color BC of a luminosity mask, or nil. It is
 	// not in krilla (D68).
@@ -40,9 +43,10 @@ type Mask struct {
 // and maskType indicates the type of mask.
 func NewMask(stream *Stream, maskType MaskType) *Mask {
 	return &Mask{
-		stream:     stream,
-		maskType:   maskType,
-		customBBox: nil,
+		stream:          stream,
+		maskType:        maskType,
+		customBBox:      nil,
+		groupColorSpace: groupColorSpaceRGB,
 	}
 }
 
@@ -75,9 +79,10 @@ func newMaskFromShading(gradientProperties gradientProperties, shadingTransform 
 	shadingStream := shadingMaskStream(sc, cc, shadingTransform, shadingFunction)
 
 	return &Mask{
-		stream:     shadingStream,
-		maskType:   MaskTypeLuminosity,
-		customBBox: &bbox,
+		stream:          shadingStream,
+		maskType:        MaskTypeLuminosity,
+		customBBox:      &bbox,
+		groupColorSpace: groupColorSpaceLuma,
 	}
 }
 
@@ -117,6 +122,7 @@ func (m *Mask) hash(h *hasher) {
 		h.usize(1)
 		h.rect(*m.customBBox)
 	}
+	m.groupColorSpace.hash(h)
 	// okage: the backdrop and the transfer function add to the hash only
 	// when they are set, so that the hash of every other mask stays the hash
 	// of upstream (D68).
@@ -127,7 +133,7 @@ func (m *Mask) hash(h *hasher) {
 // src/graphics/mask.rs. It writes the stream as a transparency group once,
 // and the dictionary of the soft mask.
 func (m *Mask) serialize(sc *serializeContext, cc *chunkContainer, rootRef pdfwriter.Ref) {
-	xObject := sc.registerCacheable(cc, newXObject(m.stream, false, true, m.customBBox))
+	xObject := sc.registerCacheable(cc, newXObject(m.stream, false, m.groupColorSpace, m.customBBox))
 
 	chunk := cc.nonStream.masks
 	dict := chunk.Indirect(rootRef).Dict()

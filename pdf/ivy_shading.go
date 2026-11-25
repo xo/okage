@@ -181,9 +181,10 @@ func (b *contentBuilder) writeMesh(m MeshGradient, bounds Rect, sc *serializeCon
 	if m.hasOpacity() {
 		opacities := meshShading{triangles: m.Triangles, antiAlias: m.AntiAlias, useOpacities: true}
 		mask := &Mask{
-			stream:     meshMaskStream(sc, cc, m.Transform, opacities),
-			maskType:   MaskTypeLuminosity,
-			customBBox: &bounds,
+			stream:          meshMaskStream(sc, cc, m.Transform, opacities),
+			maskType:        MaskTypeLuminosity,
+			customBBox:      &bounds,
+			groupColorSpace: groupColorSpaceRGB,
 		}
 		state := newExtGState().mask(mask, sc, cc)
 		b.usesMask = true
@@ -414,9 +415,10 @@ func (s *Surface) drawMeshFill(p *Path) bool {
 	bbox := p.Bounds()
 	opacities := meshShading{triangles: m.Triangles, antiAlias: m.AntiAlias, useOpacities: true}
 	s.PushMask(&Mask{
-		stream:     meshMaskStream(s.sc, s.cc, m.Transform, opacities),
-		maskType:   MaskTypeLuminosity,
-		customBBox: &bbox,
+		stream:          meshMaskStream(s.sc, s.cc, m.Transform, opacities),
+		maskType:        MaskTypeLuminosity,
+		customBBox:      &bbox,
+		groupColorSpace: groupColorSpaceRGB,
 	})
 	fill := *s.fill
 	fill.Paint = opaque

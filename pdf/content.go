@@ -825,7 +825,7 @@ func (b *contentBuilder) drawMasked(sc *serializeContext, cc *chunkContainer, ma
 	mask = mask.coverContent(stream)
 	state := newExtGState().mask(mask, sc, cc)
 	b.usesMask = true
-	xObject := newXObject(stream, false, true, nil)
+	xObject := newXObject(stream, false, groupColorSpaceRGB, nil)
 	b.drawXObject(sc, cc, xObject, state)
 }
 
@@ -834,14 +834,14 @@ func (b *contentBuilder) drawOpacified(sc *serializeContext, cc *chunkContainer,
 	state := newExtGState().
 		strokingAlpha(opacity).
 		nonStrokingAlpha(opacity)
-	xObject := newXObject(stream, true, false, nil)
+	xObject := newXObject(stream, true, groupColorSpaceNone, nil)
 	b.drawXObject(sc, cc, xObject, state)
 }
 
 // drawIsolated is ContentBuilder::draw_isolated in krilla src/content.rs.
 func (b *contentBuilder) drawIsolated(sc *serializeContext, cc *chunkContainer, stream *Stream) {
 	state := newExtGState()
-	xObject := newXObject(stream, true, false, nil)
+	xObject := newXObject(stream, true, groupColorSpaceNone, nil)
 	b.drawXObject(sc, cc, xObject, state)
 }
 

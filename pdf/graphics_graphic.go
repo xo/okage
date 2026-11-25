@@ -27,5 +27,5 @@ type Graphic struct {
 // graphic. isolated indicates whether the contents of the graphic should be
 // isolated from wherever the graphic is invoked.
 func NewGraphic(stream *Stream, isolated bool) Graphic {
-	return Graphic{xObject: newXObject(stream, isolated, false, nil)}
+	return Graphic{xObject: newXObject(stream, isolated, groupColorSpaceNone, nil)}
 }

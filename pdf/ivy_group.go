@@ -82,7 +82,7 @@ func (i pushInstructionGroup) pop(s *Surface) {
 // newGroupXObject is newXObject for a group of PushGroup. The XObject always
 // has a group of the transparency type, with the flag K of a knockout group.
 func newGroupXObject(stream *Stream, isolated, knockout bool) xObject {
-	x := newXObject(stream, isolated, true, nil)
+	x := newXObject(stream, isolated, groupColorSpaceRGB, nil)
 	if !knockout {
 		return x
 	}

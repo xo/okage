@@ -35,7 +35,10 @@ func basicPatternStream(t *testing.T, s *Surface) {
 // question "krilla" of the oracle in test/krilla gave the files of the
 // hashes, for a page of 160 by 160 with the settings {"pretty": true,
 // "ascii_compatible": true, "compress_content_streams": false,
-// "xmp_metadata": false}. The comment of each scene gives its calls. The
+// "xmp_metadata": false}. On 2026-11-25, the oracle at the commit
+// 63233fb4 of krilla gave the hashes of the five scenes of gradients with
+// opacities again, because the mask of a gradient now has a gray
+// transparency group. The comment of each scene gives its calls. The
 // files are the same byte for byte, with the ID of the document. The test
 // module compares the same scenes with the oracle directly, so this test
 // keeps them for a machine without cargo.
@@ -91,7 +94,7 @@ func TestGraphicsScenes(t *testing.T) {
 				}, Opacity: 1})
 				s.DrawPath(rectToPath(t, 20, 20, 140, 140))
 			},
-			"0c1e5b68b85e8e33b7db2acb4bf76c76b32bde19ef2df7da4a84a981be5839a2",
+			"81a202023b6cf87a89463e71b9b1f96e39f391089050ec7410bca35d4aac2484",
 		},
 		{
 			// The stops of the scene above, from 50, 10 to 150, 110, the
@@ -105,7 +108,7 @@ func TestGraphicsScenes(t *testing.T) {
 				}, Opacity: 1})
 				s.DrawPath(rectToPath(t, 20, 20, 140, 140))
 			},
-			"1d766f37935a9db5fad4d3e608b64fdce59e4e034ebbc9f9dbf36ab0dadcd1f0",
+			"90c5428a56149958d1536e2bf9c0deea3ed25dbfe0ab8ca04e570c749bb14c8b",
 		},
 		{
 			// A sweep gradient of luma stops with opacities, anti-aliased.
@@ -117,7 +120,7 @@ func TestGraphicsScenes(t *testing.T) {
 				}, Opacity: 1})
 				s.DrawPath(rectToPath(t, 20, 20, 140, 140))
 			},
-			"b18bf5e6e756fb633449e94b354af6bb457353c8de0f87885027ec29a79e5b77",
+			"99aa05f82b2f511eaad48d4e978007fa238cae14c8bb5cc3629863af13f501f5",
 		},
 		{
 			// A radial gradient of the luma stops, with a scale, and the
@@ -131,7 +134,7 @@ func TestGraphicsScenes(t *testing.T) {
 				}, Opacity: 0.5})
 				s.DrawPath(rectToPath(t, 20, 20, 140, 140))
 			},
-			"4ac810bd974acb0430448e1ec71411c3c9c566ade39b6650d6be4194981e7b2f",
+			"1607a28773d5b2ec7b02f789a2a10a326b4d2d9e8a66dd7f8ed015ce052a1930",
 		},
 		{
 			// The pattern of basic_pattern_stream of krilla tests/src/main.rs,
@@ -187,7 +190,7 @@ func TestGraphicsScenes(t *testing.T) {
 				}, Opacity: 1})
 				s.DrawPath(rectToPath(t, 20, 20, 140, 140))
 			},
-			"a9cdab2d3a41b68e220589a3dc0174b6c025741d41bf4b702729cee8c75b5c4d",
+			"59d88ffb3b175af10b3a7394ab2c30de14a86079c81aeb167523ea1879f28bb1",
 		},
 		{
 			// A linear gradient of two CMYK stops, padded at 0 and 1.

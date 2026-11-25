@@ -368,21 +368,21 @@ func TestGraphicsStates(t *testing.T) {
 // TestXObject checks XObject in krilla src/graphics/xobject.rs.
 func TestXObject(t *testing.T) {
 	s := emptyStream()
-	x := newXObject(s, false, false, nil)
+	x := newXObject(s, false, groupColorSpaceNone, nil)
 	if !x.isEmpty() || x.bbox() != s.bbox {
 		t.Error("the XObject of an empty stream is wrong")
 	}
 	r, _ := path.RectFromXYWH(1, 2, 3, 4)
-	x = newXObject(newStream([]byte("q Q"), s.bbox, nil, s.resourceDictionary, true), false, false, &r)
+	x = newXObject(newStream([]byte("q Q"), s.bbox, nil, s.resourceDictionary, true), false, groupColorSpaceNone, &r)
 	r, _ = path.RectFromXYWH(5, 6, 7, 8)
-	if x.isEmpty() || x.bbox().Left() != 1 || !x.p.value.transparencyGroupColorSpace {
+	if x.isEmpty() || x.bbox().Left() != 1 || x.p.value.transparencyGroupColorSpace != groupColorSpaceRGB {
 		t.Errorf("the XObject is %+v", x.p.value)
 	}
 
 	// A transparency group of device-independent colors takes the sRGB
 	// color space.
 	d := NewDocument(WithNoDeviceCS(true), WithPretty(false))
-	registerResourceable(d.sc, d.cc, newXObject(emptyStream(), true, false, nil))
+	registerResourceable(d.sc, d.cc, newXObject(emptyStream(), true, groupColorSpaceNone, nil))
 	if got := string(d.cc.streams.xObjects[0].AsBytes()); !strings.Contains(got, "/Group<</Type/Group/S/Transparency/I true/CS 3 0 R>>") {
 		t.Errorf("the group is written as %q", got)
 	}
