@@ -2,6 +2,8 @@
 
 package tables
 
+import "math"
+
 // okage: this file is not in go-text (D84).
 //
 // go-text computes the deltas of gvar, of an item variation store and of
@@ -175,3 +177,59 @@ func (sm SegmentMaps) MapFixed(coord Fixed) Fixed {
 // ToCoord rounds a coordinate in the 16.16 format to 2.14, as
 // Fixed::to_f2dot14 of font-types does.
 func (a Fixed) ToCoord() Coord { return Coord((a + 2) >> 2) }
+
+// okage: FixedFromFloat64, SaturatingSub and NormalizeFixed are not in
+// go-text (D101). They normalize a coordinate of the user as skrifa does,
+// for Font.NormalizeVariations and for internal/subsetter.
+
+// FixedFromFloat64 returns x in the 16.16 format, as Fixed::from_f64 of
+// font-types src/fixed.rs does. It rounds half away from zero, and
+// saturates as the conversion "as i32" of Rust does. NaN gives 0.
+func FixedFromFloat64(x float64) Fixed {
+	frac := -0.5
+	if !math.Signbit(x) {
+		frac = 0.5
+	}
+	v := float64(x*65536) + frac
+	switch {
+	case v != v:
+		return 0
+	case v <= math.MinInt32:
+		return math.MinInt32
+	case v >= math.MaxInt32:
+		return math.MaxInt32
+	}
+	return Fixed(int32(v))
+}
+
+// SaturatingSub returns a minus b, clamped to the range of the format, as
+// Fixed::saturating_sub of font-types src/fixed.rs does.
+func (a Fixed) SaturatingSub(b Fixed) Fixed {
+	d := int64(a) - int64(b)
+	return Fixed(min(max(d, math.MinInt32), math.MaxInt32))
+}
+
+// fixedOfFloat1616 returns the bits of a number of the table fvar, which
+// go-text reads as a Float1616.
+func fixedOfFloat1616(v Float1616) Fixed {
+	return Fixed(int32(Float1616ToUint(v)))
+}
+
+// NormalizeFixed maps a coordinate of the user to the range -1 to 1 of the
+// axis, in the 16.16 format, as VariationAxisRecord::normalize of
+// read-fonts src/tables/fvar.rs does. The quotient is rounded.
+func (va VariationAxisRecord) NormalizeFixed(value Fixed) Fixed {
+	minValue, defaultValue := fixedOfFloat1616(va.Minimum), fixedOfFloat1616(va.Default)
+	// Make sure max is >= min to avoid potential panic in clamp.
+	maxValue := max(fixedOfFloat1616(va.Maximum), minValue)
+	value = min(max(value, minValue), maxValue)
+	switch {
+	case value < defaultValue:
+		value = -defaultValue.SaturatingSub(value).Div(defaultValue.SaturatingSub(minValue))
+	case value > defaultValue:
+		value = value.SaturatingSub(defaultValue).Div(maxValue.SaturatingSub(defaultValue))
+	default:
+		value = 0
+	}
+	return min(max(value, -FixedOne), FixedOne)
+}

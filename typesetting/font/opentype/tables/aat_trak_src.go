@@ -57,10 +57,16 @@ func (td TrackData) GetTracking(ptem float32, track float32) float32 {
 	t0 := td.TrackTable[i].Track
 	t1 := td.TrackTable[j].Track
 
-	t := (track - t0) / (t1 - t0)
-
 	a := td.TrackTable[i].value(ptem, td.SizeTable)
 	b := td.TrackTable[j].value(ptem, td.SizeTable)
+
+	// okage: two tracks with the same value give the mean of their
+	// values, as in HarfBuzz 15.2.0. go-text divided by zero (D101).
+	if t0 == t1 {
+		return (a + b) * 0.5
+	}
+
+	t := (track - t0) / (t1 - t0)
 	// okage: the conversion stops a fused multiply and add (D16, D71).
 	return a + float32(t*(b-a))
 }

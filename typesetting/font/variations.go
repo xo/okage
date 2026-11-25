@@ -703,15 +703,18 @@ func (fv fvar) normalizeCoordinates(coords []float32) []VarCoord {
 //
 // This method panics if `coords` has not the correct length, that is the number of axis inf 'fvar'.
 func (f *Font) NormalizeVariations(coords []float32) []VarCoord {
-	// Axis normalization is a two-stage process.  First we normalize
-	// based on the [min,def,max] values for the axis to be [-1,0,1].
-	// Then, if there's an `avar' table, we renormalize this range.
-	normalized := f.fvar.normalizeCoordinates(coords)
-
-	// now applying 'avar'
-	for i, av := range f.avar.AxisSegmentMaps {
-		normalized[i] = av.Map(normalized[i])
+	// okage: the coordinates are normalized and mapped with avar in the
+	// 16.16 format, and rounded to 2.14 at the end, as
+	// Fvar::user_to_normalized of read-fonts does (D101). go-text rounds
+	// the normalized value to 2.14 in float32 first, and then maps it with
+	// avar in 2.14, so a coordinate could differ from skrifa by one unit.
+	normalized := make([]VarCoord, len(coords))
+	for i, a := range f.fvar {
+		fixed := a.NormalizeFixed(tables.FixedFromFloat64(float64(coords[i])))
+		if i < len(f.avar.AxisSegmentMaps) {
+			fixed = f.avar.AxisSegmentMaps[i].MapFixed(fixed)
+		}
+		normalized[i] = fixed.ToCoord()
 	}
-
 	return normalized
 }

@@ -24,7 +24,10 @@ func ParseTrackData(src []byte, parentSrc []byte) (TrackData, int, error) {
 	n += 8
 
 	{
-		if offsetSizeTable != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the table trak, as in
+		// HarfBuzz 15.2.0, whose offset is never null here. go-text ignored
+		// it, and gave no sizes (D101).
+		{
 			if L := len(parentSrc); L < offsetSizeTable {
 				return item, 0, fmt.Errorf("reading TrackData: "+"EOF: expected length: %d, got %d", offsetSizeTable, L)
 			}
@@ -72,7 +75,10 @@ func ParseTrackTableEntry(src []byte, grandParentSrc []byte, perSizeTrackingCoun
 	n += 8
 
 	{
-		if offsetPerSizeTracking != 0 { // ignore null offset
+		// okage: the offset 0 is the start of the table trak, as in
+		// HarfBuzz 15.2.0, whose offset is never null here. go-text ignored
+		// it, and value indexed the missing values, which panicked (D101).
+		{
 			if L := len(grandParentSrc); L < offsetPerSizeTracking {
 				return item, 0, fmt.Errorf("reading TrackTableEntry: "+"EOF: expected length: %d, got %d", offsetPerSizeTracking, L)
 			}

@@ -181,11 +181,13 @@ func (reg RegionAxisCoordinates) evaluate(coord Coord) float32 {
 }
 
 type ItemVariationData struct {
-	itemCount        uint16    // The number of delta sets for distinct items.
-	wordDeltaCount   uint16    // A packed field: the high bit is a flag—see details below.
-	regionIndexCount uint16    // The number of variation regions referenced.
-	RegionIndexes    []uint16  `arrayCount:"ComputedField-regionIndexCount"` //[regionIndexCount]	Array of indices into the variation region list for the regions referenced by this item variation data table.
-	DeltaSets        [][]int16 `isOpaque:"" subsliceStart:"AtCurrent"`       //[itemCount]	Delta-set rows.
+	itemCount        uint16   // The number of delta sets for distinct items.
+	wordDeltaCount   uint16   // A packed field: the high bit is a flag—see details below.
+	regionIndexCount uint16   // The number of variation regions referenced.
+	RegionIndexes    []uint16 `arrayCount:"ComputedField-regionIndexCount"` //[regionIndexCount]	Array of indices into the variation region list for the regions referenced by this item variation data table.
+	// okage: a delta is an int32, so that a delta of 32 bits fits (D101).
+	// go-text holds an int16.
+	DeltaSets [][]int32 `isOpaque:"" subsliceStart:"AtCurrent"` //[itemCount]	Delta-set rows.
 }
 
 func (ivd *ItemVariationData) parseDeltaSets(src []byte) error {
@@ -193,29 +195,47 @@ func (ivd *ItemVariationData) parseDeltaSets(src []byte) error {
 		LONG_WORDS            = 0x8000 // Flag indicating that “word” deltas are long (int32)
 		WORD_DELTA_COUNT_MASK = 0x7FFF // Count of “word” delt
 	)
-	if ivd.wordDeltaCount&LONG_WORDS != 0 {
-		return errors.New("LONG_WORDS not implemented in DeltaSets")
-	}
+	// okage: go-text returns an error for the flag LONG_WORDS, and the
+	// table that holds the store is then not loaded. The copy reads the
+	// deltas of 32 bits and of 16 bits that the flag gives, as
+	// DeltaSetIter of read-fonts src/tables/variations.rs and
+	// VarData::get_delta of HarfBuzz src/hb-ot-layout-common.hh do (D101).
+	longWords := ivd.wordDeltaCount&LONG_WORDS != 0
 	itemCount := int(ivd.itemCount)
-	shortDeltaCount := int(WORD_DELTA_COUNT_MASK & ivd.wordDeltaCount)
+	wordDeltaCount := int(WORD_DELTA_COUNT_MASK & ivd.wordDeltaCount)
 	regionIndexCount := int(ivd.regionIndexCount)
 
-	rowLength := shortDeltaCount + regionIndexCount
+	// A word delta has 2 bytes, and a short delta 1 byte. With the flag
+	// LONG_WORDS, a word delta has 4 bytes, and a short delta 2 bytes.
+	wordSize, shortSize := 2, 1
+	if longWords {
+		wordSize, shortSize = 4, 2
+	}
+	rowLength := wordDeltaCount*wordSize + (regionIndexCount-wordDeltaCount)*shortSize
+	if wordDeltaCount > regionIndexCount {
+		return errors.New("invalid item variation data subtable")
+	}
 	if L := len(src); L < itemCount*rowLength {
 		return fmt.Errorf("EOF: expected length: %d, got %d", itemCount*rowLength, L)
 	}
-	if shortDeltaCount > regionIndexCount {
-		return errors.New("invalid item variation data subtable")
-	}
-	ivd.DeltaSets = make([][]int16, itemCount)
+	ivd.DeltaSets = make([][]int32, itemCount)
 	for i := range ivd.DeltaSets {
-		vi := make([]int16, regionIndexCount)
+		vi := make([]int32, regionIndexCount)
 		j := 0
-		for ; j < shortDeltaCount; j++ {
-			vi[j] = int16(binary.BigEndian.Uint16(src[2*j:]))
-		}
-		for ; j < regionIndexCount; j++ {
-			vi[j] = int16(int8(src[shortDeltaCount+j]))
+		if longWords {
+			for ; j < wordDeltaCount; j++ {
+				vi[j] = int32(binary.BigEndian.Uint32(src[4*j:]))
+			}
+			for ; j < regionIndexCount; j++ {
+				vi[j] = int32(int16(binary.BigEndian.Uint16(src[2*wordDeltaCount+2*j:])))
+			}
+		} else {
+			for ; j < wordDeltaCount; j++ {
+				vi[j] = int32(int16(binary.BigEndian.Uint16(src[2*j:])))
+			}
+			for ; j < regionIndexCount; j++ {
+				vi[j] = int32(int8(src[wordDeltaCount+j]))
+			}
 		}
 		ivd.DeltaSets[i] = vi
 		src = src[rowLength:]

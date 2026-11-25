@@ -260,7 +260,8 @@ func TestItemVarStoreOutOfRange(t *testing.T) {
 		VariationRegionList: VariationRegionList{axisCount: 1, VariationRegions: []VariationRegion{
 			{RegionAxes: []RegionAxisCoordinates{{StartCoord: -1, PeakCoord: 1, EndCoord: 1}}},
 		}},
-		ItemVariationDatas: []ItemVariationData{{RegionIndexes: []uint16{3}, DeltaSets: [][]int16{{10}}}},
+		// okage: a delta is an int32 (D101).
+		ItemVariationDatas: []ItemVariationData{{RegionIndexes: []uint16{3}, DeltaSets: [][]int32{{10}}}},
 	}
 	// region index 3 is out of range
 	tu.Assert(t, store.GetDelta(VariationStoreIndex{}, []Coord{1}) == 0)

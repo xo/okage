@@ -171,7 +171,7 @@ func TestMathVariation(t *testing.T) {
 		}}},
 		ItemVariationDatas: []tables.ItemVariationData{{
 			RegionIndexes: []uint16{0},
-			DeltaSets:     [][]int16{{0}, {40}},
+			DeltaSets:     [][]int32{{0}, {40}},
 		}},
 	}
 	if got := face.MathConstant(AxisHeight); got != 250 {

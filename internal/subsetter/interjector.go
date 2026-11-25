@@ -7,7 +7,6 @@ package subsetter
 
 import (
 	"encoding/binary"
-	"math"
 
 	ot "github.com/xo/okage/typesetting/font/opentype"
 	"github.com/xo/okage/typesetting/font/opentype/tables"
@@ -89,8 +88,9 @@ func (s *skrifaInterjector) isDefaultLocation() bool {
 // OpenType, maps them with the avar table, and rounds them to 2.14 at the
 // end, in Fvar::user_to_normalized of read-fonts src/tables/fvar.rs. The
 // port does the same with the avar table of version 1 of typesetting
-// (D84). typesetting does not read the avar table of version 2, which skrifa
-// reads.
+// (D84), with the normalization of typesetting that Font.NormalizeVariations
+// also uses (D101). typesetting does not read the avar table of version 2,
+// which skrifa reads.
 func axesLocation(ref fontRef, location []Variation) []tables.Coord {
 	raw, ok := ref.table(Tag{'f', 'v', 'a', 'r'})
 	if !ok {
@@ -105,7 +105,7 @@ func axesLocation(ref fontRef, location []Variation) []tables.Coord {
 	for i, a := range axes {
 		for _, v := range location {
 			if [4]byte(v.Tag) == tagBytes(a.Tag) {
-				fixed[i] = normalizeAxis(a, fixedFromF64(float64(v.Value)))
+				fixed[i] = a.NormalizeFixed(tables.FixedFromFloat64(float64(v.Value)))
 			}
 		}
 	}
@@ -122,57 +122,6 @@ func axesLocation(ref fontRef, location []Variation) []tables.Coord {
 		coords[i] = f.ToCoord()
 	}
 	return coords
-}
-
-// normalizeAxis normalizes a coordinate of the user to the range -1 to 1 of
-// the axis, as VariationAxisRecord::normalize of read-fonts
-// src/tables/fvar.rs does in the 16.16 format.
-func normalizeAxis(a tables.VariationAxisRecord, value tables.Fixed) tables.Fixed {
-	minValue, defaultValue := fixedOfFloat1616(a.Minimum), fixedOfFloat1616(a.Default)
-	// Make sure max is >= min to avoid potential panic in clamp.
-	maxValue := max(fixedOfFloat1616(a.Maximum), minValue)
-	value = min(max(value, minValue), maxValue)
-	switch {
-	case value < defaultValue:
-		value = -saturatingSub(defaultValue, value).Div(saturatingSub(defaultValue, minValue))
-	case value > defaultValue:
-		value = saturatingSub(value, defaultValue).Div(saturatingSub(maxValue, defaultValue))
-	default:
-		value = 0
-	}
-	return min(max(value, -tables.FixedOne), tables.FixedOne)
-}
-
-// fixedOfFloat1616 gives the bits of a number of the fvar table, which
-// typesetting reads as a float32.
-func fixedOfFloat1616(v float32) tables.Fixed {
-	return tables.Fixed(int32(tables.Float1616ToUint(v)))
-}
-
-// fixedFromF64 is Fixed::from_f64 of font-types src/fixed.rs: it rounds
-// half away from zero, and saturates as the conversion as i32 of Rust does.
-// NaN gives 0.
-func fixedFromF64(x float64) tables.Fixed {
-	frac := -0.5
-	if !math.Signbit(x) {
-		frac = 0.5
-	}
-	v := float64(x*65536) + frac
-	switch {
-	case v != v:
-		return 0
-	case v <= math.MinInt32:
-		return math.MinInt32
-	case v >= math.MaxInt32:
-		return math.MaxInt32
-	}
-	return tables.Fixed(int32(v))
-}
-
-// saturatingSub is Fixed::saturating_sub of font-types src/fixed.rs.
-func saturatingSub(a, b tables.Fixed) tables.Fixed {
-	d := int64(a) - int64(b)
-	return tables.Fixed(min(max(d, math.MinInt32), math.MaxInt32))
 }
 
 // tagBytes gives the four bytes of a tag of typesetting.

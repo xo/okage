@@ -25,12 +25,14 @@ func TestVar(t *testing.T) {
 		design     float32
 		normalized VarCoord
 	}{
+		// okage: the coordinates are those of skrifa, which normalizes and
+		// maps them with avar in 16.16 and rounds them to 2.14 at the end
+		// (D65, D101). go-text gives 1529 for 450, and D65 gave -16116 for
+		// 206.
 		{200, -16384},
-		// okage: avar interpolates in 16.16 with a rounded division, as
-		// skrifa and FreeType do, and go-text gives -16117 (D65).
-		{206, -16116},
+		{206, -16117},
 		{400, 0},
-		{450, 1529},
+		{450, 1530},
 		{600, 6014},
 	} {
 		coords := font.NormalizeVariations([]float32{test.design})
@@ -45,8 +47,9 @@ func TestVar(t *testing.T) {
 	face := NewFace(font)
 	face.SetVariations([]Variation{{ot.MustNewTag("wght"), 206.}})
 	tu.Assert(t, len(face.coords) == 1)
-	// okage: go-text gives -16117 (D65).
-	tu.Assert(t, face.coords[0] == -16116)
+	// okage: skrifa gives -16117, as go-text does. D65 gave -16116
+	// (D101).
+	tu.Assert(t, face.coords[0] == -16117)
 
 	face.SetVariations(nil)
 	tu.Assert(t, len(face.coords) == 0)
@@ -56,14 +59,13 @@ func TestVar(t *testing.T) {
 		design     float32
 		normalized VarCoord
 	}{
-		// okage: avar interpolates in 16.16 with a rounded division, as
-		// skrifa and FreeType do, and go-text gives 1310 (D65).
+		// okage: the coordinates are those of skrifa (D65, D101). go-text
+		// gives 1310 for 200 and 2672 for 301, and D65 gave 6424 for
+		// 401.2.
 		{200, 1311},
-		{301, 2672},
+		{301, 2674},
 		{400, 6390},
-		// okage: avar interpolates in 16.16 with a rounded division, as
-		// skrifa and FreeType do, and go-text gives 6423 (D65).
-		{401.2, 6424},
+		{401.2, 6423},
 	} {
 		coords := font.NormalizeVariations([]float32{test.design})
 		tu.AssertC(t, coords[0] == test.normalized, fmt.Sprintf("%d != %d", coords[0], test.normalized))
@@ -716,7 +718,10 @@ func TestCFF2Var(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	for _, data := range datas[2:3] {
-		coords := font.NormalizeVariations([]float32{data.Coord})
+		// okage: HarfBuzz made the extents at its normalized coordinate
+		// 2672 for the weight 301. NormalizeVariations gives 2674, as
+		// skrifa does (D101).
+		coords := []VarCoord{2672}
 
 		for _, glyph := range data.Extents[1:2] {
 			_, bounds, err := font.cff2.LoadGlyph(glyph.GID, coords)

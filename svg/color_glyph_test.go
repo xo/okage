@@ -3,6 +3,7 @@ package svg
 import (
 	"encoding/binary"
 	"image/color"
+	"os"
 	"slices"
 	"testing"
 
@@ -188,4 +189,34 @@ func TestColorGlyphPalette(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestColorGlyphLongWords checks that the test font of COLRv1 of
+// fontations has its color glyphs. The item variation store of its table
+// COLR has deltas of 32 bits, which go-text could not parse, so the font
+// had no table COLR (D101). The glyph 99 rotates by an angle with such a
+// delta, at the largest value of the axis ROTA.
+func TestColorGlyphLongWords(t *testing.T) {
+	data, err := os.ReadFile("../internal/colr/testdata/test_glyphs-glyf_colr_1_variable.ttf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	db := NewFontDatabase()
+	ids := db.LoadFontData(data)
+	if len(ids) != 1 {
+		t.Fatalf("the database loaded %d faces, want 1", len(ids))
+	}
+	style := ColorGlyphStyle{Variations: []FontVariation{{Tag: [4]byte{'R', 'O', 'T', 'A'}, Value: 539.98901}}}
+	tree, ok := db.ColorGlyph(ids[0], 99, style)
+	if !ok {
+		t.Fatal("ColorGlyph is false")
+	}
+	pm := renderColorGlyph(t, tree, 40, 4, 36, 48, 48)
+	data = pm.Data()
+	for i := 3; i < len(data); i += 4 {
+		if data[i] != 0 {
+			return
+		}
+	}
+	t.Error("the glyph draws no pixel")
 }
