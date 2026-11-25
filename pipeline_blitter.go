@@ -6,7 +6,10 @@
 
 package okage
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"math"
+)
 
 // rasterPipelineBlitter is RasterPipelineBlitter in tiny-skia
 // src/pipeline/blitter.rs.
@@ -17,9 +20,13 @@ import "encoding/binary"
 // hold. The other rows of a mask are 0, and the stage mask_u8 stores
 // nothing there, so the bytes are the same as upstream. It also draws only
 // on the columns from colLeft to colRight, without colRight: the columns
-// that the pixmap holds. The columns of a mask that a pixmap draws through
-// do not cut a rect here, because maskBounds keeps the chunks of the stages
-// in their places (D35).
+// that the pixmap holds, when it is the subpixmap of a mask that holds
+// fewer columns than its width. A pixmap that holds each column does not
+// cut a rect, because upstream does not. The hairline without
+// anti-aliasing can give a rect one column past the right side, and
+// upstream draws that pixel on the first column of the next row. The
+// columns of a mask that a pixmap draws through do not cut a rect here,
+// because maskBounds keeps the chunks of the stages in their places (D35).
 //
 // Port: innerAntiHRp, innerRectRp and innerMaskRp are the pipelines without
 // the stage mask_u8, for a mask of NewRectMask. They run on the chunks of
@@ -263,11 +270,12 @@ func newRasterPipelineBlitter(paint *Paint, mask *subMaskRef, pixmap *subPixmapM
 		rowTop, rowBottom = max(rowTop, mask.top), min(rowBottom, mask.bottom)
 	}
 
+	colLeft, colRight := blitColumns(pixmap)
 	return &rasterPipelineBlitter{
 		rowTop:           uint32(max(rowTop, 0)),
 		rowBottom:        uint32(max(rowBottom, 0)),
-		colLeft:          uint32(max(pixmap.left, 0)),
-		colRight:         uint32(max(pixmap.right, 0)),
+		colLeft:          colLeft,
+		colRight:         colRight,
 		mask:             mask,
 		pixmapSrc:        pixmapSrc,
 		pixmap:           pixmap,
@@ -318,11 +326,12 @@ func newRasterPipelineBlitterMask(pixmap *subPixmapMut) (*rasterPipelineBlitter,
 		blitMaskRp = p.compile()
 	}
 
+	colLeft, colRight := blitColumns(pixmap)
 	return &rasterPipelineBlitter{
 		rowTop:           uint32(max(pixmap.top, 0)),
 		rowBottom:        uint32(max(pixmap.bottom, 0)),
-		colLeft:          uint32(max(pixmap.left, 0)),
-		colRight:         uint32(max(pixmap.right, 0)),
+		colLeft:          colLeft,
+		colRight:         colRight,
 		mask:             nil,
 		pixmapSrc:        dummyPixmapSrc(),
 		pixmap:           pixmap,
@@ -333,6 +342,16 @@ func newRasterPipelineBlitterMask(pixmap *subPixmapMut) (*rasterPipelineBlitter,
 		blitMaskRp:       blitMaskRp,
 		isMask:           true,
 	}, true
+}
+
+// blitColumns returns the columns that a blitter draws on in pixmap: the
+// columns that the subpixmap of a mask holds, or every column when pixmap
+// holds each column, as in upstream. It ports no upstream function (D35).
+func blitColumns(pixmap *subPixmapMut) (left, right uint32) {
+	if pixmap.left <= 0 && pixmap.right >= int(pixmap.size.Width()) {
+		return 0, math.MaxUint32
+	}
+	return uint32(max(pixmap.left, 0)), uint32(max(pixmap.right, 0))
 }
 
 // maskCtx returns self.mask.map(|c| c.mask_ctx()).unwrap_or_default() of
