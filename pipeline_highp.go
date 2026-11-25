@@ -1400,9 +1400,40 @@ func setLum(r, g, b, l float32) (float32, float32, float32) {
 // clipColor is clip_color in tiny-skia src/pipeline/highp.rs.
 //
 // Port (D33): it works on one lane, as setSat does.
+//
+// Port (D96): if mx is 0 or more and not more than a, clipColorChannel
+// takes neither of its branches and gives c.max(0) for each channel. The
+// function then returns that without lum, and the Go compiler inlines it.
+// clipColorSlow does the rest.
 func clipColor(r, g, b, a float32) (float32, float32, float32) {
+	// mx is r.max(g.max(b)), written out with the rule of wide.LaneMax.
+	mx := g
+	if g < b {
+		mx = b
+	}
+	if !(r < mx) {
+		mx = r
+	}
+	if !(mx >= 0) || mx > a {
+		return clipColorSlow(r, g, b, a, mx)
+	}
+	// c.max(0) with the rule of wide.LaneMax.
+	if r < 0 {
+		r = 0
+	}
+	if g < 0 {
+		g = 0
+	}
+	if b < 0 {
+		b = 0
+	}
+	return r, g, b
+}
+
+// clipColorSlow is the part of clipColor where mx is less than 0, more than
+// a, or NaN. It ports no upstream function (D96).
+func clipColorSlow(r, g, b, a, mx float32) (float32, float32, float32) {
 	mn := wide.LaneMin(r, wide.LaneMin(g, b))
-	mx := wide.LaneMax(r, wide.LaneMax(g, b))
 	l := lum(r, g, b)
 
 	return clipColorChannel(r, mn, mx, l, a),
@@ -1778,9 +1809,13 @@ func sampler4x4(
 			prevXs = xs
 		}
 		var rl, gl, bl, al float32
+		// Port (D96): the loops read the weights of the lane once, so
+		// that the inner loop loads only the pixels.
+		wxl := [4]float32{wx[0][l], wx[1][l], wx[2][l], wx[3][l]}
 		for j := range ys {
+			wyj := wy[j][l]
 			for i := range xs {
-				w := float32(wx[i][l] * wy[j][l])
+				w := float32(wxl[i] * wyj)
 				c := &block[j][i]
 				rl = madHighp(w, c[0], rl)
 				gl = madHighp(w, c[1], gl)
@@ -2211,29 +2246,46 @@ func (p *highpPipeline) applyConcentricScaleBias() {
 	p.nextStage()
 }
 
+// No benchmark of tiny-skia covers the stages of the color spaces, so D33
+// left them as chains of methods. BenchmarkGamma measures them (D96). Most
+// of them now work on one lane at a time, and copy no channel, as "Copies of
+// a vector" in docs/SIMD.md says. The stages of the gamma 2.2 call Powf,
+// because its SIMD code is faster than LanePowf on each lane in the SIMD
+// build.
+
 // gammaExpand2 is gamma_expand_2 in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) gammaExpand2() {
-	p.r = p.r.Mul(p.r)
-	p.g = p.g.Mul(p.g)
-	p.b = p.b.Mul(p.b)
+	// Port (D33): one loop on the lanes. Upstream: r * r, g * g, b * b.
+	for i := range p.r {
+		p.r[i] = float32(p.r[i] * p.r[i])
+		p.g[i] = float32(p.g[i] * p.g[i])
+		p.b[i] = float32(p.b[i] * p.b[i])
+	}
 
 	p.nextStage()
 }
 
 // gammaExpandDst2 is gamma_expand_dst_2 in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) gammaExpandDst2() {
-	p.dr = p.dr.Mul(p.dr)
-	p.dg = p.dg.Mul(p.dg)
-	p.db = p.db.Mul(p.db)
+	// Port (D33): one loop on the lanes, as gammaExpand2 does.
+	for i := range p.dr {
+		p.dr[i] = float32(p.dr[i] * p.dr[i])
+		p.dg[i] = float32(p.dg[i] * p.dg[i])
+		p.db[i] = float32(p.db[i] * p.db[i])
+	}
 
 	p.nextStage()
 }
 
 // gammaCompress2 is gamma_compress_2 in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) gammaCompress2() {
-	p.r = p.r.Sqrt()
-	p.g = p.g.Sqrt()
-	p.b = p.b.Sqrt()
+	// Port (D33): one loop on the lanes. Upstream: r.sqrt(), g.sqrt(),
+	// b.sqrt().
+	for i := range p.r {
+		p.r[i] = wide.LaneSqrt(p.r[i])
+		p.g[i] = wide.LaneSqrt(p.g[i])
+		p.b[i] = wide.LaneSqrt(p.b[i])
+	}
 
 	p.nextStage()
 }
@@ -2267,26 +2319,38 @@ func (p *highpPipeline) gammaCompress22() {
 }
 
 // srgbExpand is srgb_expand in tiny-skia src/pipeline/highp.rs.
-func srgbExpand(x wide.F32x8) wide.F32x8 {
-	small := x.CmpLe(wide.SplatF32x8(0.04045))
-	linear := x.Div(wide.SplatF32x8(12.92))
-	exp := x.Add(wide.SplatF32x8(0.055)).Div(wide.SplatF32x8(1.055)).Powf(2.4)
-	return small.Blend(linear, exp)
+//
+// Port (D33): it works on one lane, because only the loops of the stages
+// call it. Upstream: x.cmp_le(0.04045).blend(x / 12.92,
+// ((x + 0.055) / 1.055).powf(2.4)). The blend of a mask from a comparison
+// picks one of the two values, as the branch does.
+func srgbExpand(x float32) float32 {
+	if x <= 0.04045 {
+		return x / 12.92
+	}
+	return wide.LanePowf((x+0.055)/1.055, 2.4)
 }
 
 // srgbCompress is srgb_compress in tiny-skia src/pipeline/highp.rs.
-func srgbCompress(x wide.F32x8) wide.F32x8 {
-	small := x.CmpLe(wide.SplatF32x8(0.0031308))
-	linear := x.Mul(wide.SplatF32x8(12.92))
-	exp := x.Powf(0.416666666).Mul(wide.SplatF32x8(1.055)).Sub(wide.SplatF32x8(0.055))
-	return small.Blend(linear, exp)
+//
+// Port (D33): it works on one lane, as srgbExpand does. Upstream:
+// x.cmp_le(0.0031308).blend(x * 12.92, x.powf(0.416666666) * 1.055 -
+// 0.055).
+func srgbCompress(x float32) float32 {
+	if x <= 0.0031308 {
+		return float32(x * 12.92)
+	}
+	return float32(wide.LanePowf(x, 0.416666666)*1.055) - 0.055
 }
 
 // gammaExpandSrgb is gamma_expand_srgb in tiny-skia src/pipeline/highp.rs.
 func (p *highpPipeline) gammaExpandSrgb() {
-	p.r = srgbExpand(p.r)
-	p.g = srgbExpand(p.g)
-	p.b = srgbExpand(p.b)
+	// Port (D33): one loop on the lanes, with srgbExpand for each lane.
+	for i := range p.r {
+		p.r[i] = srgbExpand(p.r[i])
+		p.g[i] = srgbExpand(p.g[i])
+		p.b[i] = srgbExpand(p.b[i])
+	}
 
 	p.nextStage()
 }
@@ -2294,9 +2358,12 @@ func (p *highpPipeline) gammaExpandSrgb() {
 // gammaExpandDstSrgb is gamma_expand_dst_srgb in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) gammaExpandDstSrgb() {
-	p.dr = srgbExpand(p.dr)
-	p.dg = srgbExpand(p.dg)
-	p.db = srgbExpand(p.db)
+	// Port (D33): one loop on the lanes, as gammaExpandSrgb does.
+	for i := range p.dr {
+		p.dr[i] = srgbExpand(p.dr[i])
+		p.dg[i] = srgbExpand(p.dg[i])
+		p.db[i] = srgbExpand(p.db[i])
+	}
 
 	p.nextStage()
 }
@@ -2304,9 +2371,12 @@ func (p *highpPipeline) gammaExpandDstSrgb() {
 // gammaCompressSrgb is gamma_compress_srgb in tiny-skia
 // src/pipeline/highp.rs.
 func (p *highpPipeline) gammaCompressSrgb() {
-	p.r = srgbCompress(p.r)
-	p.g = srgbCompress(p.g)
-	p.b = srgbCompress(p.b)
+	// Port (D33): one loop on the lanes, with srgbCompress for each lane.
+	for i := range p.r {
+		p.r[i] = srgbCompress(p.r[i])
+		p.g[i] = srgbCompress(p.g[i])
+		p.b[i] = srgbCompress(p.b[i])
+	}
 
 	p.nextStage()
 }
