@@ -2,8 +2,9 @@ package harfbuzz_test
 
 import "testing"
 
-// The test of D101 compares harfbuzz with HarfBuzz 15.2.0 on a table trak
-// whose offsets are null.
+// The tests of D101 compare harfbuzz with HarfBuzz 15.2.0 on a table trak
+// whose offsets are null, and on the space separators that the generated
+// USE table gives the category SPACE.
 
 // trakTrack is a track of trakWith: its value and its tracking values for
 // each size. nil values give the null offset.
@@ -70,4 +71,26 @@ func TestTrakNullOffsets(t *testing.T) {
 			compareOptions(t, data, shapeOptions{}, "ab", "abc")
 		})
 	}
+}
+
+// TestUSESpaceSeparators: Roboto with the table GSUB of TestUSEWordEnds,
+// whose features isol, init, medi and fina for Balinese each replace the
+// glyph 0. The USE table that usegen writes gives the category SPACE to
+// each space separator, as the table of HarfBuzz 15.2.0 does, where D97
+// mapped them by hand. A space separator ends a word and is not the base
+// of a vowel or a mark. The no-break space is a consonant placeholder, the
+// base of the vowel after it.
+func TestUSESpaceSeparators(t *testing.T) {
+	gsub := layoutTable(t, []string{"DFLT", "bali"},
+		[]layoutFeature{{"fina", []int{3}}, {"init", []int{1}}, {"isol", []int{0}}, {"medi", []int{2}}},
+		[][]byte{
+			lookupTable(t, 1, 0, singleSubst(robotoA, 0)),
+			lookupTable(t, 1, 0, singleSubst(robotoB, 0)),
+			lookupTable(t, 1, 0, singleSubst(robotoC, 0)),
+			lookupTable(t, 1, 0, singleSubst(robotoX, 0)),
+		})
+	data := robotoWith(t, map[string][]byte{"GSUB": gsub})
+	compareOptions(t, data, shapeOptions{flags: true},
+		"ᬓᬓ\u3000ᬓᬓ", "ᬓ\u2002ᬓᬓᬓ", "ᬓ\u1680ᬓ", "ᬓ\u202fᬓ\u205fᬓ",
+		"ᬓ\u3000\u1b36", "\u2009\u1b36", "\u200a\u1b34\u1b36", "ᬓ\u00a0\u1b36", "\u00a0\u1b36ᬓ")
 }

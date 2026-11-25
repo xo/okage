@@ -30,6 +30,9 @@
 //   - TestTrakNullOffsets compares tables trak whose offset to the sizes
 //     or to the values of a track is null, which HarfBuzz reads as the
 //     start of the table (D101).
+//   - TestUSESpaceSeparators compares the USE shaper at each space
+//     separator, which the table that usegen generates puts in the
+//     category SPACE (D101).
 //
 // A test skips when python3, uharfbuzz with HarfBuzz 15.2.0, or the folder
 // typesetting/testdata is missing. uharfbuzz 0.57.0 built on the HarfBuzz

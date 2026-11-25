@@ -136,29 +136,21 @@ func (cs *complexShaperUSE) setupMasks(plan *otShapePlan, buffer *Buffer, _ *Fon
 
 	info := buffer.Info
 	for i := range info {
-		info[i].complexCategory = useCategory(info[i].codepoint)
+		info[i].complexCategory = useLookup(info[i].codepoint)
 	}
 }
 
 // useSM_ex_SP is the category SPACE of the USE shaper of HarfBuzz 15.2.0.
 // The syllable machine has no rule for it, so a space is a cluster of its
 // own.
+//
+// okage: the table of ot_shape_use_table.go gives it to a space separator
+// that is not a consonant placeholder, as in HarfBuzz 15.2.0 (D97, D101).
 const useSM_ex_SP = 57
 
-// useCategory returns the category of u for the USE shaper.
-//
-// okage: as in HarfBuzz 15.2.0, a space separator that is not a consonant
-// placeholder has the category SPACE. useLookup, from the table of HarfBuzz
-// 15.1.0, gives it the category OTHER, so that a space could start a
-// symbol cluster and be the base of a dependent vowel (D97).
-func useCategory(u rune) uint8 {
-	switch u {
-	case 0x0020, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
-		0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000:
-		return useSM_ex_SP
-	}
-	return useLookup(u)
-}
+// okage: usegen writes the table from the files of the Unicode Character
+// Database in upstream/unicode-ucd (D101).
+//go:generate go run ./internal/usegen
 
 func (cs *complexShaperUSE) setupRphfMask(buffer *Buffer) {
 	usePlan := cs.plan
