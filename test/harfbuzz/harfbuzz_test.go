@@ -100,6 +100,15 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool, args .
 // 0, the font has that scale on both axes, in place of its units per em.
 func shapeOkage(t *testing.T, data []byte, texts []string, flags bool, scale int32) [][]string {
 	t.Helper()
+	return shapeOkageConcat(t, data, texts, flags, false, scale)
+}
+
+// shapeOkageConcat is shapeOkage, and when concat is true, the buffer has
+// the flag ProduceUnsafeToConcat, and each glyph ends with its flags
+// unsafe-to-break (1) and unsafe-to-concat (2), as with the argument
+// --concat of shape.py (D93).
+func shapeOkageConcat(t *testing.T, data []byte, texts []string, flags, concat bool, scale int32) [][]string {
+	t.Helper()
 	face, err := font.ParseTTF(bytes.NewReader(data))
 	if err != nil {
 		t.Fatal(err)
@@ -114,6 +123,9 @@ func shapeOkage(t *testing.T, data []byte, texts []string, flags bool, scale int
 		buf.Clear()
 		buf.AddRunes([]rune(text), 0, -1)
 		buf.GuessSegmentProperties()
+		if concat {
+			buf.Flags |= harfbuzz.ProduceUnsafeToConcat
+		}
 		buf.Shape(hf, nil)
 		glyphs := make([]string, len(buf.Info))
 		for j, info := range buf.Info {
@@ -125,6 +137,9 @@ func shapeOkage(t *testing.T, data []byte, texts []string, flags bool, scale int
 					unsafe = 1
 				}
 				glyphs[j] += fmt.Sprintf(" %d", unsafe)
+			}
+			if concat {
+				glyphs[j] += fmt.Sprintf(" %d", info.Mask&(harfbuzz.GlyphUnsafeToBreak|harfbuzz.GlyphUnsafeToConcat))
 			}
 		}
 		out[i] = glyphs
@@ -155,6 +170,14 @@ func compareShapingAt(t *testing.T, data []byte, texts []string, flags bool, sca
 	}
 	want := shapeHarfBuzz(t, path, texts, flags, args...)
 	got := shapeOkage(t, data, texts, flags, scale)
+	reportDiffs(t, texts, got, want)
+	return want
+}
+
+// reportDiffs fails the test for each text whose glyphs from harfbuzz in
+// got differ from the glyphs from HarfBuzz in want.
+func reportDiffs(t *testing.T, texts []string, got [][]string, want []shaped) {
+	t.Helper()
 	for i, text := range texts {
 		if slices.Equal(got[i], want[i].glyphs) {
 			continue
@@ -174,7 +197,6 @@ func compareShapingAt(t *testing.T, data []byte, texts []string, flags bool, sca
 			}
 		}
 	}
-	return want
 }
 
 // trim shortens a long text for a message.

@@ -38,10 +38,9 @@ type Paragraph struct {
 	// does not move to the heap for each call of prepare.
 	item Input
 
-	text    []rune
-	split   Segmenter
-	shaper  HarfbuzzShaper
-	breaker segmenter.Segmenter
+	text   []rune
+	split  Segmenter
+	shaper HarfbuzzShaper
 
 	// runs are the runs of the paragraph, and glyphs holds the glyphs of
 	// all the runs.
@@ -117,6 +116,9 @@ type paragraphRun struct {
 	// go down, and reverse is true when they go down, as in a run from
 	// right to left.
 	monotone, reverse bool
+	// okage: D93. reversed is true when the shaper shapes the run against
+	// its direction, as shapedReversed tells.
+	reversed bool
 }
 
 // The flags of Paragraph.clusters.
@@ -132,16 +134,16 @@ const (
 )
 
 // glyphFlags are the flags of HarfBuzz in the mask of a glyph that Line
-// reads. Only the shaper of a Paragraph sets the flag unsafe-to-concat, so
-// Line removes it from the glyphs that it gives.
+// reads. The shaper of a Paragraph always sets the flag unsafe-to-concat,
+// and Line removes it from the glyphs that it gives (D77).
 const glyphFlags = harfbuzz.GlyphUnsafeToBreak | harfbuzz.GlyphUnsafeToConcat
 
-// The flags of Paragraph.breaks.
+// The flags of Paragraph.breaks, which segmenter.LineBreaks writes (D92).
 const (
 	// lineBreak tells that a line can break before the rune.
-	lineBreak uint8 = 1 << iota
+	lineBreak = segmenter.LineBreakAllowed
 	// mandatoryBreak tells that a line must break before the rune.
-	mandatoryBreak
+	mandatoryBreak = segmenter.LineBreakMandatory
 )
 
 // contextLength is the number of runes before and after a run that the
@@ -217,6 +219,8 @@ func (p *Paragraph) Init(input Input, faces Fontmap, prepare func(*Input)) {
 			}
 		}
 		run.monotone, run.reverse = up || down, !up
+		// okage: D93.
+		run.reversed = shapedReversed(&item, p.text[item.RunStart:item.RunEnd])
 		p.runs = append(p.runs, run)
 	}
 }
@@ -245,21 +249,11 @@ func (p *Paragraph) LineBreak(i int) (ok, mandatory bool) {
 
 // computeBreaks computes the line breaks of the paragraph.
 func (p *Paragraph) computeBreaks() {
+	// okage: D92. segmenter.LineBreaks gives the breaks of the lines of
+	// the segmenter, without the graphemes and the words.
 	p.breaks = zeroed(p.breaks, len(p.text)+1)
 	p.hasBreaks = true
-	if len(p.text) == 0 {
-		return
-	}
-	p.breaker.Init(p.text)
-	lines := p.breaker.LineIterator()
-	for lines.Next() {
-		line := lines.Line()
-		f := lineBreak
-		if line.IsMandatoryBreak {
-			f |= mandatoryBreak
-		}
-		p.breaks[line.Offset+len(line.Text)] = f
-	}
+	segmenter.LineBreaks(p.text, p.breaks)
 }
 
 // Line returns the outputs of the runes start to end of the paragraph. They
@@ -290,10 +284,12 @@ func (p *Paragraph) computeBreaks() {
 // end of a line is the same, toward the start of the line. When no cluster
 // joins, Line shapes the run again whole.
 //
-// Line trusts the flags of HarfBuzz. HarfBuzz misses a few clusters that
-// are unsafe to break, such as a character that the font does not have,
-// which it decomposes in another way when a mark is elsewhere in the text
-// (D70). Line can then give other glyphs than a new shaping.
+// Line trusts the flags of HarfBuzz, except for runes that the shaper
+// shapes against the direction of their run, which Line shapes again
+// whole (D93). HarfBuzz misses a few other clusters that are unsafe to
+// break, such as a character that the font does not have, which it
+// decomposes in another way when a mark is elsewhere in the text (D70).
+// Line can then give other glyphs than a new shaping.
 //
 // The mask of a glyph that Line takes from the paragraph holds the flag
 // unsafe-to-break of the paragraph. Near a cut, a new shaping of the range
@@ -412,6 +408,14 @@ func (p *Paragraph) lineRun(item Input, start, end int) {
 		p.shapeRun(item)
 		return
 	}
+	// okage: D93. Line does not trust the flags of HarfBuzz for runes that
+	// the shaper shapes against their direction, in the paragraph or in
+	// the line.
+	if run.reversed || shapedReversed(&item, p.text[a:b]) {
+		p.shapeRun(item)
+		return
+	}
+	byText := directionByText(&item)
 	// The shaper of a script that joins its letters reads the runes around
 	// a run. An end of the run reads the same runes as in the paragraph
 	// when at least contextLength runes of the range are on the other
@@ -427,13 +431,13 @@ func (p *Paragraph) lineRun(item Input, start, end int) {
 	c1, c2 := a, b
 	p.left, p.right = p.left[:0], p.right[:0]
 	if !leftContext || (a > run.input.RunStart && !p.safe(a)) {
-		if c1 = p.spliceLeft(item, a, b, start); c1 == b {
+		if c1 = p.spliceLeft(item, a, b, start, byText); c1 == b {
 			p.shapeRun(item)
 			return
 		}
 	}
 	if !rightContext || (b < run.input.RunEnd && !p.safe(b)) {
-		if c2 = p.spliceRight(item, a, c1, b, start); c2 == c1 {
+		if c2 = p.spliceRight(item, a, c1, b, start, byText); c2 == c1 {
 			p.shapeRun(item)
 			return
 		}
@@ -502,10 +506,18 @@ func countLineClusters(glyphs []Glyph, g1, g2, c1 int, item *Input, reverse bool
 // glyphs of the paragraph take over, with the glyphs of a to c in p.left.
 // It returns b when no cluster in the first half of the part can take
 // over, since the shaper then shapes the part whole for less.
-func (p *Paragraph) spliceLeft(item Input, a, b, start int) int {
+//
+// okage: D93. When byText is true, the part is numeric, and a piece that
+// is not numeric is skipped, because the shaper shapes it against its
+// direction.
+func (p *Paragraph) spliceLeft(item Input, a, b, start int, byText bool) int {
 	half := a + (b-a)/2
 	for c := p.nextCluster(a, b, unsafeConcat); c <= half; c = p.nextCluster(c, b, unsafeConcat) {
-		piece := p.shapePiece(item, a, p.nextCluster(c, b, 0), start)
+		end := p.nextCluster(c, b, 0)
+		if byText && !numericRun(p.text[a:end]) {
+			continue
+		}
+		piece := p.shapePiece(item, a, end, start)
 		if concatAt(piece, c-start) {
 			p.left = appendClusters(p.left[:0], piece, a-start, c-start)
 			return c
@@ -519,10 +531,17 @@ func (p *Paragraph) spliceLeft(item Input, a, b, start int) int {
 // c where the glyphs of the paragraph stop, with the glyphs of c to b in
 // p.right. It returns c1 when no cluster after c1 and in the last half of
 // the part can stop them.
-func (p *Paragraph) spliceRight(item Input, a, c1, b, start int) int {
+//
+// okage: D93. When byText is true, the part is numeric, and a piece that
+// is not numeric is skipped, as in spliceLeft.
+func (p *Paragraph) spliceRight(item Input, a, c1, b, start int, byText bool) int {
 	half := b - (b-a)/2
 	for c := p.prevCluster(b, c1, unsafeConcat); c > c1 && c >= half; c = p.prevCluster(c, c1, unsafeConcat) {
-		piece := p.shapePiece(item, p.prevCluster(c, c1, 0), b, start)
+		begin := p.prevCluster(c, c1, 0)
+		if byText && !numericRun(p.text[begin:b]) {
+			continue
+		}
+		piece := p.shapePiece(item, begin, b, start)
 		if concatAt(piece, c-start) {
 			p.right = appendClusters(p.right[:0], piece, c-start, b-start)
 			return c
@@ -679,6 +698,77 @@ func sameShaping(a, b *Input) bool {
 		}
 	}
 	return true
+}
+
+// shaperDirection returns the direction of the buffer of harfbuzz for a
+// run. The shaper sets a sideways run horizontally, as shape does.
+//
+// okage: D93.
+func shaperDirection(item *Input) harfbuzz.Direction {
+	dir := item.Direction
+	if dir.IsSideways() {
+		dir = dir.SwitchAxis()
+	}
+	return dir.Harfbuzz()
+}
+
+// directionByText reports whether the direction in which the shaper shapes
+// a run depends on the runes of the run. It does for a horizontal run from
+// left to right in a script that HarfBuzz sets from right to left, such as
+// Arabic. HarfBuzz then shapes the run from left to right when numericRun
+// is true for its runes, and from right to left otherwise
+// (ensureNativeDirection of harfbuzz). The runes of the context do not
+// count.
+//
+// okage: D93.
+func directionByText(item *Input) bool {
+	return shaperDirection(item) == harfbuzz.LeftToRight &&
+		harfbuzz.ScriptHorizontalDirection(item.Script) == harfbuzz.RightToLeft
+}
+
+// shapedReversed reports whether the shaper shapes the runes of a run
+// against the direction of the run, as ensureNativeDirection of harfbuzz
+// decides. HarfBuzz then reverses the buffer, shapes it in the direction
+// of the script, and reverses the glyphs again. For such runes, the flag
+// unsafe-to-break of HarfBuzz 15.1.0 misses clusters that a cut changes:
+//
+//   - When directionByText is true, a cut can change numericRun, and so
+//     the direction of all the glyphs.
+//   - In a run of tatweels of the script Common, set from right to left,
+//     Amiri makes ligatures of up to seven tatweels from the end of the
+//     run, and a lookup of the feature rlig changes the tatweel that is
+//     left at the start. HarfBuzz does not mark that the cluster after it
+//     is unsafe to break.
+//
+// okage: D93.
+func shapedReversed(item *Input, runes []rune) bool {
+	dir := shaperDirection(item)
+	if dir == harfbuzz.TopToBottom || dir == harfbuzz.BottomToTop {
+		return dir != harfbuzz.TopToBottom
+	}
+	native := harfbuzz.ScriptHorizontalDirection(item.Script)
+	if native == harfbuzz.RightToLeft && dir == harfbuzz.LeftToRight && numericRun(runes) {
+		native = harfbuzz.LeftToRight
+	}
+	return native != 0 && dir != native
+}
+
+// numericRun reports whether runes hold a decimal digit or a regional
+// indicator, and no letter, as ensureNativeDirection of harfbuzz checks.
+//
+// okage: D93.
+func numericRun(runes []rune) bool {
+	found := false
+	for _, r := range runes {
+		gc := ucd.LookupGeneralCategory(r)
+		if gc.IsLetter() {
+			return false
+		}
+		if gc == ucd.Nd || (0x1F1E6 <= r && r <= 0x1F1FF) {
+			found = true
+		}
+	}
+	return found
 }
 
 // joinsLetters reports whether the shaper joins the letters of a script,

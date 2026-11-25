@@ -137,10 +137,20 @@ func (c *wouldApplyContext) chargeOps(count int) bool {
 type matcherFunc struct {
 	class tables.ClassDef
 	covs  []tables.Coverage
+	// always makes the matcher match each glyph, as match_always of
+	// HarfBuzz. The matcher then reads no value.
+	//
+	// okage: go-text has no always (D93).
+	always bool
 }
 
 // interprets `value` as a Glyph
 var matchGlyph = matcherFunc{}
+
+// matches each glyph, as match_always of HarfBuzz
+//
+// okage: go-text has no matchAlways (D93).
+var matchAlways = matcherFunc{always: true}
 
 // interprets `value` as a Class
 func matchClass(class tables.ClassDef) matcherFunc { return matcherFunc{class: class} }
@@ -203,6 +213,10 @@ func (m *otApplyContextMatcher) mayMatch(info *GlyphInfo, glyphData []uint16) ui
 	}
 
 	if m.hasMatchFunc {
+		// okage: D93.
+		if m.matchFunc.always {
+			return yes
+		}
 		if m.matchFunc.match(gID(info.Glyph), glyphData[0]) {
 			return yes
 		}
@@ -555,7 +569,17 @@ func (c *otApplyContext) randomNumber() uint32 {
 	return c.randomState
 }
 
+// applyRuleSet is RuleSet::apply of HarfBuzz 15.1.0.
+//
+// okage: go-text has only the slow path. The fast path of HarfBuzz tries
+// only the rules whose first two glyphs match, so it marks other glyphs
+// unsafe to concat. The glyphs are the same (D93).
 func (c *otApplyContext) applyRuleSet(ruleSet tables.SequenceRuleSet, match matcherFunc) bool {
+	if len(ruleSet.SeqRule) > ruleSetSlowPath {
+		if applied, done := c.applyRuleSetFast(ruleSet, match); done {
+			return applied
+		}
+	}
 	for _, rule := range ruleSet.SeqRule {
 		// the first which match is applied
 		applied := c.contextApplyLookup(rule.InputSequence, rule.SeqLookupRecords, match)
@@ -566,7 +590,15 @@ func (c *otApplyContext) applyRuleSet(ruleSet tables.SequenceRuleSet, match matc
 	return false
 }
 
+// applyChainRuleSet is ChainRuleSet::apply of HarfBuzz 15.1.0.
+//
+// okage: go-text has only the slow path, as in applyRuleSet (D93).
 func (c *otApplyContext) applyChainRuleSet(ruleSet tables.ChainedClassSequenceRuleSet, match [3]matcherFunc) bool {
+	if len(ruleSet.ChainedSeqRules) > ruleSetSlowPath {
+		if applied, done := c.applyChainRuleSetFast(ruleSet, match); done {
+			return applied
+		}
+	}
 	for i, rule := range ruleSet.ChainedSeqRules {
 
 		if debugMode {
@@ -579,6 +611,149 @@ func (c *otApplyContext) applyChainRuleSet(ruleSet tables.ChainedClassSequenceRu
 		}
 	}
 	return false
+}
+
+// ruleSetSlowPath is the largest number of rules of a RuleSet or a
+// ChainRuleSet that HarfBuzz 15.1.0 tries with the slow path.
+//
+// okage: D93.
+const ruleSetSlowPath = 4
+
+// fastPathGlyphs finds the first two glyphs after the current glyph for
+// the fast path of a rule set, as RuleSet::apply and ChainRuleSet::apply of
+// HarfBuzz 15.1.0. ok is false when the next glyph is one that the lookup
+// can skip, so that the slow path must apply. first is nil when no glyph
+// follows, and unsafeTo1 is then the end of the glyphs that the iterator
+// read. second is nil when no second glyph follows, or when the lookup can
+// skip it. unsafeTo1 and unsafeTo2 are the ends of the ranges that the rule
+// set marks unsafe to concat.
+//
+// okage: D93.
+func (c *otApplyContext) fastPathGlyphs() (first, second *GlyphInfo, unsafeTo1, unsafeTo2 int, ok bool) {
+	skippyIter := &c.iterInput
+	skippyIter.reset(c.buffer.idx)
+	skippyIter.setMatchFunc(matchAlways, nil)
+	found, unsafeTo := skippyIter.next()
+	if !found {
+		return nil, nil, unsafeTo, 0, true
+	}
+	first = &c.buffer.Info[skippyIter.idx]
+	unsafeTo1 = skippyIter.idx + 1
+	if skippyIter.maySkip(first) != no {
+		return nil, nil, 0, 0, false
+	}
+	if found, _ := skippyIter.next(); found && skippyIter.maySkip(&c.buffer.Info[skippyIter.idx]) == no {
+		second = &c.buffer.Info[skippyIter.idx]
+		unsafeTo2 = skippyIter.idx + 1
+	}
+	return first, second, unsafeTo1, unsafeTo2, true
+}
+
+// applyRuleSetFast is the fast path of RuleSet::apply of HarfBuzz 15.1.0.
+// done is false when the slow path must apply.
+//
+// okage: D93.
+func (c *otApplyContext) applyRuleSetFast(ruleSet tables.SequenceRuleSet, match matcherFunc) (applied, done bool) {
+	first, second, unsafeTo1, unsafeTo2, ok := c.fastPathGlyphs()
+	if !ok {
+		return false, false
+	}
+	if first == nil {
+		// Only the rules with no more input can apply. unsafeTo1 is the
+		// end of the glyphs that the iterator read.
+		for _, rule := range ruleSet.SeqRule {
+			if len(rule.InputSequence) == 0 && c.contextApplyLookup(rule.InputSequence, rule.SeqLookupRecords, match) {
+				return true, true
+			}
+		}
+		c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo1)
+		return false, true
+	}
+	unsafeTo := -1
+	for _, rule := range ruleSet.SeqRule {
+		input := rule.InputSequence
+		if len(input) == 0 || match.match(gID(first.Glyph), input[0]) {
+			if second == nil || len(input) < 2 || match.match(gID(second.Glyph), input[1]) {
+				if c.contextApplyLookup(input, rule.SeqLookupRecords, match) {
+					if unsafeTo != -1 {
+						c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
+					}
+					return true, true
+				}
+			} else {
+				unsafeTo = unsafeTo2
+			}
+		} else if unsafeTo == -1 {
+			unsafeTo = unsafeTo1
+		}
+	}
+	if unsafeTo != -1 {
+		c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
+	}
+	return false, true
+}
+
+// applyChainRuleSetFast is the fast path of ChainRuleSet::apply of
+// HarfBuzz 15.1.0. done is false when the slow path must apply.
+//
+// okage: D93.
+func (c *otApplyContext) applyChainRuleSetFast(ruleSet tables.ChainedClassSequenceRuleSet, match [3]matcherFunc) (applied, done bool) {
+	first, second, unsafeTo1, unsafeTo2, ok := c.fastPathGlyphs()
+	if !ok {
+		return false, false
+	}
+	if first == nil {
+		// Only the rules with no more input and no lookahead can apply.
+		for _, rule := range ruleSet.ChainedSeqRules {
+			if len(rule.InputSequence) == 0 && len(rule.LookaheadSequence) == 0 &&
+				c.chainContextApplyLookup(rule.BacktrackSequence, rule.InputSequence, rule.LookaheadSequence, rule.SeqLookupRecords, match) {
+				return true, true
+			}
+		}
+		c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo1)
+		return false, true
+	}
+	unsafeTo := -1
+	for _, rule := range ruleSet.ChainedSeqRules {
+		input, lookahead := rule.InputSequence, rule.LookaheadSequence
+		var firstOK bool
+		if len(input) > 0 {
+			firstOK = match[1].match(gID(first.Glyph), input[0])
+		} else {
+			firstOK = len(lookahead) == 0 || match[2].match(gID(first.Glyph), lookahead[0])
+		}
+		if !firstOK {
+			if unsafeTo == -1 {
+				unsafeTo = unsafeTo1
+			}
+			continue
+		}
+		secondOK := second == nil
+		if !secondOK {
+			// The second glyph is the second glyph of the input, or the
+			// glyph of the lookahead after the input.
+			if len(input) > 1 {
+				secondOK = match[1].match(gID(second.Glyph), input[1])
+			} else {
+				k := 1 - len(input)
+				secondOK = len(lookahead) <= k || match[2].match(gID(second.Glyph), lookahead[k])
+			}
+		}
+		if !secondOK {
+			unsafeTo = unsafeTo2
+			continue
+		}
+		if c.chainContextApplyLookup(rule.BacktrackSequence, input, lookahead, rule.SeqLookupRecords, match) {
+			if unsafeTo != -1 {
+				c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
+			}
+			return true, true
+		}
+	}
+	if unsafeTo != -1 {
+		c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
+	}
+	return false, true
 }
 
 // `input` starts with second glyph (`inputCount` = len(input)+1)
@@ -607,8 +782,14 @@ func (c *otApplyContext) chainContextApplyLookup(backtrack, input, lookahead []u
 		return false
 	}
 
+	// okage: as in HarfBuzz 15.1.0, endIndex stays at the current glyph
+	// when the input does not match, so that no glyph is marked unsafe to
+	// concat. go-text marked the glyphs up to the end of the match (D93).
 	hasMatch, matchEnd, _ := c.matchInput(input, lookupContexts[1])
-	endIndex := matchEnd
+	endIndex := c.buffer.idx
+	if hasMatch {
+		endIndex = matchEnd
+	}
 	if !(hasMatch && endIndex != 0) {
 		c.buffer.unsafeToConcat(c.buffer.idx, endIndex)
 		return false

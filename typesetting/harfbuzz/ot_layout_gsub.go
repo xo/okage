@@ -210,13 +210,19 @@ func (c *otApplyContext) applyGSUB(table tables.GSUBLookup) bool {
 		}
 		lB, lL := len(data.BacktrackCoverages), len(data.LookaheadCoverages)
 
+		// okage: when the context does not match, HarfBuzz 15.1.0 marks
+		// the glyphs that it read unsafe to concat, and go-text did not.
+		// endIndex is 0 when the backtrack does not match, so that the
+		// range is empty, as in HarfBuzz (D93).
 		hasMatch, startIndex := c.matchBacktrack(get1N(&c.indices, 0, lB), matchCoverage(data.BacktrackCoverages))
 		if !hasMatch {
+			c.buffer.unsafeToConcatFromOutbuffer(startIndex, 0)
 			return false
 		}
 
 		hasMatch, endIndex := c.matchLookahead(get1N(&c.indices, 0, lL), matchCoverage(data.LookaheadCoverages), c.buffer.idx+1)
 		if !hasMatch {
+			c.buffer.unsafeToConcatFromOutbuffer(startIndex, endIndex)
 			return false
 		}
 
@@ -315,11 +321,42 @@ func (c *otApplyContext) applyOneLigature(lig tables.Ligature) bool {
 	return true
 }
 
+// applySubsLigature is LigatureSet::apply of HarfBuzz 15.1.0. When the
+// next glyph is one that the lookup does not skip, it tries only the
+// ligatures whose second component is that glyph, and marks the glyphs up
+// to it unsafe to concat when it passes over another ligature.
+//
+// okage: go-text tries each ligature, and so marks other glyphs unsafe to
+// concat. The glyphs are the same (D93).
 func (c *otApplyContext) applySubsLigature(ligatureSet []tables.Ligature) bool {
-	for _, lig := range ligatureSet {
-		if c.applyOneLigature(lig) {
-			return true
+	skippyIter := &c.iterInput
+	skippyIter.reset(c.buffer.idx)
+	skippyIter.setMatchFunc(matchAlways, nil)
+	if ok, _ := skippyIter.next(); !ok || skippyIter.maySkip(&c.buffer.Info[skippyIter.idx]) != no {
+		for _, lig := range ligatureSet {
+			if c.applyOneLigature(lig) {
+				return true
+			}
 		}
+		return false
+	}
+	first := c.buffer.Info[skippyIter.idx].Glyph
+	unsafeTo := skippyIter.idx + 1
+	unsafeToConcat := false
+	for _, lig := range ligatureSet {
+		if len(lig.ComponentGlyphIDs) == 0 || GID(lig.ComponentGlyphIDs[0]) == first {
+			if c.applyOneLigature(lig) {
+				if unsafeToConcat {
+					c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
+				}
+				return true
+			}
+		} else {
+			unsafeToConcat = true
+		}
+	}
+	if unsafeToConcat {
+		c.buffer.unsafeToConcat(c.buffer.idx, unsafeTo)
 	}
 	return false
 }

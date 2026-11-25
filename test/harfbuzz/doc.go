@@ -17,6 +17,11 @@
 //     line at a time, from typesetting/testdata. By default it shapes the
 //     first 200 lines of each text. With the flag -harfbuzz.all, it shapes
 //     all 413,399 lines, which takes about a minute.
+//   - TestScale and TestKerxFormat6LongValues shape at scales other than
+//     the units per em of the font, and with long kerning values of kerx
+//     format 6 (D90).
+//   - TestUnsafeToConcat and TestRuleSetUnsafeToConcat compare the flags
+//     unsafe-to-break and unsafe-to-concat of each glyph (D93).
 //
 // A test skips when python3, uharfbuzz with HarfBuzz 15.1.0, or the folder
 // typesetting/testdata is missing. To install uharfbuzz, run:

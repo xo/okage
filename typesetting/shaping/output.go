@@ -67,10 +67,12 @@ type Glyph struct {
 	GlyphCount int
 	GlyphID    font.GID
 	// Mask holds the glyph flags of HarfBuzz for the cluster of the glyph.
-	// Each glyph of a cluster has the same flags. The shaper sets only
-	// [harfbuzz.GlyphUnsafeToBreak]. [Glyph.UnsafeToBreak] reads it.
+	// Each glyph of a cluster has the same flags. The shaper sets
+	// [harfbuzz.GlyphUnsafeToBreak], which [Glyph.UnsafeToBreak] reads.
+	// It sets [harfbuzz.GlyphUnsafeToConcat], which [Glyph.UnsafeToConcat]
+	// reads, only after [HarfbuzzShaper.SetUnsafeToConcat].
 	//
-	// okage: go-text does not document Mask (D70).
+	// okage: go-text does not document Mask (D70, D93).
 	Mask uint32
 
 	// startLetterSpacing and endLetterSpacing are set when letter spacing is applied,
@@ -104,6 +106,19 @@ func (g Glyph) GlyphsCount() int { return g.GlyphCount }
 //
 // okage: go-text has no UnsafeToBreak (D70).
 func (g Glyph) UnsafeToBreak() bool { return g.Mask&harfbuzz.GlyphUnsafeToBreak != 0 }
+
+// UnsafeToConcat reports whether the text can give other glyphs when it
+// breaks at the start of the cluster of g, the two parts are shaped on
+// their own, and their glyphs are joined. A cluster that is unsafe to
+// break is also unsafe to concat. HarfBuzz gives a method that shapes
+// again only a few clusters around a line break with this flag, and the
+// documentation of [harfbuzz.GlyphUnsafeToConcat] describes it. This is
+// [harfbuzz.GlyphUnsafeToConcat], which HarfBuzz names
+// HB_GLYPH_FLAG_UNSAFE_TO_CONCAT. It is false for every glyph unless the
+// shaper had [HarfbuzzShaper.SetUnsafeToConcat] on.
+//
+// okage: go-text has no UnsafeToConcat (D93).
+func (g Glyph) UnsafeToConcat() bool { return g.Mask&harfbuzz.GlyphUnsafeToConcat != 0 }
 
 // LeftSideBearing returns the distance from the glyph's X origin to
 // its leftmost edge. This value can be negative if the glyph extends

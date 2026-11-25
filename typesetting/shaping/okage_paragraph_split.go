@@ -44,11 +44,15 @@ func (p *Paragraph) initSplit() {
 	var lastFace *font.Face
 	hasFace := false
 	for i, r := range p.text {
-		info := runeInfo{script: language.LookupScript(r), delim: -1, ignore: ignoreFaceChange(r)}
-		strong := info.script.Strong()
-		if !strong {
-			info.delim = int16(lookupDelimIndex(r))
+		// okage: D92. A rune below U+0080 takes its script, its paired
+		// delimiter and ignore from a table.
+		var info runeInfo
+		if uint32(r) < uint32(len(asciiRuneInfo)) {
+			info = asciiRuneInfo[r]
+		} else {
+			info = newRuneInfo(r)
 		}
+		strong := info.script.Strong()
 		if !info.ignore {
 			info.face = p.faces.ResolveFace(r)
 		}
@@ -74,6 +78,26 @@ func (p *Paragraph) initSplit() {
 	}
 	p.lang, p.langOK = language.NewLangID(lang)
 }
+
+// newRuneInfo returns the script, the paired delimiter and ignore of r,
+// with no face.
+func newRuneInfo(r rune) runeInfo {
+	info := runeInfo{script: language.LookupScript(r), delim: -1, ignore: ignoreFaceChange(r)}
+	if !info.script.Strong() {
+		info.delim = int16(lookupDelimIndex(r))
+	}
+	return info
+}
+
+// asciiRuneInfo holds newRuneInfo of each rune below U+0080.
+//
+// okage: D92.
+var asciiRuneInfo = func() (t [0x80]runeInfo) {
+	for r := range rune(len(t)) {
+		t[r] = newRuneInfo(r)
+	}
+	return t
+}()
 
 // noChange marks a rune that cannot change the split in p.nextScript and
 // p.nextFace, before initNext.

@@ -218,6 +218,51 @@ func computeBreakAttributes(text []rune, attributes []breakAttr) {
 	attributes[len(text)] |= mandatoryLineBoundary // Rule LB3
 }
 
+// The flags that [LineBreaks] writes.
+//
+// okage: D92.
+const (
+	// LineBreakAllowed tells that a line can break before the rune.
+	LineBreakAllowed = uint8(lineBoundary)
+	// LineBreakMandatory tells that a line must break before the rune.
+	// LineBreakAllowed is then set too.
+	LineBreakMandatory = uint8(mandatoryLineBoundary)
+)
+
+// LineBreaks computes the line breaks of paragraph, and writes them into
+// breaks, which must have the length len(paragraph)+1. breaks[i] holds
+// LineBreakAllowed and LineBreakMandatory for the break before the rune i,
+// as the lines of [Segmenter.LineIterator] after [Segmenter.Init] give
+// them: a line that ends before the rune i, or at the end of paragraph
+// for i = len(paragraph). breaks[0] is 0.
+//
+// okage: D92. LineBreaks applies the rules of the line breaks alone. The
+// rules of the graphemes and the words do not change them, and a program
+// that only needs the line breaks, such as Paragraph of shaping, saves
+// their work and the copy of the text.
+func LineBreaks(paragraph []rune, breaks []uint8) {
+	if len(breaks) != len(paragraph)+1 {
+		panic("segmenter: LineBreaks needs len(paragraph)+1 breaks")
+	}
+	cr := newCursor(paragraph)
+	for i := 0; i <= len(paragraph); i++ {
+		cr.startIteration(paragraph, i)
+		var attr breakAttr
+		switch cr.applyLineBoundaryRules() {
+		case breakEmpty, breakAllowed:
+			attr = lineBoundary // rule LB31 for breakEmpty
+		case breakMandatory:
+			attr = lineBoundary | mandatoryLineBoundary
+		}
+		cr.endIteration()
+		breaks[i] = uint8(attr)
+	}
+	breaks[len(paragraph)] = uint8(lineBoundary | mandatoryLineBoundary) // Rule LB3
+	// Rule LB2. The line iterator gives no line for an empty paragraph,
+	// so breaks[0] is 0 then too.
+	breaks[0] = 0
+}
+
 // Segmenter is the entry point of the package.
 //
 // Usage :

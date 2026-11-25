@@ -43,6 +43,16 @@ const (
 	BottomToTop                      // Text is set vertically from bottom to top.
 )
 
+// ScriptHorizontalDirection returns the direction of a script when it is
+// set horizontally, as getHorizontalDirection does. It is
+// hb_script_get_horizontal_direction of HarfBuzz.
+//
+// okage: go-text has no ScriptHorizontalDirection. Paragraph of shaping
+// reads it (D93).
+func ScriptHorizontalDirection(script language.Script) Direction {
+	return getHorizontalDirection(script)
+}
+
 // Fetches the `Direction` of a script when it is
 // set horizontally. All right-to-left scripts will return
 // `RightToLeft`. All left-to-right scripts will return

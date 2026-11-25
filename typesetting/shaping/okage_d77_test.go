@@ -327,16 +327,14 @@ func TestParagraphAllocs(t *testing.T) {
 // text picks a character of an alphabet of Latin, Arabic with its marks,
 // digits, spaces and paired punctuation, which Roboto or Amiri have. Each
 // two bytes of cuts pick a range. The alphabet leaves out the characters
-// of FuzzUnsafeToBreak, and the tatweel U+0640: in a run of tatweels and
-// spaces, whose script is Common, Amiri gives a ligature of tatweels where
-// a run starts, and HarfBuzz does not mark the cluster as unsafe to break.
-// uharfbuzz 0.57.0 does the same, so Line takes other glyphs than a new
-// shaping there (D70).
+// of FuzzUnsafeToBreak. It holds the tatweel U+0640, since Line shapes a
+// run of tatweels of the script Common from right to left again whole
+// (D93).
 func FuzzParagraphLine(f *testing.F) {
 	roboto := loadOpentypeFont(f, "../font/testdata/Roboto-Regular.ttf")
 	amiri := loadOpentypeFont(f, "../font/testdata/Amiri-Regular.ttf")
 	alphabet := []rune("AVWTYLPFKkoaecfilty0147.,;:'\" -()[]«»/" +
-		"ابتجحدرسعفقكلمنهويةءأإص،؟ ١٢ًَِّْ")
+		"ابتجحدرسعفقكلمنهويةءأإص،؟ ١٢ًَِّْـ")
 	f.Add([]byte("AVA Wave, To. office (Ty) fi"), []byte{3, 9, 0, 28, 14, 20}, false)
 	f.Add([]byte{40, 41, 42, 43, 38, 44, 45, 46, 47, 38, 1, 2, 3, 38, 48, 49, 50, 51}, []byte{0, 5, 4, 12, 9, 18}, true)
 	f.Add([]byte{40, 66, 41, 67, 42, 38, 30, 43, 44, 31, 36, 1, 39, 50, 51, 52}, []byte{1, 6, 2, 9}, false)
@@ -345,6 +343,14 @@ func FuzzParagraphLine(f *testing.F) {
 	// changes. A first version of Line, which read only the flag
 	// unsafe-to-break, gave other glyphs for this input.
 	f.Add([]byte("0090900"), []byte("72"), false)
+	// okage: D93. The shaper shapes "'')", of the script Arabic, from right
+	// to left, and "'')[0" from left to right, because it holds a digit and
+	// no letter. Roboto kerns the quotes in another way in each direction.
+	f.Add([]byte("fAbb !Z"), []byte("0"), false)
+	// okage: D93. In a run of tatweels of the script Common, from right to
+	// left, Amiri gives the first tatweel another glyph when the run is
+	// longer, and HarfBuzz does not mark the cut after it.
+	f.Add([]byte("AGGGGGGGGGGGGGGGA000000"), []byte("02"), false)
 	faces := fixedFontmap{roboto, amiri}
 	var (
 		p      Paragraph

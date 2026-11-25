@@ -22,11 +22,22 @@ type HarfbuzzShaper struct {
 	features []harfbuzz.Feature
 
 	// concat makes the shaper set the flag unsafe-to-concat of HarfBuzz in
-	// the masks of the glyphs. Only the shaper of a Paragraph sets it.
+	// the masks of the glyphs. The shaper of a Paragraph sets it, and a
+	// program sets it with SetUnsafeToConcat.
 	//
-	// okage: go-text has no concat (D77).
+	// okage: go-text has no concat (D77, D93).
 	concat bool
 }
+
+// SetUnsafeToConcat sets whether the shaper gives the flag unsafe-to-concat
+// of HarfBuzz in the masks of the glyphs, as [Glyph.UnsafeToConcat] reads
+// it. It sets the buffer flag [harfbuzz.ProduceUnsafeToConcat] of
+// HarfBuzz for each shaping. The flag is off by default, as in HarfBuzz,
+// because it costs time. The glyphs and their positions are the same with
+// the flag on and off.
+//
+// okage: go-text has no SetUnsafeToConcat (D93).
+func (t *HarfbuzzShaper) SetUnsafeToConcat(on bool) { t.concat = on }
 
 // SetFontCacheSize adjusts the size of the font cache within the shaper.
 // It is safe to adjust the size after using the shaper, though shrinking

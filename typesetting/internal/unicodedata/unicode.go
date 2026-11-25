@@ -19,7 +19,9 @@ func LookupGeneralCategory(r rune) GeneralCategory {
 	if uint32(r) < uint32(len(latin1GeneralCategory)) {
 		return latin1GeneralCategory[r]
 	}
-	return GeneralCategory(gcLookup(r))
+	// okage: D92. The table of LookupSegmentProperties has two levels,
+	// where gcLookup walks five.
+	return LookupSegmentProperties(r).GeneralCategory
 }
 
 // okage: D72. latin1GeneralCategory is the general category of each rune

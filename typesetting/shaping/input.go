@@ -3,6 +3,7 @@
 package shaping
 
 import (
+	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/typesetting/bidi"
 	"github.com/xo/okage/typesetting/di"
 	"github.com/xo/okage/typesetting/font"
@@ -294,14 +295,36 @@ const bidiClassesRTL = ucd.BD_R | ucd.BD_AL | ucd.BD_AN |
 // level 0 to each character of text when the paragraph is left to right
 // or neutral (D72).
 func needsBidi(text []rune) bool {
-	for i, r := range text {
-		class, _ := ucd.LookupBidiClass(r)
+	for i := 0; i < len(text); i++ {
+		// okage: D92. IndexOutside skips the runes of noBidiRanges, 8 at a
+		// time in the SIMD build, and only the other runes take the lookup.
+		if i += noBidiRanges.IndexOutside(text[i:]); i == len(text) {
+			break
+		}
+		class, _ := ucd.LookupBidiClass(text[i])
 		if class&bidiClassesRTL != 0 || (class == ucd.BD_B && i != len(text)-1) {
 			return true
 		}
 	}
 	return false
 }
+
+// noBidiRanges holds ranges of runes that have no class of bidiClassesRTL
+// and are not paragraph separators. They hold the ASCII letters, the
+// Latin, Greek, Cyrillic and Armenian letters, the scripts of India and of
+// Asia, the CJK ideographs, Hangul, the general punctuation around the bidi
+// controls, and the half width and full width forms. The ranges for the
+// text that is most common come first. A test compares them with the
+// lookup for each rune (D92).
+var noBidiRanges = wide.NewRuneRanges(
+	[2]rune{0x1F, 0x84},
+	[2]rune{0x86, 0x58F},
+	[2]rune{0x206A, 0xFB1C},
+	[2]rune{0xFEFF, 0x107FF},
+	[2]rune{0x8E3, 0x200E},
+	[2]rune{0x2010, 0x2028},
+	[2]rune{0x202F, 0x2065},
+)
 
 // lookupDelimIndex binary searches in the list of the paired delimiters,
 // and returns -1 if `ch` is not found
