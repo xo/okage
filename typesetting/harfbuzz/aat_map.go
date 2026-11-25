@@ -57,6 +57,10 @@ type aatFeatureInfo struct {
 	type_       aatLayoutFeatureType
 	setting     aatLayoutFeatureSelector
 	isExclusive bool
+
+	// okage: seq is the order of the request, from 1, as in HarfBuzz
+	// 15.2.0. It also tells two requests apart (D97).
+	seq int
 }
 
 func (fi aatFeatureInfo) key() uint32 {
@@ -72,7 +76,10 @@ func (a aatFeatureInfo) isLess(b aatFeatureInfo) bool {
 	if !a.isExclusive && (a.setting&selMask) != (b.setting&selMask) {
 		return a.setting < b.setting
 	}
-	return false
+	// okage: a later request comes first, so that the merge of the
+	// duplicates keeps it, as in HarfBuzz 15.2.0. go-text kept the first
+	// request (D97).
+	return a.seq > b.seq
 }
 
 type aatMapBuilder struct {
@@ -172,7 +179,7 @@ func (mb *aatMapBuilder) compileMorxFlag(chain font.MorxChain) GlyphMask {
 	retry:
 		// Check whether this type_/setting pair was requested in the map, and if so, apply its flags.
 		// (The search here only looks at the type_ and setting fields of feature_info_t.)
-		info := aatFeatureInfo{type_, setting, false}
+		info := aatFeatureInfo{type_: type_, setting: setting}
 		if mb.hasFeature(info) {
 			flags &= feature.DisableFlags
 			flags |= feature.EnableFlags
@@ -207,6 +214,7 @@ func (mb *aatMapBuilder) addFeature(feature Feature) {
 				type_:       aatLayoutFeatureTypeCharacterAlternatives,
 				setting:     aatLayoutFeatureSelector(feature.Value),
 				isExclusive: true,
+				seq:         len(mb.features) + 1, // okage: D97
 			},
 			start: feature.Start,
 			end:   feature.End,
@@ -244,6 +252,7 @@ func (mb *aatMapBuilder) addFeature(feature Feature) {
 		info.setting = mapping.selectorToDisable
 	}
 	info.isExclusive = featureName.IsExclusive()
+	info.seq = len(mb.features) + 1 // okage: D97
 	mb.features = append(mb.features, aatFeatureRange{
 		info:  info,
 		start: feature.Start,
@@ -283,7 +292,7 @@ func (mb *aatMapBuilder) compile(m *aatMap) {
 		featureEvents = append(featureEvents, aatFeatureEvent{
 			index:   -1, /* This value does magic. */
 			start:   false,
-			feature: aatFeatureInfo{},
+			feature: aatFeatureInfo{seq: len(mb.features) + 1}, // okage: D97
 		})
 	}
 
@@ -332,8 +341,11 @@ func (mb *aatMapBuilder) compile(m *aatMap) {
 		if event.start {
 			activeFeatures = append(activeFeatures, event.feature)
 		} else {
+			// okage: the end of a request removes that request, found by
+			// its seq, as in HarfBuzz 15.2.0. go-text removed the first
+			// request with the same type and setting (D97).
 			for i, f := range activeFeatures {
-				if f.key() == event.feature.key() {
+				if f.seq == event.feature.seq {
 					// remove the item
 					activeFeatures = append(activeFeatures[:i], activeFeatures[i+1:]...)
 					break

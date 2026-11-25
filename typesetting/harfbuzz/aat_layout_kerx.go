@@ -13,10 +13,21 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 
 	c.buffer.unsafeToConcat(0, maxInt)
 
-	c.setupBufferGlyphSet()
+	// okage: the set of the glyphs of the buffer is made only for a table
+	// of more than one subtable, as in HarfBuzz 15.2.0 (D97).
+	c.usingBufferGlyphSet = false
+	if len(kerx) > 1 {
+		c.setupBufferGlyphSet()
+	}
 
 	for i, st := range kerx {
 		var reverse bool
+
+		// okage: only the kerning of pairs and classes that is not
+		// cross-stream applies with GPOS, as in HarfBuzz 15.2.0 (D97).
+		if c.plan.applyGpos && (st.IsMachineKern() || st.IsCrossStream()) {
+			continue
+		}
 
 		if !st.IsExtended && st.IsVariation() {
 			continue
@@ -28,6 +39,7 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 
 		c.firstSet = accelerators[i].first_set
 		c.secondSet = accelerators[i].second_set
+		c.secondSetGates = accelerators[i].secondSetGates
 		c.machineClassCache = accelerators[i].class_cache
 
 		if !c.bufferIntersectsMachine() {
@@ -37,14 +49,20 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 			continue
 		}
 
+		// okage: as in HarfBuzz 15.2.0, a subtable whose actions need a
+		// glyph that the buffer does not hold is skipped (D97).
+		if !c.bufferIntersectsSecond() {
+			if debugMode {
+				fmt.Printf("AAT kerx : skipped subtable %d because no completer glyph matches\n", i)
+			}
+			continue
+		}
+
 		reverse = st.IsBackwards() != c.buffer.Props.Direction.isBackward()
 
-		// okage: a subtable takes the length of the buffer in operations,
-		// and the table stops when the buffer is in error, as in HarfBuzz
-		// 15.1.0 (D73).
-		if !c.chargeBufferPass() {
-			break
-		}
+		// okage: a subtable takes no operation for its pass over the
+		// buffer, as in HarfBuzz 15.2.0. HarfBuzz 15.1.0 took the length
+		// of the buffer (D73, D97).
 
 		if debugMode {
 			fmt.Printf("AAT kerx : start subtable %d\n", i)
@@ -86,6 +104,12 @@ func (c *aatApplyContext) applyKernx(kerx font.Kernx, accelerators []kernxSubtab
 
 	if c.bufferIsReversed {
 		c.reverseBuffer()
+	}
+
+	// okage: the offsets across the line go past the pairs that kern, so
+	// the whole buffer is unsafe to break, as in HarfBuzz 15.2.0 (D97).
+	if seenCrossStream && c.buffer.scratchFlags&bsfHasGPOSAttachment != 0 {
+		c.buffer.unsafeToBreak(0, maxInt)
 	}
 }
 
@@ -385,6 +409,18 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 	ankrActionIndex := entry.AsKernxIndex()
 	if dc.markSet && ankrActionIndex != 0xFFFF && buffer.idx < len(buffer.Pos) {
 		o := buffer.curPos(0)
+		// okage: an attachment of more than 16 bits leaves the glyph
+		// unattached, with no offset, as in HarfBuzz 15.2.0. go-text cut
+		// the attachment to 16 bits, and attached the glyph to another
+		// glyph (D97).
+		attachChain := dc.mark - buffer.idx
+		if dc.c.bufferIsReversed {
+			attachChain = -attachChain
+		}
+		if attachChain != int(int16(attachChain)) {
+			o.attachChain = 0
+			goto mark
+		}
 		switch dc.actionType {
 		case 0: /* Control Point Actions.*/
 			/* Indexed into glyph outline. */
@@ -442,13 +478,11 @@ func (dc *driverContextKerx4) transition(buffer *Buffer, driver stateTableDriver
 			o.XOffset = saturateAdd(o.XOffset, baseOffset)
 		}
 		o.attachType = attachTypeMark
-		o.attachChain = int16(dc.mark - buffer.idx)
-		if dc.c.bufferIsReversed {
-			o.attachChain = -o.attachChain
-		}
+		o.attachChain = int16(attachChain)
 		buffer.scratchFlags |= bsfHasGPOSAttachment
 	}
 
+mark:
 	const Mark = 0x8000 /* If set, remember this glyph as the marked glyph. */
 	if entry.Flags&Mark != 0 {
 		dc.markSet = true
@@ -472,6 +506,10 @@ type kernxSubtableAccelerator struct {
 	first_set   intSet
 	second_set  intSet
 	class_cache aatClassCache
+
+	// okage: secondSetGates is true when second_set holds each glyph that
+	// can make an action of a state table, as in HarfBuzz 15.2.0 (D97).
+	secondSetGates bool
 }
 
 func newKernxSubtableAccelerator(subtable font.KernSubtable) kernxSubtableAccelerator {
@@ -487,7 +525,7 @@ func newKernxSubtableAccelerator(subtable font.KernSubtable) kernxSubtableAccele
 		// okage: collect only the glyphs whose class can start an action,
 		// as HarfBuzz 15.1.0 (D73).
 		collectInitialGlyphs(&out.first_set, &st.Machine, driverContextKerx1{}, subtable.IsExtended)
-		// collectLookupGlyphs (second_set, num_glyphs); // second_set is unused for machine kerning
+		out.secondSetGates = collectSecondGlyphs(&out.second_set, &st.Machine, driverContextKerx1{}, subtable.IsExtended)
 	case font.Kern2:
 		collectLookupGlyphs(&out.first_set, st.Left)
 		collectLookupGlyphs(&out.second_set, st.Right)
@@ -499,7 +537,7 @@ func newKernxSubtableAccelerator(subtable font.KernSubtable) kernxSubtableAccele
 	case font.Kern4:
 		// okage: as for Kern1 (D73).
 		collectInitialGlyphs(&out.first_set, &st.Machine, driverContextKerx4{}, true)
-		// collectLookupGlyphs (second_set, num_glyphs); // second_set is unused for machine kerning
+		out.secondSetGates = collectSecondGlyphs(&out.second_set, &st.Machine, driverContextKerx4{}, true)
 	case font.Kern6:
 		collectLookupGlyphs(&out.first_set, st.Row)
 		collectLookupGlyphs(&out.second_set, st.Column)

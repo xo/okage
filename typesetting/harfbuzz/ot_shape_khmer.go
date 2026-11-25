@@ -137,6 +137,8 @@ func setupSyllablesKhmer(_ *otShapePlan, _ *Font, buffer *Buffer) bool {
 	findSyllablesKhmer(buffer)
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
+		// okage: D97.
+		syllabicRecordCut(buffer, start, end)
 		buffer.unsafeToBreak(start, end)
 	}
 	return false
@@ -182,7 +184,9 @@ func (khmerPlan *khmerShapePlan) reorderConsonantSyllable(buffer *Buffer, start,
 		 * the 'pref' OpenType feature applied to them.
 		 * """
 		 */
-		if info[i].complexCategory == khmSM_ex_H && numCoengs <= 2 && i+1 < end {
+		// okage: only the first or the second coeng can move, as in
+		// HarfBuzz 15.2.0. HarfBuzz 15.1.0 also moved the third (D97).
+		if info[i].complexCategory == khmSM_ex_H && numCoengs < 2 && i+1 < end {
 			numCoengs++
 
 			if info[i+1].complexCategory == khmSM_ex_Ra {

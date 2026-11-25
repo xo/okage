@@ -83,7 +83,7 @@ func ligatureSet(first int, ligatures ...[]int) []byte {
 
 // TestRuleSetUnsafeToConcat compares the flags with HarfBuzz for lookups
 // built by hand, whose rules and ligatures do not match the text in each
-// way. HarfBuzz 15.1.0 tries a ligature set and a rule set of more than 4
+// way. HarfBuzz 15.2.0 tries a ligature set and a rule set of more than 4
 // rules on a fast path, which tests the first glyphs after the current
 // glyph before it tries a rule. Each path marks other glyphs unsafe to
 // concat. A chained context rule whose input does not match marks no

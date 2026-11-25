@@ -49,10 +49,19 @@ func (ac *otLayoutLookupAccelerator) init(lookup layoutLookup) {
 // apply the subtables and stops at the first success.
 //
 // okage: the loop does not copy each subtable (D87).
+//
+// okage: as in HarfBuzz 15.2.0, the loop stops when the buffer is in
+// error. HarfBuzz 15.1.0 tried the next subtables (D97).
 func (ac *otLayoutLookupAccelerator) apply(c *otApplyContext) bool {
+	if c.buffer.inError {
+		return false
+	}
 	for i := range ac.subtables {
 		if ac.subtables[i].apply(c) {
 			return true
+		}
+		if c.buffer.inError {
+			return false
 		}
 	}
 	return false
@@ -208,7 +217,9 @@ func (m *otApplyContextMatcher) init(c *otApplyContext, contextMatch bool) {
 }
 
 func (m *otApplyContextMatcher) mayMatch(info *GlyphInfo, glyphData []uint16) uint8 {
-	if info.Mask&m.mask == 0 || (m.perSyllable && m.syllable != 0 && m.syllable != info.syllable) {
+	// okage: the test of the syllable is in skippingIterator.match, as in
+	// HarfBuzz 15.2.0 (D97).
+	if info.Mask&m.mask == 0 {
 		return no
 	}
 
@@ -298,6 +309,14 @@ const (
 )
 
 func (it *skippingIterator) match(info *GlyphInfo) matchRes {
+	// okage: a glyph of another syllable ends the match, also when the
+	// lookup skips it, as in HarfBuzz 15.2.0. HarfBuzz 15.1.0 skipped such
+	// a glyph, and a lookup per syllable matched a glyph many syllables
+	// later (D97).
+	if it.matcher.perSyllable && it.matcher.syllable != 0 && it.matcher.syllable != info.syllable {
+		return notMatch
+	}
+
 	skipR := it.matcher.maySkip(it.c, info)
 	if skipR == yes {
 		return skip
@@ -315,29 +334,47 @@ func (it *skippingIterator) match(info *GlyphInfo) matchRes {
 	return skip
 }
 
+// chargeSkipped takes count/32 operations for count glyphs that the
+// iterator skipped.
+//
+// okage: this is charge_skipped of HarfBuzz 15.2.0. A short run of skipped
+// glyphs is free (D97).
+func (it *skippingIterator) chargeSkipped(count int) {
+	if count >= 32 {
+		it.c.buffer.spendOps(count / 32)
+	}
+}
+
+// okage: next and prev take operations for the glyphs that they skip, as
+// in HarfBuzz 15.2.0 (D97).
 func (it *skippingIterator) next() (_ bool, unsafeTo int) {
 	stop := it.end - 1
 	info := it.c.buffer.Info
+	start := it.idx
 	for it.idx < stop {
 		it.idx++
 		switch it.match(&info[it.idx]) {
 		case match:
+			it.chargeSkipped(it.idx - start - 1)
 			if len(it.matchGlyphDataArray) != 0 {
 				it.matchGlyphDataStart++
 			}
 			return true, 0
 		case notMatch:
+			it.chargeSkipped(it.idx - start - 1)
 			return false, it.idx + 1
 		case skip:
 			continue
 		}
 	}
+	it.chargeSkipped(max(it.idx-start, 0))
 	return false, it.end
 }
 
 func (it *skippingIterator) prev() (_ bool, unsafeFrom int) {
 	stop := 0
 	outInfo, infoL := it.c.buffer.outInfo, it.c.buffer.Info
+	start := it.idx
 	for it.idx > stop {
 		it.idx--
 		var info *GlyphInfo
@@ -355,16 +392,19 @@ func (it *skippingIterator) prev() (_ bool, unsafeFrom int) {
 
 		switch it.match(info) {
 		case match:
+			it.chargeSkipped(start - it.idx - 1)
 			if len(it.matchGlyphDataArray) != 0 {
 				it.matchGlyphDataStart++
 			}
 			return true, 0
 		case notMatch:
+			it.chargeSkipped(start - it.idx - 1)
 			return false, max(1, it.idx) - 1
 		case skip:
 			continue
 		}
 	}
+	it.chargeSkipped(max(start-it.idx, 0))
 	return false, 0
 }
 
@@ -761,6 +801,10 @@ func (c *otApplyContext) contextApplyLookup(input []uint16, lookupRecord []table
 	if len(input)+1 > maxContextLength {
 		return false
 	}
+	// okage: as in HarfBuzz 15.2.0 (D97).
+	if c.buffer.inError {
+		return false
+	}
 	hasMatch, matchEnd, _ := c.matchInput(input, lookupContext)
 	if hasMatch {
 		c.buffer.unsafeToBreak(c.buffer.idx, matchEnd)
@@ -779,6 +823,10 @@ func (c *otApplyContext) chainContextApplyLookup(backtrack, input, lookahead []u
 	lookupRecord []tables.SequenceLookupRecord, lookupContexts [3]matcherFunc,
 ) bool {
 	if len(input)+1 > maxContextLength {
+		return false
+	}
+	// okage: as in HarfBuzz 15.2.0 (D97).
+	if c.buffer.inError {
 		return false
 	}
 
@@ -986,6 +1034,10 @@ func (c *otApplyContext) matchInput(input []uint16, matchFunc matcherFunc) (_ bo
 						j--
 					}
 
+					// okage: the walk takes an operation for each glyph,
+					// as in HarfBuzz 15.2.0 (D97).
+					buffer.spendOps(len(out) - j)
+
 					if found && skippyIter.maySkip(&out[j]) == yes {
 						ligbase = ligbaseMaySkip
 					} else {
@@ -1111,7 +1163,8 @@ func (c *otApplyContext) ligateInput(count, matchEnd int, ligGlyph gID, totalCom
 
 	if !isMarkLigature && lastLigID != 0 {
 		/* Re-adjust components for any marks following. */
-		for i := buffer.idx; i < len(buffer.Info); i++ {
+		i := buffer.idx
+		for ; i < len(buffer.Info); i++ {
 			if lastLigID != buffer.Info[i].getLigID() {
 				break
 			}
@@ -1125,6 +1178,9 @@ func (c *otApplyContext) ligateInput(count, matchEnd int, ligGlyph gID, totalCom
 				min(thisComp, lastNumComponents)
 			buffer.Info[i].setLigPropsForMark(ligID, newLigComp)
 		}
+		// okage: the walk takes an operation for each mark, as in
+		// HarfBuzz 15.2.0 (D97).
+		buffer.spendOps(i - buffer.idx)
 	}
 }
 
@@ -1213,8 +1269,11 @@ func (c *otApplyContext) applyLookup(count int,
 		if buffer.inError {
 			break
 		}
+		// okage: a record that does not recurse takes one operation, as
+		// in HarfBuzz 15.2.0. A rule can hold 65,535 records (D97).
 		idx := int(lk.SequenceIndex)
 		if idx >= count { // invalid, ignored
+			buffer.spendOps(1)
 			continue
 		}
 
@@ -1222,6 +1281,7 @@ func (c *otApplyContext) applyLookup(count int,
 
 		// This can happen if earlier recursed lookups deleted many entries.
 		if c.matchPositions[idx] >= origLen {
+			buffer.spendOps(1)
 			continue
 		}
 

@@ -344,7 +344,7 @@ func TestAttachmentNesting(t *testing.T) {
 	}
 	for i := range pos {
 		if pos[i].attachChain != 0 {
-			propagateAttachmentOffsets(pos, i, LeftToRight)
+			propagateAttachmentOffsets(NewBuffer(), pos, i, LeftToRight)
 		}
 	}
 	if pos[0].YOffset != 65 || pos[63].YOffset != 2 || pos[64].YOffset != 1 || pos[65].YOffset != 5 {
@@ -642,7 +642,7 @@ func TestAttachmentClamp(t *testing.T) {
 	pos[1].YOffset = math.MaxInt32
 	pos[1].attachChain = -1
 	pos[1].attachType = attachTypeCursive
-	propagateAttachmentOffsets(pos, 1, LeftToRight)
+	propagateAttachmentOffsets(NewBuffer(), pos, 1, LeftToRight)
 	if got := pos[1].YOffset; got != math.MaxInt32 {
 		t.Errorf("cursive: got the offset %d, want %d", got, math.MaxInt32)
 	}
@@ -651,7 +651,7 @@ func TestAttachmentClamp(t *testing.T) {
 	pos[1].XAdvance = math.MaxInt32
 	pos[2].attachChain = -2
 	pos[2].attachType = attachTypeMark
-	propagateAttachmentOffsets(pos, 2, LeftToRight)
+	propagateAttachmentOffsets(NewBuffer(), pos, 2, LeftToRight)
 	if got := pos[2].XOffset; got != math.MinInt32 {
 		t.Errorf("mark: got the offset %d, want %d", got, math.MinInt32)
 	}
@@ -692,21 +692,23 @@ func gsubMultiple(t testing.TB, count int) []byte {
 		[][]byte{lookupTable(t, 2, 0, multiple)})
 }
 
-// TestDropOutputWithoutOperations shapes xaaa with gsubNestedRecords and
-// 20,000 records. Each a takes about 40,000 operations, so the buffer has
-// no operations left in the middle of the lookup, at the second a. The
+// TestDropOutputWithoutOperations shapes xaaaaaaa with gsubNestedRecords
+// and 65,535 records. Each a takes about 130,000 operations, so the buffer
+// has no operations left in the middle of the lookup, at the fifth a. The
 // output of the lookup has its own array from x on, because z, y is longer
-// than x. HarfBuzz 15.1.0 then drops the output, and keeps the array of the
-// input, where each move back of the lookup wrote a glyph: x, b, a, a.
-// go-text kept the output, z, y, a, a, a.
+// than x. HarfBuzz then drops the output, and keeps the array of the input,
+// where each move back of the lookup wrote a glyph: x, then b at the
+// fifth a. go-text kept the output (D73). The text has seven a, so that it
+// takes more than the 524,288 operations of HarfBuzz 15.2.0 (D97).
 func TestDropOutputWithoutOperations(t *testing.T) {
-	face := fontWithLayout(t, map[string][]byte{"GSUB": gsubNestedRecords(t, 20000)})
+	face := fontWithLayout(t, map[string][]byte{"GSUB": gsubNestedRecords(t, 65535)})
 	if got := len(face.GSUB.Lookups); got != 2 {
 		t.Fatalf("got %d lookups of GSUB, want 2", got)
 	}
 	testShapedFace(t, face, []shapedText{
-		{"xaaa", []shapedGlyph{
-			{robotoX, 0, 1015, 0, 0}, {robotoB, 1, 1149, 0, 0}, {robotoA, 2, 1114, 0, 0}, {robotoA, 3, 1114, 0, 0},
+		{"xaaaaaaa", []shapedGlyph{
+			{robotoX, 0, 1015, 0, 0}, {robotoA, 1, 1114, 0, 0}, {robotoA, 2, 1114, 0, 0}, {robotoA, 3, 1114, 0, 0},
+			{robotoA, 4, 1114, 0, 0}, {robotoB, 5, 1149, 0, 0}, {robotoA, 6, 1114, 0, 0}, {robotoA, 7, 1114, 0, 0},
 		}},
 	})
 }
@@ -811,41 +813,50 @@ func morxInsertions(count int) []byte {
 	for range 31 {
 		insertion = append(insertion, u16s(int(robotoA))...)
 	}
+	// costly is insertion, whose entry 1 inserts 31 glyphs before and 31
+	// glyphs after the current glyph, from the index 0xFFFE, which is not
+	// in the subtable.
+	costly := u32s(5, 20, 28, 48, 64)
+	costly = append(costly, u16s(8, int(robotoA), 1, 4)...)
+	costly = append(costly, u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 1)...)
+	costly = append(costly, u16s(0, 0, 0xFFFF, 0xFFFF, 0, 31<<5|31, 0xFFFE, 0xFFFE)...)
 	noncontextual := u16s(8, int(robotoA), 1, int(robotoB)) // a lookup of format 8
 
-	length := 16 + count*(12+len(insertion)) + 12 + len(noncontextual)
+	length := 16 + count*(12+len(insertion)) + 12 + len(costly) + 12 + len(noncontextual)
 	out := u16s(2, 0)
-	out = append(out, u32s(1, 1, uint32(length), 0, uint32(count+1))...) // one chain
+	out = append(out, u32s(1, 1, uint32(length), 0, uint32(count+2))...) // one chain
 	for range count {
 		// The length, the coverage for all the directions and the type,
 		// and the flags.
 		out = append(out, u32s(uint32(12+len(insertion)), 0x20000005, 1)...)
 		out = append(out, insertion...)
 	}
+	out = append(out, u32s(uint32(12+len(costly)), 0x20000005, 1)...)
+	out = append(out, costly...)
 	out = append(out, u32s(uint32(12+len(noncontextual)), 0x20000004, 1)...)
 	return append(out, noncontextual...)
 }
 
 // TestMorxSubtableOperations shapes a with morxInsertions and three
 // insertion subtables, which make 32, 1,024, then 32,768 glyphs a. The
-// buffer has 65,536 operations, and the insertions take 33,792. As in
-// HarfBuzz 15.1.0, each subtable also takes the length of the buffer in
-// operations, so the noncontextual subtable takes 32,768. The buffer is
-// then in error, and the subtable does not apply. go-text took no
-// operation for a subtable, and gave 32,768 glyphs b.
+// buffer has 524,288 operations. The fourth subtable takes 62 operations
+// for each a, for the insertions that are not in the subtable, as
+// HarfBuzz 15.2.0 does. The buffer is then in error, and the noncontextual
+// subtable does not apply. go-text took no operation for an insertion,
+// and gave 32,768 glyphs b (D73, D97).
 func TestMorxSubtableOperations(t *testing.T) {
 	face := fontWithLayout(t, map[string][]byte{"morx": morxInsertions(3)})
-	if got := len(face.Morx); got != 1 || len(face.Morx[0].Subtables) != 4 {
-		t.Fatalf("got %d chains of morx, want 1 with 4 subtables", got)
+	if got := len(face.Morx); got != 1 || len(face.Morx[0].Subtables) != 5 {
+		t.Fatalf("got %d chains of morx, want 1 with 5 subtables", got)
 	}
 	testFontHashes(t, face.Font, []shapedHash{{"a", 32768, 0x9458d2032c2f2325}})
 }
 
 // gsubIndicRules builds a table GSUB for the script dev2 of
 // NotoSansDevanagari-Regular.ttf, from the glyphs of ka, kha and the virama.
-// The feature pres replaces ka with kha. The feature blwf has a context of
-// format 1 for the virama, with 32,000 rules that match no text. The rules
-// share their bytes.
+// The feature pres replaces ka with kha. The features blwf, vatu, pstf and
+// pref have a context of format 1 for the virama, with 32,000 rules that
+// match no text. The rules share their bytes.
 func gsubIndicRules(t testing.TB, ka, kha, virama GID) []byte {
 	const rules = 32000
 	single := u16s(1, 6, int(kha-ka))
@@ -857,17 +868,19 @@ func gsubIndicRules(t testing.TB, ka, kha, virama GID) []byte {
 		context = append(context, u16s(2+2*rules)...)
 	}
 	context = append(context, u16s(2, 0, 1)...) // the rule: the virama, then the glyph 1
-	return layoutTable(t, []string{"DFLT", "dev2"}, []layoutFeature{{"blwf", []int{1}}, {"pres", []int{0}}},
+	return layoutTable(t, []string{"DFLT", "dev2"},
+		[]layoutFeature{{"blwf", []int{1}}, {"pref", []int{1}}, {"pres", []int{0}}, {"pstf", []int{1}}, {"vatu", []int{1}}},
 		[][]byte{lookupTable(t, 1, 0, single), lookupTable(t, 5, 0, context)})
 }
 
-// TestIndicWouldSubstituteOperations shapes four times ka with
+// TestIndicWouldSubstituteOperations shapes six times ka with
 // gsubIndicRules. To find the position of each consonant, the Indic shaper
-// asks whether blwf substitutes the virama and the consonant. As in
-// HarfBuzz 15.1.0, the question takes an operation for each rule of the
-// rule set of the virama. At the third consonant, the buffer has no
-// operations left, and it is in error, so pres does not apply. go-text took
-// no operation, and pres replaced each ka with kha.
+// asks whether blwf, vatu, pstf and pref substitute the virama and the
+// consonant. As in HarfBuzz, each question takes an operation for each rule
+// of the rule set of the virama (D73). Before the last consonant, the
+// buffer has no operations left of the 524,288 of HarfBuzz 15.2.0, and it
+// is in error, so pres does not apply (D97). go-text took no operation,
+// and pres replaced each ka with kha.
 func TestIndicWouldSubstituteOperations(t *testing.T) {
 	data, err := td.Files.ReadFile("perf_reference/fonts/NotoSansDevanagari-Regular.ttf")
 	if err != nil {
@@ -887,8 +900,9 @@ func TestIndicWouldSubstituteOperations(t *testing.T) {
 	if got := len(face.GSUB.Lookups); got != 2 {
 		t.Fatalf("got %d lookups of GSUB, want 2", got)
 	}
-	testShapedFace(t, face, []shapedText{{"कककक", []shapedGlyph{
+	testShapedFace(t, face, []shapedText{{"कककककक", []shapedGlyph{
 		{ka, 0, 762, 0, 0}, {ka, 1, 762, 0, 0}, {ka, 2, 762, 0, 0}, {ka, 3, 762, 0, 0},
+		{ka, 4, 762, 0, 0}, {ka, 5, 762, 0, 0},
 	}}})
 }
 
@@ -1103,13 +1117,14 @@ func TestKerxFormat1History(t *testing.T) {
 }
 
 // TestKerxFormat1Operations shapes aab and aa with a subtable of format 1
-// of kerx, which applies at b a list of 100,000 values 0 without an end,
-// then a subtable of format 0, which kerns a, a. As in HarfBuzz 15.1.0,
-// each action takes one operation, the buffer runs out of operations in
-// the first subtable, and the second subtable does not apply. go-text
-// took no operation for an action, and kerned a, a (D73).
+// of kerx, which applies at b a list of 600,000 values 0 without an end,
+// then a subtable of format 0, which kerns a, a. As in HarfBuzz, each
+// action takes one operation, the buffer runs out of its 524,288
+// operations in the first subtable, and the second subtable does not
+// apply. go-text took no operation for an action, and kerned a, a (D73,
+// D97).
 func TestKerxFormat1Operations(t *testing.T) {
-	values := make([]int, 100000)
+	values := make([]int, 600000)
 	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}, values...),
 		kerxPairs(int(robotoA), int(robotoA), -300))
 	face := fontWithLayout(t, map[string][]byte{"kerx": kerx})

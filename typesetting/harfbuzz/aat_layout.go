@@ -470,6 +470,7 @@ type aatApplyContext struct {
 
 	firstSet          intSet        // readonly
 	secondSet         intSet        // readonly
+	secondSetGates    bool          // readonly, okage: D97
 	machineClassCache aatClassCache // readonly
 }
 
@@ -480,13 +481,6 @@ func newAatApplyContext(plan *otShapePlan, font *Font, buffer *Buffer) *aatApply
 	out.face = font.face
 	out.buffer = buffer
 	return &out
-}
-
-// chargeBufferPass takes the length of the buffer in operations for a pass
-// of a subtable over the buffer, as charge_buffer_pass of HarfBuzz 15.1.0.
-// The font gives the number of subtables (D73).
-func (c *aatApplyContext) chargeBufferPass() bool {
-	return c.buffer.spendOps(len(c.buffer.Info))
 }
 
 func (c *aatApplyContext) reverseBuffer() {
@@ -510,6 +504,29 @@ func (c *aatApplyContext) bufferIntersectsMachine() bool {
 	// Faster for shorter buffers.
 	for _, info := range c.buffer.Info {
 		if c.firstSet.hasGlyph(info.Glyph) {
+			return true
+		}
+	}
+	return false
+}
+
+// bufferIntersectsSecond returns false when secondSet holds each glyph
+// that can make an action of the subtable, and the buffer holds none of
+// them. The subtable can then make no action.
+//
+// okage: this is buffer_intersects_second of HarfBuzz 15.2.0, which skips
+// such a subtable. The subtable then takes no operation (D97).
+func (c *aatApplyContext) bufferIntersectsSecond() bool {
+	if !c.secondSetGates {
+		return true
+	}
+	if c.usingBufferGlyphSet {
+		return c.bufferGlyphSet.Intersects(c.secondSet)
+	}
+
+	// Faster for shorter buffers.
+	for _, info := range c.buffer.Info {
+		if c.secondSet.hasGlyph(info.Glyph) {
 			return true
 		}
 	}
@@ -878,7 +895,9 @@ func (sp *otShapePlan) aatLayoutPosition(font *Font, buffer *Buffer) {
 
 func collectLookupGlyphs(dst *intSet, src tables.AatLookupMixed) {
 	switch src.(type) {
-	case tables.AATLoopkup2, tables.AATLoopkupExt2:
+	// okage: the segments of format 4 are collected as those of format 2,
+	// as in HarfBuzz 15.2.0 (D97).
+	case tables.AATLoopkup2, tables.AATLoopkupExt2, tables.AATLoopkup4, tables.AATLoopkupExt4:
 		collectSegmentGlyphs(dst, src.Coverage())
 		return
 	}
@@ -944,6 +963,55 @@ func collectInitialGlyphs(dst *intSet, machine *font.AATStateTable, table aatAct
 	collectLookupFiltered(dst, machine.Class, &filter)
 }
 
+// collectSecondGlyphs adds to dst the glyphs whose class has an entry with
+// an action from a state that the machine can reach from the start of the
+// text. An action needs such a glyph, so a subtable can skip a buffer that
+// holds none of them. It returns false, and the set does not gate the
+// subtable, when an action can come without such a glyph: at the end of
+// the text, for a glyph out of the bounds of the class table, in a state
+// table of kern, or when the machine has more than 512 classes. extended
+// is false for a state table of kern.
+//
+// okage: this is collect_second_glyphs of HarfBuzz 15.2.0 (D97).
+func collectSecondGlyphs(dst *intSet, machine *font.AATStateTable, table aatActionable, extended bool) bool {
+	const (
+		classEndOfText   = 0
+		classOutOfBounds = 1
+	)
+	if !extended {
+		return false
+	}
+	nClasses := machine.NClasses()
+	if nClasses > 512 {
+		return false
+	}
+	var filter aatClassFilter
+	visited := map[uint16]bool{0: true}
+	queue := []uint16{0}
+	for len(queue) != 0 {
+		s := queue[len(queue)-1]
+		queue = queue[:len(queue)-1]
+		for k := range nClasses {
+			entry := machine.GetEntry(s, uint16(k))
+			if table.isActionable(entry) {
+				if k == classEndOfText || k == classOutOfBounds {
+					return false
+				}
+				filter.add(uint16(k))
+			}
+			if ns := entry.NewState; !visited[ns] {
+				visited[ns] = true
+				queue = append(queue, ns)
+			}
+		}
+	}
+	if filter.has(2) { // the class of the deleted glyph
+		dst.addGlyph(deletedGlyph)
+	}
+	collectLookupFiltered(dst, machine.Class, &filter)
+	return true
+}
+
 // collectLookupFiltered adds to dst the glyphs of the lookup whose value is
 // in the filter, as collect_glyphs_filtered of the lookups of HarfBuzz
 // 15.1.0. A glyph is a uint32 here, as in HarfBuzz, so that a glyph after
@@ -993,8 +1061,34 @@ func collectLookupFiltered(dst *intSet, lookup tables.AATLookup, filter *aatClas
 			dst.addRange(first, last)
 		}
 	case tables.AATLoopkup4:
-		for _, r := range lookup.Records {
+		// okage: as for format 2, the segments are added one by one while
+		// they are sorted and disjoint, and the rest is added as a single
+		// range without a look at the values, as collect_segments_glyphs_
+		// filtered of HarfBuzz 15.2.0 does (D97).
+		var next uint32
+		i := 0
+		for ; i < len(lookup.Records); i++ {
+			r := lookup.Records[i]
+			if uint32(r.FirstGlyph) < next {
+				break
+			}
+			if r.FirstGlyph == deletedGlyph || r.FirstGlyph > r.LastGlyph {
+				continue
+			}
 			addValues(r.FirstGlyph, r.Values)
+			next = uint32(r.LastGlyph) + 1
+		}
+		first, last := uint32(math.MaxUint32), uint32(0)
+		for ; i < len(lookup.Records); i++ {
+			r := lookup.Records[i]
+			if r.FirstGlyph == deletedGlyph || r.FirstGlyph > r.LastGlyph {
+				continue
+			}
+			first = min(first, uint32(r.FirstGlyph))
+			last = max(last, uint32(r.LastGlyph))
+		}
+		if first <= last {
+			dst.addRange(first, last)
 		}
 	case tables.AATLoopkup6:
 		for _, r := range lookup.Records {

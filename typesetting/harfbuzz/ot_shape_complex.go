@@ -219,6 +219,58 @@ func (cs complexShaperDefault) normalizationPreference() normalizationMode {
 	return nmDefault
 }
 
+// syllabicRecordCut records the cut of a syllable that the syllable
+// iterator makes, for each piece [start, end) that it gives. The iterator
+// cuts a syllable of more than maxSyllableLength glyphs, at the glyphs of
+// that moment, so the walks before and after the substitutions could see
+// other pieces. The cut gives each piece but the last a serial of its own,
+// which the substituted glyphs keep, and keeps the pieces in one cluster.
+//
+// okage: this is hb_syllabic_record_cut of HarfBuzz 15.2.0 (D97).
+func syllabicRecordCut(buffer *Buffer, start, end int) {
+	if end-start < maxSyllableLength {
+		return
+	}
+	info := buffer.Info
+	count := len(info)
+	syllable := info[start].syllable
+	if end == count || info[end].syllable != syllable {
+		return // not cut
+	}
+
+	syllableEnd := end
+	for syllableEnd < count && info[syllableEnd].syllable == syllable {
+		syllableEnd++
+	}
+
+	buffer.mergeClusters(start, syllableEnd)
+
+	// Alternate between two serials different from both the one before
+	// start and the one the last piece keeps.
+	prevSerial := uint8(0)
+	if start != 0 {
+		prevSerial = info[start-1].syllable >> 4
+	}
+	lastSerial := syllable >> 4
+	var serials [2]uint8
+	serial := uint8(1)
+	for j := range serials {
+		for serial == prevSerial || serial == lastSerial {
+			serial++
+		}
+		serials[j] = serial
+		serial++
+	}
+
+	for j := 0; syllableEnd-start > maxSyllableLength; start, j = end, j^1 {
+		end = start + maxSyllableLength
+		v := serials[j]<<4 | syllable&0x0F
+		for i := start; i < end; i++ {
+			info[i].syllable = v
+		}
+	}
+}
+
 func syllabicInsertDottedCircles(font *Font, buffer *Buffer, brokenSyllableType,
 	dottedcircleCategory uint8, rephaCategory, dottedCirclePosition int,
 ) bool {

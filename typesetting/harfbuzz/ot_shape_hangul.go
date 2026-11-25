@@ -185,7 +185,17 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 						chars[0] = 0x25CC
 						chars[1] = u
 					}
-					buffer.replaceGlyphs(1, chars[:], nil)
+					// okage: the dotted circle takes its Unicode properties,
+					// as in HarfBuzz 15.2.0. It then keeps its advance in a
+					// font without GDEF (D97).
+					if !buffer.replaceGlyphs(1, chars[:], nil) {
+						break
+					}
+					dottedCircle := len(buffer.outInfo) - 1
+					if chars[0] == 0x25CC {
+						dottedCircle--
+					}
+					buffer.outInfo[dottedCircle].setUnicodeProps(buffer)
 				} else {
 					/* No dotted circle available in the font; just leave tone mark untouched. */
 					buffer.nextGlyph()
@@ -331,6 +341,11 @@ func (cs *complexShaperHangul) preprocessText(_ *otShapePlan, buffer *Buffer, fo
 				buffer.nextGlyph()
 				continue
 			}
+		} else if u == 0x25CC {
+			// okage: a dotted circle is already a base for a tone mark, as
+			// in HarfBuzz 15.2.0. A tone mark at the start of the text then
+			// gets only one dotted circle (D97).
+			end = start + 1
 		}
 
 		/* Didn't find a recognizable syllable, so we leave end <= start;

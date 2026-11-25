@@ -29,14 +29,19 @@ func kern(driver fontP.SimpleKerns, crossStream bool, font *Font, buffer *Buffer
 			continue
 		}
 
-		skippyIter.resetFast(idx)
-		if ok, unsafeTo := skippyIter.next(); !ok {
-			idx = unsafeTo
-			continue
-		}
-
 		i := idx
-		j := skippyIter.idx
+		j := i + 1
+		// okage: as in HarfBuzz 15.2.0, a next glyph that the kerning does
+		// not skip is the pair at once, without the skipping iterator,
+		// which takes operations for the glyphs that it skips (D97).
+		if j == len(pos) || info[j].Mask&kernMask == 0 || info[j].isMark() || info[j].isDefaultIgnorable() {
+			skippyIter.resetFast(i)
+			if ok, unsafeTo := skippyIter.next(); !ok {
+				idx = unsafeTo
+				continue
+			}
+			j = skippyIter.idx
+		}
 
 		rawKern := driver.KernPair(info[i].Glyph, info[j].Glyph)
 		kern := Position(rawKern)
@@ -45,40 +50,59 @@ func kern(driver fontP.SimpleKerns, crossStream bool, font *Font, buffer *Buffer
 			goto skip
 		}
 
-		if horizontal {
-			if scale {
-				kern = font.emScaleX(rawKern)
+		// okage: as in HarfBuzz 15.2.0, the value -0x8000 of a cross-stream
+		// subtable resets the offset across the line and the attachment,
+		// a value across the line is scaled on the axis across the line,
+		// and the sums are clamped. go-text took -0x8000 as an offset, and
+		// scaled a value across the line on the axis of the line (D97).
+		if crossStream && rawKern == -0x8000 {
+			pos[j].attachType = attachTypeNone
+			pos[j].attachChain = 0
+			if horizontal {
+				pos[j].YOffset = 0
+			} else {
+				pos[j].XOffset = 0
 			}
+		} else if horizontal {
 			if crossStream {
+				if scale {
+					kern = font.emScaleY(rawKern)
+				}
 				pos[j].YOffset = kern
 				buffer.scratchFlags |= bsfHasGPOSAttachment
 			} else {
+				if scale {
+					kern = font.emScaleX(rawKern)
+				}
 				kern1 := kern >> 1
 				kern2 := kern - kern1
-				pos[i].XAdvance += kern1
-				pos[j].XAdvance += kern2
-				pos[j].XOffset += kern2
+				pos[i].XAdvance = saturateAdd(pos[i].XAdvance, kern1)
+				pos[j].XAdvance = saturateAdd(pos[j].XAdvance, kern2)
+				pos[j].XOffset = saturateAdd(pos[j].XOffset, kern2)
 			}
 		} else {
-			if scale {
-				kern = font.emScaleY(rawKern)
-			}
 			if crossStream {
+				if scale {
+					kern = font.emScaleX(rawKern)
+				}
 				pos[j].XOffset = kern
 				buffer.scratchFlags |= bsfHasGPOSAttachment
 			} else {
+				if scale {
+					kern = font.emScaleY(rawKern)
+				}
 				kern1 := kern >> 1
 				kern2 := kern - kern1
-				pos[i].YAdvance += kern1
-				pos[j].YAdvance += kern2
-				pos[j].YOffset += kern2
+				pos[i].YAdvance = saturateAdd(pos[i].YAdvance, kern1)
+				pos[j].YAdvance = saturateAdd(pos[j].YAdvance, kern2)
+				pos[j].YOffset = saturateAdd(pos[j].YOffset, kern2)
 			}
 		}
 
 		buffer.unsafeToBreak(i, j+1)
 
 	skip:
-		idx = skippyIter.idx
+		idx = j
 	}
 }
 

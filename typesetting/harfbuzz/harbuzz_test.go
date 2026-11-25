@@ -216,7 +216,7 @@ func TestExample(t *testing.T) {
 func TestPropagateAttachmentOffsetsNegativeChain(t *testing.T) {
 	// cross-stream kerx attaches every glyph to the previous one, including the first
 	pos := []GlyphPosition{{attachChain: -1, attachType: attachTypeCursive}}
-	propagateAttachmentOffsets(pos, 0, LeftToRight) // must not panic
+	propagateAttachmentOffsets(NewBuffer(), pos, 0, LeftToRight) // must not panic
 }
 
 func TestWouldApplyContext2OutOfRangeClass(t *testing.T) {

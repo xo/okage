@@ -44,6 +44,13 @@ func (c *otApplyContext) applyString(proxy otProxyMeta, accel *otLayoutLookupAcc
 	if len(buffer.Info) == 0 || c.lookupMask == 0 {
 		return
 	}
+
+	// okage: each pass of a lookup over the buffer takes an operation for
+	// each 16 glyphs, as in HarfBuzz 15.2.0 (D97).
+	if !buffer.spendOps(len(buffer.Info) / 16) {
+		return
+	}
+
 	c.setLookupProps(lookup.Props())
 	if !lookup.isReverse() {
 		// in/out forward substitution/positioning
@@ -111,7 +118,9 @@ func (c *otApplyContext) applyForward(accel *otLayoutLookupAccelerator) bool {
 func (c *otApplyContext) applyBackward(accel *otLayoutLookupAccelerator) bool {
 	ret := false
 	buffer := c.buffer
-	for do := true; do; do = buffer.idx >= 0 {
+	// okage: the loop stops when the buffer is in error, as in HarfBuzz
+	// 15.2.0 (D97).
+	for do := true; do; do = buffer.idx >= 0 && !buffer.inError {
 		cur := buffer.cur(0)
 		if accel.digest.mayHave(gID(cur.Glyph)) &&
 			(cur.Mask&c.lookupMask != 0) &&
@@ -140,7 +149,9 @@ func (m *otMap) apply(proxy otProxy, plan *otShapePlan, font *Font, buffer *Buff
 			fmt.Printf("\tAPPLY - stage %d\n", stageI)
 		}
 
-		for ; i < stage.lastLookup; i++ {
+		// okage: the lookups stop when the buffer is in error, as in
+		// HarfBuzz 15.2.0 (D97).
+		for ; i < stage.lastLookup && !buffer.inError; i++ {
 			lookup := m.lookups[tableIndex][i]
 			lookupIndex := lookup.index
 

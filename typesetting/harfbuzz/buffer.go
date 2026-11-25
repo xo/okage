@@ -49,8 +49,10 @@ const (
 // input text
 const contextLength = 5
 
+// okage: maxOpsDefault is HB_BUFFER_MAX_OPS_DEFAULT of HarfBuzz 15.2.0,
+// which raised it from 0x1FFFFFFF (D97).
 const (
-	maxOpsDefault = 0x1FFFFFFF
+	maxOpsDefault = 0x3FFFFFFF
 	maxLenDefault = 0x3FFFFFFF
 )
 
@@ -757,6 +759,19 @@ func (b *Buffer) unsafeToBreakFromOutbuffer(start, end int) {
 	b.setGlyphFlags(GlyphUnsafeToBreak|GlyphUnsafeToConcat, start, end, true, true)
 }
 
+// unsafeToBreakInOutbuffer marks the glyphs of the output from start to
+// end unsafe to break and unsafe to concat. Both ends are indexes in the
+// output.
+//
+// okage: this is unsafe_to_break_in_outbuffer of HarfBuzz 15.2.0 (D97).
+func (b *Buffer) unsafeToBreakInOutbuffer(start, end int) {
+	if end-start < 2 {
+		return
+	}
+	cluster := b.findMinCluster(b.outInfo, start, end, maxInt)
+	b.infosSetGlyphFlags(b.outInfo, start, end, cluster, GlyphUnsafeToBreak|GlyphUnsafeToConcat)
+}
+
 func (b *Buffer) unsafeToConcatFromOutbuffer(start, end int) {
 	if (b.Flags & ProduceUnsafeToConcat) == 0 {
 		return
@@ -1157,7 +1172,10 @@ func (b *Buffer) mergeOutGraphemeClusters(start, end int) {
 	if end-start < 2 {
 		return
 	}
+	// okage: at the levels of characters, the glyphs are unsafe to break,
+	// as in HarfBuzz 15.2.0. HarfBuzz 15.1.0 set no flag (D97).
 	if !b.ClusterLevel.isGraphemes() {
+		b.unsafeToBreakInOutbuffer(start, end)
 		return
 	}
 	b.mergeOutClustersImpl(start, end)

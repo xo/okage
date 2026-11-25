@@ -214,12 +214,25 @@ func TestLookupSegmentsOutOfOrder(t *testing.T) {
 // empty, it is the language of the buffer. When ranged is not empty, each
 // character i of a text has the feature ranged in a range of its own, on
 // when i is not a multiple of period and off when it is. When off is not
-// empty, the feature off is off for the whole text.
+// empty, the feature off is off for the whole text. When direction is not
+// empty, it is the direction of the buffer, such as ttb. features are more
+// requests of features, in their order, and flags compares the flag
+// unsafe-to-break of each glyph. When notFound is not 0, the buffer gives
+// it to a character that the font does not have. clusterLevel is the
+// cluster level of the buffer. The first itemOffset characters of a text
+// are the context before the text.
 type shapeOptions struct {
-	language string
-	ranged   string
-	period   int
-	off      string
+	language  string
+	ranged    string
+	period    int
+	off       string
+	direction string
+	features  []harfbuzz.Feature
+	flags     bool
+
+	notFound     harfbuzz.GID
+	clusterLevel harfbuzz.ClusterLevel
+	itemOffset   int
 }
 
 // compareOptions shapes each text in the font data with harfbuzz and with
@@ -240,7 +253,26 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 	if opts.off != "" {
 		args = append(args, "--off", opts.off)
 	}
-	want := shapeHarfBuzz(t, path, texts, false, args...)
+	if opts.direction != "" {
+		args = append(args, "--direction", opts.direction)
+	}
+	for _, f := range opts.features {
+		end := strconv.Itoa(f.End)
+		if f.End == harfbuzz.FeatureGlobalEnd {
+			end = "-1"
+		}
+		args = append(args, "--feature", f.Tag.String(), strconv.Itoa(f.Start), end, strconv.Itoa(int(f.Value)))
+	}
+	if opts.notFound != 0 {
+		args = append(args, "--not-found", strconv.Itoa(int(opts.notFound)))
+	}
+	if opts.clusterLevel != 0 {
+		args = append(args, "--cluster-level", strconv.Itoa(int(opts.clusterLevel)))
+	}
+	if opts.itemOffset != 0 {
+		args = append(args, "--item-offset", strconv.Itoa(opts.itemOffset))
+	}
+	want := shapeHarfBuzz(t, path, texts, opts.flags, args...)
 	face, err := font.ParseTTF(bytes.NewReader(data))
 	if err != nil {
 		t.Fatal(err)
@@ -249,11 +281,16 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 	for i, text := range texts {
 		runes := []rune(text)
 		buf := harfbuzz.NewBuffer()
-		buf.AddRunes(runes, 0, -1)
+		buf.AddRunes(runes, opts.itemOffset, -1)
+		buf.NotFound = opts.notFound
+		buf.ClusterLevel = opts.clusterLevel
 		if opts.language != "" {
 			buf.Props.Language = language.NewLanguage(opts.language)
 		}
 		buf.GuessSegmentProperties()
+		if opts.direction != "" {
+			buf.Props.Direction = directions[opts.direction]
+		}
 		var features []harfbuzz.Feature
 		if opts.ranged != "" {
 			tag := ot.MustNewTag(opts.ranged)
@@ -268,11 +305,20 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 		if opts.off != "" {
 			features = append(features, harfbuzz.Feature{Tag: ot.MustNewTag(opts.off), End: harfbuzz.FeatureGlobalEnd})
 		}
+		features = append(features, opts.features...)
 		buf.Shape(hf, features)
 		var got []string
 		for j, info := range buf.Info {
 			pos := buf.Pos[j]
-			got = append(got, fmt.Sprintf("%d %d %d %d %d %d", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset))
+			glyph := fmt.Sprintf("%d %d %d %d %d %d", info.Glyph, info.Cluster, pos.XAdvance, pos.YAdvance, pos.XOffset, pos.YOffset)
+			if opts.flags {
+				unsafe := 0
+				if info.Mask&harfbuzz.GlyphUnsafeToBreak != 0 {
+					unsafe = 1
+				}
+				glyph += fmt.Sprintf(" %d", unsafe)
+			}
+			got = append(got, glyph)
 		}
 		if !slices.Equal(got, want[i].glyphs) {
 			t.Errorf("%+q with %+v: got %d glyphs, HarfBuzz gives %d", trim(text), opts, len(got), len(want[i].glyphs))
@@ -284,6 +330,14 @@ func compareOptions(t *testing.T, data []byte, opts shapeOptions, texts ...strin
 			}
 		}
 	}
+}
+
+// directions maps the directions of shape.py to those of harfbuzz.
+var directions = map[string]harfbuzz.Direction{
+	"ltr": harfbuzz.LeftToRight,
+	"rtl": harfbuzz.RightToLeft,
+	"ttb": harfbuzz.TopToBottom,
+	"btt": harfbuzz.BottomToTop,
 }
 
 // ltagTable builds a table ltag with the tags.

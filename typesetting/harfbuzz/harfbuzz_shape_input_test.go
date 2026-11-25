@@ -82,10 +82,24 @@ func readTestFile(t testing.TB, filename string) (out []testData) {
 			continue
 		}
 
+		if newLine, ok := harfbuzz152Lines[line]; ok {
+			line = newLine
+		}
+
 		out = append(out, newTestData(t, dir, line))
 	}
 
 	return out
+}
+
+// harfbuzz152Lines maps a line of the tests of typesetting/testdata to the
+// line that HarfBuzz 15.2.0 has in its place.
+//
+// okage: okage follows HarfBuzz 15.2.0, whose tests changed these results.
+// The files of typesetting/testdata stay byte for byte (D76, D97).
+var harfbuzz152Lines = map[string]string{
+	// The Arabic shaper centers the tiles of stch on an exact fit.
+	"../fonts/507637795ce4f2975593da54d12b46f76c7cc4cc.ttf;--direction=l;U+0661,U+0662,U+0663,U+0891,U+0664,U+066B;[one-ar=0+449|two-ar=1+449|three-ar=2+449|piastre-ar.head=3@-192,0+0|piastre-ar.repeat=3@452,0+0|piastre-ar.tail=3@586,0+0|four-ar=4+449|decimalseparator-ar=5+222]": "../fonts/507637795ce4f2975593da54d12b46f76c7cc4cc.ttf;--direction=l;U+0661,U+0662,U+0663,U+0891,U+0664,U+066B;[one-ar=0+449|two-ar=1+449|three-ar=2+449|piastre-ar.head=3@-259,0+0|piastre-ar.repeat=3@385,0+0|piastre-ar.tail=3@519,0+0|four-ar=4+449|decimalseparator-ar=5+222]",
 }
 
 // testData represents one line of a .tests file

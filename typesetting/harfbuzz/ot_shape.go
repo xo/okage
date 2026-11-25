@@ -2,6 +2,7 @@ package harfbuzz
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/xo/okage/typesetting/font"
 	ot "github.com/xo/okage/typesetting/font/opentype"
@@ -100,26 +101,31 @@ func (planner *otShapePlanner) compile(plan *otShapePlan, key otShapePlanKey) {
 	hasGSUB := !plan.applyMorx && planner.tables.GSUB.Lookups != nil
 	hasGPOS := !disableGpos && planner.tables.GPOS.Lookups != nil
 
+	// okage: as in HarfBuzz 15.2.0, kerx applies with GPOS when GPOS has
+	// no feature of kerning. kerx then applies only its subtables of pairs
+	// and classes that are not cross-stream, and the marks stay zeroed.
+	// hasGposMark is false when GPOS does not apply. go-text applied
+	// either GPOS or kerx (D97).
+	plan.applyGpos = hasGPOS
 	if hasKerx && !(hasGSUB && hasGPOS) {
 		plan.applyKerx = true
-	} else if hasGPOS {
-		plan.applyGpos = true
+		plan.applyGpos = false
 	}
 
-	if !plan.applyKerx && (!hasGposKern || !plan.applyGpos) {
+	needsKerning := !hasGposKern || !plan.applyGpos
+	if needsKerning && hasKerx {
 		// apparently Apple applies kerx if GPOS kern was not applied.
-		if hasKerx {
-			plan.applyKerx = true
-		} else if planner.tables.Kern != nil {
-			plan.applyKern = planner.scriptFallbackPosition // Not all shapers apply legacy `kern`
-		}
+		plan.applyKerx = true
+	}
+	if needsKerning && !plan.applyKerx && planner.tables.Kern != nil {
+		plan.applyKern = planner.scriptFallbackPosition // Not all shapers apply legacy `kern`
 	}
 
 	plan.applyFallbackKern = planner.scriptFallbackPosition && !(plan.applyGpos || plan.applyKerx || plan.applyKern)
 
-	plan.zeroMarks = planner.scriptZeroMarks && !plan.applyKerx &&
+	plan.zeroMarks = planner.scriptZeroMarks && (!plan.applyKerx || plan.applyGpos) &&
 		(!plan.applyKern || !hasMachineKerning(planner.tables.Kern))
-	plan.hasGposMark = plan.otMap.getMask1(ot.NewTag('m', 'a', 'r', 'k')) != 0
+	plan.hasGposMark = plan.applyGpos && plan.otMap.getMask1(ot.NewTag('m', 'a', 'r', 'k')) != 0
 
 	plan.adjustMarkPositioningWhenZeroing = !plan.applyGpos && !plan.applyKerx &&
 		(!plan.applyKern || !hasCrossKerning(planner.tables.Kern))
@@ -184,7 +190,9 @@ func (sp *otShapePlan) substitute(font *Font, buffer *Buffer) {
 func (sp *otShapePlan) position(font *Font, buffer *Buffer) {
 	if sp.applyGpos {
 		sp.otMap.position(sp, font, buffer)
-	} else if sp.applyKerx {
+	}
+	// okage: kerx can apply after GPOS, as in HarfBuzz 15.2.0 (D97).
+	if sp.applyKerx {
 		sp.aatLayoutPosition(font, buffer)
 	}
 
@@ -265,6 +273,11 @@ func (planner *otShapePlanner) collectFeatures(userFeatures []Feature) {
 		 * matter which script/langsys it is listed (or not) under.
 		 * See various bugs referenced from:
 		 * https://github.com/harfbuzz/harfbuzz/issues/63 */
+		// okage: as in HarfBuzz 15.2.0, vkrn has a mask when the caller
+		// asks for it, also when GPOS does not have it, so that the table
+		// kern applies (D97).
+		map_.addFeatureExt(ot.NewTag('v', 'k', 'r', 'n'), ffGlobalHasFallback, 0)
+
 		map_.enableFeatureExt(ot.NewTag('v', 'e', 'r', 't'), ffGlobalSearch, 1)
 	}
 
@@ -473,8 +486,13 @@ func (c *otContext) setupMasks() {
 
 	for _, feature := range c.userFeatures {
 		if !(feature.Start == FeatureGlobalStart && feature.End == FeatureGlobalEnd) {
-			mask, shift := map_.getMask(feature.Tag)
-			buffer.setMasks(feature.Value<<shift, mask, feature.Start, feature.End)
+			// okage: a later global request for the tag wins over the
+			// earlier requests on ranges, as in HarfBuzz 15.2.0. HarfBuzz
+			// 15.1.0 kept the value of the range (D97).
+			mask, shift, isGlobal := map_.getMaskGlobal(feature.Tag)
+			if !isGlobal {
+				buffer.setMasks(feature.Value<<shift, mask, feature.Start, feature.End)
+			}
 		}
 	}
 }
@@ -837,20 +855,24 @@ func (sp *shaperOpentype) shape(font *Font, buffer *Buffer, features []Feature) 
 	c := otContext{plan: &sp.plan, font: font, buffer: buffer, userFeatures: features}
 	c.buffer.scratchFlags = bsfDefault
 
-	// okage: the limits of hb-limits.hh of HarfBuzz 15.1.0. go-text had 64,
+	// okage: the limits of hb-limits.hh of HarfBuzz 15.2.0, which raised
+	// them from 256, 65536, 4096 and 65536 in 15.1.0 (D97). go-text had 64,
 	// 16384, 1024 and 16384. NotoSansDuployan-Regular.otf makes about 60
 	// glyphs of each character, and the lower limits stopped its shaping
-	// before HarfBuzz stops. The default limits apply when a product does
-	// not fit, so that an int of 32 bits does not overflow (D73).
-	const maxLenFactor = 256
+	// before HarfBuzz stops (D73). As in hb_buffer_t::enter of HarfBuzz
+	// 15.2.0, the limit of length keeps its default when the product does
+	// not fit in 32 bits, and the limit of operations is clamped to the
+	// range from maxOpsMin to its default (D97).
+	const maxLenFactor = 512
 	const maxLenMin = 65536
-	const maxOpsFactor = 4096
-	const maxOpsMin = 65536
+	const maxOpsFactor = 65536
+	const maxOpsMin = 524288
 	c.buffer.maxOps, c.buffer.maxLen = maxOpsDefault, maxLenDefault
-	if n := len(c.buffer.Info); n <= maxOpsDefault/maxOpsFactor {
-		c.buffer.maxOps = max(n*maxOpsFactor, maxOpsMin)
-		c.buffer.maxLen = max(n*maxLenFactor, maxLenMin)
+	n := uint64(len(c.buffer.Info))
+	if n <= math.MaxUint32/maxLenFactor {
+		c.buffer.maxLen = int(max(n*maxLenFactor, maxLenMin))
 	}
+	c.buffer.maxOps = int(min(max(n*maxOpsFactor, maxOpsMin), maxOpsDefault))
 
 	// save the original direction, we use it later.
 	c.targetDirection = c.buffer.Props.Direction

@@ -167,6 +167,18 @@ func (k KernSubtable) IsCrossStream() bool { return k.coverage&kerxCrossStream !
 // IsVariation returns true if the subtable has variation kerning values.
 func (k KernSubtable) IsVariation() bool { return k.coverage&kerxVariation != 0 }
 
+// IsMachineKern returns true if the subtable kerns with a state machine,
+// in the format 1 or 4.
+//
+// okage: this is is_machine_kern of HarfBuzz 15.2.0 (D97).
+func (k KernSubtable) IsMachineKern() bool {
+	switch k.Data.(type) {
+	case Kern1, Kern4:
+		return true
+	}
+	return false
+}
+
 type Kern0 []tables.Kernx0Record
 
 func newKern0(k tables.KernData0) Kern0  { return k.Pairs }

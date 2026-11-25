@@ -136,8 +136,28 @@ func (cs *complexShaperUSE) setupMasks(plan *otShapePlan, buffer *Buffer, _ *Fon
 
 	info := buffer.Info
 	for i := range info {
-		info[i].complexCategory = useLookup(info[i].codepoint)
+		info[i].complexCategory = useCategory(info[i].codepoint)
 	}
+}
+
+// useSM_ex_SP is the category SPACE of the USE shaper of HarfBuzz 15.2.0.
+// The syllable machine has no rule for it, so a space is a cluster of its
+// own.
+const useSM_ex_SP = 57
+
+// useCategory returns the category of u for the USE shaper.
+//
+// okage: as in HarfBuzz 15.2.0, a space separator that is not a consonant
+// placeholder has the category SPACE. useLookup, from the table of HarfBuzz
+// 15.1.0, gives it the category OTHER, so that a space could start a
+// symbol cluster and be the base of a dependent vowel (D97).
+func useCategory(u rune) uint8 {
+	switch u {
+	case 0x0020, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
+		0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000:
+		return useSM_ex_SP
+	}
+	return useLookup(u)
 }
 
 func (cs *complexShaperUSE) setupRphfMask(buffer *Buffer) {
@@ -187,15 +207,33 @@ func (cs *complexShaperUSE) setupTopographicalMasks(plan *otShapePlan, buffer *B
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
 		syllableType := info[start].syllable & 0x0F
+		// okage: as in HarfBuzz 15.2.0, a generic base, a symbol cluster and
+		// a space end a word, and a ZWNJ in a syllable ends the word after
+		// it. The flags unsafe-to-break and unsafe-to-concat cover the
+		// syllables whose forms depend on each other. HarfBuzz 15.1.0 joined
+		// symbol clusters, and set no flag (D97).
+		base := start
+		if info[base].complexCategory == useSM_ex_R || info[base].complexCategory == useSM_ex_CS {
+			base++
+		}
+		if base < end && info[base].complexCategory == useSM_ex_GB {
+			syllableType = useNonCluster
+		}
+
 		switch syllableType {
-		case useHieroglyphCluster, useNonCluster:
-			// these don't join.  Nothing to do.
+		case useHieroglyphCluster, useNonCluster, useSymbolCluster:
+			// these don't join.
+			if lastForm != joiningFormNone {
+				buffer.unsafeToConcat(lastStart, end)
+			}
 			lastForm = joiningFormNone
 
 		case useViramaTerminatedCluster, useSakotTerminatedCluster, useStandardCluster, useNumberJoinerTerminatedCluster,
-			useNumeralCluster, useSymbolCluster, useBrokenCluster:
+			useNumeralCluster, useBrokenCluster:
 			join := lastForm == joiningFormFina || lastForm == joiningFormIsol
+			buffer.unsafeToConcat(lastStart, end)
 			if join {
+				buffer.unsafeToBreak(lastStart, end)
 				// fixup previous syllable's form.
 				if lastForm == joiningFormFina {
 					lastForm = joiningFormMedi
@@ -218,6 +256,12 @@ func (cs *complexShaperUSE) setupTopographicalMasks(plan *otShapePlan, buffer *B
 		}
 
 		lastStart = start
+		for i := start; i < end; i++ {
+			if info[i].complexCategory == useSM_ex_ZWNJ {
+				lastForm = joiningFormNone
+				break
+			}
+		}
 	}
 }
 
@@ -225,6 +269,8 @@ func (cs *complexShaperUSE) setupSyllablesUse(plan *otShapePlan, _ *Font, buffer
 	findSyllablesUse(buffer)
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
+		// okage: D97.
+		syllabicRecordCut(buffer, start, end)
 		buffer.unsafeToBreak(start, end)
 	}
 	cs.setupRphfMask(buffer)

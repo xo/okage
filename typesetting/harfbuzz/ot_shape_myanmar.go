@@ -110,6 +110,8 @@ func setupSyllablesMyanmar(_ *otShapePlan, _ *Font, buffer *Buffer) bool {
 	findSyllablesMyanmar(buffer)
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
+		// okage: D97.
+		syllabicRecordCut(buffer, start, end)
 		buffer.unsafeToBreak(start, end)
 	}
 	return false

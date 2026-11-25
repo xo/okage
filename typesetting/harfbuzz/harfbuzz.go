@@ -6,6 +6,9 @@
 // See `Buffer` and its methods for more details.
 //
 // This package is a direct port of the C/C++ library.
+//
+// okage: the package follows HarfBuzz 15.2.0, and gives the same glyphs
+// and positions for the texts of its tests (D73, D97).
 package harfbuzz
 
 import (
@@ -534,4 +537,20 @@ func roundf(f float32) Position {
 		return p
 	}
 	return Position(math.Floor(d))
+}
+
+// roundfClamp rounds f as roundf does, and clamps the result to the range
+// of a Position. NaN gives math.MinInt32.
+//
+// okage: this is hb_clamp_to<hb_position_t> (roundf (f)) of HarfBuzz
+// 15.2.0, which the anchors of GPOS use (D97).
+func roundfClamp(f float32) Position {
+	d := float64(f) + 0.5
+	switch {
+	case d > -(1<<31) && d < 1<<31:
+		return roundf(f)
+	case d >= 1<<31:
+		return math.MaxInt32
+	}
+	return math.MinInt32
 }

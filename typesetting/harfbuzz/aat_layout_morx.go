@@ -39,6 +39,17 @@ func (c *aatApplyContext) applyMorx(chain font.MorxChain, accelerators []morxSub
 			continue
 		}
 
+		// okage: as in HarfBuzz 15.2.0, a subtable whose actions need a
+		// glyph that the buffer does not hold is skipped (D97).
+		c.secondSet = accelerators[i].secondSet
+		c.secondSetGates = accelerators[i].secondSetGates
+		if !c.bufferIntersectsSecond() {
+			if debugMode {
+				fmt.Printf("AAT morx : skipped subtable %d because no completer glyph matches\n", i)
+			}
+			continue
+		}
+
 		/* Buffer contents is always in logical direction.  Determine if
 		we need to reverse before applying this subtable.  We reverse
 		back after if we did reverse indeed.
@@ -70,12 +81,9 @@ func (c *aatApplyContext) applyMorx(chain font.MorxChain, accelerators []morxSub
 			reverse = coverage&Backwards != 0 != c.buffer.Props.Direction.isBackward()
 		}
 
-		// okage: a subtable takes the length of the buffer in operations,
-		// and the chain stops when the buffer is in error, as in HarfBuzz
-		// 15.1.0 (D73).
-		if !c.chargeBufferPass() {
-			break
-		}
+		// okage: a subtable takes no operation for its pass over the
+		// buffer, as in HarfBuzz 15.2.0. HarfBuzz 15.1.0 took the length
+		// of the buffer (D73, D97).
 
 		if debugMode {
 			fmt.Printf("MORX - start chainsubtable %d\n", i)
@@ -661,6 +669,12 @@ func (c *aatApplyContext) applyNonContextualSubtable(data font.MorxNonContextual
 type morxSubtableAccelerator struct {
 	glyphSet   intSet
 	classCache aatClassCache
+
+	// okage: secondSet holds the glyphs that can make an action, and
+	// gates the subtable when secondSetGates is true, as in HarfBuzz
+	// 15.2.0 (D97).
+	secondSet      intSet
+	secondSetGates bool
 }
 
 func (ma *morxSubtableAccelerator) init(subtable font.MorxSubtable) {
@@ -671,14 +685,18 @@ func (ma *morxSubtableAccelerator) init(subtable font.MorxSubtable) {
 	case font.MorxRearrangementSubtable:
 		machine := font.AATStateTable(st)
 		collectInitialGlyphs(&ma.glyphSet, &machine, driverContextRearrangement{}, true)
+		ma.secondSetGates = collectSecondGlyphs(&ma.secondSet, &machine, driverContextRearrangement{}, true)
 	case font.MorxContextualSubtable:
 		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextContextual{}, true)
+		ma.secondSetGates = collectSecondGlyphs(&ma.secondSet, &st.Machine, driverContextContextual{}, true)
 	case font.MorxLigatureSubtable:
 		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextLigature{}, true)
+		ma.secondSetGates = collectSecondGlyphs(&ma.secondSet, &st.Machine, driverContextLigature{}, true)
 	case font.MorxNonContextualSubtable:
 		collectLookupGlyphs(&ma.glyphSet, st.Class)
 	case font.MorxInsertionSubtable:
 		collectInitialGlyphs(&ma.glyphSet, &st.Machine, driverContextInsertion{}, true)
+		ma.secondSetGates = collectSecondGlyphs(&ma.secondSet, &st.Machine, driverContextInsertion{}, true)
 	}
 }
 

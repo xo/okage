@@ -194,7 +194,9 @@ func (mb *otMapBuilder) compile(m *otMap, key otShapePlanKey) {
 			bitsNeeded = min(otMapMaxBits, bitStorage(info.maxValue))
 		}
 
-		if info.maxValue == 0 || nextBit+bitsNeeded >= globalBitShift {
+		// okage: the last bit before the global bit can be allocated, as
+		// in HarfBuzz 15.2.0 (D97).
+		if info.maxValue == 0 || nextBit+bitsNeeded > globalBitShift {
 			continue // feature disabled, or not enough bits.
 		}
 
@@ -239,6 +241,7 @@ func (mb *otMapBuilder) compile(m *otMap, key otShapePlanKey) {
 		}
 		map_.mask1 = (1 << map_.shift) & map_.mask
 		map_.needsFallback = !found
+		map_.isGlobal = info.flags&ffGLOBAL != 0 // okage: D97
 
 		if debugMode {
 			fmt.Printf("\tMAP - adding feature %s (%d) for stage %v\n", info.Tag, info.Tag, info.stage)
@@ -331,6 +334,7 @@ type featureMap struct {
 	mask          GlyphMask
 	mask1         GlyphMask /* mask for value=1, for quick access */
 	needsFallback bool      // = 1;
+	isGlobal      bool      // okage: the last request is global (D97)
 	autoZWNJ      bool      // = 1;
 	autoZWJ       bool      // = 1;
 	random        bool      // = 1;
@@ -399,6 +403,16 @@ func (m *otMap) getMask(featureTag tables.Tag) (GlyphMask, int) {
 		return ma.mask, ma.shift
 	}
 	return 0, 0
+}
+
+// getMaskGlobal is getMask, and also tells whether the feature is global.
+//
+// okage: this is get_mask of HarfBuzz 15.2.0 with is_global (D97).
+func (m *otMap) getMaskGlobal(featureTag tables.Tag) (GlyphMask, int, bool) {
+	if ma := bsearchFeature(m.features, featureTag); ma != nil {
+		return ma.mask, ma.shift, ma.isGlobal
+	}
+	return 0, 0, false
 }
 
 func (m *otMap) getMask1(featureTag tables.Tag) GlyphMask {

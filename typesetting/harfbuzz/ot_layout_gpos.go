@@ -63,16 +63,18 @@ func positionStartGPOS(buffer *Buffer) {
 	}
 }
 
-func propagateAttachmentOffsets(pos []GlyphPosition, i int, direction Direction) {
-	propagateAttachmentOffsetsNested(pos, i, direction, maxNestingLevel)
+func propagateAttachmentOffsets(buffer *Buffer, pos []GlyphPosition, i int, direction Direction) {
+	propagateAttachmentOffsetsNested(buffer, pos, i, direction, maxNestingLevel)
 }
 
 // okage: HarfBuzz 15.1.0 follows a chain of attachments to at most
 // HB_MAX_NESTING_LEVEL glyphs, and the glyph at that depth does not take
 // the offset of its parent. go-text followed the whole chain. HarfBuzz
 // also clamps each sum to the range of a position, from bcce9d4f55 and
-// the fix of its issue 6151, and go-text let a sum wrap (D73).
-func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Direction, nestingLevel int) {
+// the fix of its issue 6151, and go-text let a sum wrap (D73). The walk
+// from a mark to its base takes an operation for each glyph, as in
+// HarfBuzz 15.2.0 (D97).
+func propagateAttachmentOffsetsNested(buffer *Buffer, pos []GlyphPosition, i int, direction Direction, nestingLevel int) {
 	/* Adjusts offsets of attached glyphs (both cursive and mark) to accumulate
 	 * offset of glyph they are attached to. */
 	chain, type_ := pos[i].attachChain, pos[i].attachType
@@ -90,7 +92,7 @@ func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Dire
 	}
 
 	if pos[j].attachChain != 0 {
-		propagateAttachmentOffsetsNested(pos, j, direction, nestingLevel-1)
+		propagateAttachmentOffsetsNested(buffer, pos, j, direction, nestingLevel-1)
 	}
 
 	//   assert (!!(type_ & attachTypeMark) ^ !!(type_ & attachTypeCursive));
@@ -109,6 +111,9 @@ func propagateAttachmentOffsetsNested(pos []GlyphPosition, i int, direction Dire
 		}
 
 		// i is the position of the mark; j is the base.
+		if !buffer.spendOps(max(i-j, j-i)) {
+			return
+		}
 		if j < i {
 			/* This is the common case: mark follows base.
 			 * And currently the only way in OpenType. */
@@ -152,16 +157,18 @@ func positionFinishOffsetsGPOS(font *Font, buffer *Buffer) {
 		}
 
 		// https://github.com/harfbuzz/harfbuzz/issues/5514
+		// okage: the loops stop when the buffer is in error, as in
+		// HarfBuzz 15.2.0 (D97).
 		if direction.isForward() {
-			for i := range pos {
+			for i := 0; i < len(pos) && !buffer.inError; i++ {
 				if pos[i].attachChain != 0 {
-					propagateAttachmentOffsets(pos, i, direction)
+					propagateAttachmentOffsets(buffer, pos, i, direction)
 				}
 			}
 		} else {
-			for i := len(pos) - 1; i >= 0; i-- {
+			for i := len(pos) - 1; i >= 0 && !buffer.inError; i-- {
 				if pos[i].attachChain != 0 {
-					propagateAttachmentOffsets(pos, i, direction)
+					propagateAttachmentOffsets(buffer, pos, i, direction)
 				}
 			}
 		}
@@ -473,34 +480,35 @@ func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) 
 
 	// okage: as in HarfBuzz 15.1.0, each sum is clamped to the range of a
 	// position, from the fix of its issue 6151. go-text let a sum wrap
-	// (D73).
+	// (D73). As in HarfBuzz 15.2.0, each rounded anchor is clamped too
+	// (D97).
 	var d Position
 	/* Main-direction adjustment */
 	switch c.direction {
 	case LeftToRight:
-		pos[i].XAdvance = saturateAdd(roundf(exitX), pos[i].XOffset)
+		pos[i].XAdvance = saturateAdd(roundfClamp(exitX), pos[i].XOffset)
 
-		d = saturateAdd(roundf(entryX), pos[j].XOffset)
+		d = saturateAdd(roundfClamp(entryX), pos[j].XOffset)
 		pos[j].XAdvance = saturateSub(pos[j].XAdvance, d)
 		pos[j].XOffset = saturateSub(pos[j].XOffset, d)
 	case RightToLeft:
-		d = saturateAdd(roundf(exitX), pos[i].XOffset)
+		d = saturateAdd(roundfClamp(exitX), pos[i].XOffset)
 		pos[i].XAdvance = saturateSub(pos[i].XAdvance, d)
 		pos[i].XOffset = saturateSub(pos[i].XOffset, d)
 
-		pos[j].XAdvance = saturateAdd(roundf(entryX), pos[j].XOffset)
+		pos[j].XAdvance = saturateAdd(roundfClamp(entryX), pos[j].XOffset)
 	case TopToBottom:
-		pos[i].YAdvance = saturateAdd(roundf(exitY), pos[i].YOffset)
+		pos[i].YAdvance = saturateAdd(roundfClamp(exitY), pos[i].YOffset)
 
-		d = saturateAdd(roundf(entryY), pos[j].YOffset)
+		d = saturateAdd(roundfClamp(entryY), pos[j].YOffset)
 		pos[j].YAdvance = saturateSub(pos[j].YAdvance, d)
 		pos[j].YOffset = saturateSub(pos[j].YOffset, d)
 	case BottomToTop:
-		d = saturateAdd(roundf(exitY), pos[i].YOffset)
+		d = saturateAdd(roundfClamp(exitY), pos[i].YOffset)
 		pos[i].YAdvance = saturateSub(pos[i].YAdvance, d)
 		pos[i].YOffset = saturateSub(pos[i].YOffset, d)
 
-		pos[j].YAdvance = roundf(entryY)
+		pos[j].YAdvance = roundfClamp(entryY)
 	}
 
 	/* Cross-direction adjustment */
@@ -513,14 +521,16 @@ func (c *otApplyContext) applyGPOSCursive(data tables.CursivePos, covIndex int) 
 	 * Arabic. */
 	child := i
 	parent := j
-	xOffset := roundf(entryX - exitX)
-	yOffset := roundf(entryY - exitY)
+	// okage: the offsets are clamped, and their negation saturates, as in
+	// HarfBuzz 15.2.0 (D97).
+	xOffset := roundfClamp(entryX - exitX)
+	yOffset := roundfClamp(entryY - exitY)
 	if uint16(c.lookupProps)&otRightToLeft == 0 {
 		k := child
 		child = parent
 		parent = k
-		xOffset = -xOffset
-		yOffset = -yOffset
+		xOffset = saturateSub(0, xOffset)
+		yOffset = saturateSub(0, yOffset)
 	}
 
 	/* If child was already connected to someone else, walk through its old
@@ -719,8 +729,9 @@ func (c *otApplyContext) applyGPOSMarks(marks tables.MarkArray, markIndex, glyph
 	}
 	mark.attachChain = int16(chain)
 	mark.attachType = attachTypeMark
-	mark.XOffset = roundf(baseX - markX)
-	mark.YOffset = roundf(baseY - markY)
+	// okage: clamped, as in HarfBuzz 15.2.0 (D97).
+	mark.XOffset = roundfClamp(baseX - markX)
+	mark.YOffset = roundfClamp(baseY - markY)
 	if buffer.Props.Direction.isHorizontal() {
 		mark.YOffset += baseOffset
 	} else {
@@ -746,7 +757,8 @@ func (c *otApplyContext) applyGPOSMarkToBase(data tables.MarkBasePos, markIndex 
 		c.lastBase = -1
 	}
 
-	for j := buffer.idx; j > c.lastBaseUntil; j-- {
+	j := buffer.idx
+	for ; j > c.lastBaseUntil; j-- {
 		ma := skippyIter.match(&buffer.Info[j-1])
 		if ma == match {
 			// https://github.com/harfbuzz/harfbuzz/issues/4124
@@ -767,10 +779,22 @@ func (c *otApplyContext) applyGPOSMarkToBase(data tables.MarkBasePos, markIndex 
 				ma = skip
 			}
 		}
-		if ma == match {
-			c.lastBase = j - 1
+		// okage: a glyph that the lookup does not skip ends the search,
+		// also when it does not match, as in HarfBuzz 15.2.0. HarfBuzz 7.0.0
+		// to 15.1.0 went on, and a mark attached to an earlier base when a
+		// feature over a range did not apply to the nearest base (D97).
+		if ma != skip {
+			c.lastBase = -1
+			if ma == match {
+				c.lastBase = j - 1
+			}
 			break
 		}
+	}
+	// okage: the search takes an operation for each glyph, as in HarfBuzz
+	// 15.2.0 (D97).
+	if !buffer.spendOps(buffer.idx - j) {
+		return false
 	}
 
 	c.lastBaseUntil = buffer.idx
@@ -800,7 +824,8 @@ func (c *otApplyContext) applyGPOSMarkToLigature(data tables.MarkLigPos, markInd
 		c.lastBase = -1
 	}
 
-	for j := buffer.idx; j > c.lastBaseUntil; j-- {
+	j := buffer.idx
+	for ; j > c.lastBaseUntil; j-- {
 		ma := skippyIter.match(&buffer.Info[j-1])
 		if ma == match {
 			// https://github.com/harfbuzz/harfbuzz/issues/4124
@@ -815,10 +840,22 @@ func (c *otApplyContext) applyGPOSMarkToLigature(data tables.MarkLigPos, markInd
 				ma = skip
 			}
 		}
-		if ma == match {
-			c.lastBase = j - 1
+		// okage: a glyph that the lookup does not skip ends the search,
+		// also when it does not match, as in HarfBuzz 15.2.0. HarfBuzz 7.0.0
+		// to 15.1.0 went on, and a mark attached to an earlier base when a
+		// feature over a range did not apply to the nearest base (D97).
+		if ma != skip {
+			c.lastBase = -1
+			if ma == match {
+				c.lastBase = j - 1
+			}
 			break
 		}
+	}
+	// okage: the search takes an operation for each glyph, as in HarfBuzz
+	// 15.2.0 (D97).
+	if !buffer.spendOps(buffer.idx - j) {
+		return false
 	}
 	c.lastBaseUntil = buffer.idx
 	if c.lastBase == -1 {

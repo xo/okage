@@ -369,6 +369,8 @@ func setupSyllablesIndic(_ *otShapePlan, _ *Font, buffer *Buffer) bool {
 	findSyllablesIndic(buffer)
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
+		// okage: D97.
+		syllabicRecordCut(buffer, start, end)
 		buffer.unsafeToBreak(start, end)
 	}
 	return false
@@ -900,6 +902,8 @@ func (cs *complexShaperIndic) initialReorderingIndic(_ *otShapePlan, font *Font,
 
 	iter, count := buffer.syllableIterator()
 	for start, end := iter.next(); start < count; start, end = iter.next() {
+		// okage: D97.
+		syllabicRecordCut(buffer, start, end)
 		cs.plan.initialReorderingSyllableIndic(font, buffer, start, end)
 	}
 
@@ -1344,9 +1348,18 @@ func (indicPlan *indicShapePlan) finalReorderingSyllableIndic(buffer *Buffer, st
 			1<<ucd.Mc |
 			1<<ucd.Me |
 			1<<ucd.Mn
-		if start == 0 || 1<<info[start-1].unicode.generalCategory()&flagRange == 0 {
+		// okage: at the start of the buffer, the character before the
+		// buffer decides, as in HarfBuzz 15.2.0. HarfBuzz 15.1.0 applied
+		// init after a letter or a mark of the context (D97).
+		previous := ucd.Zs
+		if start != 0 {
+			previous = info[start-1].unicode.generalCategory()
+		} else if len(buffer.context[0]) != 0 {
+			previous = ucd.LookupGeneralCategory(buffer.context[0][0])
+		}
+		if 1<<previous&flagRange == 0 {
 			info[start].Mask |= indicPlan.maskArray[indicInit]
-		} else {
+		} else if start != 0 {
 			buffer.unsafeToBreak(start-1, start+1)
 		}
 	}

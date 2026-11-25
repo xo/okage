@@ -297,6 +297,10 @@ func (c *otApplyContext) applySubsAlternate(alternates []gID) bool {
 }
 
 func (c *otApplyContext) applyOneLigature(lig tables.Ligature) bool {
+	// okage: as in HarfBuzz 15.2.0 (D97).
+	if c.buffer.inError {
+		return false
+	}
 	count := len(lig.ComponentGlyphIDs) + 1
 
 	// Special-case to make it in-place and not consider this

@@ -37,7 +37,7 @@ type shaped struct {
 // shapeHarfBuzz shapes each text in the font of the file with shape.py,
 // with the flag unsafe-to-break of each glyph when flags is true, and with
 // the other arguments of shape.py in args. It skips the test when python3
-// or uharfbuzz with HarfBuzz 15.1.0 is missing.
+// or uharfbuzz with HarfBuzz 15.2.0 is missing.
 func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool, args ...string) []shaped {
 	t.Helper()
 	python, err := exec.LookPath("python3")
@@ -48,8 +48,8 @@ func shapeHarfBuzz(t *testing.T, path string, texts []string, flags bool, args .
 	if err != nil {
 		t.Skip("uharfbuzz is missing")
 	}
-	if v := strings.TrimSpace(string(version)); v != "15.1.0" {
-		t.Skipf("uharfbuzz has HarfBuzz %s, want 15.1.0", v)
+	if v := strings.TrimSpace(string(version)); v != "15.2.0" {
+		t.Skipf("uharfbuzz has HarfBuzz %s, want 15.2.0", v)
 	}
 	var stdin bytes.Buffer
 	for _, text := range texts {
@@ -461,19 +461,20 @@ func gposCursiveCycle(t *testing.T) (gdef, gpos []byte) {
 // TestCursiveCycle: the cursive attachments of a, b and c form a cycle,
 // and d attaches to c. The walk of the attachments of c for the offset of
 // d stops after 3 attachments, one less than the number of glyphs, as in
-// HarfBuzz 15.1.0. go-text did not stop.
+// HarfBuzz 15.2.0. go-text did not stop.
 func TestCursiveCycle(t *testing.T) {
 	gdef, gpos := gposCursiveCycle(t)
 	testCase(t, robotoWith(t, map[string][]byte{"GDEF": gdef, "GPOS": gpos}), false, "abcd", "abcdabcd", "dcba")
 }
 
 // TestDropOutputWithoutOperations: a context of one glyph calls a
-// MultipleSubst once for x and 20,000 times for a. The MultipleSubst
+// MultipleSubst once for x and 65,535 times for a. The MultipleSubst
 // replaces a with b, b with a, and x with z, y. The buffer has no
 // operations left in the middle of the lookup, and HarfBuzz drops the
-// output of the lookup.
+// output of the lookup. The texts have seven a, so that they take more
+// than the 524,288 operations of HarfBuzz 15.2.0 (D97).
 func TestDropOutputWithoutOperations(t *testing.T) {
-	const records = 20000
+	const records = 65535
 	multiple := u16s(1, 26, 3, 12, 16, 20, 1, robotoB, 1, robotoA, 2, robotoZ, robotoY)
 	multiple = append(multiple, coverage1(robotoA, robotoB, robotoX)...)
 	context := u16s(1, 10, 2, 30, 18)
@@ -485,7 +486,7 @@ func TestDropOutputWithoutOperations(t *testing.T) {
 	}
 	gsub := layoutTable(t, []string{"DFLT"}, []layoutFeature{{"ccmp", []int{1}}},
 		[][]byte{lookupTable(t, 2, 0, multiple), lookupTable(t, 5, 0, context)})
-	testCase(t, robotoWith(t, map[string][]byte{"GSUB": gsub}), true, "xaaa", "xaaab", "axaa")
+	testCase(t, robotoWith(t, map[string][]byte{"GSUB": gsub}), true, "xaaaaaaa", "xaaaaaaab", "axaaaaaa")
 }
 
 // TestBufferLengthLimit: a MultipleSubst replaces x with count glyphs y.
@@ -513,9 +514,12 @@ func TestBufferLengthLimit(t *testing.T) {
 }
 
 // TestMorxSubtableOperations: a chain of morx with three insertion
-// subtables, each of which inserts 31 times a after each a, then a
-// noncontextual subtable that replaces a with b. The noncontextual
-// subtable takes 32,768 operations, more than the buffer has left.
+// subtables, each of which inserts 31 times a after each a, an insertion
+// subtable whose two insertions at each a are not in the subtable, then a
+// noncontextual subtable that replaces a with b. Each of the 32,768 a
+// takes 62 operations in the fourth subtable, which inserts no glyph, and
+// the buffer runs out of operations. HarfBuzz 15.2.0 takes no operation
+// for the pass of a subtable over the buffer (D97).
 func TestMorxSubtableOperations(t *testing.T) {
 	insertion := u32s(5, 20, 28, 48, 64)
 	insertion = append(insertion, u16s(8, robotoA, 1, 4)...)
@@ -524,15 +528,22 @@ func TestMorxSubtableOperations(t *testing.T) {
 	for range 31 {
 		insertion = append(insertion, u16s(robotoA)...)
 	}
+	// costly is insertion, with the indexes 0xFFFE of its insertions.
+	costly := u32s(5, 20, 28, 48, 64)
+	costly = append(costly, u16s(8, robotoA, 1, 4)...)
+	costly = append(costly, u16s(0, 0, 0, 0, 1, 0, 0, 0, 0, 1)...)
+	costly = append(costly, u16s(0, 0, 0xFFFF, 0xFFFF, 0, 31<<5|31, 0xFFFE, 0xFFFE)...)
 	noncontextual := u16s(8, robotoA, 1, robotoB)
 	const count = 3
-	length := 16 + count*(12+len(insertion)) + 12 + len(noncontextual)
+	length := 16 + count*(12+len(insertion)) + 12 + len(costly) + 12 + len(noncontextual)
 	morx := u16s(2, 0)
-	morx = append(morx, u32s(1, 1, uint32(length), 0, count+1)...)
+	morx = append(morx, u32s(1, 1, uint32(length), 0, count+2)...)
 	for range count {
 		morx = append(morx, u32s(uint32(12+len(insertion)), 0x20000005, 1)...)
 		morx = append(morx, insertion...)
 	}
+	morx = append(morx, u32s(uint32(12+len(costly)), 0x20000005, 1)...)
+	morx = append(morx, costly...)
 	morx = append(morx, u32s(uint32(12+len(noncontextual)), 0x20000004, 1)...)
 	morx = append(morx, noncontextual...)
 	testCase(t, robotoWith(t, map[string][]byte{"morx": morx}), true, "a")
@@ -540,9 +551,11 @@ func TestMorxSubtableOperations(t *testing.T) {
 }
 
 // TestIndicWouldSubstituteOperations: NotoSansDevanagari-Regular.ttf with a
-// table GSUB whose feature pres replaces ka with kha, and whose feature
-// blwf has 32,000 rules for the virama. The questions of the Indic shaper
-// about blwf take the operations of the buffer.
+// table GSUB whose feature pres replaces ka with kha, and whose features
+// blwf, vatu, pstf and pref have 32,000 rules for the virama. The questions
+// of the Indic shaper about these features take the operations of the
+// buffer. Four questions for each consonant take more than the operations
+// of HarfBuzz 15.2.0 for a text of six consonants (D97).
 func TestIndicWouldSubstituteOperations(t *testing.T) {
 	data, err := os.ReadFile(filepath.Join(perfReference, "fonts", "NotoSansDevanagari-Regular.ttf"))
 	if err != nil {
@@ -558,10 +571,11 @@ func TestIndicWouldSubstituteOperations(t *testing.T) {
 		context = append(context, u16s(2+2*rules)...)
 	}
 	context = append(context, u16s(2, 0, 1)...)
-	gsub := layoutTable(t, []string{"DFLT", "dev2"}, []layoutFeature{{"blwf", []int{1}}, {"pres", []int{0}}},
+	gsub := layoutTable(t, []string{"DFLT", "dev2"},
+		[]layoutFeature{{"blwf", []int{1}}, {"pref", []int{1}}, {"pres", []int{0}}, {"pstf", []int{1}}, {"vatu", []int{1}}},
 		[][]byte{lookupTable(t, 1, 0, single), lookupTable(t, 5, 0, context)})
 	data = replaceLayout(t, data, map[string][]byte{"GSUB": gsub})
-	testCase(t, data, true, "कककक", "कककककक")
+	testCase(t, data, true, "कककककक", "कककककककक")
 	testCase(t, data, false, "कक")
 }
 
@@ -702,12 +716,12 @@ func TestKerxFormat1History(t *testing.T) {
 }
 
 // TestKerxFormat1Operations: a subtable of format 1 of kerx applies at b a
-// list of 100,000 values 0 without an end, then a subtable of format 0
+// list of 600,000 values 0 without an end, then a subtable of format 0
 // kerns a, a. Each action takes one operation, and HarfBuzz runs out of
-// operations in the first subtable. The table then stops, and the second
-// subtable does not apply.
+// its 524,288 operations in the first subtable (D97). The table then
+// stops, and the second subtable does not apply.
 func TestKerxFormat1Operations(t *testing.T) {
-	values := make([]int, 100000)
+	values := make([]int, 600000)
 	kerx := kerxTable(kerxFormat1([4][2]int{{0, kerxEnd}, {kerxPush, kerxEnd}, {kerxPush, 0}, {0, kerxEnd}}, values...),
 		kerxPairs(robotoA, robotoA, -300))
 	data := robotoWith(t, map[string][]byte{"kerx": kerx})

@@ -71,8 +71,10 @@ type otNormalizeContext struct {
 	shaper otComplexShaper
 }
 
-func setGlyph(info *GlyphInfo, font *Font) {
-	info.Glyph, _ = font.face.NominalGlyph(info.codepoint)
+// okage: a character that the font does not have takes the glyph notFound
+// of the buffer, as in HarfBuzz 15.2.0. go-text gave it the glyph 0 (D97).
+func setGlyph(info *GlyphInfo, font *Font, notFound GID) {
+	info.Glyph, _ = font.nominalGlyph(info.codepoint, notFound)
 }
 
 func outputChar(buffer *Buffer, unichar rune, glyph GID) {
@@ -194,7 +196,7 @@ func (c *otNormalizeContext) handleVariationSelectorCluster(end int) {
 				buffer.replaceGlyphs(2, []rune{r}, nil)
 			} else {
 				// Just pass on the two characters separately, let GSUB do its magic.
-				setGlyph(buffer.cur(0), font)
+				setGlyph(buffer.cur(0), font, buffer.NotFound)
 				buffer.nextGlyph()
 
 				buffer.scratchFlags |= bsfHasVariationSelectorFallback
@@ -203,21 +205,21 @@ func (c *otNormalizeContext) handleVariationSelectorCluster(end int) {
 					buffer.cur(0).clearDefaultIgnorable()
 				}
 
-				setGlyph(buffer.cur(0), font)
+				setGlyph(buffer.cur(0), font, buffer.NotFound)
 				buffer.nextGlyph()
 			}
 			// skip any further variation selectors.
 			for buffer.idx < end && !buffer.inError && uniIsVariationSelector(buffer.cur(0).codepoint) {
-				setGlyph(buffer.cur(0), font)
+				setGlyph(buffer.cur(0), font, buffer.NotFound)
 				buffer.nextGlyph()
 			}
 		} else {
-			setGlyph(buffer.cur(0), font)
+			setGlyph(buffer.cur(0), font, buffer.NotFound)
 			buffer.nextGlyph()
 		}
 	}
 	if buffer.idx < end {
-		setGlyph(buffer.cur(0), font)
+		setGlyph(buffer.cur(0), font, buffer.NotFound)
 		buffer.nextGlyph()
 	}
 }
@@ -341,6 +343,12 @@ func otShapeNormalize(plan *otShapePlan, buffer *Buffer, font *Font) {
 
 		// idx to end is one non-simple cluster.
 		c.decomposeMultiCharCluster(end, alwaysShortCircuit)
+	}
+	// okage: a decomposition can add marks to a text with no marks, as in
+	// HarfBuzz 15.2.0. HarfBuzz 15.1.0 then left precomposed characters
+	// decomposed in the Indic, Khmer, Myanmar and USE shapers (D97).
+	if !buffer.inError && len(buffer.outInfo) != count {
+		allSimple = false
 	}
 
 	buffer.swapBuffers()

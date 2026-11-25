@@ -513,6 +513,12 @@ func (cs *complexShaperArabic) postprocessGlyphs(plan *otShapePlan, buffer *Buff
 			// see if we can improve the fit by adding an extra repeat and squeezing them together a bit.
 			var extraRepeatOverlap Position
 			shortfall := sign*wRemaining - sign*wRepeating*(Position(nCopies)+1)
+			// okage: the space that the tiles leave is the shortfall, so that
+			// the tiles are centered on a short word and on an exact fit, as
+			// in HarfBuzz 15.2.0 (D97).
+			if shortfall <= 0 {
+				wRemaining = -shortfall * sign
+			}
 			if shortfall > 0 && nRepeating > 0 {
 				nCopies++
 				excess := (Position(nCopies)+1)*sign*wRepeating - sign*wRemaining
@@ -540,6 +546,10 @@ func (cs *complexShaperArabic) postprocessGlyphs(plan *otShapePlan, buffer *Buff
 			} else {
 				buffer.unsafeToBreak(context, end)
 				xOffset := wRemaining / 2
+				// okage: as in HarfBuzz 15.2.0 (D97).
+				if !rtl {
+					xOffset = -xOffset
+				}
 				for k := end; k > start; k-- {
 					width := font.GlyphHAdvance(info[k-1].Glyph)
 

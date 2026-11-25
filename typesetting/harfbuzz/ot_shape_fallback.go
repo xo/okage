@@ -244,7 +244,9 @@ func positionAroundBase(plan *otShapePlan, font *Font, buffer *Buffer,
 	/* Use horizontal advance for horizontal positioning.
 	* Generally a better idea.  Also works for zero-ink glyphs.  See:
 	* https://github.com/harfbuzz/harfbuzz/issues/1532 */
-	baseExtents.XBearing = 0
+	// okage: the offset of the base moves the marks with it, as in
+	// HarfBuzz 15.2.0. go-text took 0 (D97).
+	baseExtents.XBearing = buffer.Pos[base].XOffset
 	baseExtents.Width = font.GlyphHAdvance(buffer.Info[base].Glyph)
 
 	ligID := buffer.Info[base].getLigID()

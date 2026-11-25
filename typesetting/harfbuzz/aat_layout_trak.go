@@ -34,14 +34,18 @@ func (c *aatApplyContext) applyTrak(track float32) {
 		advanceToAdd := c.font.getHTracking(track)
 		iter, count := buffer.graphemesIterator()
 		for start, _ := iter.next(); start < count; start, _ = iter.next() {
-			buffer.Pos[start].XAdvance += advanceToAdd
+			// okage: the sum is clamped, as in HarfBuzz 15.2.0 (D97).
+			buffer.Pos[start].XAdvance = saturateAdd(buffer.Pos[start].XAdvance, advanceToAdd)
 		}
 
 	} else {
 		advanceToAdd := c.font.getVTracking(track)
 		iter, count := buffer.graphemesIterator()
 		for start, _ := iter.next(); start < count; start, _ = iter.next() {
-			buffer.Pos[start].YAdvance += advanceToAdd
+			// okage: a vertical advance is negative, so the tracking is
+			// subtracted, as in HarfBuzz 15.2.0. go-text added it, and a
+			// positive tracking made the spacing smaller (D97).
+			buffer.Pos[start].YAdvance = saturateSub(buffer.Pos[start].YAdvance, advanceToAdd)
 		}
 	}
 }
