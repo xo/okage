@@ -29,4 +29,4 @@ number of curves grows with the radius of the arc, and kurbo has no limit:
    radius 1e50, 1e300 or the largest float64 ends with 4,096 curves that reach
    the end of the arc.
 
-This is a difference from upstream, in the list of `README.md`.
+This is a difference from upstream, in the list of `docs/DIFFERENCES.md`.

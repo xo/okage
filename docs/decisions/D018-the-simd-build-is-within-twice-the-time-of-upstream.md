@@ -42,7 +42,7 @@ form is now a loop on the lanes that gives the same bits for each of the 2^32
 values of a lane, and the times above include that change. Before it,
 `BlendColorDodge` took 111 ms.
 
-`docs/BACKLOG.md` holds the work that closes the gap.
+`docs/BACKLOG.md` held the work that closes the gap, until D96 cleared it.
 
 D35 closes this target. okage has no speed target, and work that makes it
 faster stays open.

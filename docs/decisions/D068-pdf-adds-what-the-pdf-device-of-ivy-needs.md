@@ -202,5 +202,5 @@ makes the new calls.
 
 Follow "When upstream changes" of D62. If krilla adds one of these
 features, port it. If the result is the same, remove the addition and its
-line in `README.md`. If it is not the same, a maintainer decides which one
-okage keeps.
+line in [`docs/DIFFERENCES.md`](../DIFFERENCES.md). If it is not the same, a
+maintainer decides which one okage keeps.

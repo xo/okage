@@ -31,5 +31,5 @@ does not set one.
    takes any two NaN values as equal.
 
 This is a difference from upstream for a NaN that is not `0xffc00000`, in
-the list of `README.md`. `TestF32x8PowfNaN` checks that each NaN gives the
+the list of `docs/DIFFERENCES.md`. `TestF32x8PowfNaN` checks that each NaN gives the
 result of `0xffc00000`.

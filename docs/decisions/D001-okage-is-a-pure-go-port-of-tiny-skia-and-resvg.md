@@ -27,8 +27,9 @@ okage is a translation of the upstream source, not a new design with the same
 purpose. The Go code follows the Rust code closely enough that a person can
 port an upstream change by reading its diff. The behavior is the same,
 including the faults of upstream. A deliberate difference is a decision of its
-own, and `README.md` lists it. [`docs/UPSTREAM.md`](../UPSTREAM.md) says how
-close the code follows upstream.
+own, and [`docs/DIFFERENCES.md`](../DIFFERENCES.md) lists it.
+[`docs/UPSTREAM.md`](../UPSTREAM.md) says how close the code follows
+upstream.
 
 okage ports no crate that decodes an image, and no crate for text, fonts or
 the shaping of text (D7, D9). Other Go code does that work, and the output of

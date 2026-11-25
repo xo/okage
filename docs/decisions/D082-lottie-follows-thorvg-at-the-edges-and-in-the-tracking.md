@@ -87,7 +87,8 @@ test against velato gives the same calls for each of the 879 files.
    "lottie" in the backlog is deleted.
 5. Each part of the code has a comment that names D82.
 6. The statuses of D41, D75 and D79 say "amended by D82", and the item of
-   `lottie` in `README.md` that names D79 names the parts 1 to 3.
+   `lottie` in [`docs/DIFFERENCES.md`](../DIFFERENCES.md) that names D79
+   names the parts 1 to 3.
 
 ## When upstream changes
 

@@ -26,8 +26,8 @@ maintainers want `pdf` to handle both.
 4. Each change has a test with a font that the subsetter refuses, and the
    oracle of krilla still gives the same file for each font that does not
    fail.
-5. These are deliberate differences from krilla, and `README.md` lists
-   them.
+5. These are deliberate differences from krilla, and `docs/DIFFERENCES.md`
+   lists them.
 
 ## When upstream changes
 

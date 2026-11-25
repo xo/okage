@@ -70,7 +70,7 @@ steps:
    another way than ThorVG, a maintainer decides whether okage keeps that
    part on top of the code of upstream. Record the result here or in a new
    decision.
-4. Update the list "Differences from upstream" in `README.md`.
+4. Update the list of differences in `docs/DIFFERENCES.md`.
 
 ## Why
 

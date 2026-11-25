@@ -1,6 +1,6 @@
 # D45. `svg` loads WOFF, WOFF2 and EOT fonts, and reads their names
 
-Status: Decided, amends D7, D9 and D13, amended by D51.
+Status: Decided, amends D7, D9 and D13, amended by D51 and D91.
 
 The image viewer iv shows a preview of a font file. It used a package on
 tdewolff/canvas for that, which adds 6.9 MB to its release build. iv can draw
@@ -23,7 +23,8 @@ okage, not in iv, because other programs, such as zuzu, can use it too.
 
    An sfnt file is a TrueType or OpenType font file. `FaceData` gives the
    sfnt bytes, not the bytes of the web format. An EOT file that uses
-   MicroType Express compression does not load. Such files are rare.
+   MicroType Express compression does not load. Such files are rare, and
+   D91 decides that okage does not read them.
 2. `ConvertFontData(data []byte) ([]byte, error)` in `svg` gives the sfnt
    bytes of a font in one of these formats, for a program that needs the
    bytes and not a database. It returns sfnt bytes as they are.

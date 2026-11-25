@@ -181,8 +181,8 @@ now under Apache-2.0 or MIT, and okage already ports it.
 11. ivy keeps its own device for PDF output, which maps the calls of its
     display list onto a `pdf.Surface`. okage adds to `pdf` only what that
     device needs and krilla does not have. Each addition is a deliberate
-    difference from upstream. It goes in the list "Differences from
-    upstream" of `README.md`, and in a section of this decision, when it is
+    difference from upstream. It goes in the list of differences in
+    `docs/DIFFERENCES.md`, and in a section of this decision, when it is
     built. The additions are:
     - a transparency group with the knockout flag,
     - a soft mask with a backdrop color and a transfer function,
@@ -215,7 +215,7 @@ For a difference of item 8 or item 11, follow these steps:
    commit, and remove each `okage:` change that the commit makes the same.
 2. If krilla adds a feature of item 11, such as knockout groups, port it.
    If the result is the same as the addition of okage, remove the addition
-   and its line in `README.md`. If it is not the same, a maintainer decides
+   and its line in `docs/DIFFERENCES.md`. If it is not the same, a maintainer decides
    which one okage keeps, and the choice is recorded here.
 
 ## Why

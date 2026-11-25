@@ -24,8 +24,8 @@ closes the speed target of D18:
 4. Phase 4: the SIMD paths of `internal/wide`, with the CPU check (D15, D28).
    The tests pass in both builds, on arm64 and on WebAssembly, and with
    TinyGo. okage is about 1.2 to 3 times slower than the scalar code of
-   upstream (D33). It has no speed target (D35), and `BACKLOG.md` holds the
-   steps that can make it faster.
+   upstream (D33). It has no speed target (D35). D96 records the steps for
+   speed that were tried on 2026-11-25, and which ones okage kept.
 5. Phase 5: the three commits of tiny-skia after the base commit, up to
    `5d475477` on 2026-08-20. One commit is ported, and two are not
    applicable.
@@ -59,9 +59,10 @@ closes the speed target of D18:
    of the tests of `font-variation-settings`.
 
 10. Phase 10: the 26 commits of resvg after `v0.49.0`, up to `847abd69` on
-    2026-11-05, each in its own okage commit. On 2026-11-11 okage follows
-    resvg up to `500d8605`, with svgtypes 0.16.2. The Rust oracle links usvg and
-    resvg at that commit and gives the same trees and the same pixels. The
+    2026-11-05, each in its own okage commit. On 2026-11-25 okage follows
+    resvg up to `1938e970` of 2026-11-23, with svgtypes 0.16.2. The Rust
+    oracle links usvg and resvg at `deda5edb`, the last commit that changes
+    code, and gives the same trees and the same pixels. The
     commits of the crates under `internal/` after their base wait until resvg
     raises their versions (D12).
 
@@ -464,7 +465,8 @@ renders SVG files.
 
 okage ports the benchmarks of tiny-skia, and records the speed of each build
 (D18). okage has no speed target, and work that makes it faster is always
-welcome (D35). D17 records the measurements of the prototype.
+welcome (D35). D96 records the measurements of the forms of the pipeline
+that D17 names.
 
 When a comparison with another Go library is needed, its benchmark goes in
 the test module, and the library needs the approval of the maintainers (D22).
@@ -1110,332 +1112,12 @@ answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. D83
 answers question 35 with answer 1, D84 answers question 36 with answer 1,
 and D85 answers question 37 with answer 1, on 2026-11-21. D87 answers
 question 38 with answer 1, and D90 answers question 41 with answer 1, on
-2026-11-21. Questions 39 and 40 are open, from D88 and D89. The next question
-is question 42.
+2026-11-21. Questions 39 and 40 are open, from D88 and D89. Question 42
+is open, from D96. The next question is question 43.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
 within a tolerance.
-
-### Question 19: the tests of go-text that need typesetting-utils
-
-Asked on 2026-11-17, from D52. 33 of the 54 test files of the packages that
-okage copies from go-text read the fonts and the test data of the module
-`github.com/go-text/typesetting-utils`. The data is about 165 MB, and the
-module is an outside package (D6). The copy leaves these tests out, so most
-tests of `harfbuzz`, `font` and `font/opentype/tables` do not run. The
-maintainers can choose one of these answers:
-
-1. Require `typesetting-utils` in the test module, and move the tests there.
-2. Copy into okage only the fonts that the tests read, and keep the tests in
-   their packages.
-3. Leave the tests out, and compare the shaping of `typesetting` with
-   HarfBuzz in the test module, as an oracle.
-
-### Question 20: the base commits of the PDF writer
-
-Asked on 2026-11-18, from D62. krilla tagged `krilla-v0.8.2` on 2026-06-04.
-Its main branch has 47 more commits, up to `e3459d06` on 2026-11-11. These
-commits fix the colors and the bounds of COLR glyphs, and the glyphs of
-`sbix` and SVG. They size the rasters of SVG filters by the full transform.
-They draw a line of length 0 with round caps, and they add the forms. Main
-pins pdf-writer at `fdf09012`, a commit after `v0.15.0`, and requires
-subsetter `v0.2.6`. The maintainers can
-choose one of these answers:
-
-1. The head of main of krilla, `e3459d06`, with pdf-writer `fdf09012` and
-   subsetter `v0.2.6`, as velato started from its main branch (D41).
-2. The tag `krilla-v0.8.2`, with pdf-writer `v0.15.0` and subsetter
-   `v0.2.6`, and the 47 commits in the ledger as `pending`.
-
-The recommendation is answer 1. The fixes of the color glyphs and of the SVG
-filters change what okage writes. A port of the tag ports faults that
-upstream already fixed.
-
-### Question 21: the names of the packages of the PDF writer
-
-Asked on 2026-11-18, from D62. The packages of okage take the name of their
-format, such as `svg` and `lottie`, or the name of their crate, such as
-`kurbo`. ivy has its own package `pdf`, which reads PDF files, so a file of
-ivy that imports both names one of them again. The maintainers can choose
-one of these answers:
-
-1. `pdf` for krilla and `pdfsvg` for krilla-svg, with `internal/pdfwriter`,
-   `internal/subsetter`, `internal/siphasher` and `internal/colr`.
-2. `krilla` for krilla and `krillasvg` for krilla-svg, with the same
-   internal packages.
-3. `pdf` for krilla, and the files of krilla-svg in `svg`, which then
-   imports `pdf`. A function that `svg` uses for the glyphs of SVG goes
-   through a function value, as in krilla.
-
-The recommendation is answer 1. It follows `svg` and `lottie`. A program that
-writes PDF without SVG does not link `svg`, which keeps a build with TinyGo
-small (D25).
-
-### Question 22: the scope of the base port of krilla
-
-Asked on 2026-11-18, from D62. krilla also writes the tagging for PDF/UA
-(about 5,200 lines with its generated code), forms (about 1,000 lines), the
-checks of PDF/A and PDF/UA with their XMP metadata (about 3,000 lines with
-`xmp-writer`), embedded files, separation colors, and the pages of other PDF
-files through `hayro-write`. The maintainers can choose one of these answers:
-
-1. The base port leaves them out, and each one waits for a decision when a
-   program needs it.
-2. The base port holds all of them except the pages of other PDF files.
-
-The recommendation is answer 1. ivy needs a file that a person can read and
-search. The base port gives that in about 40 days of work. The other parts
-add about 9,000 lines, and nothing uses them yet.
-
-### Question 23: where the device of ivy for PDF output lives
-
-Asked on 2026-11-18, from D62. ivy draws its pages through a display list,
-with save and restore, groups with knockout, soft masks with a backdrop and
-a transfer function, mesh gradients and stencil masks. The surface of krilla
-pushes and pops its state. It has no knockout, no backdrop, no transfer
-function, no mesh gradient and no stencil of 8 bits. The maintainers can
-choose one of these answers:
-
-1. ivy keeps the device in ivy, on top of `pdf.Surface`. okage adds to `pdf`
-   only the features of PDF that the device needs, as item 11 of D62 lists.
-2. okage adds a device to `pdf` that takes the calls of a display list with
-   the types of okage, and ivy calls it.
-
-The recommendation is answer 1. The display list belongs to ivy, and it
-changes with the formats of ivy. The additions of answer 1 are features of
-PDF, so a later version of krilla can add them, and okage then follows it.
-
-### Question 24: a writer that streams
-
-Asked on 2026-11-18, from D62. krilla keeps the whole file in memory and
-writes it at the end, because a subset of a font needs every glyph of the
-document. A book with many images then holds all of its images, compressed,
-until the end. The maintainers can choose one of these answers:
-
-1. The port keeps the model of krilla. `Document.Finish` writes the file to
-   an `io.Writer`.
-2. The port writes the content of each page and each image to the
-   `io.Writer` when the program finishes the page, and the fonts at the end.
-   This is a deliberate difference from upstream.
-
-The recommendation is answer 1 first, and a decision for answer 2 when a
-program needs it. Answer 2 changes the order of the objects, so the tests
-cannot compare the objects with krilla in the same order.
-
-### Question 25: the fonts that are not TrueType or OpenType
-
-Asked on 2026-11-18, from D62. krilla embeds TrueType, OpenType, CFF2 and
-variable fonts, and the 14 standard fonts of PDF without a font file. ivy
-also draws Type 1 fonts, bare CFF fonts and Type 3 fonts from the PDF files
-that it reads. The maintainers can choose one of these answers:
-
-1. The caller draws the glyphs of such a font as paths. The text cannot be
-   copied or searched.
-2. `pdf` adds a font that the caller makes from an outline and an advance
-   for each glyph. `pdf` writes it as a Type 3 font with a ToUnicode map, as
-   krilla writes its Type 3 fonts.
-
-The recommendation is answer 2, after the base port. It reuses
-`text/type3.rs`, keeps the text, and needs no parser of Type 1 fonts in
-okage.
-
-### Question 26: the oracles of the PDF writer
-
-Asked on 2026-11-18, from D62. On 2026-11-18 MuPDF rendered the PDF files of
-krilla for the 1,768 SVG files that krilla-svg converted. Only 6 were within
-1 percent of the reference images of resvg with the metric of D31, because
-MuPDF anti-aliases in another way. So the tests render the file of krilla
-and the file of okage with the same renderer, and compare the two. The
-maintainers can choose one of these answers:
-
-1. The test module runs `mutool`, `pdftoppm` and `qpdf` as outside programs,
-   as it runs `dot` for `html` (D38), and the Rust oracle links krilla,
-   krilla-svg and subsetter.
-2. The test module renders with one of them only.
-
-The recommendation is answer 1. Two renderers find a fault that one of them
-hides, and `qpdf` finds a file that is not well formed.
-
-### Question 27: the text of a glyph that the caller does not give
-
-Asked on 2026-11-18, from D62. krilla writes the ToUnicode map from the text
-that the caller gives with the glyphs. ivy draws runs of glyphs, and its
-runs do not always carry their text. A glyph without text cannot be copied
-or searched in a viewer. The maintainers can choose one of these answers:
-
-1. Follow krilla. The caller gives the text.
-2. Where the caller gives no text for a glyph, `pdf` takes it from the
-   `cmap` table of the font, when one character maps to the glyph. This is
-   a deliberate difference from upstream.
-
-The recommendation is answer 1, and ivy gives the text of its clusters,
-which its layout knows. Answer 2 guesses wrong for a ligature or a glyph of
-two characters.
-
-### Question 32: where the math layout lives, and what okage holds of it
-
-Asked on 2026-11-20, from D78. ivy will set the math of LaTeX with a copy
-of go-tex/engine, and lay out the math of Office Math, MathML and
-OpenDocument formulas. zuzu draws the KaTeX math of Mermaid labels. Both
-programs ask for one math layout in okage. The source is go-tex/math at
-`6a6d2729`, about 4,600 lines of Go under the BSD-3-Clause license, which
-reads fonts with go-opentype. The maintainers can choose one of these
-answers:
-
-1. okage ports go-tex/math into `texmath`, a public package at the root of
-   the module, on the fonts of `typesetting`. The port splits the parser
-   from the layout, so that ivy builds a tree of nodes without TeX. It gives
-   items, a path and a call that draws with okage. typesetting reads the
-   MATH table as an addition to the copy of go-text. STIX Two Math is in
-   `texmath/stixtwomath`.
-2. The same port, in `typesetting/texmath`, beside the copy of go-text.
-3. okage adds only the reader of the MATH table to `typesetting/font`, as
-   the item "Math" of `BACKLOG.md` says. ivy and zuzu each keep a parser and
-   a layout of their own.
-4. okage adds nothing. ivy and zuzu import go-tex/math and go-opentype, and
-   each program reads its fonts with two libraries.
-
-The recommendation is answer 1. One port serves both programs, with one
-reader of fonts and one set of tests. A package at the root keeps the
-ledger of go-text apart from the ledger of go-tex/math. With answer 1, the
-maintainers also accept the other recommendations of D78, unless they say
-otherwise: the layout uses exact font units, with a switch that rounds as
-the source does for the comparison only. okage bundles STIX Two Math and
-not Latin Modern Math. The limits of section 5 of D78 apply. The test
-module requires `github.com/go-tex/math` and
-`github.com/go-opentype/opentype` for the source oracle, and runs KaTeX
-with Node. The two helpers for a TeX engine wait until ivy measures a need.
-
-### Question 33: the changes of D81 to the shaper of typesetting
-
-Asked on 2026-11-20, from D81. A profile of `test/textbench` after D72 and
-D77 found work that the shaper of `typesetting` repeats for each glyph or
-for each run. D81 proposes six changes, each a commit of its own, that
-remove it and keep the glyphs the same. Five of them change the copy of
-go-text, which needs the approval of the maintainers (D52). Together they
-make the path of ivy with `Paragraph` 17% faster on `pg24264` and 12%
-faster on `pg1342`. The maintainers can choose one of these answers:
-
-1. Accept all six changes of D81.
-2. Accept the changes 1, 2, 3 and 6, which each gave 3% or more on one of
-   the books, and leave out the cmap cache and the kerning record. The
-   cmap cache makes each `Face` 15 KiB larger, and the kerning record gave
-   less than 3%.
-3. Accept none of them.
-
-The recommendation is answer 1. Each change is a few lines with a test or
-an equal hash of the output, the cmap cache gave 5% on the Chinese book,
-and the kerning record gave 1.6% to 2.6% on the English book.
-
-### Question 34: the parts of D82 that lottie takes from ThorVG
-
-Asked on 2026-11-20, from D82. ThorVG, the second oracle of `lottie` (D43),
-repeats the pixels at the edge of the canvas when it blurs a layer,
-multiplies the advances of a text that it shapes by a factor of the
-tracking, and fades the edge of a turned image over one pixel of the image.
-The `PixmapSink` does none of these. ThorVG and velato both skip the effect
-Set Matte, which lottie-web draws. D82 has a prototype of each, with a test
-against ThorVG. The maintainers can choose one of these answers:
-
-1. Accept all four parts of D82: the blur, the tracking, the turned image
-   and Set Matte.
-2. Accept the blur, the tracking and the turned image, which follow ThorVG.
-   Remove the prototype of Set Matte, and delete item 2 of "lottie" in
-   `BACKLOG.md`, because both oracles skip the effect.
-3. Accept none of them, and keep the backlog items.
-
-The recommendation is answer 2. The first three parts each make a test
-against ThorVG pass that fails without them, and they follow the reference
-of D43. Set Matte has no oracle that draws it, and it changes only the
-antialiasing of a few edges in the two files of the corpus that use it.
-
-### Question 35: the changes of D83 to the Unicode tables and the layout tables of typesetting
-
-Asked on 2026-11-20, from D83. After D81, a profile of `test/textbench`
-found two more costs in `typesetting`. The segmenter looks up six Unicode
-properties of each rune, each in a table of its own. The shaper searches
-the coverage and the classes of the kerning and the glyph classes of GDEF
-for each glyph. D83 proposes five changes, each a commit of its own, that
-keep the glyphs the same: one table for the six properties, a cache of
-the kerning by classes, a cache of the glyph properties of GDEF, a cache
-of the coverage of the kerning by pairs, and 4096 glyphs in the cache of
-GDEF. Each one changes the copy of go-text, which needs the approval of
-the maintainers (D52). Together they make the path of ivy with
-`Paragraph` 10% faster on `pg24264` and 17% faster on `pg1342`. The
-maintainers can choose one of these answers:
-
-1. Accept all five changes of D83.
-2. Accept the changes 1 to 4, and leave out change 5. Change 5 makes the
-   cache of GDEF larger than the cache of HarfBuzz, and takes 15 KiB more
-   for each `harfbuzz.Font`.
-3. Accept none of them.
-
-The recommendation is answer 1. Each change is a few lines with a test
-that compares it with the tables for each rune or each glyph, and the
-hashes of the output did not change. Change 1 adds a table of 53 KiB to
-the binary, and gave 4% to 7% on both books. Change 5 gave 2.7% on the
-Chinese book, for the same reason as the cmap cache of D81.
-
-### Question 36: whether typesetting computes the deltas of variable fonts in fixed point
-
-Asked on 2026-11-20, from D84. `typesetting` computes the deltas of gvar,
-of the item variation stores and of the blends of CFF2 in float32, as
-go-text and HarfBuzz do. skrifa computes them in 16.16 fixed point, so some
-points of the instances of `test/krilla` differ by 1 unit from the
-instances of subsetter. D65 accepts that within a tolerance. D84 has a
-prototype in three commits:
-
-1. `typesetting` computes the deltas in 16.16, as skrifa does.
-2. `internal/subsetter` computes the coordinates of a location in 16.16,
-   as skrifa does.
-3. `typesetting` gives the deltas of gvar of a glyph in 16.16 with the new
-   public method `Face.GlyphVariationDeltas`, and `internal/subsetter` reads
-   them.
-
-With the three commits, each of the 629 instances of `test/krilla` is the
-same as the instance of subsetter, byte for byte. No image of the tests of
-resvg changes, and the shaping of perf_reference still matches HarfBuzz.
-The shaping of a variable font gets about 25% faster, and the outline of a
-glyph of a variable font gets 7% to 18% slower. The maintainers can choose
-one of these answers:
-
-1. Accept the three commits. `TestSubsetterVariable` can then require the
-   same bytes, and the tolerance of D65 goes away.
-2. Accept commits 1 and 2. 95 points differ by 1 unit, and none by more.
-   The tolerance of D65 stays.
-3. Accept commit 2 alone, and move its map of avar into
-   `internal/subsetter`. The copy of go-text does not change, and 1,346
-   points differ by 1 unit. The tolerance of D65 stays.
-4. Accept none of them, and keep the tolerance of D65.
-
-The recommendation is answer 1. It gives the instances of the oracle, and
-the outlines and the shaping of `typesetting` do not change in a way that a
-test can see.
-
-### Question 37: the text animators, the capitals and the text on a path of D85
-
-Asked on 2026-11-20, from D85. velato does not parse the text animators of
-a text layer, the key `ca` of a text document, or the text on a path, and
-ThorVG draws all three. D85 has a prototype of each, with a test against
-ThorVG. The build of ThorVG draws no small letter when the key `ca` is not
-0, because of a fault in `_searchGlyph`. The prototype follows the source of
-ThorVG there, and draws the capitals. The maintainers can choose one of
-these answers:
-
-1. Accept all of D85: the text animators as ThorVG draws them, the capitals
-   as the source of ThorVG draws them, and the text on a path.
-2. Accept all of D85, and draw the text animators of a text that the sink
-   shapes glyph by glyph, as for a text of the list `chars`. ThorVG takes
-   the share of the first glyph for the whole text, so no test against
-   ThorVG can compare this.
-3. Accept the text animators and the capitals, and keep the text on a path
-   in the backlog, because ThorVG does not turn the glyphs on the path.
-4. Accept none of them, and keep items 2 and 3 of "lottie" in the backlog.
-
-The recommendation is answer 1. Each part makes a test against ThorVG pass
-that fails without it, and it follows the reference of D43. A file without
-these keys draws the same bytes as before.
 
 ### Question 39: the public API of the blur and the color matrix of D88
 
@@ -1484,3 +1166,21 @@ The recommendation is answer 1. A caller draws such a font with the calls
 that it already makes, and gets the text code of krilla with no copy of it.
 A shape glyph takes one code for every color of the text, as the bitmap
 fonts of the source files do.
+
+### Question 42: the copies of the stages in archsimd registers of D96
+
+Asked on 2026-11-25, from point 4 of D96. A copy of a program of stages
+that keeps its values in `archsimd` registers ran a group of 8 pixels of a
+gradient in 17 ns, where the stages took 73 ns. Hard rule 8 lets only
+`internal/wide` hold code with the SIMD tag, and each program of stages
+needs its own copy. The maintainers can choose one of these answers:
+
+1. A tool writes a copy for each of a few common programs into
+   `internal/wide`, such as a solid fill, a linear gradient and a pattern.
+   The pipeline uses a copy when its program matches one, and the stages
+   otherwise. A test compares each copy with the stages, byte for byte.
+2. The same copies, written by hand for one or two programs only.
+3. No copies. The pipeline keeps its stages.
+
+The recommendation is answer 1, for the programs that ivy draws most. Each
+copy gives the same bytes as the stages, so D16 still holds.

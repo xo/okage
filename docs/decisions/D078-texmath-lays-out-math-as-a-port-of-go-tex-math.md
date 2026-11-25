@@ -1,6 +1,6 @@
 # D78. `texmath` lays out math, as a port of go-tex/math
 
-Status: Decided, amends D5, D7, D9 and D13.
+Status: Decided, amends D5, D7, D9 and D13, amended by D95.
 
 On 2026-11-20 a maintainer brought a request of the programs ivy and zuzu.
 ivy will read and write LaTeX. It will copy the TeX engine
@@ -22,7 +22,7 @@ choices:
    in `texmath`, and does not report them to go-tex. Hard rule 6 of
    `AGENTS.md`, which ports a behavior of upstream with its faults, does not
    apply to `texmath`. Each fault that okage fixes is in the ledger of
-   go-tex/math and in "Differences from upstream" in `README.md`.
+   go-tex/math and in `docs/DIFFERENCES.md`.
 2. okage follows the commits of go-tex/math with a ledger, and takes the
    fixes and the features that fit (phase 27). It does not try to give the
    bytes or the rounded metrics of the source.
@@ -737,6 +737,8 @@ func (f *Face) LigaturePair(left, right GID) (GID, bool)
 ```
 
 They go in `typesetting/font/okage_pair.go`, marked as section 2 says.
+On 2026-11-25, D95 added them at the request of the maintainers.
+`LigaturePair` is a method of `Font`, which a `Face` also has.
 
 ### 9. The upstream record
 
@@ -811,11 +813,13 @@ On 2026-11-20, phase 26 also added the cheap missing commands: `\colorbox`,
 missing, and `\big` and its kin keep their fixed multiples of the em.
 On 2026-11-20, zuzu asked for `\phase`, the angle mark of electrical
 engineering, and phase 26 added it with the layout of KaTeX.
+On 2026-11-25, D95 added `\underrightarrow`, `\sideset`, the environments
+`align`, `equation` and `gather`, and each other command of KaTeX that
+`texmath` did not parse.
 
 ### 11. The deliberate differences
 
-Each of these goes in "Differences from upstream" in `README.md` when it is
-built:
+Each of these goes in `docs/DIFFERENCES.md` when it is built:
 
 1. The parser makes a tree, and the layout makes items, not SVG text.
 2. The layout uses exact font units and a size in `float64`, not whole
@@ -825,6 +829,8 @@ built:
 4. The additions of phase 26: the MATH italic correction, top accent
    attachment and math kerning in the layout, the text face, and the
    commands of section 10.
+5. The additions of D95: the other commands of KaTeX, the forms that the
+   parser reads as KaTeX does, and `WithLineWidth`.
 
 ### 12. What zuzu assumes
 
@@ -928,11 +934,12 @@ the oracles of fontTools and KaTeX.
 5. The faults of the source that the port finds, such as the spaces that
    the tokenizer drops in `\text`, the missing limits of section 5 and a
    NaN or an infinity from the parser of numbers. Each fix goes in the
-   ledger and in `README.md`, as the choices at the top say. They are fixed
-   in the phase that finds them.
+   ledger and in `docs/DIFFERENCES.md`, as the choices at the top say. They
+   are fixed in the phase that finds them.
 3. `\overbrace` and `\underbrace` with the horizontal assembly, and
    `\widehat` and `\widetilde` with the horizontal variants. 1 day.
-4. The helpers of section 8, if ivy asks for them. 0.5 days.
+4. The helpers of section 8, if ivy asks for them. 0.5 days. D95 added
+   them on 2026-11-25.
 
 Gate: the KaTeX gates with the new commands removed from the list of
 missing commands, and the snapshots of each addition.
@@ -940,7 +947,7 @@ missing commands, and the snapshots of each addition.
 ### Phase 27. Follow go-tex/math
 
 Port the commits of go-tex/math after the base commit, as `UPSTREAM.md`
-says.
+says. D95 records the state on 2026-11-25.
 
 ### The total
 
@@ -956,8 +963,9 @@ additions of phase 26 about 800 lines to `texmath`.
    the ledger.
 2. A commit that adds what okage added in phase 26, such as `\color` or the
    use of the italic correction, is ported. If the result is the same as the
-   addition of okage, remove the addition and its line in `README.md`. If it
-   is not the same, a maintainer decides which one okage keeps.
+   addition of okage, remove the addition and its line in
+   `docs/DIFFERENCES.md`. If it is not the same, a maintainer decides which
+   one okage keeps.
 3. A commit that only changes the rounding of the source, or the use of
    go-opentype, is not applicable, because okage uses exact units and
    `typesetting`.

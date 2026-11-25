@@ -59,4 +59,4 @@ against the scalar build, so a path that is on gains even with that cost.
 The pipeline keeps its values in arrays between two stages, so the SIMD build
 cannot keep them in registers. The benchmarks of D18 show the cost. A form of
 the pipeline that keeps its values in `archsimd` registers through a run of
-stages is the work of D17, and `docs/BACKLOG.md` holds it.
+stages is the work of D17, and D96 records a prototype of it.

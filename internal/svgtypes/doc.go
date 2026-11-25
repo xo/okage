@@ -3,8 +3,9 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package svgtypes is a port of the Rust crate svgtypes 0.16.1, a collection
-// of parsers for SVG types, at the commit fa62387a.
+// Package svgtypes is a port of the Rust crate svgtypes 0.16.2, a collection
+// of parsers for SVG types. The port starts at the commit fa62387a of
+// svgtypes 0.16.1, and follows svgtypes up to 0.16.2 (D12).
 //
 // Supported SVG types:
 //

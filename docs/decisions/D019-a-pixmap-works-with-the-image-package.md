@@ -14,4 +14,4 @@ each pixel, in the order red, green, blue and alpha, premultiplied by the
 alpha. So neither way converts a pixel.
 
 These are APIs that upstream does not have. They port no Rust function, and
-`README.md` lists them.
+`docs/DIFFERENCES.md` lists them.

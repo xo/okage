@@ -69,6 +69,9 @@ with the smallest ports and the cleanest licenses first:
 5. DWG, a port of acadrust, if CAD files matter.
 6. EPS, EMF, XPS, VSDX and CDR, only when a user asks for them.
 
+Items 1 and 2 are done. The package `pdf` ports krilla (D62), and the
+package `lottie` ports velato (D41).
+
 [ivy]: https://github.com/xo/ivy
 [krilla]: https://github.com/LaurenzV/krilla
 [svg2pdf]: https://github.com/typst/svg2pdf

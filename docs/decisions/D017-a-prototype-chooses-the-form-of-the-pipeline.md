@@ -1,6 +1,6 @@
 # D17. A prototype chooses the form of the pipeline
 
-Status: Decided.
+Status: Decided, amended by D96.
 
 Upstream runs the stages of the pipeline through a table of function
 pointers, and each stage calls the next. Go has no tail calls, and a call
@@ -47,6 +47,7 @@ has the form of upstream: a table of `func(*lowpPipeline)` and
 records how its vector types work in the SIMD build. The benchmarks of D18
 measure the port against upstream.
 
-The other forms of this decision are not measured yet: one loop with a
-`switch`, the channels in local variables, and a copy of the stages that
-keeps its values in `archsimd` registers. `docs/BACKLOG.md` holds that work.
+The other forms of this decision were not measured before the port: one
+loop with a `switch`, the channels in local variables, and a copy of the
+stages that keeps its values in `archsimd` registers. D96 measured them on
+2026-11-25 and kept the form of upstream.

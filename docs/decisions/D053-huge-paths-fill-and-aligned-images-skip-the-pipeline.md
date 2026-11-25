@@ -59,7 +59,7 @@ wider or taller than 2^31 pixels, so that fill draws nothing.
    test `FuzzFillPathHuge` fills and strokes random paths with huge
    coordinates.
 
-This is a difference from upstream, in the list of `README.md`.
+This is a difference from upstream, in the list of `docs/DIFFERENCES.md`.
 
 ## The decision for aligned images
 

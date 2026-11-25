@@ -1,6 +1,6 @@
 # D42. `lottie` draws merge paths by compositing
 
-Status: Decided, amends D41, amended by D43.
+Status: Decided, amends D41, amended by D43 and D94.
 
 A merge path is a shape item of Lottie, with the type `mm`. It combines the
 paths above it in its group into one shape, and the fills and strokes below
@@ -74,7 +74,7 @@ When a velato commit adds merge paths, follow these steps:
 3. Run the tests of D42. If upstream does not cover a mode or a case that
    D42 covers, a maintainer decides whether okage keeps that part on top of
    the code of upstream. Record the result in D42 or in a new decision.
-4. Update the list "Differences from upstream" in `README.md`.
+4. Update the list of differences in `docs/DIFFERENCES.md`.
 
 If upstream adds geometric boolean operations, the fallback of item 4 also
 goes away, because the stroke then has a path to draw.

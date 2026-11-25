@@ -36,7 +36,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
 | D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34, D54, D71 and D74 |
-| D17 | [A prototype chooses the form of the pipeline](D017-a-prototype-chooses-the-form-of-the-pipeline.md) | Decided |
+| D17 | [A prototype chooses the form of the pipeline](D017-a-prototype-chooses-the-form-of-the-pipeline.md) | Decided, amended by D96 |
 | D18 | [The SIMD build is within twice the time of upstream](D018-the-simd-build-is-within-twice-the-time-of-upstream.md) | Decided, amended by D35 |
 | D19 | [A `Pixmap` works with the package `image`](D019-a-pixmap-works-with-the-image-package.md) | Decided |
 | D20 | [Options use the functional options pattern, and logs go to `slog`](D020-options-use-the-functional-options-pattern-and-logs-go-to-slog.md) | Decided |
@@ -60,11 +60,11 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D38 | [`html` parses and lays out the HTML labels of Graphviz](D038-html-parses-and-lays-out-the-html-labels-of-graphviz.md) | Decided, amends D5, amended by D49 |
 | D39 | [Text falls back past a missing character, and `ShapeText` draws color glyphs](D039-text-falls-back-past-a-missing-character-and-draws-color-glyphs.md) | Decided, amends D37, amended by D40 |
 | D40 | [Text falls back for an emoji that the font does not draw as an emoji](D040-text-falls-back-for-an-emoji-that-the-font-does-not-draw-as-emoji.md) | Decided, amends D39 |
-| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44, D75, D79 and D82 |
-| D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 |
+| D41 | [`lottie` renders Lottie animations, as a port of velato](D041-lottie-renders-lottie-animations-as-a-port-of-velato.md) | Decided, amends D5 and D7, amended by D42, D43, D44, D75, D79, D82 and D91 |
+| D42 | [`lottie` draws merge paths by compositing](D042-lottie-draws-merge-paths-by-compositing.md) | Decided, amends D41, amended by D43 and D94 |
 | D43 | [`lottie` draws as ThorVG where velato differs](D043-lottie-draws-as-thorvg-where-velato-differs.md) | Decided, amends D41 and D42 |
 | D44 | [`lottie` loads files and draws frames for a program](D044-lottie-loads-and-draws-frames-for-a-program.md) | Decided, amends D41 |
-| D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13, amended by D51 |
+| D45 | [`svg` loads WOFF, WOFF2 and EOT fonts, and reads their names](D045-svg-loads-woff-woff2-and-eot-fonts-and-reads-their-names.md) | Decided, amends D7, D9 and D13, amended by D51 and D91 |
 | D46 | [`FontDatabase` loads the fonts of the system as the renderer does](D046-fontdatabase-loads-the-fonts-of-the-system-as-the-renderer-does.md) | Decided, amends D36 |
 | D47 | [roxmltree is a public package](D047-roxmltree-is-a-public-package.md) | Decided, amends D5 and D8, amended by D58 |
 | D48 | [kurbo is a public package](D048-kurbo-is-a-public-package.md) | Decided, amends D5 and D7 |
@@ -89,16 +89,16 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D67 | [typesetting applies the fixes of malformed input out of order](D067-typesetting-applies-the-fixes-of-malformed-input-out-of-order.md) | Decided, amends D65 |
 | D68 | [`pdf` adds what the PDF device of ivy needs](D068-pdf-adds-what-the-pdf-device-of-ivy-needs.md) | Decided, amends D62, amended by D69 |
 | D69 | [Dashes, many stops and image masks for the PDF device of ivy](D069-dashes-many-stops-and-image-masks-for-the-pdf-device-of-ivy.md) | Decided, amends D68 |
-| D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided, amended by D77 |
+| D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided, amended by D77 and D93 |
 | D71 | [The copy of go-text does not fuse a multiply and an add](D071-the-copy-of-go-text-does-not-fuse-a-multiply-and-an-add.md) | Decided, amends D16 |
-| D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided, amended by D81 |
+| D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided, amended by D81 and D92 |
 | D73 | [typesetting fixes the faults that go-text still has](D073-typesetting-fixes-the-faults-that-go-text-still-has.md) | Decided |
 | D74 | [pdf reuses its compressor, limits a subset, and a stroke ends on NaN](D074-pdf-reuses-its-compressor-limits-a-subset-and-a-stroke-ends-on-nan.md) | Decided, amends D16 |
 | D75 | [lottie draws image assets in the pixmap sink](D075-lottie-draws-image-assets-in-the-pixmap-sink.md) | Decided, amends D41, amended by D82 |
 | D76 | [The test fonts of go-text are a module of their own](D076-the-test-fonts-of-go-text-are-a-module-of-their-own.md) | Decided, amends D63 |
-| D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70 |
-| D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13 |
-| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82 and D85 |
+| D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70, amended by D93 |
+| D78 | [`texmath` lays out math, as a port of go-tex/math](D078-texmath-lays-out-math-as-a-port-of-go-tex-math.md) | Decided, amends D5, D7, D9 and D13, amended by D95 |
+| D79 | [lottie draws text layers, blurs and drop shadows](D079-lottie-draws-text-layers-blurs-and-drop-shadows.md) | Decided, amends D41, amended by D82, D85 and D94 |
 | D80 | [pdf draws a font as paths when its subset fails](D080-pdf-draws-a-font-as-paths-when-its-subset-fails.md) | Decided, amends D62 |
 | D81 | [typesetting skips repeated work in the shaper](D081-typesetting-skips-repeated-work-in-the-shaper.md) | Decided, amends D72, amended by D83 and D90 |
 | D82 | [lottie follows ThorVG at the edges and in the tracking](D082-lottie-follows-thorvg-at-the-edges-and-in-the-tracking.md) | Decided, amends D41, D75 and D79 |
@@ -110,3 +110,9 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D88 | [The blur and the color matrix of the filters get a public API](D088-the-blur-and-the-color-matrix-of-the-filters-get-a-public-api.md) | Proposed, amends D5 and D79 |
 | D89 | [pdf makes a Type 3 font from images that the caller gives](D089-pdf-makes-a-type-3-font-from-images-that-the-caller-gives.md) | Proposed, amends D62 and D68 |
 | D90 | [harfbuzz scales the values of a font as HarfBuzz does, in 32 bits](D090-harfbuzz-scales-the-values-of-a-font-as-harfbuzz-does-in-32-bits.md) | Decided, amends D81 |
+| D91 | [lottie ignores expressions, and webfont reads no MicroType Express](D091-lottie-ignores-expressions-and-webfont-reads-no-microtype-express.md) | Decided, amends D41 and D45 |
+| D92 | [typesetting finds the line breaks alone and scans runes with SIMD](D092-typesetting-finds-the-line-breaks-alone-and-scans-runes-with-simd.md) | Decided, amends D72 |
+| D93 | [shaping gives the flag unsafe-to-concat, and Line shapes reversed runs again](D093-shaping-gives-the-flag-unsafe-to-concat-and-line-shapes-reversed-runs-again.md) | Decided, amends D70 and D77 |
+| D94 | [lottie strokes the result of a merge path, and blurs at each quality](D094-lottie-strokes-the-result-of-a-merge-path-and-blurs-at-each-quality.md) | Decided, amends D42 and D79 |
+| D95 | [texmath gets the rest of the math backlog](D095-texmath-gets-the-rest-of-the-math-backlog.md) | Decided, amends D78 |
+| D96 | [The speed work of phase 4, and the cost of the SIMD build](D096-the-speed-work-of-phase-4-and-the-cost-of-the-simd-build.md) | Decided, amends D17 |

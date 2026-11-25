@@ -1,6 +1,6 @@
 # D70. shaping gives the flags of HarfBuzz and reuses its glyphs
 
-Status: Decided, amended by D77.
+Status: Decided, amended by D77 and D93.
 
 ivy lays out its documents with `typesetting/shaping`, the copy of go-text
 in okage (D52). On 2026-11-19 the layout of
@@ -32,7 +32,8 @@ decision.
    of HarfBuzz.
 3. The shaper does not set the buffer flag `ProduceUnsafeToConcat`, so the
    mask never holds `GlyphUnsafeToConcat`. okage adds no option for it
-   until a program needs it.
+   until a program needs it. D93 adds `HarfbuzzShaper.SetUnsafeToConcat`
+   for a program that needs it.
 
 ## The glyphs that the shaper reuses
 

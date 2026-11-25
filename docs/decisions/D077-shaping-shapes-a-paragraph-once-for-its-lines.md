@@ -1,6 +1,6 @@
 # D77. shaping shapes a paragraph once for its lines
 
-Status: Decided, amends D70.
+Status: Decided, amends D70, amended by D93.
 
 ivy breaks a text into lines as WeasyPrint does. For each line, it shapes a
 text that starts at the start of the line, finds the break, and takes the

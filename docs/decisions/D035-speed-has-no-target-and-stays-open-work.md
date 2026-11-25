@@ -17,4 +17,5 @@ a new form of the pipeline, and GoAT was not taken (`docs/PLAN.md`).
    shows it.
 3. The benchmarks of D18 stay. The nightly job of CI runs them (D24), and a
    change for speed records its times before and after.
-4. `docs/BACKLOG.md` keeps the known steps that can make okage faster.
+4. `docs/BACKLOG.md` keeps the known steps that can make okage faster. D96
+   tried the steps of phase 4 and cleared them from the backlog.

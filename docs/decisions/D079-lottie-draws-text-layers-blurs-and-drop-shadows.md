@@ -1,6 +1,6 @@
 # D79. lottie draws text layers, blurs and drop shadows
 
-Status: Decided, amends D41, amended by D82 and D85.
+Status: Decided, amends D41, amended by D82, D85 and D94.
 
 velato does not parse a text layer of Lottie, so `lottie.Parse` returns an
 error for a file with one, and the whole file does not draw. velato parses

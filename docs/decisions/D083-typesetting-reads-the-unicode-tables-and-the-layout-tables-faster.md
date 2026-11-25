@@ -143,8 +143,8 @@ is the split of each line. These are the next candidates:
   lookups in the digests, takes 11% of the time of `pg1342`.
 - The split of each line in `Paragraph.Line`, which is okage's own code
   (D77), takes 7% of `pg24264`.
-- The scale and the rounding of the advances and the extents, which item 2
-  of "typesetting" in the backlog still lists for SIMD.
+- The scale and the rounding of the advances and the extents. D92 measured
+  them for SIMD and left them out.
 
 ## When upstream changes
 

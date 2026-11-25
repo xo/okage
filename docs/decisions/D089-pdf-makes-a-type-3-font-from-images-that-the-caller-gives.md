@@ -206,7 +206,8 @@ func (f *Font) AddStreamGlyph(content *Stream, advance float32) (GlyphID, error)
    makes the new calls.
 3. TinyGo (D25): the code uses `image`, which `pdf` already uses, and no
    `reflect`.
-4. This is a deliberate difference from krilla, and `README.md` lists it.
+4. This is a deliberate difference from krilla, and
+   [`docs/DIFFERENCES.md`](../DIFFERENCES.md) lists it.
 
 ## The recommendation
 

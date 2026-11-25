@@ -49,7 +49,7 @@ follow these steps:
    release notes.
 3. If the result is not the same, a maintainer decides which one okage keeps.
    Record the result here or in a new decision.
-4. Update the list of added APIs in `README.md`.
+4. Update the list of added APIs in `docs/DIFFERENCES.md`.
 
 ## Why
 

@@ -1,6 +1,6 @@
 # D41. `lottie` renders Lottie animations, as a port of velato
 
-Status: Decided, amends D5 and D7, amended by D42, D43, D44, D75, D79 and D82.
+Status: Decided, amends D5 and D7, amended by D42, D43, D44, D75, D79, D82 and D91.
 
 Lottie is a JSON format for vector animations. The package
 `github.com/xo/lottie` renders it today. It runs ThorVG, compiled to
@@ -85,7 +85,8 @@ No file uses text layers or image layers, which velato does not support.
 8. The base port has the features of velato and nothing more. Merge paths
    with path boolean operations, expressions, and the fix of the opacity
    stops each need a decision of their own. D42 proposes merge paths by
-   compositing. Each one is a deliberate
+   compositing. D91 decides that `lottie` ignores expressions, as velato
+   does. Each one is a deliberate
    difference from upstream, and its decision has a section "When upstream
    changes", as D40 has. The gaps go in [`../BACKLOG.md`](../BACKLOG.md).
 9. `xo/lottie` stays as it is. This decision does not replace it. A program

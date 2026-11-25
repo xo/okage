@@ -25,7 +25,7 @@ is compared.
    `1 / sqrt(x)`. Upstream approximates them with `rcp_ps` on x86 and with
    `vrecpeq` and one step of refinement on NEON, only in the blend modes color
    dodge and color burn. Its scalar code and its WebAssembly code are exact.
-   This is a difference from upstream, and `README.md` lists it.
+   This is a difference from upstream, and `docs/DIFFERENCES.md` lists it.
 2. A multiply and an add are never fused. Rust does not fuse `f * m + a`, and
    the helper `mad` of upstream is an unfused multiply and add. The Go
    compiler can fuse `x*y + z` on architectures such as arm64, also across

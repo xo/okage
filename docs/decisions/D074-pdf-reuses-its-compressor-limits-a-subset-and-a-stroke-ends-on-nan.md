@@ -35,7 +35,7 @@ The maintainers want these faults fixed.
    a deliberate difference from tiny-skia, and it amends D16: the bytes are
    the same as tiny-skia for each path whose points are finite, and
    tiny-skia gives no result for the other paths, because it does not end.
-   `README.md` lists the difference.
+   `docs/DIFFERENCES.md` lists the difference.
 4. Each change has a test. The test of item 3 strokes the path of item 3 of
    "The PDF writer" in `docs/BACKLOG.md`, and must end.
 

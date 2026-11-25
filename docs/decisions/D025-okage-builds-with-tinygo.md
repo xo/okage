@@ -13,7 +13,7 @@ small devices. The build for WebAssembly matters most.
    recorded in `docs/BACKLOG.md` and fixed one at a time.
 3. If a fault cannot be fixed without a change to the port, okage can have a
    degraded build for TinyGo. Each degradation is a decision of its own, and
-   `README.md` lists it.
+   [`docs/DIFFERENCES.md`](../DIFFERENCES.md) lists it.
 4. TinyGo 0.44.0 is the lowest version that okage supports. CI builds for the
    host and for `wasip1`.
 

@@ -29,8 +29,8 @@ fonts, so those crates are not in the list (D7, D9). velato came on
 D50). These three are Python packages, not crates. For each one, the base
 commit is the commit that okage ports, and the column `matched` holds the
 same commit. go-text came on 2026-11-17, as the upstream `typesetting`, with
-the policy `copy` (D52). Its base commit is `v0.3.5`, and its column
-`matched` stays empty until okage applies its pending commits. krilla,
+the policy `copy` (D52). Its base commit is `v0.3.5`. Its column `matched`
+stayed empty until okage applied its pending commits, on 2026-11-20. krilla,
 pdf-writer and subsetter came on 2026-11-18, for the PDF writer (D62). The
 row of krilla covers the crates `krilla` and `krilla-svg`, which are folders
 of one repository. Their column `matched` stayed empty until the base port of
@@ -48,8 +48,9 @@ until okage ports the pending commits of its ledger. go-tex/math came on
 2026-11-20, as the upstream `go-tex-math`, for the math layout of `texmath`
 (D78). It is a Go module, but its policy is `port`, because the port splits
 its parser from its layout and reads fonts with `typesetting`. Its base
-commit is `6a6d2729`, the head of main on 2026-11-18, and its column
-`matched` stays empty until the base port is done.
+commit is `6a6d2729`, the head of main on 2026-11-18. Its column `matched`
+stayed empty until the base port was done. Since then it holds the last
+commit of the ledger of go-tex/math that okage matches.
 
 ## The checkouts
 
@@ -284,7 +285,7 @@ The port is in the packages `pdf` and `pdfsvg` (D62).
 | `crates/krilla/src/interchange/tagging/**`, `crates/krilla/src/interactive/form.rs`, `crates/krilla/src/interchange/embed.rs`, `crates/krilla/src/graphics/separation.rs`, `crates/krilla/src/pdf.rs` | none | Review. The base port of D62 leaves them out. A commit that changes only these files is `not-applicable` until a decision adds them |
 | `crates/krilla-svg/src/<name>.rs` | `pdfsvg/<name>.go` | Port. A change that the tree of `svg` needs has a comment that starts with `okage:` (D62) |
 | `refs/snapshots/**` | `pdf/testdata/snapshots/**`, copied byte for byte | Port |
-| `assets/fonts/**` | `pdf/testdata/fonts/**`, copied byte for byte with their licenses, for the fonts that the ported tests read (D63). The section "The copies of okage" at the end of `README.md` names the license of each font, and the two licenses that okage wrote | Port |
+| `assets/fonts/**` | `pdf/testdata/fonts/**`, copied byte for byte with their licenses, for the fonts that the ported tests read (D63). The section "The copies of okage" at the end of `pdf/testdata/fonts/README.md` names the license of each font, and the two licenses that okage wrote | Port |
 | `Cargo.toml`, `Cargo.lock`, `crates/*/Cargo.toml` | none | Review. A new version of pdf-writer or subsetter starts the steps of "A new version of a dependency" |
 | everything else | none | Review. "Testing" under "The PDF writer" in [`PLAN.md`](PLAN.md) says which tests okage ports and which ones the test module compares |
 
@@ -597,7 +598,7 @@ skips an upstream whose checkout is missing.
 The column `matched` of an upstream never moves past a commit that is still
 `pending` (D12).
 
-On 2026-11-20 nineteen ledgers exist:
+On 2026-11-25 nineteen ledgers exist:
 
 1. `tiny-skia.tsv` holds the three commits after `v0.12.0`. `88c65f6e`
    renames a function in `examples/pattern.rs`, and it is `ported`, because
@@ -606,16 +607,18 @@ On 2026-11-20 nineteen ledgers exist:
    to `path/src/dash.rs` and `src/pipeline/mod.rs`. `5d475477` changes the CI
    of upstream only, and it is `not-applicable`. The column `matched` is
    `5d475477`.
-2. `resvg.tsv` holds the 41 commits after `v0.49.0`, up to `433d0213` on
-   2026-11-17. Each one up to `500d8605` is `ported`, with its okage commit.
+2. `resvg.tsv` holds the 42 commits after `v0.49.0`, up to `1938e970` on
+   2026-11-23. Each one up to `500d8605` is `ported`, with its okage commit.
    `5bdbae64` prepares the release v0.50.0 and changes only versions and the
-   changelog, so it is `not-applicable`. Of the 11 commits after it, 9 are
-   `ported`. `46de08c8` changes only the READMEs and `433d0213` changes only
-   the CI, so they are `not-applicable`. The column `matched` is
-   `433d0213`, and the Rust oracle links usvg and resvg at `deda5edb`, the
-   last commit that changes code. `7479da34` moves svgtypes 0.16.2 into resvg. `e1a4c92d` raises harfrust to 0.15 and skrifa to
-   0.49. okage ports its change to `usvg/src/text`, with go-text in place of
-   the crates, and not the new versions of the crates (D9).
+   changelog, so it is `not-applicable`. Of the 12 commits after it, 9 are
+   `ported`. `46de08c8` changes only the READMEs, `433d0213` changes only
+   the CI, and `1938e970` raises only the versions of harfrust and skrifa.
+   So these three are `not-applicable`. The column `matched` is
+   `1938e970`, and the Rust oracle links usvg and resvg at `deda5edb`, the
+   last commit that changes code. `7479da34` moves svgtypes 0.16.2 into
+   resvg. `e1a4c92d` raises harfrust to 0.15 and skrifa to 0.49. okage ports
+   its change to `usvg/src/text`, with go-text in place of the crates, and
+   not the new versions of the crates (D9).
 3. `strict-num.tsv` holds the 7 commits after the base commit. None of them
    changes code that okage ports, so each one is `not-applicable`, and the
    column `matched` is `76d36feb`.
@@ -625,8 +628,9 @@ On 2026-11-20 nineteen ledgers exist:
    which files it changes. The others are `not-applicable`, with the
    reason. okage ports the pending commits in phase 10, after usvg raises the
    version of the crate. On 2026-11-11 each commit of svgtypes up to 0.16.2
-   is `ported` or `not-applicable`, and the column `matched` of svgtypes is
-   `90a7f12f`.
+   is `ported` or `not-applicable`. Its last commit, `723dad9c` of
+   2026-11-13, adds a notice that the repository moved to resvg, and it is
+   `not-applicable`. The column `matched` of svgtypes is `723dad9c`.
 5. `velato.tsv` holds no commit yet. The base commit of velato is
    `83336b65`, the head of main on 2026-11-12, and the column `matched` is
    the same commit (D41).
@@ -653,19 +657,29 @@ On 2026-11-20 nineteen ledgers exist:
    they read (D63). The tests of 5 `not-applicable` commits are in these
    files. okage copies each file that they read, also a font that has no
    license, into `typesetting/testdata`, a module of its own (D76). No test
-   skips for a missing font.
+   skips for a missing font. On 2026-11-25 the ledger holds 127 commits, up
+   to `79cc91be` of 2026-11-20, which fixes rule W5 of the bidi algorithm.
+   okage ported it, so 101 commits are `ported`, and the column `matched`
+   is `79cc91be`.
 8. `krilla.tsv`, `pdf-writer.tsv` and `subsetter.tsv` start at the base
    commits of D62. On 2026-11-18 krilla has no commit after `e3459d06`.
    On 2026-11-20 okage starts to port the commits of krilla after the base
    port, from `cc194f14` on. The column `matched` of krilla moves with each
    one, and the Rust oracle of `test/krilla` links krilla and krilla-svg at
-   that commit.
+   that commit. On 2026-11-25 the ledger holds 13 commits after
+   `e3459d06`. 7 are `ported`, and 6 are `not-applicable`, each with its
+   reason in its note.
    pdf-writer has two commits after `fdf09012`. `a10fe0a3` changes only a
    comment of the forms, which the base port leaves out, so it is
    `not-applicable`. `12549ecf` reserves the capacity of a stream in
-   `object.rs`, and it is `pending`. subsetter has one commit after
-   `v0.2.6`. `b0adcc1c` sorts the tables of a font when it reads them, and
-   it is `pending`. The column `matched` of each one is empty.
+   `object.rs`, and it is `pending`. The column `matched` of pdf-writer is
+   empty. On 2026-11-25 subsetter has six commits after `v0.2.6`, and each
+   one is `ported`. `b0adcc1c` sorts the tables of a font when it reads
+   them. `8221117c` computes the bounds of the head table of an instance of
+   a variable font. The other four change only `NOTICE`. The column
+   `matched` of subsetter is `8221117c`. The Rust oracle of `test/krilla`
+   links subsetter at that commit, with a patch of the version 0.2.6 that
+   krilla requires.
 9. `siphasher.tsv` starts at `1.0.2`, which is `db817204`. On 2026-11-18
    it holds the 8 commits after it. `4b90c33a` makes `sip128.rs` faster and
    adds the method `write_u16` to `Hasher`, with the same hashes, and it is
@@ -673,20 +687,21 @@ On 2026-11-20 nineteen ledgers exist:
    description or the links in comments, so they are `not-applicable`. The
    column `matched` is empty, because it cannot move past a pending commit.
 10. `write-fonts.tsv` starts at `write-fonts-v0.48.0`, which is
-    `9af3f318`. On 2026-11-18 it holds the 859 commits of fontations after
-    it. 12 change a file that the port follows, and they are `pending`. The
-    other 847 are merge commits, or change only other crates, or change
+    `9af3f318`. On 2026-11-25 it holds the 882 commits of fontations after
+    it, up to 2026-11-23. 12 change a file that the port follows, and they
+    are `pending`. The other 870 are merge commits, or change only other crates, or change
     other parts of write-fonts, so they are `not-applicable`. The column
     `matched` is empty.
 11. `go-tex-math.tsv` starts at `6a6d2729`, the head of main of go-tex/math
-    on 2026-11-18 (D78). On 2026-11-20 the base commit is still the head of
-    main, so the ledger holds no commit. The column `matched` is empty until
-    the base port of phases 23 to 25 of D78 is done.
+    on 2026-11-18 (D78). On 2026-11-25 it holds the 2 commits after it.
+    `6bf53a13` changes only the CI. `e33cf138` raises the version of
+    go-opentype, and `texmath` reads fonts with `typesetting`. So both are
+    `not-applicable`, and the column `matched` is `e33cf138`.
 
 ## A difference from upstream
 
 okage differs from upstream only where a decision says so. Each difference
-is in the list "Differences from upstream" in `README.md`, with its decision.
+is in the list of [`DIFFERENCES.md`](DIFFERENCES.md), with its decision.
 That list is the full list of differences, so this document does not repeat
 it.
 

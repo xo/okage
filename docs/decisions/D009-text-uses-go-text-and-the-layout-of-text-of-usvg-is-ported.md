@@ -31,7 +31,7 @@ are more than 135,000 lines:
    other file of usvg. A commit that only raises the version of a crate of
    text changes nothing that okage ports.
 5. The text that okage renders can differ from the text of resvg. That is an
-   accepted difference, and `README.md` lists it. The 386 tests of resvg that
+   accepted difference, and `docs/DIFFERENCES.md` lists it. The 386 tests of resvg that
    render text are compared within the tolerance of D23.
 
 ## Fonts come from the caller

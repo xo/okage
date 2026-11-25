@@ -136,8 +136,8 @@ These are the next candidates. Each one is a larger change:
   its own.
 - The coverage and the class definitions of GPOS. HarfBuzz keeps a small
   cache of their results for each lookup, and go-text does not.
-- The scale and the rounding of the advances and the extents, which item 2
-  of "typesetting" in the backlog still lists for SIMD.
+- The scale and the rounding of the advances and the extents. D92 measured
+  them for SIMD and left them out.
 
 ## When upstream changes
 

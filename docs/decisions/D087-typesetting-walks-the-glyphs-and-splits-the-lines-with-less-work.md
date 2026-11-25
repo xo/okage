@@ -100,7 +100,7 @@ after D83 found these costs. Each share is of the time of
       `test/textbench`.
     - The fuzz target `FuzzParagraphLine` ran for 84 seconds with changes
       1 to 6. It found one fault, which the code before the changes has
-      too. Item 6 of "typesetting" in the backlog records it.
+      too. D93 fixes it.
 
 ## The measurements
 
@@ -162,7 +162,7 @@ benchmark. These are the next candidates:
 
 - The extents still take 6% of the time of `pg24264`, which uses a few
   thousand glyphs, and the scale of the advances takes 2% of each book.
-  Item 2 of "typesetting" in the backlog lists these scales for SIMD.
+  D92 measured these scales for SIMD and left them out.
 - The line breaks of `Paragraph.LineBreak`, which the segmenter computes
   once for each paragraph.
 - The copy of the glyphs of a line in `Paragraph.Line`, and the sum of

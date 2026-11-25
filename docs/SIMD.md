@@ -30,9 +30,11 @@ A library cannot set `GOEXPERIMENT` for its users. A program that imports
 okage gets the SIMD build only if its own build sets `GOEXPERIMENT=simd`.
 
 The copies of a function for each width belong to the portable package
-`simd`. The package `archsimd`, which okage uses, makes no copies. Phase 1
-measures whether `GODEBUG=simd` changes what `archsimd` runs, or what
-`archsimd.X86` reports.
+`simd`. The package `archsimd`, which okage uses, makes no copies. On
+2026-11-25, with Go 1.27.4 on an AMD Ryzen 9 9950X, `GODEBUG=simd=0`,
+`simd=128`, `simd=256` and `simd=512` did not change what `archsimd.X86`
+reports, and did not change the time of a loop of `Float32x8.Mul` and
+`Float32x8.Sub` (D96).
 
 ## Why the widths stay fixed
 
@@ -165,6 +167,24 @@ builds. The pipeline calls it once for each row of a rect, and the fast path
 of D53 once for each row of the image (D35). A new loop of plain float code
 that runs for a long time calls it in the same way.
 
+This program shows the cost:
+
+```go
+func work(x []float32, b []byte) {
+	for i := range x {
+		x[i] = float32(x[i]*0.5) + float32(b[i])
+	}
+}
+```
+
+With `x` and `b` of 4096 values, after one loop of `archsimd` code, a call
+of `work` takes 1.6 µs in the normal build and 6.6 µs in the SIMD build of
+Go 1.27.4. With a call of `archsimd.ClearAVXUpperBits` for each 64 calls of
+`work`, it takes 1.6 µs in the SIMD build. The documentation of
+`archsimd.ClearAVXUpperBits` says that the compiler can clear the bits
+itself. When a release of Go does, the calls of `wide.ClearUpperBits` can
+go.
+
 The SIMD code of the methods of `internal/wide` also leaves the upper bits
 set. On 2026-11-21 two places for the clear were measured with the root
 benchmarks of the SIMD build, with 10 runs of each benchmark, on an AMD Ryzen
@@ -214,7 +234,21 @@ that returns a vector writes it through a pointer, as `join` of lowp does.
 On 2026-11-21 these changes made the composite of a group 15 to 32 percent
 faster with most blend modes, and `BenchmarkDrawPixmapUpscale` 15 to 23
 percent faster. The geometric mean of the root benchmarks went down by 12
-percent in each build. `docs/BACKLOG.md` holds the numbers.
+percent in each build.
+
+## The scan of runes
+
+`RuneRanges` of `internal/wide` is the one code of the package that is not
+a vector type of tiny-skia. It holds up to 8 ranges of runes, and its
+method `IndexOutside` gives the first rune of a text that is in none of
+them. The text code of `typesetting` uses it for the skip of the bidi
+algorithm (D92). A person writes its five files: `runes.go` holds the type
+and the scalar code, `runes_scalar.go` and `runes_simd.go` hold the method
+in each build, and `runes_simd_amd64.go` and `runes_simd_128.go` hold the
+SIMD code. The SIMD code tests 8 runes at a time, with `Int32x8` on amd64
+and two `Int32x4` on arm64 and wasm. It runs only for a text of 32 runes or
+more, and on amd64 it calls `ClearAVXUpperBits` when it ends, because the
+text code after it runs plain float code.
 
 ## The operations
 
@@ -279,9 +313,24 @@ When a new release of Go comes out, follow these steps:
    bytes.
 6. If the release adds SVE on arm64, or makes SIMD a standard feature, write
    a decision for the change.
-7. Record the release and the result in this document.
+7. Measure the cost of the SIMD build:
+   1. Run the program of "The upper bits of the vector registers" in both
+      builds, with and without the call of `archsimd.ClearAVXUpperBits`. If
+      the SIMD build is as fast without the call, the release clears the
+      bits itself. In that case, remove the calls of `wide.ClearUpperBits`, and
+      measure the root benchmarks of the SIMD build before and after.
+   2. Run the root benchmarks in both builds, 10 runs of each build in
+      turn, and compare the geometric means of the times.
+   3. Measure the table of `widegen` again, as "The build tags and the CPU
+      check" says, and turn the SIMD code of each method on or off from the
+      result.
+   4. Run a program in the SIMD build with `GODEBUG=simd=0`, `simd=128`,
+      `simd=256` and `simd=512`. Find whether each value changes what
+      `archsimd.X86` reports, or the time of `archsimd` code.
+8. Record the release and the result in this document.
 
 | Release of Go | Date | Result |
 | --- | --- | --- |
 | 1.27.3 | 2026-11-09 | the toolchain of the plan. No code exists yet |
 | 1.27.4 | 2026-11-21 | the table of `widegen` measured again, after the cause in "The upper bits of the vector registers" was found. Five methods turned off, and no method turned on. No change in the bytes |
+| 1.27.4 | 2026-11-25 | the steps of step 7 measured again (D96). The release still does not clear the upper bits, so `wide.ClearUpperBits` stays. `GODEBUG=simd` changes nothing for `archsimd`. The table of `widegen` of 2026-11-21 still holds |

@@ -66,7 +66,7 @@ fallback of `shape_text`, follow these steps:
    not cover that case, a maintainer decides whether okage keeps that part of
    the difference on top of the code of upstream. Record the result in D39,
    in D40, or in a new decision.
-4. Update the list "Differences from upstream" in `README.md`.
+4. Update the list of differences in `docs/DIFFERENCES.md`.
 
 Do not keep the okage code next to a fix of upstream that covers the same
 case. Two implementations of one fallback give results that neither
