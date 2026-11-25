@@ -3,9 +3,10 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package pdfsvg is a port of the Rust crate krilla-svg, at the commit
+// Package pdfsvg is a port of the Rust crate krilla-svg, from the base commit
 // e3459d06 of krilla (D62). It draws a tree of the package svg onto a
-// surface of the package pdf.
+// surface of the package pdf. docs/STATUS.md names the last commit of krilla
+// that it follows.
 //
 // It passes nearly the whole test suite of resvg. A program parses an SVG
 // file with svg, and draws the tree onto a surface:

@@ -13,23 +13,26 @@ import (
 	"github.com/xo/okage/internal/pdfwriter"
 )
 
-// This file ports krilla src/interchange/metadata.rs: the metadata of the
+// This file ports krilla src/interchange/metadata/mod.rs: the metadata of the
 // information dictionary and of the catalog. The base port has no XMP
 // metadata (D62), so serialize_xmp_metadata and xmp_date have no port. The
 // part of serialize_xmp_metadata that registers a validation error is in
-// chunkContainer.finish, as finishMetadata.
+// chunkContainer.finish, as finishMetadata. The custom XMP metadata has no
+// port either: the methods custom_xmp_property, custom_xmp_schema,
+// relax_ng_schema and extension_schemas, and the modules custom.rs,
+// extension_schema.rs, predefined.rs, relax_ng.rs and xmp.rs of the folder
+// src/interchange/metadata.
 //
 // Setting document metadata.
 //
-// PDF allows for the inclusion of metadata in a PDF document. To do so, you
-// can simply create a Metadata object, set the data, and then include it in
-// the document via Document.SetMetadata.
+// PDF allows for the inclusion of metadata in a PDF document. To do so,
+// create a Metadata object, set the data, and then include it in the document
+// via Document.SetMetadata.
 
-// Metadata is Metadata in krilla src/interchange/metadata.rs. Each field of
-// upstream that is an Option is a pointer here, and nil is None. A method
-// that sets a field returns a copy of the metadata, as the builder of
-// upstream does. The copy shares no slice and no map with the metadata it
-// came from.
+// Metadata is Metadata in krilla src/interchange/metadata/mod.rs. Each field
+// of upstream that is an Option is a pointer here, and nil is None. A method
+// that sets a field returns a copy of the metadata, as the builder of upstream
+// does. The copy shares no slice and no map with the metadata it came from.
 //
 // Metadata for a PDF document.
 type Metadata struct {
@@ -53,14 +56,14 @@ type Metadata struct {
 	customFields map[string]string
 }
 
-// NewMetadata is Metadata::new in krilla src/interchange/metadata.rs.
+// NewMetadata is Metadata::new in krilla src/interchange/metadata/mod.rs.
 //
 // Create new metadata.
 func NewMetadata() Metadata {
 	return Metadata{}
 }
 
-// Title is Metadata::title in krilla src/interchange/metadata.rs. An empty
+// Title is Metadata::title in krilla src/interchange/metadata/mod.rs. An empty
 // title leaves the title as it is.
 //
 // The title of the document.
@@ -72,7 +75,7 @@ func (m Metadata) Title(title string) Metadata {
 }
 
 // Description is Metadata::description in krilla
-// src/interchange/metadata.rs. An empty description leaves the description
+// src/interchange/metadata/mod.rs. An empty description leaves the description
 // as it is.
 //
 // The description of the document.
@@ -86,7 +89,7 @@ func (m Metadata) Description(description string) Metadata {
 	return m
 }
 
-// Keywords is Metadata::keywords in krilla src/interchange/metadata.rs. An
+// Keywords is Metadata::keywords in krilla src/interchange/metadata/mod.rs. An
 // empty list leaves the keywords as they are.
 //
 // The keywords that describe the document.
@@ -97,7 +100,7 @@ func (m Metadata) Keywords(keywords []string) Metadata {
 	return m
 }
 
-// Language is Metadata::language in krilla src/interchange/metadata.rs. An
+// Language is Metadata::language in krilla src/interchange/metadata/mod.rs. An
 // empty language leaves the language as it is.
 //
 // The main language of the document, as an RFC 3066 language tag.
@@ -111,7 +114,7 @@ func (m Metadata) Language(language string) Metadata {
 	return m
 }
 
-// Creator is Metadata::creator in krilla src/interchange/metadata.rs. An
+// Creator is Metadata::creator in krilla src/interchange/metadata/mod.rs. An
 // empty creator leaves the creator as it is.
 //
 // The creator tool of the document.
@@ -122,7 +125,7 @@ func (m Metadata) Creator(creator string) Metadata {
 	return m
 }
 
-// Producer is Metadata::producer in krilla src/interchange/metadata.rs. An
+// Producer is Metadata::producer in krilla src/interchange/metadata/mod.rs. An
 // empty producer leaves the producer as it is.
 //
 // The producer tool of the document.
@@ -133,7 +136,7 @@ func (m Metadata) Producer(producer string) Metadata {
 	return m
 }
 
-// Authors is Metadata::authors in krilla src/interchange/metadata.rs. An
+// Authors is Metadata::authors in krilla src/interchange/metadata/mod.rs. An
 // empty list leaves the authors as they are.
 //
 // The authors of the document.
@@ -145,7 +148,7 @@ func (m Metadata) Authors(authors []string) Metadata {
 }
 
 // CreationDate is Metadata::creation_date in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // The creation date of the document.
 func (m Metadata) CreationDate(creationDate DateTime) Metadata {
@@ -153,7 +156,8 @@ func (m Metadata) CreationDate(creationDate DateTime) Metadata {
 	return m
 }
 
-// DocumentID is Metadata::document_id in krilla src/interchange/metadata.rs.
+// DocumentID is Metadata::document_id in krilla
+// src/interchange/metadata/mod.rs.
 //
 // A document ID.
 //
@@ -164,7 +168,7 @@ func (m Metadata) DocumentID(documentID string) Metadata {
 	return m
 }
 
-// VersionID is Metadata::version_id in krilla src/interchange/metadata.rs.
+// VersionID is Metadata::version_id in krilla src/interchange/metadata/mod.rs.
 // Upstream writes it only to the XMP metadata, so the base port does not
 // write it (D62).
 //
@@ -177,7 +181,7 @@ func (m Metadata) VersionID(versionID string) Metadata {
 }
 
 // TextDirection is Metadata::text_direction in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // The main text direction of the document.
 func (m Metadata) TextDirection(textDirection TextDirectionMetadata) Metadata {
@@ -186,7 +190,7 @@ func (m Metadata) TextDirection(textDirection TextDirectionMetadata) Metadata {
 }
 
 // PageLayout is Metadata::page_layout in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // How the viewer should lay out the pages.
 func (m Metadata) PageLayout(pageLayout PageLayout) Metadata {
@@ -195,7 +199,7 @@ func (m Metadata) PageLayout(pageLayout PageLayout) Metadata {
 }
 
 // DisplayDocTitle is Metadata::display_doc_title in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // Whether the viewer should show the title of the document in its title bar,
 // rather than the file name.
@@ -206,7 +210,7 @@ func (m Metadata) DisplayDocTitle(displayDocTitle bool) Metadata {
 	return m
 }
 
-// Trapped is Metadata::trapped in krilla src/interchange/metadata.rs.
+// Trapped is Metadata::trapped in krilla src/interchange/metadata/mod.rs.
 //
 // Whether the document has been trapped.
 //
@@ -217,8 +221,8 @@ func (m Metadata) Trapped(trapped bool) Metadata {
 }
 
 // CustomField is Metadata::custom_field in krilla
-// src/interchange/metadata.rs. It returns false where upstream returns None,
-// with the metadata as it was.
+// src/interchange/metadata/mod.rs. It returns false where upstream returns
+// None, with the metadata as it was.
 //
 // Add a custom field to the document information dictionary.
 //
@@ -226,9 +230,9 @@ func (m Metadata) Trapped(trapped bool) Metadata {
 // replaced. Returns false for empty names and names reserved for standard
 // document information fields.
 //
-// WARNING: Custom fields will currently be ignored when exporting to PDF/A-2
-// and PDF/A-3 and PDF/A-4. This is a temporary limitation that will be lifted
-// in the future.
+// Note: Custom fields are ignored when exporting to PDF/A-2, PDF/A-3 and
+// PDF/A-4. PDF/A-2 and PDF/A-3 readers ignore the document information
+// dictionary, and in PDF/A-4 it may only contain ModDate.
 func (m Metadata) CustomField(name, value string) (Metadata, bool) {
 	if name == "" || isStandardDocumentInfoField(name) {
 		return m, false
@@ -241,7 +245,7 @@ func (m Metadata) CustomField(name, value string) (Metadata, bool) {
 }
 
 // hasDocumentInfo is Metadata::has_document_info in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 func (m *Metadata) hasDocumentInfo() bool {
 	return m.title != nil ||
 		m.producer != nil ||
@@ -255,10 +259,10 @@ func (m *Metadata) hasDocumentInfo() bool {
 }
 
 // serializeDocumentInfo is Metadata::serialize_document_info in krilla
-// src/interchange/metadata.rs. Upstream starts the dictionary lazily, with a
-// LazyCell, so that it writes no dictionary when it has no entry. The port
-// starts it at the first entry in the same way. The reference is taken
-// even when no entry is written, as upstream does.
+// src/interchange/metadata/mod.rs. Upstream starts the dictionary lazily, with
+// a LazyCell, so that it writes no dictionary when it has no entry. The port
+// starts it at the first entry in the same way. The reference is taken even
+// when no entry is written, as upstream does.
 //
 // The validators of PDF/A-2 and PDF/A-3 leave out the custom fields. The base
 // port has no validator (D62), so it writes them always.
@@ -330,7 +334,7 @@ func (m *Metadata) serializeDocumentInfo(ref *pdfwriter.Ref, pdf *pdfwriter.Pdf,
 }
 
 // isStandardDocumentInfoField is is_standard_document_info_field in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 func isStandardDocumentInfoField(name string) bool {
 	switch name {
 	case "Title", "Author", "Subject", "Keywords", "Creator", "Producer",
@@ -342,10 +346,10 @@ func isStandardDocumentInfoField(name string) bool {
 
 // finishMetadata is the part of ChunkContainer::finish and
 // Metadata::serialize_xmp_metadata in krilla src/chunk_container.rs and
-// src/interchange/metadata.rs that does not write XMP metadata. It registers
-// the validation error of a document without a creation date. Upstream
-// registers it for each document with metadata, also when it writes no XMP
-// metadata.
+// src/interchange/metadata/mod.rs that does not write XMP metadata. It
+// registers the validation error of a document without a creation date.
+// Upstream registers it for each document with metadata, also when it writes
+// no XMP metadata.
 func finishMetadata(sc *serializeContext, m *Metadata) {
 	if m != nil && m.creationDate == nil {
 		sc.registerValidationError(validationError{kind: validationMissingDocumentDate})
@@ -418,8 +422,8 @@ func serializeCatalogMetadata(sc *serializeContext, catalog *pdfwriter.Catalog, 
 	}
 }
 
-// DateTime is DateTime in krilla src/interchange/metadata.rs. A field that is
-// an Option of upstream has a flag for Some.
+// DateTime is DateTime in krilla src/interchange/metadata/mod.rs. A field that
+// is an Option of upstream has a flag for Some.
 //
 // A datetime. Invalid values will be clamped.
 type DateTime struct {
@@ -448,7 +452,7 @@ type DateTime struct {
 	utcOffsetMinute uint8
 }
 
-// NewDateTime is DateTime::new in krilla src/interchange/metadata.rs.
+// NewDateTime is DateTime::new in krilla src/interchange/metadata/mod.rs.
 //
 // Create a new, minimal date. The year will be clamped within the range
 // 0-9999.
@@ -456,7 +460,7 @@ func NewDateTime(year uint16) DateTime {
 	return DateTime{year: min(year, 9999)}
 }
 
-// Month is DateTime::month in krilla src/interchange/metadata.rs.
+// Month is DateTime::month in krilla src/interchange/metadata/mod.rs.
 //
 // Add the month field. It will be clamped within the range 1-12.
 func (d DateTime) Month(month uint8) DateTime {
@@ -464,7 +468,7 @@ func (d DateTime) Month(month uint8) DateTime {
 	return d
 }
 
-// Day is DateTime::day in krilla src/interchange/metadata.rs.
+// Day is DateTime::day in krilla src/interchange/metadata/mod.rs.
 //
 // Add the day field. It will be clamped within the range 1-31.
 func (d DateTime) Day(day uint8) DateTime {
@@ -472,7 +476,7 @@ func (d DateTime) Day(day uint8) DateTime {
 	return d
 }
 
-// Hour is DateTime::hour in krilla src/interchange/metadata.rs.
+// Hour is DateTime::hour in krilla src/interchange/metadata/mod.rs.
 //
 // Add the hour field. It will be clamped within the range 0-23.
 func (d DateTime) Hour(hour uint8) DateTime {
@@ -480,7 +484,7 @@ func (d DateTime) Hour(hour uint8) DateTime {
 	return d
 }
 
-// Minute is DateTime::minute in krilla src/interchange/metadata.rs.
+// Minute is DateTime::minute in krilla src/interchange/metadata/mod.rs.
 //
 // Add the minute field. It will be clamped within the range 0-59.
 func (d DateTime) Minute(minute uint8) DateTime {
@@ -488,7 +492,7 @@ func (d DateTime) Minute(minute uint8) DateTime {
 	return d
 }
 
-// Second is DateTime::second in krilla src/interchange/metadata.rs.
+// Second is DateTime::second in krilla src/interchange/metadata/mod.rs.
 //
 // Add the second field. It will be clamped within the range 0-59.
 func (d DateTime) Second(second uint8) DateTime {
@@ -497,7 +501,7 @@ func (d DateTime) Second(second uint8) DateTime {
 }
 
 // UTCOffsetHour is DateTime::utc_offset_hour in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // Add the offset from UTC in hours. If not specified, the time will be
 // assumed to be local to the viewer's time zone. It will be clamped within
@@ -508,7 +512,7 @@ func (d DateTime) UTCOffsetHour(hour int8) DateTime {
 }
 
 // UTCOffsetMinute is DateTime::utc_offset_minute in krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 //
 // Add the offset from UTC in minutes. This will have the same sign as set in
 // UTCOffsetHour. It will be clamped within the range 0-59.
@@ -526,7 +530,7 @@ func orU8(v uint8, ok bool, def uint8) uint8 {
 	return def
 }
 
-// pdfDate is pdf_date in krilla src/interchange/metadata.rs.
+// pdfDate is pdf_date in krilla src/interchange/metadata/mod.rs.
 //
 // Converts a datetime to a pdf-writer date.
 func pdfDate(d DateTime) pdfwriter.Date {
@@ -547,9 +551,9 @@ func pdfDate(d DateTime) pdfwriter.Date {
 }
 
 // TextDirectionMetadata is TextDirection in krilla
-// src/interchange/metadata.rs. The module text of krilla has a TextDirection
-// of its own, for the direction of a run of text, so this one takes the name
-// of its module as a suffix (D10).
+// src/interchange/metadata/mod.rs. The module text of krilla has a
+// TextDirection of its own, for the direction of a run of text, so this one
+// takes the name of its module as a suffix (D10).
 //
 // The main text direction of the document.
 type TextDirectionMetadata uint8
@@ -562,7 +566,7 @@ const (
 	TextDirectionMetadataRightToLeft
 )
 
-// toPDF is TextDirection::to_pdf in krilla src/interchange/metadata.rs. A
+// toPDF is TextDirection::to_pdf in krilla src/interchange/metadata/mod.rs. A
 // value that is not one of the constants is right to left.
 func (d TextDirectionMetadata) toPDF() pdfwriter.Direction {
 	if d == TextDirectionMetadataLeftToRight {
@@ -571,7 +575,7 @@ func (d TextDirectionMetadata) toPDF() pdfwriter.Direction {
 	return pdfwriter.DirectionR2L
 }
 
-// PageLayout is PageLayout in krilla src/interchange/metadata.rs.
+// PageLayout is PageLayout in krilla src/interchange/metadata/mod.rs.
 //
 // How the viewer should lay out the pages.
 type PageLayout uint8
@@ -602,8 +606,8 @@ const (
 	PageLayoutTwoPageRight
 )
 
-// toPDF is PageLayout::to_pdf in krilla src/interchange/metadata.rs. A value
-// that is not one of the constants is a single page.
+// toPDF is PageLayout::to_pdf in krilla src/interchange/metadata/mod.rs. A
+// value that is not one of the constants is a single page.
 func (l PageLayout) toPDF() pdfwriter.PageLayout {
 	switch l {
 	case PageLayoutOneColumn:

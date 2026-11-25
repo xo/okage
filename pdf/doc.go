@@ -3,8 +3,9 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package pdf is a port of the Rust crate krilla, at the commit e3459d06
-// (D62). It writes PDF files.
+// Package pdf is a port of the Rust crate krilla, from the base commit
+// e3459d06 (D62). It writes PDF files. docs/STATUS.md names the last commit
+// of krilla that it follows.
 //
 // krilla is a high-level library that creates PDF files. It builds on the
 // crate pdf-writer, which okage ports into internal/pdfwriter. It hides the
@@ -34,7 +35,7 @@
 // stream.rs, resource.rs, chunk_container.rs, serialize.rs, document.rs,
 // page.rs, configure/, content.rs, surface.rs, graphics/ without
 // graphics/separation.rs, text/ without the standard fonts,
-// interchange/metadata.rs, interchange/outline.rs, interactive/action.rs,
+// interchange/metadata/mod.rs, interchange/outline.rs, interactive/action.rs,
 // interactive/annotation.rs and interactive/destination.rs.
 //
 // Each file of graphics/ is a file graphics_<name>.go, and the ICC profiles

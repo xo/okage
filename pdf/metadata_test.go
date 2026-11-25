@@ -18,7 +18,7 @@ import (
 )
 
 // The tests of this file port the snapshot tests of krilla
-// tests/src/metadata.rs and the test of src/interchange/metadata.rs. A
+// tests/src/metadata.rs and the test of src/interchange/metadata/mod.rs. A
 // snapshot with XMP metadata is compared without its XMP stream, with
 // checkSnapshotWithoutXMP, because the base port writes no XMP metadata
 // (D62). The snapshot metadata_full_with_xmp is metadata_full with XMP
@@ -119,7 +119,7 @@ func TestMetadataPDF20Author(t *testing.T) {
 
 // TestCustomFieldReturnsNoneForIgnoredNames is the test
 // custom_field_returns_none_for_ignored_names of krilla
-// src/interchange/metadata.rs.
+// src/interchange/metadata/mod.rs.
 func TestCustomFieldReturnsNoneForIgnoredNames(t *testing.T) {
 	if _, ok := NewMetadata().CustomField("", "value"); ok {
 		t.Error("an empty name is accepted")
