@@ -18,7 +18,9 @@ On 2026-11-25 each part of okage is in this state:
 2. The package `svg` is the port of usvg and resvg. It parses and renders
    each test file of resvg. A file without text and without a raster image
    gives the same pixels as resvg. A file with text or an image is within
-   the tolerance of D31.
+   the tolerance of D31. The package `filter` holds the Gaussian blur, the
+   color matrix and the transfer functions of resvg for a caller, and `svg`
+   and `lottie` call it (D88).
 3. The package `lottie` is the port of velato. It gives the same calls to
    its sink as velato for each of the 879 Noto animated emoji. Each sampled
    frame of them is within the tolerance of D43 of ThorVG.
@@ -30,11 +32,13 @@ On 2026-11-25 each part of okage is in this state:
    cssselect2, with the tests of their upstreams (D50).
 6. The packages `pdf` and `pdfsvg` are the ports of krilla and krilla-svg.
    The test module compares their files with the files of krilla, and
-   renders both with MuPDF and Poppler (D62).
+   renders both with MuPDF and Poppler (D62). `pdf` writes the XMP metadata
+   and the custom XMP metadata of krilla, embeds files, and has the
+   validators of PDF/A, but not the validator of PDF/UA (D99).
 7. `typesetting` is a copy of go-text. Its shaper gives the same glyphs and
-   positions as HarfBuzz 15.1.0 for each of the 413,399 lines of
+   positions as HarfBuzz 15.2.0 for each of the 413,399 lines of
    `perf_reference`. This holds at the units per em of the font and at
-   other scales (D73, D90).
+   other scales (D73, D90, D97).
 8. The package `texmath` is a fork of go-tex/math. It parses each formula of
    its corpus that KaTeX parses (D78, D95).
 
@@ -51,7 +55,7 @@ base commit. [UPSTREAM.md](UPSTREAM.md) gives the rules.
 | --- | --- | --- | --- |
 | [tiny-skia](https://github.com/linebender/tiny-skia) | tiny-skia 0.12.0, tiny-skia-path 0.12.0 | the root package, `path` | `5d475477` of 2026-08-20 |
 | [strict-num](https://github.com/RazrFalcon/strict-num) | strict-num 0.1.1 | `path` | `76d36feb` of 2024-04-25 |
-| [resvg](https://github.com/linebender/resvg) | usvg 0.49.0, resvg 0.49.0 | `svg` | `1938e970` of 2026-11-23 |
+| [resvg](https://github.com/linebender/resvg) | usvg 0.49.0, resvg 0.49.0 | `svg`, `filter` | `1938e970` of 2026-11-23 |
 | [svgtypes](https://github.com/linebender/svgtypes) | svgtypes 0.16.2 | `internal/svgtypes` | `723dad9c` of 2026-11-13 |
 | [roxmltree](https://github.com/RazrFalcon/roxmltree) | roxmltree 0.21.1 | `roxmltree` | none yet, see the ledger |
 | [simplecss](https://github.com/linebender/simplecss) | simplecss 0.2.2 | `internal/simplecss` | none yet, see the ledger |
@@ -63,6 +67,7 @@ base commit. [UPSTREAM.md](UPSTREAM.md) gives the rules.
 | [cssselect2](https://github.com/Kozea/cssselect2) | cssselect2 0.10.1 | `cssselect2` | `fc22accd` of 2026-10-25 |
 | [typesetting](https://github.com/go-text/typesetting) | github.com/go-text/typesetting v0.3.5 | `typesetting` | `79cc91be` of 2026-11-20 |
 | [krilla](https://github.com/LaurenzV/krilla) | krilla 0.8.2, krilla-svg 0.8.1 | `pdf`, `pdfsvg` | `7b15610d` of 2026-11-24 |
+| [xmp-writer](https://github.com/typst/xmp-writer) | xmp-writer 0.3.3 at `9498ae2b` | `internal/xmpwriter` | `9498ae2b` of 2026-11-19 |
 | [pdf-writer](https://github.com/typst/pdf-writer) | pdf-writer 0.15.0 | `internal/pdfwriter` | none yet, see the ledger |
 | [subsetter](https://github.com/typst/subsetter) | subsetter 0.2.6 | `internal/subsetter` | `8221117c` of 2026-11-23 |
 | [siphasher](https://github.com/jedisct1/rust-siphash) | siphasher 1.0.2 | `internal/siphasher` | none yet, see the ledger |

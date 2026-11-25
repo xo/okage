@@ -1,6 +1,6 @@
 # D93. shaping gives the flag unsafe-to-concat, and Line shapes reversed runs again
 
-Status: Decided, amends D70 and D77.
+Status: Decided, amends D70 and D77, amended by D97.
 
 Items 3, 4 and 5 of "typesetting" in [`../BACKLOG.md`](../BACKLOG.md) were
 open after D90:
@@ -40,7 +40,8 @@ the comment of `harfbuzz.GlyphUnsafeToConcat` says.
    method `SetFontCacheSize`. So the new setting is a method of the same
    kind, not a functional option. Hard rule 11 is about the options of the
    code of okage, and a change of `typesetting` stays close to go-text
-   (D52).
+   (D52). On 2026-11-25 the maintainers kept the method, and hard rule 11
+   of `AGENTS.md` now names this exception.
 4. `Paragraph` does not change. Its shaper always sets the flag, and
    `Line` removes it from the glyphs that it gives (D77).
 

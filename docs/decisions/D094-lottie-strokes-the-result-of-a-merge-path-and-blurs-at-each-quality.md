@@ -84,8 +84,8 @@ so these results come from files that the tests make.
 | Part | Oracle | Test |
 | --- | --- | --- |
 | The area of the result of a merge path | ThorVG, through the masks and the even-odd rule of part 2 of "What the oracles do" | `TestThorVGMergeArea` fills the result of `pathbool` for four sets of two to four operands, rectangles, rounded rectangles and ellipses, and each of the modes 2 to 5. ThorVG draws the same area with masks or with the even-odd rule. 0% of the pixels differ in each of the 80 frames |
-| The stroke and the trim path of the result | ThorVG, which strokes and trims the contours of the result as paths of a file | `TestThorVGMergeStroke`: 16 strokes and 8 trim paths of a result with one contour. 0% of the pixels differ in each of the 120 frames |
-| The start point, the direction and the order of the contours of the result | Neither. No oracle gives them, so a trim path of the result follows the rules of `pathbool` | `TestMergePathsStroke` in `lottie` |
+| The stroke and the trim path of the result | ThorVG, which strokes and trims the contours of the result as paths of a file | `TestThorVGMergeStroke`: 28 strokes and 56 trim paths, as the section of 2026-11-25 says. 0% of the pixels differ in each of the 420 frames |
+| The start point, the direction and the order of the contours of the result | Neither. No oracle gives them, so a trim path of the result follows the rules of `pathbool`, which the section of 2026-11-25 lists | `TestMergePathsStroke` in `lottie`, and `TestThorVGMergeStroke` |
 | The use of the result as an operand of a later merge path | Neither. D42 says how After Effects combines the operands | `TestMergePathsNested` in `lottie` |
 | The quality of the blur and the shadow | ThorVG | `TestThorVGQuality`: a blur and a shadow at the qualities 1, 20, 34, 35, 67, 68 and 100. At most 0.008% of the pixels differ in each of the 70 frames |
 
@@ -130,3 +130,39 @@ the result.
 
 The quality is a setting of ThorVG that a program can set, for example to
 make the blurs faster. Each quality draws as ThorVG draws it.
+
+## A trim path of a result with several contours (2026-11-25)
+
+The test of the trim path covered only a result with one contour. The
+maintainers asked on 2026-11-25 for a test of a result with several
+contours. `TestThorVGMergeStroke` now has seven sets of operands. The three
+new sets are a bar across the square, a circle inside the square, and a
+path in the shape of a U with a bar across its arms. The test strokes the
+result of each set at each mode from 2 to 5. It trims each result once with
+the trim mode simultaneously and once with the mode individually. 14 of the
+28 results have two contours or more, and one has ten. 0% of the pixels
+differ in each of the 420 frames. `pathbool` and `lottie` did not change.
+
+The test pins these rules of `pathbool.Combine`:
+
+1. The order of the contours. A contour comes before another when its
+   first edge comes first. The edges come in the order of the operands, and
+   in each operand in the order of its points after the flattening.
+2. The start point of a contour. It is the start of its first edge.
+3. The direction of a contour. It has the inside on its left where y goes
+   up. On the canvas, where y goes down, an outer contour turns clockwise
+   and a hole turns counterclockwise.
+
+With the mode simultaneously, okage trims each contour of the result on its
+own, as velato trims each contour of a path. ThorVG trims each path of the
+file on its own. So that trim pins the start points and the directions.
+With the mode individually, okage trims the contours as one outline. So
+that trim also pins the order.
+
+ThorVG 1.1.1 trims the paths of a group with the mode individually in
+another order than velato: the first path, then the last, and then the
+others backwards. The maintainers chose on 2026-11-25 that `lottie`
+follows that order, as the section of 2026-11-25 of D43 says. A trim path
+with the mode individually trims each contour of the result of a merge
+path as a path of its own in that order. So the file of the test gives
+ThorVG the contours in the order of `pathbool`, and the two draw the same.

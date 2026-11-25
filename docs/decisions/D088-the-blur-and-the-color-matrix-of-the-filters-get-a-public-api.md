@@ -1,6 +1,6 @@
 # D88. The blur and the color matrix of the filters get a public API
 
-Status: Proposed, amends D5 and D79.
+Status: Decided, amends D5 and D79.
 
 ## Context
 
@@ -245,7 +245,84 @@ without its copy into RGBA. `svg` keeps its bytes. The transfer functions
 cost about 100 lines more, and without them ivy keeps its table and its
 threshold.
 
-When the maintainers decide this decision, the statuses of D5 and D79 get
-"amended by D88". The table "Layout" of `AGENTS.md` then names `filter` in
-place of `internal/boxblur`. Question 39 at the end of
-[`../PLAN.md`](../PLAN.md) asks the maintainers to choose.
+## The decision
+
+On 2026-11-25 the maintainers chose answer 1 of question 39: option 3, with
+the color matrix and the transfer functions. The statuses of D5 and D79 say
+"amended by D88". The table "Layout" of `AGENTS.md` names `filter` in place
+of `internal/boxblur`.
+
+The package holds the API of option 3, with these details:
+
+1. The files `box_blur.go`, `iir_blur.go`, `color_matrix.go` and
+   `component_transfer.go` moved from `internal/boxblur` and `svg`.
+   `mod.go` ports the parts of `src/filter/mod.rs` that they use, and `svg`
+   keeps its own port of that module for the other primitives.
+   `okage_filter.go` holds the API, and `okage_blur_alpha.go` the box blur
+   and the IIR blur of one channel for `BlurMask`. The package has the MIT
+   license of resvg in `filter/LICENSE` (D13).
+2. `svg` calls `Blur` for `feGaussianBlur` and `feDropShadow`,
+   `ApplyColorMatrix` for `feColorMatrix` and `ApplyComponentTransfer` for
+   `feComponentTransfer`. `svg` still converts the colors into the color
+   space of the primitive itself, so it does not pass `WithLinearRGB`.
+3. `lottie` calls `Blur` with `WithBoxBlur` for the Gaussian blur of a
+   layer. It calls `BlurMask` with `WithBoxBlur` for the alpha of a drop
+   shadow, which it no longer copies into RGBA bytes.
+4. `WithLinearRGB` also applies to `Blur`, as
+   `color-interpolation-filters` applies to `feGaussianBlur` in resvg.
+   `BlurMask` ignores it, because the conversion does not change the alpha.
+5. `Blur` and `BlurMask` take the sigmas as float64, and round them to
+   float32, as resvg holds them. A sigma above 2^20 blurs as 2^20. Above
+   about 1.4 x 10^9 the size of a box of resvg overflows an int32. A blur
+   with a sigma of 2^20 has boxes more than a million pixels wide.
+6. The box blur of a column starts its index on the right at the minimum
+   of the radius and the height, times the width. Upstream starts it at the
+   radius times the width, which can overflow an int of 32 bits. Both
+   indexes are past the column, where the blur reads 0, so the bytes are the
+   same.
+7. The zero `ColorMatrix` changes no color, and the zero `TransferFunction`
+   is the identity. On a pixmap, `ApplyColorMatrix` and
+   `ApplyComponentTransfer` still demultiply and multiply the pixels again,
+   as resvg does for each color primitive.
+
+What ivy needs is covered:
+
+1. `blur.go` fills the silhouette into an `okage.Mask`, and can call
+   `BlurMask` on it in place of its three box blurs. The glow and the soft
+   edge stay in ivy, because they change the silhouette before the blur.
+2. `recolor.go` can apply its four steps on an `image.NRGBA` with
+   `ApplyComponentTransferNRGBA` and `ApplyColorMatrixNRGBA`. The contrast
+   and the brightness are `TransferLinear(k, 0.5 - k/2 + b)`, with the
+   factor k and the brightness b of ivy. The gray is a matrix with the
+   weights 0.299, 0.587 and 0.114 in each of the rows R, G and B. The black
+   and white is `TransferDiscrete` after the gray. Two values put the
+   threshold at 0.5. 256 values map each byte to its own value, so they put
+   the threshold at any byte. The duotone is a matrix whose rows R, G and B
+   take the gray of the channel R, times the difference of the two colors,
+   plus the first color. The examples of the package show the gray, a
+   duotone, the contrast and the black and white.
+
+The tests:
+
+1. The images of the tests of resvg do not change. All 1,798 test files of
+   resvg, rendered at the scales 0.21, 0.5, 1 and 2.3, give the same bytes
+   as before, for 7,192 images in all.
+2. The tests of `lottie` against ThorVG for the blurs, the shadows, the
+   qualities and the edges give the same numbers as before. The corpus of
+   `TestThorVG` was not on the machine.
+3. A test compares the blur of the box of fact 2 with a blur of the whole
+   image, for RGBA and for one channel. A test compares `BlurMask` with the
+   alpha of `Blur`, with the box blur and with the IIR blur.
+4. A test compares each function on a pixmap with the same primitive in an
+   SVG file that `svg` renders, in sRGB and in linearRGB. Another test
+   compares each function on an `image.NRGBA` with the same function on an
+   opaque pixmap.
+
+The speed of `svg` on 2026-11-25, as the median of 10 runs of each build in
+turns, for a canvas of 800 by 800 pixels:
+
+| Scene | Before | After |
+| --- | --- | --- |
+| a blurred circle of radius 40, `stdDeviation="6"` | 39.5 ms | 13.4 ms |
+| a drop shadow of a rectangle of 120 by 60, `stdDeviation="5"` | 51.8 ms | 26.1 ms |
+| a blurred rectangle that fills the canvas | 41.9 ms | 41.6 ms |

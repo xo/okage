@@ -1,6 +1,6 @@
 # D68. `pdf` adds what the PDF device of ivy needs
 
-Status: Decided, amends D62, amended by D69.
+Status: Decided, amends D62, amended by D69 and D89.
 
 ivy keeps its own device for PDF output, which maps the calls of its display
 list onto a `pdf.Surface` (D62 item 11). krilla does not have some features
@@ -67,7 +67,7 @@ krilla.
    mesh in a group whose soft mask is that shading, because Poppler 26.11
    does not apply the soft mask of a graphics state to a shading of type 4.
    A stroke sets the soft mask in its graphics state, as krilla does for a
-   gradient. A mesh with no triangle, a vertex with no color or a point
+   gradient. The group of that soft mask is in gray, as D89 says. A mesh with no triangle, a vertex with no color or a point
    that is not finite records `ErrPDFInvalidGradient`. Colors with
    different numbers of components record `ErrPDFMixedColorSpaces` (D66).
 5. A fill through a stencil of 8 bits. `Surface.FillStencil(*image.Alpha,

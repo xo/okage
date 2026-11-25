@@ -50,7 +50,10 @@ until okage ports the pending commits of its ledger. go-tex/math came on
 its parser from its layout and reads fonts with `typesetting`. Its base
 commit is `6a6d2729`, the head of main on 2026-11-18. Its column `matched`
 stayed empty until the base port was done. Since then it holds the last
-commit of the ledger of go-tex/math that okage matches.
+commit of the ledger of go-tex/math that okage matches. xmp-writer came on
+2026-11-25, for the XMP metadata of `pdf` (D99). Its base commit is
+`9498ae2b`, the commit that krilla `7b15610d` takes from git, and its
+column `matched` holds the same commit.
 
 ## The checkouts
 
@@ -136,6 +139,8 @@ paths that it changes: Port, then Review, then Not applicable.
 | `crates/usvg/src/<folder>/mod.rs` | `svg/usvg_<folder>.go` | Port |
 | `crates/usvg/src/main.rs` | none | Not applicable. It is the command line tool |
 | `crates/resvg/src/<name>.rs` | `svg/resvg_<name>.go` | Port |
+| `crates/resvg/src/filter/box_blur.rs`, `iir_blur.rs`, `color_matrix.rs` and `component_transfer.rs` | `filter/<name>.go`, such as `filter/box_blur.go` (D88) | Port |
+| `crates/resvg/src/filter/mod.rs` | `svg/resvg_filter.go`, and the parts that the four files above use also in `filter/mod.go` (D88) | Port |
 | `crates/resvg/src/<folder>/<name>.rs` | `svg/resvg_<folder>_<name>.go` | Port |
 | `crates/resvg/src/main.rs` | none | Not applicable. It is the command line tool |
 | `crates/resvg/tests/tests/**` | `svg/testdata/tests/**`, copied byte for byte | Port |
@@ -265,8 +270,9 @@ okage. Then run `gofmt` on `typesetting/`. The files keep the import groups
 of go-text, so the formatters of `golangci-lint` do not run on them.
 
 The code of go-text for the tables kern, kerx and morx follows HarfBuzz
-at its commit 873dbc1e, and D73 makes `harfbuzz` follow HarfBuzz 15.1.0
-at the places that it lists. On 2026-11-21 okage audited the seven
+at its commit 873dbc1e. D73 made `harfbuzz` follow HarfBuzz 15.1.0 at the
+places that it lists, and D97 makes it follow HarfBuzz 15.2.0. The
+oracle in `test/harfbuzz` uses the HarfBuzz 15.2.0 of the system. On 2026-11-21 okage audited the seven
 commits of HarfBuzz after 873dbc1e that change this code: 5a1c0c4660,
 88e5077a80, a763a612d1, ec4a38c4ab, 77be62a733, cd570b6f54 and
 370a0da5a1. okage applied each one, as fixes 20 to 26 of D73. The ledger
@@ -282,7 +288,8 @@ The port is in the packages `pdf` and `pdfsvg` (D62).
 | `crates/krilla/src/<name>.rs` | `pdf/<name>.go` | Port |
 | `crates/krilla/src/<folder>/<name>.rs` | `pdf/<folder>_<name>.go`, such as `pdf/graphics_paint.go` and `pdf/text_cid.go` | Port |
 | `crates/krilla/src/<folder>/mod.rs` | `pdf/<folder>.go` | Port |
-| `crates/krilla/src/interchange/tagging/**`, `crates/krilla/src/interactive/form.rs`, `crates/krilla/src/interchange/embed.rs`, `crates/krilla/src/graphics/separation.rs`, `crates/krilla/src/pdf.rs` | none | Review. The base port of D62 leaves them out. A commit that changes only these files is `not-applicable` until a decision adds them |
+| `crates/krilla/src/interchange/metadata/<name>.rs` | `pdf/metadata_<name>.go`, and `pdf/metadata.go` for `mod.rs` (D99) | Port |
+| `crates/krilla/src/interchange/tagging/**`, `crates/krilla/src/interactive/form.rs`, `crates/krilla/src/graphics/separation.rs`, `crates/krilla/src/pdf.rs` | none | Review. The base port of D62 leaves them out. A commit that changes only these files is `not-applicable` until a decision adds them. The validator of PDF/UA in `crates/krilla/src/configure/validate.rs` is left out too, because it needs the tags (D99) |
 | `crates/krilla-svg/src/<name>.rs` | `pdfsvg/<name>.go` | Port. A change that the tree of `svg` needs has a comment that starts with `okage:` (D62) |
 | `refs/snapshots/**` | `pdf/testdata/snapshots/**`, copied byte for byte | Port |
 | `assets/fonts/**` | `pdf/testdata/fonts/**`, copied byte for byte with their licenses, for the fonts that the ported tests read (D63). The section "The copies of okage" at the end of `pdf/testdata/fonts/README.md` names the license of each font, and the two licenses that okage wrote | Port |
@@ -333,6 +340,24 @@ on 2026-11-18.
 | `src/lib.rs` | `internal/siphasher/doc.go` | Review |
 | `src/sip.rs`, `src/tests.rs` | none | Not applicable. krilla does not call the 64-bit mode |
 | `Cargo.toml`, `COPYING`, `LICENSE-*` | none | Review |
+| everything else | none | Not applicable |
+
+### xmp-writer
+
+The port is in `internal/xmpwriter`, and it holds the whole crate, with
+the module of its feature `pdfa` (D99). krilla takes the crate from git, at
+the commit `9498ae2b` of version 0.3.3. The checkout `upstream/xmp-writer`
+is a copy of the checkout of cargo for that commit, so no fetch was needed.
+To fetch later commits, clone the URL of the list into the folder. The
+crate has no tests, so `internal/xmpwriter/testdata/reference.rs` writes
+the packets of `internal/xmpwriter/testdata/reference.txt`. If a commit
+changes the output, run the program with cargo against that commit, and
+copy its output into the file.
+
+| Upstream path | okage path | Rule |
+| --- | --- | --- |
+| `src/lib.rs`, `src/types.rs`, `src/pdfa.rs` | `internal/xmpwriter/lib.go`, `types.go` and `pdfa.go`. The documentation of `lib.rs` is in `doc.go` | Port |
+| `Cargo.toml`, `LICENSE-*` | none | Review. A change of `Cargo.toml` of krilla that moves to another commit of xmp-writer starts the steps of "A new version of a dependency" |
 | everything else | none | Not applicable |
 
 ### write-fonts

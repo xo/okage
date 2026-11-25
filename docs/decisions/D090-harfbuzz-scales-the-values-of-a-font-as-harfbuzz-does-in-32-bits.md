@@ -1,6 +1,6 @@
 # D90. harfbuzz scales the values of a font as HarfBuzz does, in 32 bits
 
-Status: Decided, amends D81.
+Status: Decided, amends D81, amended by D97.
 
 ## Context
 

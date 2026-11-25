@@ -1,6 +1,6 @@
 # D5. The packages follow the crates
 
-Status: Decided, amended by D38, D41, D47, D48, D49, D50, D51, D52, D62 and D78.
+Status: Decided, amended by D38, D41, D47, D48, D49, D50, D51, D52, D62, D78 and D88.
 
 | Path | Package | What it holds |
 | --- | --- | --- |

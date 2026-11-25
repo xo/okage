@@ -1,6 +1,6 @@
 # D84. typesetting computes the deltas of variable fonts in fixed point
 
-Status: Decided, amends D65.
+Status: Decided, amends D65, amended by D101.
 
 `internal/subsetter` makes the instances of variable fonts with
 `typesetting`, the copy of go-text in okage (D52), where subsetter makes

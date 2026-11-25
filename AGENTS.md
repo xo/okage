@@ -27,7 +27,7 @@ on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35, D96). `svg` holds the port of
 usvg and resvg, with the layout of text on go-text (D9), up to the commit
 `1938e970` of resvg of 2026-11-23. The maintainers accepted the decisions D1
-to D87 and D90 to D96. D88 and D89 are proposed. The package `html` parses
+to D101. The package `html` parses
 and lays out the HTML-like labels of Graphviz, with `dot` as its oracle
 (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
@@ -72,19 +72,20 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |
 | working on the radial gradients of `NewRadialGradientExtend`, for the radial shadings of PDF | D64, then D55 |
 | working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |
-| making the pipeline faster, or measuring the cost of the SIMD build | D17, D35 and D96, then "A new release of Go" in [docs/SIMD.md](docs/SIMD.md) |
+| making the pipeline faster, or measuring the cost of the SIMD build | D17, D35, D96 and D98, then "A new release of Go" in [docs/SIMD.md](docs/SIMD.md) |
 | writing or changing the vector types, or anything with a build tag | [docs/SIMD.md](docs/SIMD.md), then D15 and D16 |
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 and D71 |
 | writing code that a user imports, with TinyGo in mind | D25, and "TinyGo" in [docs/PLAN.md](docs/PLAN.md) |
 | adding an outside package | D6 |
-| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45, D46, D57 and D61 |
+| working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45, D46, D57, D61, D100 and D101 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the parser of HTML documents in `html` | D49, then D38 |
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45, D51 and D91 |
-| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83, D84, D87, D90, D92 and D93, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80 and D84, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83, D84, D87, D90, D92, D93, D97 and D101, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99 and D101, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the math layout of `texmath`, the table MATH, or applying a commit of go-tex/math | D78 and D95, then D52 for the reader of the table MATH in `typesetting` |
+| working on the blurs, the color matrix or the transfer functions of `filter`, or a blur of `svg` or `lottie` | D88, then D79 and D16 |
 | working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79, D82, D85, D91 and D94 |
 | working on the XML parser or the CSS parser of `svg`, or asked to use another package for them | D8, then D47 and D50 |
 | writing an option, a logger or an error | D20 and D21 |
@@ -112,8 +113,7 @@ A bare number, such as D3, names a decision of this repository, in
 `docs/decisions/`. A decision of another repository names that repository,
 such as dbmeta D110 or transit D30. An open question has a number, and it is
 at the end of `docs/PLAN.md` until the maintainers answer it. The numbers do
-not repeat. Questions 39, 40 and 42 are open, and the next question is
-question 43.
+not repeat. No question is open, and the next question is question 43.
 
 ## Hard rules
 
@@ -169,12 +169,17 @@ question 43.
     `github.com/go-text/typesetting` in okage (D52), do that work. The layout
     of text of usvg is still ported, with `typesetting` in place of the crates
     that it calls. A change of `typesetting` stays close to go-text, and has a
-    comment that starts with `okage:` and names its decision (D52). The walk of the paint graph of COLRv1 of skrifa
-    is the one part of a crate of text that okage ports (D32).
+    comment that starts with `okage:` and names its decision (D52). The walk of
+    the paint graph of COLRv1, of skrifa 0.44 for `pdf` and of read-fonts
+    0.46 for `svg`, is the one part of a crate of text that okage ports (D32,
+    D100).
 11. An option is a functional option whose name starts with `With`, and it
     holds its value in the value that it configures, never in a package
     variable. Log only to the `*slog.Logger` that the caller gives with an
-    option (D20).
+    option (D20). A type of the copy of go-text that has no constructor
+    and a setter method in go-text, such as `HarfbuzzShaper`, takes a new
+    setting as a setter method too, so that the copy stays close to
+    go-text (D52, D93).
 12. An error that a caller can test for is a sentinel error of the root
     package, a constant of the type `okage.Error`. The other packages return
     it or wrap it with `%w`, and declare no sentinel error of their own (D21).
@@ -232,8 +237,8 @@ D5 sets the layout of the code. The repository holds these files:
 | `docs/images/` | the images of the examples of `README.md`, which `test/readme` draws |
 | `docs/decisions/` | the decisions, one file each, with an index |
 | `docs/upstream/upstreams.tsv` | the list of upstream repositories, with the base commit and the matched commit of each (D12) |
-| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv`, `typesetting.tsv`, `krilla.tsv`, `pdf-writer.tsv`, `subsetter.tsv`, `siphasher.tsv`, `write-fonts.tsv` and `go-tex-math.tsv` |
-| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/`, `upstream/typesetting/`, `upstream/krilla/`, `upstream/pdf-writer/`, `upstream/subsetter/`, `upstream/siphasher/`, `upstream/write-fonts/` and `upstream/go-tex-math/` (D49, D50, D52, D62, D78) |
+| `docs/upstream/<repository>.tsv` | the ledger of the commits of one upstream after its base commit (D12). Each upstream of `upstreams.tsv` has one, such as `tiny-skia.tsv`, `resvg.tsv`, `tinyhtml5.tsv`, `tinycss2.tsv`, `cssselect2.tsv`, `typesetting.tsv`, `krilla.tsv`, `pdf-writer.tsv`, `subsetter.tsv`, `siphasher.tsv`, `write-fonts.tsv`, `xmp-writer.tsv` and `go-tex-math.tsv` |
+| `upstream/<repository>/` | the upstream checkouts, which git ignores (D11). For example, `upstream/tiny-skia/`, `upstream/resvg/`, `upstream/tinyhtml5/`, `upstream/tinycss2/`, `upstream/cssselect2/`, `upstream/typesetting/`, `upstream/krilla/`, `upstream/pdf-writer/`, `upstream/subsetter/`, `upstream/siphasher/`, `upstream/write-fonts/`, `upstream/xmp-writer/` and `upstream/go-tex-math/` (D49, D50, D52, D62, D78, D99) |
 
 When code exists, the code goes here:
 
@@ -244,13 +249,13 @@ When code exists, the code goes here:
 | `svg/` | the package `svg`, the port of the crates `usvg` and `resvg`. A file starts with the name of its crate, such as `usvg_parser_svgtree.go` |
 | `html/` | the package `html`, the parser and the layout of the HTML-like labels of Graphviz (D38), and the parser of HTML documents, the port of tinyhtml5. A file of the port starts with `tinyhtml5_` and the name of its Python module, such as `tinyhtml5_tokenizer.go` (D49) |
 | `lottie/` | the package `lottie`, the port of the crate `velato`. A file starts with the name of its folder in `src`, such as `runtime_evaluate.go` (D41) |
+| `filter/` | the package `filter`, the Gaussian blur, the color matrix and the transfer functions of the filters of resvg, on a `Mask`, a `Pixmap` and an `image.NRGBA`. `svg` and `lottie` call it, and ivy uses it for its shadows and its pictures. A file of the port keeps the name of its file in `src/filter/` of resvg, such as `box_blur.go`, and a file that ports nothing starts with `okage_` (D88) |
 | `pdf/` | the package `pdf`, the port of the crate `krilla`, which writes PDF files. A file of a folder of `src` starts with the name of the folder, such as `configure_version.go` (D62) |
 | `pdfsvg/` | the package `pdfsvg`, the port of the crate `krilla-svg`, which draws a tree of `svg` onto a surface of `pdf`. A file has the name of its file in `src`, such as `clip_path.go` (D62) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
 | `internal/glyphoutline/` | the code that draws the outline of a glyph of `typesetting` in the order of skrifa, with the filter of read-fonts for CFF, which `svg` and `pdf` share |
-| `internal/boxblur/` | the box blur of the filters of resvg, the port of `src/filter/box_blur.rs`, which `svg` and `lottie` share (D79) |
 | `internal/pathbool/` | the geometric boolean operations of paths, which `lottie` uses for a stroke or a trim path of the result of a merge path. It ports no upstream code (D94) |
-| `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15) |
+| `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15), and the fused programs of the pipeline that `fusegen` writes (D98) |
 | `internal/<crate>/` | a crate that `svg` uses, such as `internal/svgtypes` (D5) |
 | `roxmltree/` | the package `roxmltree`, the port of the crate roxmltree. It is public, so that ivy reads XML with it (D47) |
 | `kurbo/` | the package `kurbo`, the port of a subset of the crate kurbo. It is public, so that ivy draws PDF with it (D48) |
@@ -268,7 +273,7 @@ When code exists, the code goes here:
 | `tinycss2/testdata/`, `cssselect2/testdata/` | the results of tinycss2 and cssselect2 that the tests compare with, the documents of the tests of cssselect2, and the script `make.py` that writes the results (D50) |
 | `webfont/testdata/` | the test fonts of `webfont`, which the tests of `svg` also read (D51) |
 | `typesetting/testdata/` | a module of its own, with its own `go.mod` and no Go package, so the module `github.com/xo/okage` does not hold it (D76). It holds the fonts and the test files of `github.com/go-text/typesetting-utils` that the tests of `typesetting` read, byte for byte, with their licenses and a `readme.md` that lists them. The package `typesetting/internal/testfonts` reads them from the disk for the tests, and a test skips when the folder is not there (D63, D76) |
-| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62), the benchmarks of the speed of `typesetting` on the workloads of ivy in `test/textbench`, the comparison of the shaper of `typesetting` with uharfbuzz 15.1.0 in `test/harfbuzz` (D73), and the oracles of the math layout in `test/texmath` (D78), and the test of the examples of `README.md` in `test/readme` |
+| `test/` | the test module: the Rust oracle, the vips oracle, the `dot` oracle of `html` (D38), the comparison of `lottie` with velato and ThorVG (D41, D43), the comparison of the builds for WebAssembly and the benchmarks against other libraries (D22), the comparison of the radial gradients of D64 with MuPDF in `test/shading`, and the PDF oracle of krilla, krilla-svg, pdf-writer and subsetter in `test/krilla`, with the reader and the renderers of PDF files (D62), the benchmarks of the speed of `typesetting` on the workloads of ivy in `test/textbench`, the comparison of the shaper of `typesetting` with uharfbuzz and HarfBuzz 15.2.0 in `test/harfbuzz` (D73, D97), and the oracles of the math layout in `test/texmath` (D78), and the test of the examples of `README.md` in `test/readme` |
 | `test/texmath/` | the oracles of `texmath` (D78): `mathtable.py`, which reads the MATH table of a font with fontTools for the test of the reader of `typesetting`, the corpus of formulas in `corpus.txt`, and the KaTeX script in `katex/`, with its `package.json` and `package-lock.json` at the version of KaTeX that Mermaid 12.3.0 bundles. `katex_parse.txt` lists the formulas that KaTeX parses and `texmath.Parse` does not, each with its missing command and its reason, for the parse gate of `katex_parse_test.go`. `katex_layout.txt` lists the formulas outside the gate of the height and the depth of `layout_test.go`, each with its reason. `report_test.go` writes a report of KaTeX and `texmath` side by side when Chromium is on the machine. `npm ci` in `test/texmath/katex` installs the packages into `test/texmath/katex/node_modules`, which git ignores |
 | `test/readme/` | the test of the examples of `README.md`. It makes sure that `README.md` holds the code of each example, and that each example draws its image in `docs/images/`. Run it with `-readme.update` to draw the images again |
 

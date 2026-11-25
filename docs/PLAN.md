@@ -801,7 +801,7 @@ The checkouts are `upstream/krilla`, `upstream/pdf-writer` and
 crates `siphasher`, `write-fonts` and `xmp-writer` each get a checkout, a
 row in `docs/upstream/upstreams.tsv` and a ledger, as the other upstreams
 have. Each one gets them in the phase that ports it: `siphasher` in phase
-12, `write-fonts` in phase 13, and `xmp-writer` when a decision adds XMP.
+12, `write-fonts` in phase 13, and `xmp-writer` with D99 on 2026-11-25.
 
 | Repository | URL | Base commit | okage |
 | --- | --- | --- | --- |
@@ -1094,8 +1094,9 @@ These parts of krilla wait for a decision of their own:
 
 1. The tagging for PDF/UA, about 5,200 lines with its generated code.
 2. The forms, about 1,000 lines.
-3. The checks of PDF/A and PDF/UA with `xmp-writer`, about 3,000 lines.
-4. The embedded files and the separation colors.
+3. The checks of PDF/UA. D99 ported the checks of PDF/A, the XMP metadata
+   and the embedded files on 2026-11-25.
+4. The separation colors.
 5. The embedding of the pages of another PDF file, with `hayro-write`.
 6. A writer that streams (question 24).
 
@@ -1112,75 +1113,10 @@ answer 1, and D82 answers question 34 with answer 2, on 2026-11-20. D83
 answers question 35 with answer 1, D84 answers question 36 with answer 1,
 and D85 answers question 37 with answer 1, on 2026-11-21. D87 answers
 question 38 with answer 1, and D90 answers question 41 with answer 1, on
-2026-11-21. Questions 39 and 40 are open, from D88 and D89. Question 42
-is open, from D96. The next question is question 43.
+2026-11-21. On 2026-11-25 the maintainers answered questions 39 and 40 with
+answer 1, which D88 and D89 record, and question 42 with answer 1, which
+D98 records. No question is open. The next question is question 43.
 
 The maintainers answered questions 1 to 18 by 2026-11-10, and the decisions
 record the answers. D31 answers question 16, how two images are compared
 within a tolerance.
-
-### Question 39: the public API of the blur and the color matrix of D88
-
-Asked on 2026-11-21, from D88. ivy blurs the masks of the shadows, the glows
-and the soft edges of DrawingML, and changes the colors of pictures, with
-code of its own. okage holds the same work in the filters of `svg`, and none
-of it is public. D88 compares four places for an API. The maintainers can
-choose one of these answers:
-
-1. A new public package `filter` holds `Blur`, `BlurMask`, the four kinds
-   of the color matrix and the five transfer functions of resvg. They work
-   on a `Mask`, a `Pixmap` and an `image.NRGBA`. `internal/boxblur` moves
-   into it, and `svg` and `lottie` call it.
-2. Answer 1 without the transfer functions. ivy then keeps its table of the
-   contrast and the brightness, and its threshold of the black and white.
-3. Methods on `Mask` and `Pixmap` in the root package, as a deliberate
-   addition to the API of tiny-skia.
-4. Functions in `svg`, on the types of the tree of usvg.
-5. No change. ivy keeps its own blur and its own colors.
-
-The recommendation is answer 1. The root package stays the port of
-tiny-skia, and a program imports a small package and not all of `svg`. ivy
-can delete its blur and most of its change of colors. `svg` and `lottie`
-keep their bytes.
-
-### Question 40: the Type 3 font of images of D89
-
-Asked on 2026-11-21, from D89. `pdf` makes a Type 3 font only from the
-glyphs of a font file. ivy writes the bitmap glyphs of the Type 3 fonts of
-the PDF files that it reads as image masks of the page. It writes a color
-glyph or a bitmap glyph of its layout as an image. Neither has text in the
-written file, and each viewer scales an image of a page down in another way
-than a glyph. The maintainers can choose one of these answers:
-
-1. `NewImageFont` returns a `*Font` whose glyphs the caller adds with
-   `AddImageGlyph`, each a mask or an image with its advance. `DrawGlyphs`
-   draws them into Type 3 fonts with their text. A mask glyph is a shape
-   glyph with `d1`, which takes the fill of the text.
-2. A separate type `Type3Font`, with its own call `DrawType3Glyphs`.
-3. A `*Font` whose glyphs the caller draws as streams of `pdf`, each a
-   colored glyph with `d0`.
-4. No change. ivy keeps the image masks of the page, and can draw the text
-   again as invisible text.
-
-The recommendation is answer 1. A caller draws such a font with the calls
-that it already makes, and gets the text code of krilla with no copy of it.
-A shape glyph takes one code for every color of the text, as the bitmap
-fonts of the source files do.
-
-### Question 42: the copies of the stages in archsimd registers of D96
-
-Asked on 2026-11-25, from point 4 of D96. A copy of a program of stages
-that keeps its values in `archsimd` registers ran a group of 8 pixels of a
-gradient in 17 ns, where the stages took 73 ns. Hard rule 8 lets only
-`internal/wide` hold code with the SIMD tag, and each program of stages
-needs its own copy. The maintainers can choose one of these answers:
-
-1. A tool writes a copy for each of a few common programs into
-   `internal/wide`, such as a solid fill, a linear gradient and a pattern.
-   The pipeline uses a copy when its program matches one, and the stages
-   otherwise. A test compares each copy with the stages, byte for byte.
-2. The same copies, written by hand for one or two programs only.
-3. No copies. The pipeline keeps its stages.
-
-The recommendation is answer 1, for the programs that ivy draws most. Each
-copy gives the same bytes as the stages, so D16 still holds.

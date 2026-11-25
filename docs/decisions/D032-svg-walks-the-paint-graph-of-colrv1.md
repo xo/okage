@@ -1,6 +1,6 @@
 # D32. `svg` walks the paint graph of COLRv1
 
-Status: Decided, amends D9, amended by D62.
+Status: Decided, amends D9, amended by D62 and D100.
 
 A COLRv1 glyph is a color glyph that a font draws as a graph of paints:
 layers, fills, gradients, transforms and composites. usvg draws such a glyph
@@ -25,9 +25,9 @@ maintainers where the walk lives: in `svg`, or in go-text as a contribution.
    parses the tables, reads the outlines and shapes the text.
 3. The walk is ported as any other upstream file is ported. The doc comment
    of each item names the item of skrifa that it replaces.
-4. The walk follows skrifa 0.44. resvg now uses the font model of read-fonts
-   0.46, through skrifa 0.49, and no test shows a difference.
-   `docs/BACKLOG.md` keeps that difference under phase 10.
+4. The walk follows skrifa 0.44. D100 adds a second walk, which follows the
+   font model of read-fonts 0.46, as usvg now does. `svg` uses the second
+   walk, and `pdf` keeps the walk of skrifa 0.44, as krilla does.
 5. A later version of skrifa that changes the walk is not tracked in a ledger
    of its own, because okage has no upstream entry for skrifa. When a commit
    of resvg raises the version of skrifa, and a test of resvg then differs in

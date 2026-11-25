@@ -1,6 +1,6 @@
 # D89. pdf makes a Type 3 font from images that the caller gives
 
-Status: Proposed, amends D62 and D68.
+Status: Decided, amends D62 and D68.
 
 ## Context
 
@@ -217,6 +217,66 @@ it. The layout can write an emoji as a color glyph with its text. Both
 paths reuse the text code of krilla. A later decision can add a glyph of
 paths to `ImageGlyph` for the outlines of question 25.
 
-When the maintainers decide this decision, the statuses of D62 and D68 get
-"amended by D89". Question 40 at the end of [`../PLAN.md`](../PLAN.md) asks
-the maintainers to choose.
+## The decision
+
+On 2026-11-25 the maintainers answered question 40 with answer 1, which is
+option 2. `NewImageFont` returns a `*Font` whose glyphs the caller adds with
+`AddImageGlyph`, each a mask or an image with its advance. `DrawGlyphs`
+draws them into Type 3 fonts with their text. A mask glyph is a shape glyph
+with `d1` that takes the fill of the text.
+
+## What the code does
+
+`pdf/ivy_type3.go` holds the API of option 2, with its errors. The changes
+to the port are in `text_font.go`, `text_glyph.go`, `text_glyph_outline.go`,
+`text_type3.go`, `surface.go` and `content.go`, each with a comment that
+starts with `okage:` and names this decision. These details are new or
+differ from option 2:
+
+1. A mask of no pixels is a glyph that draws nothing, such as a space. Its
+   content is `d1` with an empty bbox.
+2. A glyph of an image font does not take the context color, so one code of
+   its Type 3 font serves each color of the text. This holds for the color
+   glyphs too, because an image has no context color.
+3. Poppler 26.11 fills the whole page when a gradient fills a shape glyph of
+   an image mask. MuPDF 1.28.6 draws it right. So item 4 of option 2 holds:
+   when the fill of the text is not a color, `DrawGlyphs` draws each glyph
+   on the page, a mask through `FillStencil`, and the run has no text. The
+   paint keeps the space of the text, as for an outline.
+4. A stroke without a fill fills the text with the paint and the opacity of
+   the stroke. A stroke with a fill does nothing more. A Type 3 font is
+   always filled, as in krilla.
+5. With `outlined` true, `DrawGlyphs` draws each glyph on the page, a mask
+   through `FillStencil` with the fill of the surface.
+6. `DrawText` records an error that wraps `okage.ErrPDFInvalidFont` for an
+   image font, because the font has no character map to shape with.
+7. The glyph 0 of an image font is a glyph of the caller. So it does not
+   record the validation error of krilla for the glyph `.notdef`.
+8. A glyph ID that the font does not hold draws nothing, with the width 0.
+
+## The gate
+
+`imageFontScenes` in `test/krilla/ivy_type3_test.go` adds four scenes to
+`TestIvyAdditions`: mask glyphs in two colors, mask glyphs with a gradient,
+color glyphs with mask glyphs, and 300 mask glyphs, which take two Type 3
+fonts. A pixel of a glyph is 5 units of the page or more. On 2026-11-25,
+MuPDF 1.28.6 and Poppler 26.11 gave 0 pixels that differ by more than 32 in
+each scene, and `qpdf --check` accepted each file. `TestImageFontText` reads
+each file with the reader of the test module, counts its Type 3 fonts and
+its shape glyphs, and makes sure that `pdftotext` gives the text of each
+glyph. The scene with a gradient has no text, as item 3 above says.
+`pdf/ivy_type3_test.go` tests the objects of each font and the errors, and
+`FuzzDocument` makes the new calls. A document without an image font keeps
+the bytes and the hashes of krilla.
+
+## The gray group of the masks of the meshes
+
+krilla `63233fb4` writes the soft mask of the opacities of a gradient as a
+transparency group in gray, and okage commit `9306824` ported it. On
+2026-11-25 the maintainers chose to do the same for the meshes of D68 item
+4. The soft mask of the opacities of a mesh is now a transparency group in
+`DeviceGray`, or in sGray for `WithNoDeviceCS`, for a fill and for a
+stroke. The group of the masked content stays RGB, as in krilla.
+`TestMeshGradient` checks the group, and the mesh scene of
+`TestIvyAdditions` gives the same pixels as before. No hash of a test held
+a mesh, so no hash changed.

@@ -234,6 +234,7 @@ if err := d.Finish(&w); err != nil {
 | [`path`][pkg-path] | Builds, transforms, strokes and dashes paths | [tiny-skia-path][ts] |
 | [`svg`][pkg-svg] | Parses SVG files into a tree, and renders the tree | [resvg][resvg] and usvg |
 | [`lottie`][pkg-lottie] | Reads Lottie files and dotLottie archives, and draws their frames | [velato][velato] |
+| [`filter`][pkg-filter] | Blurs masks and pixmaps, and changes the colors of pixmaps and images with a color matrix or transfer functions | the filters of [resvg][resvg] |
 | [`pdf`][pkg-pdf] | Writes PDF files | [krilla][krilla] |
 | [`pdfsvg`][pkg-pdfsvg] | Draws a tree of `svg` onto a page of `pdf` | krilla-svg |
 | [`texmath`][pkg-texmath] | Parses TeX math and lays it out with the MATH table of a font | [go-tex/math][gotexmath] |
@@ -330,6 +331,7 @@ BSD-3-Clause license of tiny-skia, and it covers the root package and
 [pkg-path]: https://pkg.go.dev/github.com/xo/okage/path
 [pkg-svg]: https://pkg.go.dev/github.com/xo/okage/svg
 [pkg-lottie]: https://pkg.go.dev/github.com/xo/okage/lottie
+[pkg-filter]: https://pkg.go.dev/github.com/xo/okage/filter
 [pkg-pdf]: https://pkg.go.dev/github.com/xo/okage/pdf
 [pkg-pdfsvg]: https://pkg.go.dev/github.com/xo/okage/pdfsvg
 [pkg-texmath]: https://pkg.go.dev/github.com/xo/okage/texmath

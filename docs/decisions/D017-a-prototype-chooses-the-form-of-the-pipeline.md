@@ -1,6 +1,6 @@
 # D17. A prototype chooses the form of the pipeline
 
-Status: Decided, amended by D96.
+Status: Decided, amended by D96 and D98.
 
 Upstream runs the stages of the pipeline through a table of function
 pointers, and each stage calls the next. Go has no tail calls, and a call

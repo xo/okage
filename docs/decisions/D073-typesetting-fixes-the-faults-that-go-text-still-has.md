@@ -1,6 +1,6 @@
 # D73. typesetting fixes the faults that go-text still has
 
-Status: Decided.
+Status: Decided, amended by D97.
 
 `typesetting` copies go-text with its faults (D52). Four faults are known in
 `docs/BACKLOG.md`, and go-text has each one up to its commit `bafa8730`. The

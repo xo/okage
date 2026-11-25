@@ -1,6 +1,6 @@
 # D96. The speed work of phase 4, and the cost of the SIMD build
 
-Status: Decided, amends D17.
+Status: Decided, amends D17, amended by D98.
 
 ## Context
 

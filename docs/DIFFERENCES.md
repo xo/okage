@@ -36,7 +36,8 @@ okage differs from upstream only where a decision says so:
 9. `lottie` draws as ThorVG where velato differs: the opacity, the opacity
    stops, the radius and the highlight of gradients, solid layers, time
    remap, easing, spatial positions, the closing of animated shapes, the
-   opacity and the blend mode of layers, masks and stroke dashes (D43).
+   opacity and the blend mode of layers, masks, stroke dashes and the order
+   of a trim path with the mode individually (D43).
    `Renderer.MergePaths` draws merge paths as After Effects combines them,
    which velato and ThorVG do not, and it is off by default. A fill of the
    result draws by compositing (D42). A stroke or a trim path of the result
@@ -66,8 +67,9 @@ okage differs from upstream only where a decision says so:
     8 times the font data plus 1 MiB (D74). Where
     subsetter panics on a font, the port returns an error. The package
     comment of `internal/subsetter` lists the other differences (D62).
-15. `pdf` writes no XMP metadata, where krilla writes it by default, and it
-    has no validators of PDF/A and PDF/UA. It compresses with
+15. `pdf` has no validator of PDF/UA, because it has no tags, and the list
+    of the validation errors of `okage.ErrPDFValidation` is not public
+    (D99). It compresses with
     `compress/zlib`, so the bytes of a compressed stream differ from krilla,
     and its data does not. It returns an error where krilla panics, such as
     for a box of a page that does not fit the coordinates of PDF, for a
@@ -251,9 +253,9 @@ okage also adds APIs that upstream does not have:
     the glyph after 65,535 glyphs. Its closure of composite glyphs reads
     each glyph once, where upstream can take time and memory that grow with
     the square of the number of components, and it gives the same order. It
-    normalizes the coordinates of a variable font in float32 with avar
-    version 1, as `typesetting` does, where skrifa uses fixed point and
-    avar version 2. It hashes the glyphs in little-endian order on every
+    normalizes the coordinates of a variable font in fixed point with avar
+    version 1, as skrifa does, with the code of `typesetting` (D84, D101).
+    skrifa also reads avar version 2. It hashes the glyphs in little-endian order on every
     machine (D62).
 15. `NewRadialGradientExtend` makes a radial gradient with the rule of the
     radial shadings of PDF and PostScript. A point takes the color of the
@@ -271,6 +273,11 @@ okage also adds APIs that upstream does not have:
     `typesetting`. `typesetting` computes the deltas of the variations in
     the 16.16 fixed-point numbers of OpenType, as skrifa does, so each
     instance is the instance of subsetter, byte for byte (D62, D84).
+    `typesetting` normalizes the coordinates of a variable font in 16.16
+    and maps them with avar before it rounds them to 2.14, as skrifa does.
+    It reads the deltas of 32 bits of an item variation store, and reads a
+    null offset of the table trak as HarfBuzz does, where go-text panics
+    (D101).
 17. `pdf` adds what the PDF device of ivy needs and krilla does not have:
     `Surface.PushGroup` for the transparency groups with the flags `I` and
     `K`, `Mask.WithBackdrop` and `Mask.WithTransfer` for the entries `BC`
@@ -283,6 +290,11 @@ okage also adds APIs that upstream does not have:
     image, with the option `WithRasterArea`. `pdfsvg` draws the filters of
     SVG with `Surface.DrawRaster` too. The shaders of okage give their
     parameters with the method `Parameters` for that conversion (D68).
+    `NewImageFont` makes a font whose glyphs are images that the caller
+    adds with `Font.AddImageGlyph`, each a mask or an image with its
+    advance. `DrawGlyphs` draws them into Type 3 fonts with their text. A
+    mask glyph is a shape glyph with `d1`, which takes the fill of the text.
+    krilla writes no `d1` (D89).
 18. `StrokeDash` gives its dash array and its dash offset with the methods
     `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
     with them (D69).
@@ -313,8 +325,17 @@ okage also adds APIs that upstream does not have:
     `Paragraph.LineBreak` uses it (D92).
 23. `HarfbuzzShaper.SetUnsafeToConcat` makes the shaper give the flag
     unsafe-to-concat of HarfBuzz, and `Glyph.UnsafeToConcat` reads it. The
-    flag is the flag of HarfBuzz 15.1.0 for each line of `perf_reference`
-    (D93).
+    flag is the flag of HarfBuzz 15.2.0 for each line of `perf_reference`
+    (D93, D97).
+24. The package `filter` makes the Gaussian blur, the color matrix and the
+    transfer functions of the filters of resvg public. `Blur` and
+    `BlurMask` blur a pixmap and a mask, and `ApplyColorMatrix` and
+    `ApplyComponentTransfer` change the colors of a pixmap. The functions
+    whose names end in `NRGBA` change the colors of an `image.NRGBA`. They
+    give the bytes of the same filter primitives in `svg`, which calls them.
+    The box blur blurs only the pixels that a shape can reach, with the same
+    bytes as a blur of the whole image. A standard deviation above 2^20
+    blurs as 2^20, where resvg overflows (D88).
 
 ## Tests
 
