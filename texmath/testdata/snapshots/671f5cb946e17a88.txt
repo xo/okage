@@ -1,7 +1,9 @@
 tex "\\operatorname x"
 
 style display
-error "parsing tex math: \\operatorname needs {name}"
+box 4.79 4.73 0 0
+glyph 279 10 0 0 text "x" color 0 0 0 1
 
 style text
-error "parsing tex math: \\operatorname needs {name}"
+box 4.79 4.73 0 0
+glyph 279 10 0 0 text "x" color 0 0 0 1

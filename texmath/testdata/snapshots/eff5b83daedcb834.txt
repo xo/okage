@@ -1,7 +1,13 @@
 tex "\\cth"
 
 style display
-error "parsing tex math: unknown command \\cth"
+box 13.379999999999999 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 275 10 4.46 0 text "t" color 0 0 0 1
+glyph 262 10 7.609999999999999 0 text "h" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\cth"
+box 13.379999999999999 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 275 10 4.46 0 text "t" color 0 0 0 1
+glyph 262 10 7.609999999999999 0 text "h" color 0 0 0 1

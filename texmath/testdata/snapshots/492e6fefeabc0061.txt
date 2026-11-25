@@ -1,7 +1,13 @@
 tex "\\overgroup{AB}"
 
 style display
-error "parsing tex math: unknown command \\overgroup"
+box 15 10.63 0 0
+glyph 3300 10 0.9799999999999995 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 7.79 0 text "𝐵" color 0 0 0 1
+glyph 2125 10 0 -1.8500000000000005 text "⏠" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\overgroup"
+box 15 10.63 0 0
+glyph 3300 10 0.9799999999999995 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 7.79 0 text "𝐵" color 0 0 0 1
+glyph 2125 10 0 -1.8500000000000005 text "⏠" color 0 0 0 1

@@ -1,7 +1,33 @@
 tex "\\begin{rcases} a &\\text{if } b \\\\ c &\\text{if } d \\end{rcases}⇒…"
 
 style display
-error "parsing tex math: unknown environment \"rcases\""
+box 49.786666666666676 16.98 11.82 0
+glyph 3326 10 0 -6.9 text "𝑎" color 0 0 0 1
+glyph 263 10 11.815000000000001 -6.9 text "i" color 0 0 0 1
+glyph 260 10 14.665000000000001 -6.9 text "f" color 0 0 0 1
+glyph 1 10 17.735 -6.9 text " " color 0 0 0 1
+glyph 3327 10 20.085 -6.9 text "𝑏" color 0 0 0 1
+glyph 3328 10 0.7050000000000001 7.5 text "𝑐" color 0 0 0 1
+glyph 263 10 11.55 7.5 text "i" color 0 0 0 1
+glyph 260 10 14.4 7.5 text "f" color 0 0 0 1
+glyph 1 10 17.47 7.5 text " " color 0 0 0 1
+glyph 3329 10 19.82 7.5 text "𝑑" color 0 0 0 1
+glyph 1367 10 25.58 0.11500000000000021 text "}" color 0 0 0 1
+glyph 1579 10 32.04666666666667 0 text "⇒" color 0 0 0 1
+glyph 1053 10 40.91666666666667 0 text "…" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown environment \"rcases\""
+box 49.786666666666676 16.98 11.82 0
+glyph 3326 10 0 -6.9 text "𝑎" color 0 0 0 1
+glyph 263 10 11.815000000000001 -6.9 text "i" color 0 0 0 1
+glyph 260 10 14.665000000000001 -6.9 text "f" color 0 0 0 1
+glyph 1 10 17.735 -6.9 text " " color 0 0 0 1
+glyph 3327 10 20.085 -6.9 text "𝑏" color 0 0 0 1
+glyph 3328 10 0.7050000000000001 7.5 text "𝑐" color 0 0 0 1
+glyph 263 10 11.55 7.5 text "i" color 0 0 0 1
+glyph 260 10 14.4 7.5 text "f" color 0 0 0 1
+glyph 1 10 17.47 7.5 text " " color 0 0 0 1
+glyph 3329 10 19.82 7.5 text "𝑑" color 0 0 0 1
+glyph 1367 10 25.58 0.11500000000000021 text "}" color 0 0 0 1
+glyph 1579 10 32.04666666666667 0 text "⇒" color 0 0 0 1
+glyph 1053 10 40.91666666666667 0 text "…" color 0 0 0 1

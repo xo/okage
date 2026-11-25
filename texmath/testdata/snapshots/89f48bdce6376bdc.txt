@@ -1,7 +1,17 @@
 tex "\\arctg"
 
 style display
-error "parsing tex math: unknown command \\arctg"
+box 21.049999999999997 6.1000000000000005 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 275 10 13.059999999999999 0 text "t" color 0 0 0 1
+glyph 261 10 16.209999999999997 0 text "g" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\arctg"
+box 21.049999999999997 6.1000000000000005 2.35 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 273 10 4.8 0 text "r" color 0 0 0 1
+glyph 257 10 8.6 0 text "c" color 0 0 0 1
+glyph 275 10 13.059999999999999 0 text "t" color 0 0 0 1
+glyph 261 10 16.209999999999997 0 text "g" color 0 0 0 1

@@ -1,7 +1,15 @@
 tex "\\text{\\sout{abc}}"
 
 style display
-error "parsing tex math: unknown command \\sout"
+box 14.48 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 256 10 4.8 0 text "b" color 0 0 0 1
+glyph 257 10 10.02 0 text "c" color 0 0 0 1
+rule 0 -2.5650000000000004 14.48 0.4 color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\sout"
+box 14.48 7.0600000000000005 0.1 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 256 10 4.8 0 text "b" color 0 0 0 1
+glyph 257 10 10.02 0 text "c" color 0 0 0 1
+rule 0 -2.5650000000000004 14.48 0.4 color 0 0 0 1

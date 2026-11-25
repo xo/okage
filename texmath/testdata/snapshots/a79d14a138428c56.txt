@@ -1,7 +1,9 @@
 tex "\\varDelta"
 
 style display
-error "parsing tex math: unknown command \\varDelta"
+box 6.33 6.62 0 0
+glyph 3992 10 0 0 text "𝛥" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varDelta"
+box 6.33 6.62 0 0
+glyph 3992 10 0 0 text "𝛥" color 0 0 0 1

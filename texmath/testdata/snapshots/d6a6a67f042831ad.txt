@@ -1,7 +1,9 @@
 tex "\\nLeftrightarrow"
 
 style display
-error "parsing tex math: unknown command \\nLeftrightarrow"
+box 9.48 5.29 0.1 0
+glyph 1572 10 0 0 text "⇎" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\nLeftrightarrow"
+box 9.48 5.29 0.1 0
+glyph 1572 10 0 0 text "⇎" color 0 0 0 1

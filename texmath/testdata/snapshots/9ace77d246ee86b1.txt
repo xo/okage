@@ -1,7 +1,17 @@
 tex "\\xlongequal{abc}"
 
 style display
-error "parsing tex math: unknown command \\xlongequal"
+box 16.444000000000003 10.639 0 0
+rule 0 -4.42 16.444000000000003 0.68 color 0 0 0 1
+rule 0 -1.4200000000000002 16.444000000000003 0.68 color 0 0 0 1
+glyph 3326 7 3.000000000000001 -5.704 text "𝑎" color 0 0 0 1
+glyph 3327 7 6.885000000000002 -5.704 text "𝑏" color 0 0 0 1
+glyph 3328 7 10.546000000000001 -5.704 text "𝑐" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\xlongequal"
+box 16.444000000000003 10.639 0 0
+rule 0 -4.42 16.444000000000003 0.68 color 0 0 0 1
+rule 0 -1.4200000000000002 16.444000000000003 0.68 color 0 0 0 1
+glyph 3326 7 3.000000000000001 -5.704 text "𝑎" color 0 0 0 1
+glyph 3327 7 6.885000000000002 -5.704 text "𝑏" color 0 0 0 1
+glyph 3328 7 10.546000000000001 -5.704 text "𝑐" color 0 0 0 1

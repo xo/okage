@@ -1,7 +1,9 @@
 tex "\\doublebarwedge"
 
 style display
-error "parsing tex math: unknown command \\doublebarwedge"
+box 6.3500000000000005 8.15 0.3 0
+glyph 3005 10 0 0 text "⩞" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\doublebarwedge"
+box 6.3500000000000005 8.15 0.3 0
+glyph 3005 10 0 0 text "⩞" color 0 0 0 1

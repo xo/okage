@@ -1,7 +1,7 @@
 tex "\\underleftarrow"
 
 style display
-error "parsing tex math: unknown command \\underleftarrow"
+error "parsing tex math: expected an atom"
 
 style text
-error "parsing tex math: unknown command \\underleftarrow"
+error "parsing tex math: expected an atom"

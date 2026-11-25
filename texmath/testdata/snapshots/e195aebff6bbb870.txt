@@ -1,7 +1,9 @@
 tex "\\text{\\AA}"
 
 style display
-error "parsing tex math: unknown command \\AA"
+box 7.18 8.89 0 0
+glyph 47 10 0 0 text "Å" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\AA"
+box 7.18 8.89 0 0
+glyph 47 10 0 0 text "Å" color 0 0 0 1

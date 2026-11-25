@@ -1,7 +1,9 @@
 tex "\\leftharpoonup"
 
 style display
-error "parsing tex math: unknown command \\leftharpoonup"
+box 9.78 5.0600000000000005 0 0
+glyph 1554 10 0 0 text "↼" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\leftharpoonup"
+box 9.78 5.0600000000000005 0 0
+glyph 1554 10 0 0 text "↼" color 0 0 0 1

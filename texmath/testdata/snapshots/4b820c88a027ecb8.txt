@@ -1,7 +1,9 @@
 tex "\\maltese"
 
 style display
-error "parsing tex math: unknown command \\maltese"
+box 7.8500000000000005 6.0600000000000005 0.89 0
+glyph 2412 10 0 0 text "✠" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\maltese"
+box 7.8500000000000005 6.0600000000000005 0.89 0
+glyph 2412 10 0 0 text "✠" color 0 0 0 1

@@ -1,7 +1,9 @@
 tex "\\htmlStyle{color: red;}{x}"
 
 style display
-error "parsing tex math: unknown command \\htmlStyle"
+box 5.6899999999999995 4.79 0.1 0.1
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\htmlStyle"
+box 5.6899999999999995 4.79 0.1 0.1
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1

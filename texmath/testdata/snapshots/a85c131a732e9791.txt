@@ -1,7 +1,9 @@
 tex "\\varGamma"
 
 style display
-error "parsing tex math: unknown command \\varGamma"
+box 6.5 6.57 0 0.8
+glyph 3991 10 0 0 text "𝛤" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varGamma"
+box 6.5 6.57 0 0.8
+glyph 3991 10 0 0 text "𝛤" color 0 0 0 1

@@ -1,7 +1,9 @@
 tex "\\varsubsetneq"
 
 style display
-error "parsing tex math: unknown command \\varsubsetneq"
+box 7.2 6.41 2.21 0
+glyph 1868 10 0 0 text "⊊" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varsubsetneq"
+box 7.2 6.41 2.21 0
+glyph 1868 10 0 0 text "⊊" color 0 0 0 1

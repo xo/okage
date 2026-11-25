@@ -1,7 +1,9 @@
 tex "\\looparrowleft"
 
 style display
-error "parsing tex math: unknown command \\looparrowleft"
+box 9.48 5.66 0 0
+glyph 1537 10 0 0 text "↫" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\looparrowleft"
+box 9.48 5.66 0 0
+glyph 1537 10 0 0 text "↫" color 0 0 0 1

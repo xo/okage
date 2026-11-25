@@ -1,7 +1,11 @@
 tex "\\lang~\\rang"
 
 style display
-error "parsing tex math: unknown command \\lang"
+box 10.113333333333333 7.36 1.96 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 2497 10 6.723333333333334 0 text "⟩" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lang"
+box 10.113333333333333 7.36 1.96 0
+glyph 2492 10 0 0 text "⟨" color 0 0 0 1
+glyph 2497 10 6.723333333333334 0 text "⟩" color 0 0 0 1

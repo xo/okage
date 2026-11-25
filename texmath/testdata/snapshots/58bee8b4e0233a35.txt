@@ -1,7 +1,105 @@
 tex "\\llcorner is in the table: no paper in the 999-paper census names it, "
 
 style display
-error "parsing tex math: unknown command \\llcorner"
+box 238.04000000000008 7.0600000000000005 2.22 0
+glyph 2043 10 0 0 text "⌞" color 0 0 0 1
+glyph 3334 10 4.74 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 7.680000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 11.540000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 14.48 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 20.130000000000003 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 23.66 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 29.450000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 33.690000000000005 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 37.220000000000006 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 42.77 0 text "𝑏" color 0 0 0 1
+glyph 3339 10 48 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 50.980000000000004 0 text "𝑒" color 0 0 0 1
+glyph 1051 10 57.997777777777785 0 text ":" color 0 0 0 1
+glyph 3341 10 63.225555555555566 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 68.87555555555556 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 73.73555555555556 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 79.71555555555557 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 85.26555555555557 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 91.24555555555557 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 95.48555555555556 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 99.60555555555557 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 102.54555555555557 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 108.19555555555557 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 111.72555555555557 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 117.51555555555557 0 text "𝑒" color 0 0 0 1
+glyph 1146 10 121.75555555555556 0 text "9" color 0 0 0 1
+glyph 1146 10 126.70555555555556 0 text "9" color 0 0 0 1
+glyph 1146 10 131.65555555555557 0 text "9" color 0 0 0 1
+glyph 1197 10 138.82777777777778 0 text "−" color 0 0 0 1
+glyph 3343 10 148.25 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 154.23 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 159.78 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 165.76 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 170 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 174.12 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 178.26 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 182.5 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 188.15 0 text "𝑠" color 0 0 0 1
+glyph 3348 10 192.01000000000002 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 197.66000000000003 0 text "𝑠" color 0 0 0 1
+glyph 3341 10 201.52000000000004 0 text "𝑛" color 0 0 0 1
+glyph 3326 10 207.17000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 212.72000000000006 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 221.02000000000007 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 225.26000000000008 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 229.1200000000001 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 232.0600000000001 0 text "𝑡" color 0 0 0 1
+glyph 1048 10 235.5900000000001 0 text "," color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\llcorner"
+box 238.04000000000008 7.0600000000000005 2.22 0
+glyph 2043 10 0 0 text "⌞" color 0 0 0 1
+glyph 3334 10 4.74 0 text "𝑖" color 0 0 0 1
+glyph 3346 10 7.680000000000001 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 11.540000000000001 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 14.48 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 20.130000000000003 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 23.66 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 29.450000000000003 0 text "𝑒" color 0 0 0 1
+glyph 3347 10 33.690000000000005 0 text "𝑡" color 0 0 0 1
+glyph 3326 10 37.220000000000006 0 text "𝑎" color 0 0 0 1
+glyph 3327 10 42.77 0 text "𝑏" color 0 0 0 1
+glyph 3339 10 48 0 text "𝑙" color 0 0 0 1
+glyph 3330 10 50.980000000000004 0 text "𝑒" color 0 0 0 1
+glyph 1051 10 57.997777777777785 0 text ":" color 0 0 0 1
+glyph 3341 10 63.225555555555566 0 text "𝑛" color 0 0 0 1
+glyph 3342 10 68.87555555555556 0 text "𝑜" color 0 0 0 1
+glyph 3343 10 73.73555555555556 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 79.71555555555557 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 85.26555555555557 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 91.24555555555557 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 95.48555555555556 0 text "𝑟" color 0 0 0 1
+glyph 3334 10 99.60555555555557 0 text "𝑖" color 0 0 0 1
+glyph 3341 10 102.54555555555557 0 text "𝑛" color 0 0 0 1
+glyph 3347 10 108.19555555555557 0 text "𝑡" color 0 0 0 1
+glyph 1224 10 111.72555555555557 0 text "ℎ" color 0 0 0 1
+glyph 3330 10 117.51555555555557 0 text "𝑒" color 0 0 0 1
+glyph 1146 10 121.75555555555556 0 text "9" color 0 0 0 1
+glyph 1146 10 126.70555555555556 0 text "9" color 0 0 0 1
+glyph 1146 10 131.65555555555557 0 text "9" color 0 0 0 1
+glyph 1197 10 138.82777777777778 0 text "−" color 0 0 0 1
+glyph 3343 10 148.25 0 text "𝑝" color 0 0 0 1
+glyph 3326 10 154.23 0 text "𝑎" color 0 0 0 1
+glyph 3343 10 159.78 0 text "𝑝" color 0 0 0 1
+glyph 3330 10 165.76 0 text "𝑒" color 0 0 0 1
+glyph 3345 10 170 0 text "𝑟" color 0 0 0 1
+glyph 3328 10 174.12 0 text "𝑐" color 0 0 0 1
+glyph 3330 10 178.26 0 text "𝑒" color 0 0 0 1
+glyph 3341 10 182.5 0 text "𝑛" color 0 0 0 1
+glyph 3346 10 188.15 0 text "𝑠" color 0 0 0 1
+glyph 3348 10 192.01000000000002 0 text "𝑢" color 0 0 0 1
+glyph 3346 10 197.66000000000003 0 text "𝑠" color 0 0 0 1
+glyph 3341 10 201.52000000000004 0 text "𝑛" color 0 0 0 1
+glyph 3326 10 207.17000000000004 0 text "𝑎" color 0 0 0 1
+glyph 3340 10 212.72000000000006 0 text "𝑚" color 0 0 0 1
+glyph 3330 10 221.02000000000007 0 text "𝑒" color 0 0 0 1
+glyph 3346 10 225.26000000000008 0 text "𝑠" color 0 0 0 1
+glyph 3334 10 229.1200000000001 0 text "𝑖" color 0 0 0 1
+glyph 3347 10 232.0600000000001 0 text "𝑡" color 0 0 0 1
+glyph 1048 10 235.5900000000001 0 text "," color 0 0 0 1

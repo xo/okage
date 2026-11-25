@@ -25,12 +25,22 @@ func TestCharPrimitive(t *testing.T) {
 	}
 }
 
+// TestCharPrimitiveSpecialCharacter checks that \char`^ is the character ^,
+// as KaTeX reads it. The source refused it (D95).
+func TestCharPrimitiveSpecialCharacter(t *testing.T) {
+	for tex, want := range map[string]string{"\\char`^": "^", "\\char`_": "_", "\\char`&": "&"} {
+		l := mustParse(t, tex)
+		if a, ok := l[0].(Atom); !ok || a.Text != want {
+			t.Errorf("%q = %#v, want the character %q", tex, l[0], want)
+		}
+	}
+}
+
 func TestCharPrimitiveErrors(t *testing.T) {
 	for name, tex := range map[string]string{
 		"no number":        `\char`,
 		"non-digit":        `\char x`,
 		"backtick alone":   "\\char`",
-		"backtick nonchar": "\\char`^",
 		"backtick bare cs": "\\char`\\",
 		"out of range":     `\char"200000`,
 		"overflows int32":  `\char"FFFFFFFF`,

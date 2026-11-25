@@ -1,7 +1,15 @@
 tex "a_{\\angl n}"
 
 style display
-error "parsing tex math: unknown command \\angl"
+box 10.729460000000001 4.79 3.85 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3341 7 5.82223 2.1 text "𝑛" color 0 0 0 1
+rule 5.55 -2.3730000000000007 4.77946 0.28 color 0 0 0 1
+rule 10.04946 -2.3730000000000007 0.28 6.223000000000001 color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\angl"
+box 10.729460000000001 4.79 3.85 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3341 7 5.82223 2.1 text "𝑛" color 0 0 0 1
+rule 5.55 -2.3730000000000007 4.77946 0.28 color 0 0 0 1
+rule 10.04946 -2.3730000000000007 0.28 6.223000000000001 color 0 0 0 1

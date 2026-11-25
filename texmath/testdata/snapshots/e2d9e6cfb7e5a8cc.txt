@@ -1,7 +1,15 @@
 tex "\\cotg"
 
 style display
-error "parsing tex math: unknown command \\cotg"
+box 17.59 6.1000000000000005 2.35 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 275 10 9.6 0 text "t" color 0 0 0 1
+glyph 261 10 12.75 0 text "g" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\cotg"
+box 17.59 6.1000000000000005 2.35 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 270 10 4.46 0 text "o" color 0 0 0 1
+glyph 275 10 9.6 0 text "t" color 0 0 0 1
+glyph 261 10 12.75 0 text "g" color 0 0 0 1

@@ -274,10 +274,21 @@ func TestNewcommand(t *testing.T) {
 			t.Errorf("Parse(%q) is not Parse(%q)", c[0], c[1])
 		}
 	}
-	// A default value of the first parameter is not read.
+	// A default value of the first parameter is used when the use gives no
+	// [argument] (D95).
+	for _, c := range [][2]string{
+		{`\newcommand{\x}[2][a]{#1+#2}\x{b}`, `a+b`},
+		{`\newcommand{\x}[2][a]{#1+#2}\x[c]{b}`, `c+b`},
+		{`\newcommand{\x}[2][a]{#1+#2}\x[{]}]{b}`, `{]}+b`},
+		{`\newcommand\x[1][\alpha]{#1^2}\x\x[y]`, `\alpha^2y^2`},
+	} {
+		if !sameTree(t, c[0], c[1]) {
+			t.Errorf("%q is not %q", c[0], c[1])
+		}
+	}
 	var se *SyntaxError
-	if _, err := Parse(`\newcommand{\x}[1][a]{#1}`); !errors.As(err, &se) || se.Command != `\newcommand` {
-		t.Errorf(`\newcommand with a default: %v`, err)
+	if _, err := Parse(`\newcommand{\x}[0][a]{#1}`); !errors.As(err, &se) || se.Command != `\newcommand` {
+		t.Errorf(`\newcommand with a default and no parameter: %v`, err)
 	}
 }
 
@@ -299,12 +310,18 @@ func TestKaTeXMacros(t *testing.T) {
 		if strings.HasPrefix(body, `\math`) || strings.HasPrefix(body, `\bold`) || strings.HasSuffix(body, `\underline`) || strings.HasSuffix(body, `*`) {
 			tex += `{x}`
 		}
+		expanded := body + strings.TrimPrefix(tex, `\`+name)
+		if strings.Contains(body, "#1") {
+			// A macro with a parameter takes {x}.
+			tex = `\` + name + `{x}`
+			expanded = strings.ReplaceAll(body, "#1", " x")
+		}
 		got, err := Parse(tex)
 		if err != nil {
 			t.Errorf("Parse(%q): %v", tex, err)
 			continue
 		}
-		want, err := Parse(body + strings.TrimPrefix(tex, `\`+name))
+		want, err := Parse(expanded)
 		if err != nil || !reflect.DeepEqual(got, want) {
 			t.Errorf("Parse(%q) is not Parse(%q): %v", tex, body, err)
 		}

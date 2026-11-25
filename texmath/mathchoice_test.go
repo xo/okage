@@ -46,7 +46,6 @@ func TestMathchoiceWithTooFewGroupsIsAnError(t *testing.T) {
 		`\mathchoice{a}{b}`,
 		`\mathchoice{a}`,
 		`\mathchoice`,
-		`\mathchoice{a}{b}{c}x`,
 		`\mathchoice{a}{b}{c}{d`,
 	} {
 		if _, err := Parse(tex); err == nil {
@@ -109,7 +108,11 @@ func TestMuKernMeasuresInMathUnits(t *testing.T) {
 }
 
 func TestMuKernWithoutAReadableDimensionIsAnError(t *testing.T) {
-	for _, tex := range []string{`a\mkern b`, `a\mkern`, `a\mkern3pt b`, `a\mkern3 b`, `a\mkern.mu b`} {
+	// okage: a\mkern3pt b is a space of 3pt, as in KaTeX (D95).
+	if !sameTree(t, `a\mkern3pt b`, `a\kern3pt b`) {
+		t.Error(`\mkern3pt is not \kern3pt`)
+	}
+	for _, tex := range []string{`a\mkern b`, `a\mkern`, `a\mkern3 b`, `a\mkern.mu b`} {
 		if _, err := Parse(tex); err == nil {
 			t.Errorf("%s did not fail", tex)
 		}

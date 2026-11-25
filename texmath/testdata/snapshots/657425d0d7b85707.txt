@@ -1,7 +1,9 @@
 tex "\\nvdash"
 
 style display
-error "parsing tex math: unknown command \\nvdash"
+box 8.05 6.78 0 0
+glyph 1909 10 0 0 text "⊬" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\nvdash"
+box 8.05 6.78 0 0
+glyph 1909 10 0 0 text "⊬" color 0 0 0 1

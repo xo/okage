@@ -105,8 +105,9 @@ type Scripts struct {
 // a StyleChange around a Fraction.
 type Fraction struct {
 	Num, Den    Node
-	NoRule      bool // \atop, \binom, and \genfrac with a thickness of zero
-	Open, Close rune // the delimiters of \binom and \genfrac, 0 for none
+	NoRule      bool  // \atop, \binom, and \genfrac with a thickness of zero
+	Open, Close rune  // the delimiters of \binom and \genfrac, 0 for none
+	NumAlign    Align // the place of a narrower Num over Den: \cfrac[l] and \cfrac[r]
 }
 
 // Radical is \sqrt, with an optional degree.
@@ -190,6 +191,7 @@ type Array struct {
 	Align       []Align // per column, centered when short
 	VRules      []int   // the column gaps, 0 to the column count, with a vertical rule
 	HRules      []int   // the row gaps, 0 to the row count, with a horizontal rule, as \hline
+	HDashed     []bool  // for each rule of HRules, whether it is dashed, as \hdashline
 	Open, Close rune    // the delimiters of pmatrix and its kin, 0 for none
 	Stretch     float64 // \arraystretch, 0 for 1
 }
@@ -314,11 +316,13 @@ type Boxed struct {
 
 // Cancel draws a line across Body, as \cancel, \bcancel and \xcancel. Up is
 // the line from the bottom left to the top right corner, and Down the line
-// from the top left to the bottom right corner. The class of a Cancel is the
-// class of its Body.
+// from the top left to the bottom right corner. Strike is the horizontal
+// line of \sout, half the height of the letter x over the baseline. The
+// class of a Cancel is the class of its Body.
 type Cancel struct {
 	Body     Node
 	Up, Down bool
+	Strike   bool
 }
 
 // Phase is \phase: Body with the angle mark of electrical engineering, a line
@@ -328,7 +332,8 @@ type Phase struct{ Body Node }
 
 // Tag is \tag: Body with the label of an equation at its right, a quad
 // away, as TeX sets an equation number. Label holds the parentheses of
-// \tag, and none for \tag*.
+// \tag, and none for \tag*. With WithLineWidth, the label is at the right
+// margin of the line, and Body is centered in the line.
 type Tag struct {
 	Body, Label Node
 }
@@ -341,17 +346,52 @@ type Negate struct{ Body Node }
 // Base, which grows to its width. Its class is Op. The Base of a Scripts that
 // is a Brace takes its scripts as labels over and under the brace in each
 // style, as limits, so \overbrace{x}^{n} sets n over the brace. The source
-// draws a rule in place of the brace.
+// draws a rule in place of the brace. Rune is the character of the brace,
+// such as U+23B4 for \overbracket. It is the curly brace U+23DE or U+23DF
+// when it is 0.
 type Brace struct {
 	Base  Node
 	Under bool
+	Rune  rune
 }
 
 // OverArrow is an arrow over Base that spans its width: \overrightarrow,
-// \overleftarrow, \overleftrightarrow and \vv.
+// \overleftarrow, \overleftrightarrow and \vv. Under sets it under Base, as
+// \underrightarrow. Harpoon draws the upper half of each head, as
+// \overrightharpoon. Segment draws a short vertical bar at each end that is
+// asked for in place of a head, as \overlinesegment.
 type OverArrow struct {
 	Base        Node
 	Left, Right bool // the ends that carry a head
+	Under       bool
+	Harpoon     bool
+	Segment     bool
+}
+
+// Stretch is a character that grows to the width of Base over or under it,
+// with the horizontal variants and the horizontal assembly of the MATH
+// table: \overgroup, \undergroup, \utilde and \Overrightarrow. Its class is
+// Ord.
+type Stretch struct {
+	Base  Node
+	Rune  rune
+	Under bool
+}
+
+// VCenter is \vcenter: Body centered on the math axis.
+type VCenter struct{ Body Node }
+
+// Angl is \angl: Body under a line, with a line at its right, the angle of
+// the actuarial notation, as KaTeX draws it. Its class is Ord.
+type Angl struct{ Body Node }
+
+// Sideset is \sideset: the scripts of Left at the left of Base, and the
+// scripts of Right at its right. Base is a large operator, which takes its
+// own scripts as limits.
+type Sideset struct {
+	Base               Node
+	LeftSup, LeftSub   Node // nil when absent
+	RightSup, RightSub Node // nil when absent
 }
 
 // XArrow is an arrow that grows to the width of its labels, such as
@@ -429,3 +469,7 @@ func (XArrow) node()      {}
 func (Lap) node()         {}
 func (Overlay) node()     {}
 func (Choice) node()      {}
+func (Stretch) node()     {}
+func (VCenter) node()     {}
+func (Angl) node()        {}
+func (Sideset) node()     {}

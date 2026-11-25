@@ -1,7 +1,9 @@
 tex "\\substack x"
 
 style display
-error "parsing tex math: \\substack needs {…}"
+box 3.983 4.2915 0 0
+glyph 3354 7 0 -0.9384999999999999 text "𝑥" color 0 0 0 1
 
 style text
-error "parsing tex math: \\substack needs {…}"
+box 3.983 4.2915 0 0
+glyph 3354 7 0 -0.9384999999999999 text "𝑥" color 0 0 0 1

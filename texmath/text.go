@@ -234,3 +234,68 @@ func faceInk(f *font.Face, g font.GID, k float64) (top, bot float64) {
 	}
 	return float64(float64(e.YBearing) * k), float64((float64(e.YBearing) + float64(e.Height)) * k)
 }
+
+// textAccents maps an accent of the text mode of KaTeX, such as \' in
+// \text{\'{a}}, to its combining mark, and \textcircled to the combining
+// enclosing circle. The source has no text mode for them. They are a request
+// of the maintainers on 2026-11-25 (D95).
+var textAccents = map[string]rune{
+	"'": 0x301, "`": 0x300, "^": 0x302, "~": 0x303, "=": 0x304, "u": 0x306,
+	".": 0x307, `"`: 0x308, "r": 0x30A, "H": 0x30B, "v": 0x30C,
+	"textcircled": 0x20DD,
+}
+
+// textAccentOf reads the text accent at the start of toks with its argument,
+// a {group} of text or one character, and returns the text: the argument
+// with the combining mark after its first character, which a shaper
+// composes with it. \textcircled of one ASCII letter, or of a digit from 1
+// to 9, is the circled character of Unicode. It reports false when the
+// argument is not text.
+func textAccentOf(toks []token) (string, []token, bool) {
+	mark := textAccents[toks[0].text]
+	rest := toks[1:]
+	if len(rest) == 0 {
+		return "", nil, false
+	}
+	var base []rune
+	if rest[0].kind == tLBrace {
+		i := 1
+		for ; i < len(rest) && rest[i].kind != tRBrace; i++ {
+			s, ok := textOf(rest[i])
+			if !ok {
+				return "", nil, false
+			}
+			if rest[i].space && len(base) > 0 {
+				base = append(base, ' ')
+			}
+			base = append(base, []rune(s)...)
+		}
+		if i == len(rest) {
+			return "", nil, false
+		}
+		rest = rest[i+1:]
+	} else {
+		s, ok := textOf(rest[0])
+		if !ok {
+			return "", nil, false
+		}
+		base, rest = []rune(s), rest[1:]
+	}
+	if len(base) == 0 {
+		return string(mark), rest, true
+	}
+	if mark == 0x20DD && len(base) == 1 {
+		switch r := base[0]; {
+		case r >= 'a' && r <= 'z':
+			return string(0x24D0 + r - 'a'), rest, true
+		case r >= 'A' && r <= 'Z':
+			return string(0x24B6 + r - 'A'), rest, true
+		case r >= '1' && r <= '9':
+			return string(0x2460 + r - '1'), rest, true
+		}
+	}
+	out := make([]rune, 0, len(base)+1)
+	out = append(out, base[0], mark)
+	out = append(out, base[1:]...)
+	return string(out), rest, true
+}

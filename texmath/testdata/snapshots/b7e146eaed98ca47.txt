@@ -1,7 +1,9 @@
 tex "\\text{\\textunderscore}"
 
 style display
-error "parsing tex math: unknown command \\textunderscore"
+box 5.12 0 1.28 0
+glyph 1111 10 0 0 text "_" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\textunderscore"
+box 5.12 0 1.28 0
+glyph 1111 10 0 0 text "_" color 0 0 0 1

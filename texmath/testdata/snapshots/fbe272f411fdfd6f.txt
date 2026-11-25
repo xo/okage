@@ -1,7 +1,17 @@
 tex "\\underlinesegment{AB}"
 
 style display
-error "parsing tex math: unknown command \\underlinesegment"
+box 13.040000000000001 6.61 7.2299999999999995 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+rule 0 3.8100000000000005 13.040000000000001 0.68 color 0 0 0 1
+rule 0 1.7500000000000004 0.68 4.8 color 0 0 0 1
+rule 12.360000000000001 1.7500000000000004 0.68 4.8 color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\underlinesegment"
+box 13.040000000000001 6.61 7.2299999999999995 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+rule 0 3.8100000000000005 13.040000000000001 0.68 color 0 0 0 1
+rule 0 1.7500000000000004 0.68 4.8 color 0 0 0 1
+rule 12.360000000000001 1.7500000000000004 0.68 4.8 color 0 0 0 1

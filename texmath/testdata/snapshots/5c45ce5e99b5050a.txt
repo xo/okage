@@ -1,7 +1,9 @@
 tex "\\text{\\j}"
 
 style display
-error "parsing tex math: unknown command \\j"
+box 2.63 4.82 2.35 0
+glyph 386 10 0 0 text "ȷ" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\j"
+box 2.63 4.82 2.35 0
+glyph 386 10 0 0 text "ȷ" color 0 0 0 1

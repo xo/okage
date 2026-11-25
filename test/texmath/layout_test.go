@@ -53,13 +53,14 @@ var reasonRules = []struct {
 	re     *regexp.Regexp
 }{
 	{"brace", regexp.MustCompile(`\\(over|under)brace`)},
-	{"katex", regexp.MustCompile(`\\raisebox\{[^}]*\}\[|\\mskip[^ ]* *plus|\{18mu\}|\\char|[└┘┌┐]`)},
+	{"katex", regexp.MustCompile(`\\raisebox\{[^}]*\}\[|\\mskip[^ ]* *plus|\{18mu\}|\\char|[└┘┌┐]|\\html(Id|Class|Style|Data)\b|\\includegraphics\b`)},
 	{"unicode", regexp.MustCompile(`[∫∬∭∮∏∐∑⋀⋁⋂⋃⨀⨁⨂⨄⨆]`)},
-	{"arrow", regexp.MustCompile(`\\(x[a-zA-Z]*arrow|overrightarrow|overleftarrow|overleftrightarrow|vv)\b`)},
+	{"arrow", regexp.MustCompile(`\\(x[a-zA-Z]*arrow|overrightarrow|overleftarrow|overleftrightarrow|vv|underrightarrow|underleftarrow|underleftrightarrow|overrightharpoon|overleftharpoon|overlinesegment|underlinesegment|varinjlim|varprojlim)\b`)},
 	{"boxed", regexp.MustCompile(`\\boxed\b`)},
 	{"stack", regexp.MustCompile(`\\(stackrel|overset|underset|buildrel)\b`)},
 	{"wide", regexp.MustCompile(`\\(widehat|widetilde|widecheck)\b`)},
-	{"layout", regexp.MustCompile(`\\(frac|tfrac|dfrac|over|atop|choose|sqrt|binom|dbinom|tbinom|genfrac|stackrel|overset|underset|buildrel|underline|overline|begin|widetilde|widecheck|widehat|hat|vec|left|big|Big|bigg|Bigg|raisebox|rule|sum|prod|int|lim|log|operatorname)\b|(^|[^\\])[\^_']`)},
+	{"stretch", regexp.MustCompile(`\\(Overrightarrow|overgroup|undergroup|utilde|overbracket|underbracket)\b`)},
+	{"layout", regexp.MustCompile(`\\(frac|tfrac|dfrac|over|atop|choose|sqrt|binom|dbinom|tbinom|genfrac|stackrel|overset|underset|buildrel|underline|overline|begin|widetilde|widecheck|widehat|hat|vec|left|big|Big|bigg|Bigg|raisebox|rule|sum|prod|int|lim|log|operatorname|above|substack)\b|(^|[^\\])[\^_']`)},
 }
 
 // reasonOf returns the reason of a formula outside the gate.
@@ -81,6 +82,7 @@ var reasons = []struct{ name, text string }{
 	{"boxed", `the source pads \boxed by 0.15 em, and KaTeX by 3pt and a strut`},
 	{"stack", `the source sets \overset, \underset and \stackrel with a gap of 0.1 em, and KaTeX sets them as limits`},
 	{"wide", `KaTeX draws \widehat, \widetilde and \widecheck with SVG images of its own, and texmath with the variants of STIX Two Math`},
+	{"stretch", `KaTeX draws \Overrightarrow, \overgroup and their kin with SVG images of its own, and texmath with the variants and the assembly of STIX Two Math`},
 	{"layout", "the MATH constants and the glyph variants of STIX Two Math are not the parameters and the glyphs of the KaTeX fonts"},
 	{"glyph", "the ink of a glyph of STIX Two Math is not the box of the glyph in the metrics of KaTeX"},
 }

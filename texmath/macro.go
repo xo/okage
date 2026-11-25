@@ -22,9 +22,16 @@ import (
 
 // macroDef is one macro of \def: nargs undelimited parameters, and the body,
 // in which a pair of tokens #n marks where argument n goes.
+//
+// okage: a macro of \newcommand can give its first parameter a default
+// value, as \newcommand{\f}[2][x]{#1+#2}. A use then reads that argument in
+// [brackets] when the brackets follow it, and takes the default value when
+// they do not. The source has no \newcommand (D95).
 type macroDef struct {
-	nargs int
-	body  []token
+	nargs  int
+	body   []token
+	opt    []token // the default value of the first parameter, in order
+	hasOpt bool
 }
 
 // expandMacros runs the mouth pass. It reads the tokens from left to right,
@@ -146,9 +153,9 @@ func isNewcommand(name string) bool {
 // the token of the command, as parseDef reads a \def: an optional *, the name
 // of the macro, a control sequence alone or in braces, an optional number of
 // parameters in brackets, from 0 to 9, and the {…} body. It returns the
-// number of tokens that it read. ok is false for any other form, such as a
-// default value of the first parameter, which the parser then reports as an
-// unknown command.
+// number of tokens that it read. A [default] after the number of
+// parameters is the default value of the first parameter (D95). ok is false
+// for any other form, which the parser then reports as an unknown command.
 func parseNewcommand(st []token) (def macroDef, name string, n int, ok bool) {
 	i := len(st) - 1
 	if i >= 0 && st[i].kind == tChar && st[i].r == '*' {
@@ -172,6 +179,20 @@ func parseNewcommand(st []token) (def macroDef, name string, n int, ok bool) {
 		nargs = int(st[i-1].r - '0')
 		i -= 3
 	}
+	var opt []token
+	hasOpt := false
+	if nargs > 0 && i >= 0 && st[i].kind == tChar && st[i].r == '[' {
+		rev, n, ok := readBracketRev(st[:i+1])
+		if !ok {
+			return macroDef{}, "", 0, false
+		}
+		opt = make([]token, len(rev))
+		for j, t := range rev {
+			opt[len(rev)-1-j] = t
+		}
+		hasOpt = true
+		i -= n
+	}
 	rev, g, gok := readGroupRev(st[:i+1])
 	if !gok {
 		return macroDef{}, "", 0, false
@@ -180,7 +201,29 @@ func parseNewcommand(st []token) (def macroDef, name string, n int, ok bool) {
 	for j, t := range rev {
 		body[len(rev)-1-j] = t
 	}
-	return macroDef{nargs: nargs, body: body}, name, len(st) - 1 - i + g, true
+	return macroDef{nargs: nargs, body: body, opt: opt, hasOpt: hasOpt}, name, len(st) - 1 - i + g, true
+}
+
+// readBracketRev reads the [argument] at the top of the stack st, in reverse
+// order, up to the ] that closes it outside braces. It returns the argument
+// without the brackets, in reverse order, and the number of tokens that it
+// read.
+func readBracketRev(st []token) (inner []token, n int, ok bool) {
+	if len(st) == 0 || st[len(st)-1].kind != tChar || st[len(st)-1].r != '[' {
+		return nil, 0, false
+	}
+	depth := 0
+	for i := len(st) - 2; i >= 0; i-- {
+		switch t := st[i]; {
+		case t.kind == tLBrace:
+			depth++
+		case t.kind == tRBrace:
+			depth--
+		case depth == 0 && t.kind == tChar && t.r == ']':
+			return st[i+1 : len(st)-1], len(st) - i, true
+		}
+	}
+	return nil, 0, false
 }
 
 // katexMacro returns the macro of KaTeX of the use t, with the position of t
@@ -192,16 +235,21 @@ func katexMacro(t token) (macroDef, bool) {
 		return macroDef{}, false
 	}
 	body := tokenize(s)
+	nargs := 0
 	for i := range body {
 		body[i].pos, body[i].space = t.pos, false
+		if d, ok := isParam(body, i); ok {
+			nargs = max(nargs, d+1)
+		}
 	}
-	return macroDef{body: body}, true
+	return macroDef{nargs: nargs, body: body}, true
 }
 
 // katexMacros are the macros of KaTeX, from src/macros.js at v0.18.11, that
 // stand for a symbol, a font or an operator of texmath, and the aliases of
-// the commands of this package. They take no parameter of their own: a font,
-// such as \bold, takes its argument after the expansion.
+// the commands of this package. Most take no parameter of their own: a font,
+// such as \bold, takes its argument after the expansion. A macro whose body
+// holds #1 to #9 takes that many arguments, as \Bra (D95).
 var katexMacros = map[string]string{
 	// The sets of numbers.
 	"N": `\mathbb{N}`, "R": `\mathbb{R}`, "Z": `\mathbb{Z}`,
@@ -235,16 +283,64 @@ var katexMacros = map[string]string{
 	"plim": `\operatorname*{plim}`, "operatornamewithlimits": `\operatorname*`,
 	// The aliases of this package.
 	"underbar": `\underline`,
+	// okage: the macros of KaTeX that test/texmath/katex_parse.txt listed, a
+	// request of the maintainers on 2026-11-25 (D95). A macro of KaTeX that
+	// draws with a glyph of the KaTeX fonts, such as \nsubseteqq, is \not
+	// over the relation, and a relation of two characters, such as \Eqcolon,
+	// is one Rel atom of both, as in the MathML of KaTeX.
+	"lang": `\langle`, "rang": `\rangle`,
+	"dotso": `\ldots`, "sect": `\S`, "copyright": `\text{©}`,
+	"lq": `\text{‘}`, "rq": `\text{’}`, "textregistered": `\text{®}`,
+	"Bra": `\left\langle#1\right|`, "Ket": `\left|#1\right\rangle`,
+	"pmb":        `\boldsymbol{#1}`,
+	"injlim":     `\operatorname*{inj\,lim}`,
+	"projlim":    `\operatorname*{proj\,lim}`,
+	"varinjlim":  `\mathop{\underrightarrow{\mathrm{lim}}}\limits`,
+	"varprojlim": `\mathop{\underleftarrow{\mathrm{lim}}}\limits`,
+	"varliminf":  `\mathop{\underline{\mathrm{lim}}}\limits`,
+	"varlimsup":  `\mathop{\overline{\mathrm{lim}}}\limits`,
+	"nsubseteqq": `\not\subseteqq`, "nsupseteqq": `\not\supseteqq`,
+	"ngeqq": `\not\geqq`, "nleqq": `\not\leqq`,
+	"ngeqslant": `\not\geqslant`, "nleqslant": `\not\leqslant`,
+	"nshortmid": `\nmid`, "nshortparallel": `\nparallel`,
+	"varsubsetneq": `\subsetneq`, "varsubsetneqq": `\subsetneqq`,
+	"varsupsetneq": `\supsetneq`, "varsupsetneqq": `\supsetneqq`,
+	"gvertneqq": `\gneqq`, "lvertneqq": `\lneqq`,
+	"Eqcolon": `\mathrel{−∷}`, "Eqqcolon": `\mathrel{=∷}`,
+	"approxcolon": `\mathrel{≈∶}`, "approxcoloncolon": `\mathrel{≈∷}`,
+	"colonapprox": `\mathrel{∶≈}`, "Colonapprox": `\mathrel{∷≈}`,
+	"colonsim": `\mathrel{∶∼}`, "Colonsim": `\mathrel{∷∼}`,
+	"simcolon": `\mathrel{∼∶}`, "simcoloncolon": `\mathrel{∼∷}`,
+	// The logos of KaTeX, src/macros.ts, with \raisebox of 0.21 em for the A
+	// of \LaTeX and \KaTeX, the latexRaiseA of KaTeX for its fonts.
+	"TeX":   `\textrm{T\kern-.1667em\raisebox{-.5ex}{E}\kern-.125emX}`,
+	"LaTeX": `\textrm{L\kern-.36em\raisebox{0.21em}{$\scriptstyle\mathrm{A}$}\kern-.15em\TeX}`,
+	"KaTeX": `\textrm{K\kern-.17em\raisebox{0.21em}{$\scriptstyle\mathrm{A}$}\kern-.15em\TeX}`,
 }
 
 // readArgs reads the m.nargs arguments of a macro from the top of the stack
 // st: a {group} or a single token each, as TeX takes them. Each argument is
 // a copy, in reverse order. It returns the number of tokens that it read. ok
-// is false when the tokens end before the arguments do.
+// is false when the tokens end before the arguments do. The first argument
+// of a macro with a default value is the [argument] that follows it, or the
+// default value.
 func readArgs(m macroDef, st []token) (args [][]token, n int, ok bool) {
 	args = make([][]token, m.nargs)
 	top := len(st)
-	for i := range m.nargs {
+	first := 0
+	if m.hasOpt && m.nargs > 0 {
+		if rev, g, ok := readBracketRev(st[:top]); ok {
+			args[0] = append([]token(nil), rev...)
+			top -= g
+		} else {
+			args[0] = make([]token, len(m.opt))
+			for j, t := range m.opt {
+				args[0][len(m.opt)-1-j] = t
+			}
+		}
+		first = 1
+	}
+	for i := first; i < m.nargs; i++ {
 		if top == 0 {
 			return nil, 0, false
 		}

@@ -1,7 +1,11 @@
 tex "\\nsupseteqq"
 
 style display
-error "parsing tex math: unknown command \\nsupseteqq"
+box 7.2 7.34 2.16 0
+glyph 3113 10 0 0 text "⫆" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.5100000000000002 text "/" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\nsupseteqq"
+box 7.2 7.34 2.16 0
+glyph 3113 10 0 0 text "⫆" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.5100000000000002 text "/" color 0 0 0 1

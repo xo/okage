@@ -1,7 +1,17 @@
 tex "\\Overrightarrow{AB}"
 
 style display
-error "parsing tex math: unknown command \\Overrightarrow"
+box 13.040000000000001 14.71 0 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+glyph 4827 10 8.881784197001252e-16 -8.07 text "⇒" color 0 0 0 1
+glyph 1575 10 2.3900000000000006 -8.07 color 0 0 0 1
+glyph 1579 10 4.17 -8.07 color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Overrightarrow"
+box 13.040000000000001 14.71 0 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+glyph 4827 10 8.881784197001252e-16 -8.07 text "⇒" color 0 0 0 1
+glyph 1575 10 2.3900000000000006 -8.07 color 0 0 0 1
+glyph 1579 10 4.17 -8.07 color 0 0 0 1

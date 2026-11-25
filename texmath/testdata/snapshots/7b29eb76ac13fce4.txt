@@ -1,7 +1,9 @@
 tex "\\shortparallel"
 
 style display
-error "parsing tex math: unknown command \\shortparallel"
+box 5.3500000000000005 7.0600000000000005 1.94 0
+glyph 1688 10 0 0 text "∥" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\shortparallel"
+box 5.3500000000000005 7.0600000000000005 1.94 0
+glyph 1688 10 0 0 text "∥" color 0 0 0 1

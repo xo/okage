@@ -1,7 +1,9 @@
 tex "\\lvertneqq"
 
 style display
-error "parsing tex math: unknown command \\lvertneqq"
+box 7.2 7.640000000000001 2.66 0
+glyph 1815 10 0 0 text "≨" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lvertneqq"
+box 7.2 7.640000000000001 2.66 0
+glyph 1815 10 0 0 text "≨" color 0 0 0 1

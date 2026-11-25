@@ -1,7 +1,9 @@
 tex "\\nshortmid"
 
 style display
-error "parsing tex math: unknown command \\nshortmid"
+box 4.13 7.0600000000000005 1.94 0
+glyph 1686 10 0 0 text "∤" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\nshortmid"
+box 4.13 7.0600000000000005 1.94 0
+glyph 1686 10 0 0 text "∤" color 0 0 0 1

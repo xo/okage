@@ -32,7 +32,7 @@ const parseKnownFile = "katex_parse.txt"
 // parseReasons are the reasons of katex_parse.txt, in order, with their
 // meaning.
 var parseReasons = []struct{ name, text string }{
-	{"missing", "the command is in the list of the missing commands of D78 section 10, phase 26 did not add it, and it waits for a request"},
+	{"missing", "the command is in the list of the missing commands of D78 section 10, and texmath does not have it"},
 	{"text", "the command sets text, such as an accent of text or a letter of Latin-1, and the source has no text mode for it"},
 	{"html", "the command is an extension of KaTeX for HTML, such as a link or an image, which a box cannot hold"},
 	{"syntax", "the source reads the formula in another way than KaTeX, and gives an error with no command"},

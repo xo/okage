@@ -1,7 +1,19 @@
 tex "\\injlim"
 
 style display
-error "parsing tex math: unknown command \\injlim"
+box 27.106666666666662 7.0600000000000005 2.35 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 269 10 2.85 0 text "n" color 0 0 0 1
+glyph 265 10 8.61 0 text "j" color 0 0 0 1
+glyph 267 10 12.906666666666665 0 text "l" color 0 0 0 1
+glyph 263 10 15.736666666666665 0 text "i" color 0 0 0 1
+glyph 268 10 18.586666666666666 0 text "m" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\injlim"
+box 27.106666666666662 7.0600000000000005 2.35 0
+glyph 263 10 0 0 text "i" color 0 0 0 1
+glyph 269 10 2.85 0 text "n" color 0 0 0 1
+glyph 265 10 8.61 0 text "j" color 0 0 0 1
+glyph 267 10 12.906666666666665 0 text "l" color 0 0 0 1
+glyph 263 10 15.736666666666665 0 text "i" color 0 0 0 1
+glyph 268 10 18.586666666666666 0 text "m" color 0 0 0 1

@@ -1,7 +1,9 @@
 tex "\\text{\\textquoteleft}"
 
 style display
-error "parsing tex math: unknown command \\textquoteleft"
+box 2.45 7.1000000000000005 0 0
+glyph 1083 10 0 0 text "‘" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\textquoteleft"
+box 2.45 7.1000000000000005 0 0
+glyph 1083 10 0 0 text "‘" color 0 0 0 1

@@ -76,14 +76,16 @@
 // does. \phase draws the angle mark of electrical engineering around its
 // argument, a line under it and a slanted line at its left, as KaTeX does.
 // \tag and \tag* set the label of an equation a quad after the formula, as
-// TeX sets an equation number, because the layout has no line width.
-// \hline and \hdashline draw a rule between the rows of array and of the
-// matrices. \cfrac sets a continued fraction in display style. \kern and
+// TeX sets an equation number. With WithLineWidth, the label is at the
+// right margin of the line, and the formula is centered in it. \hline draws
+// a rule between the rows of array and of the matrices, and \hdashline a
+// dashed rule. \cfrac sets a continued fraction in display style, and
+// \cfrac[l] and \cfrac[r] set its numerator at the left or the right. \kern and
 // \hspace give a space of any length, and \llap, \rlap and \clap, with
 // \mathllap, \mathrlap and \mathclap, set their argument with no width.
 // \scriptscriptstyle, \dddot and \ddddot work. \newcommand, \renewcommand
-// and \providecommand define a macro in the formula, as \def does, but not a
-// macro whose first parameter has a default value. The macros of KaTeX that
+// and \providecommand define a macro in the formula, as \def does, and the
+// first parameter can have a default value. The macros of KaTeX that
 // stand for a symbol, a font or an operator, such as \R, \N, \Z, \reals,
 // \larr and \bold, are known unless the formula defines the name.
 //
@@ -97,6 +99,20 @@
 // depth only. The size commands, from \tiny to \Huge, set the rest of their
 // group at a factor of the size of Layout, from 0.5 to 2.488, as LaTeX and
 // KaTeX do.
+//
+// On 2026-11-25 the maintainers asked for the rest of the commands of KaTeX
+// (D95). The symbols, the operators and the macros of KaTeX all parse, with
+// the accents and the symbols of text, such as \text{\'{a}} and \ss. The
+// arrows, the harpoons and the line segments go over or under a base, as
+// \underrightarrow. \overgroup, \undergroup, \utilde and \Overrightarrow
+// grow a character of the face, and \overbracket and \underbracket a
+// square bracket. \sideset sets scripts at the left and the right of a large
+// operator. \vcenter, \angl, \sout, \smallint, \above, \brace, \brack,
+// \verb, \url and the extensible arrows of two shafts work, and align,
+// alignat, gather, equation and rcases are environments. \href and the
+// commands of HTML set their body without the link, and \includegraphics
+// is an empty space of the size of the image. A \\ outside an environment
+// makes no line break.
 //
 // The layout uses three more parts of the MATH table, and an option turns
 // each one off for a comparison with the source. The italic correction of a

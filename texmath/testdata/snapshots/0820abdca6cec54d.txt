@@ -1,7 +1,9 @@
 tex "\\rightthreetimes"
 
 style display
-error "parsing tex math: unknown command \\rightthreetimes"
+box 8.290000000000001 5.96 0.8200000000000001 0
+glyph 1945 10 0 0 text "⋌" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\rightthreetimes"
+box 8.290000000000001 5.96 0.8200000000000001 0
+glyph 1945 10 0 0 text "⋌" color 0 0 0 1

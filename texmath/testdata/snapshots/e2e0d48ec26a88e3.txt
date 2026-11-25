@@ -1,7 +1,11 @@
 tex "\\mathreflectbox{x^2}"
 
 style display
-error "parsing tex math: unknown command \\mathreflectbox"
+box 9.555 8.108 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1 transform -1 0 0 1 9.555000305175781 0
+glyph 1139 7 5.6899999999999995 -3.6 text "2" color 0 0 0 1 transform -1 0 0 1 9.555000305175781 0
 
 style text
-error "parsing tex math: unknown command \\mathreflectbox"
+box 9.555 8.108 0.1 0
+glyph 3354 10 0 0 text "𝑥" color 0 0 0 1 transform -1 0 0 1 9.555000305175781 0
+glyph 1139 7 5.6899999999999995 -3.6 text "2" color 0 0 0 1 transform -1 0 0 1 9.555000305175781 0

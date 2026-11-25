@@ -1,7 +1,13 @@
 tex "\\verb!x^2!"
 
 style display
-error "parsing tex math: unknown command \\verb"
+box 16.2 6.73 0 0
+glyph 3926 10 0 0 text "𝚡" color 0 0 0 1
+glyph 1108 10 5.4 0 text "^" color 0 0 0 1
+glyph 4265 10 10.2 0 text "𝟸" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\verb"
+box 16.2 6.73 0 0
+glyph 3926 10 0 0 text "𝚡" color 0 0 0 1
+glyph 1108 10 5.4 0 text "^" color 0 0 0 1
+glyph 4265 10 10.2 0 text "𝟸" color 0 0 0 1

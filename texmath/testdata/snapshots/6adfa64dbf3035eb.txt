@@ -1,7 +1,9 @@
 tex "\\varOmega"
 
 style display
-error "parsing tex math: unknown command \\varOmega"
+box 8.12 6.69 0 0.2
+glyph 4013 10 0 0 text "𝛺" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varOmega"
+box 8.12 6.69 0 0.2
+glyph 4013 10 0 0 text "𝛺" color 0 0 0 1

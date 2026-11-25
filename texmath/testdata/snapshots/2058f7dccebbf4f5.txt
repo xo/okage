@@ -1,7 +1,9 @@
 tex "\\char`^"
 
 style display
-error "parsing tex math: \\char needs a character code"
+box 4.8 6.73 0 0
+glyph 1108 10 0 0 text "^" color 0 0 0 1
 
 style text
-error "parsing tex math: \\char needs a character code"
+box 4.8 6.73 0 0
+glyph 1108 10 0 0 text "^" color 0 0 0 1

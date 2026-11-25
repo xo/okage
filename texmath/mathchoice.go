@@ -62,6 +62,11 @@ func (p *parser) mathchoiceGroups(cmd *token, toks []token) (*mathchoiceParts, e
 	c := &mathchoiceParts{rest: toks}
 	for i := range c.groups {
 		g, r, ok := readGroupToks(c.rest)
+		if !ok && len(c.rest) > 0 && c.rest[0].kind != tRBrace && c.rest[0].kind != tLBrace {
+			// okage: a group of one token, as KaTeX reads \mathchoice{a}{b}{c}x
+			// (D95).
+			g, r, ok = c.rest[:1], c.rest[1:], true
+		}
 		if !ok {
 			return nil, p.fail([]token{*cmd}, `\mathchoice needs four {…} groups`)
 		}

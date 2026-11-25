@@ -1,7 +1,9 @@
 tex "\\curlyeqprec"
 
 style display
-error "parsing tex math: unknown command \\curlyeqprec"
+box 7.2 6.42 1.24 0
+glyph 1965 10 0 0 text "⋞" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\curlyeqprec"
+box 7.2 6.42 1.24 0
+glyph 1965 10 0 0 text "⋞" color 0 0 0 1

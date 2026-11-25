@@ -1,7 +1,9 @@
 tex "\\Doteq"
 
 style display
-error "parsing tex math: unknown command \\Doteq"
+box 7.2 6.25 1.09 0
+glyph 1790 10 0 0 text "≑" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Doteq"
+box 7.2 6.25 1.09 0
+glyph 1790 10 0 0 text "≑" color 0 0 0 1

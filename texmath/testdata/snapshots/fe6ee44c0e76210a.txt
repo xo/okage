@@ -1,7 +1,9 @@
 tex "\\varUpsilon"
 
 style display
-error "parsing tex math: unknown command \\varUpsilon"
+box 6.76 6.640000000000001 0 0.8
+glyph 4009 10 0 0 text "𝛶" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varUpsilon"
+box 6.76 6.640000000000001 0 0.8
+glyph 4009 10 0 0 text "𝛶" color 0 0 0 1

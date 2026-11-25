@@ -1,7 +1,9 @@
 tex "\\ntriangleright"
 
 style display
-error "parsing tex math: unknown command \\ntriangleright"
+box 6.5 6.78 1.6 0
+glyph 1980 10 0 0 text "⋫" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ntriangleright"
+box 6.5 6.78 1.6 0
+glyph 1980 10 0 0 text "⋫" color 0 0 0 1

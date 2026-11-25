@@ -1,7 +1,9 @@
 tex "\\smallint"
 
 style display
-error "parsing tex math: unknown command \\smallint"
+box 9.14 7.2700000000000005 2.2600000000000002 2.3000000000000003
+glyph 1698 10 0 0 text "∫" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\smallint"
+box 9.14 7.2700000000000005 2.2600000000000002 2.3000000000000003
+glyph 1698 10 0 0 text "∫" color 0 0 0 1

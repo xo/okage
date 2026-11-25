@@ -1,7 +1,9 @@
 tex "\\text{\\ae}"
 
 style display
-error "parsing tex math: unknown command \\ae"
+box 7.09 4.8500000000000005 0.1 0
+glyph 307 10 0 0 text "æ" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ae"
+box 7.09 4.8500000000000005 0.1 0
+glyph 307 10 0 0 text "æ" color 0 0 0 1

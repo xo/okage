@@ -309,6 +309,25 @@ func (l *layout) nested(n Node, st Style) *box {
 	case Tag:
 		return l.layoutTag(n, st)
 	}
+	return l.nestedMore(n, st)
+}
+
+// nestedMore lays out the nodes of D95. It is not inlined, and nested does
+// not hold its cases, so that the frame of nested does not grow on the
+// stack of a nested formula.
+//
+//go:noinline
+func (l *layout) nestedMore(n Node, st Style) *box {
+	switch n.(type) {
+	case Stretch:
+		return l.layoutStretch(n, st)
+	case VCenter:
+		return l.layoutVCenter(n, st)
+	case Angl:
+		return l.layoutAngl(n, st)
+	case Sideset:
+		return l.layoutSideset(n, st)
+	}
 	return newBox(Ord)
 }
 
@@ -610,13 +629,35 @@ func (l *layout) layoutFraction(n Node, st Style) *box {
 	if f.NoRule {
 		b = l.binom(num, den, st)
 	} else {
-		b = l.fraction(num, den, st)
+		b = l.fraction(num, den, st, f.NumAlign)
 	}
 	if f.Open != 0 || f.Close != 0 {
 		b = l.delimited(b, f.Open, f.Close, st)
 	}
 	b.cls = Inner
 	return b
+}
+
+// alignNumerator returns num in a box as wide as den, at its left for
+// AlignLeft and at its right for AlignRight, for \cfrac[l] and \cfrac[r]
+// (D95). A numerator that is not narrower than den stays as it is. fraction
+// calls it, and not layoutFraction, because the frame of layoutFraction is
+// on the stack of each nested fraction, and the deepest chain of \over must
+// still lay out in the stack of 64 KiB of a goroutine of TinyGo.
+//
+//go:noinline
+func alignNumerator(num, den *box, align Align) *box {
+	if num.w >= den.w {
+		return num
+	}
+	wide := newBox(num.cls)
+	wide.w, wide.h, wide.d = den.w, num.h, num.d
+	x := 0.0
+	if align == AlignRight {
+		x = den.w - num.w
+	}
+	place(wide, num, x, 0)
+	return wide
 }
 
 // layoutRadical lays out a Radical. The degree is in scriptscript style:
@@ -794,7 +835,7 @@ func (l *layout) layoutPhantom(n Node, st Style) *box {
 //go:noinline
 func (l *layout) layoutBrace(n Node, st Style) *box {
 	b, _ := n.(Brace)
-	return l.brace(l.node(b.Base, st), !b.Under, st)
+	return l.brace(l.node(b.Base, st), b.Rune, !b.Under, st)
 }
 
 // layoutOverArrow lays out \overrightarrow and its kin.
@@ -802,7 +843,11 @@ func (l *layout) layoutBrace(n Node, st Style) *box {
 //go:noinline
 func (l *layout) layoutOverArrow(n Node, st Style) *box {
 	a, _ := n.(OverArrow)
-	return l.overArrow(l.node(a.Base, st), a.Left, a.Right, st)
+	b := l.node(a.Base, st)
+	if a.Under || a.Harpoon || a.Segment {
+		return l.arrowOverUnder(b, &a, st)
+	}
+	return l.overArrow(b, a.Left, a.Right, st)
 }
 
 // layoutXArrow lays out \xrightarrow and its kin. An arrow that xArrowSpec
@@ -818,6 +863,9 @@ func (l *layout) layoutXArrow(n Node, st Style) *box {
 	}
 	if a.Under != nil {
 		sub = l.node(a.Under, sst)
+	}
+	if b := l.xArrowMore(sup, sub, a.Arrow, st); b != nil {
+		return b
 	}
 	left, right, hooked, mapsto, ok := xArrowSpec(a.Arrow)
 	if !ok {

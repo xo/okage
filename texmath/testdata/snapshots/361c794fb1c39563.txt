@@ -1,7 +1,9 @@
 tex "\\varXi"
 
 style display
-error "parsing tex math: unknown command \\varXi"
+box 6.7 6.57 0 0.35000000000000003
+glyph 4002 10 0 0 text "𝛯" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varXi"
+box 6.7 6.57 0 0.35000000000000003
+glyph 4002 10 0 0 text "𝛯" color 0 0 0 1

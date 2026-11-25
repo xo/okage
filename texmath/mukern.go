@@ -29,11 +29,24 @@ import (
 // parseMuKern parses \mkern or \mskip, after the command cmd. The layout half
 // of the source is e.kern(v * px / 18): a Space of v mu.
 //
-// okage: a width past maxLength em is an error.
+// okage: a width past maxLength em is an error. A width in another unit than
+// mu, such as \mkern3pt, is read as KaTeX reads it, in that unit, and the
+// parts of the glue of \mskip after it are dropped (D95).
 func (p *parser) parseMuKern(cmd *token, toks []token, _ alphabet) (Node, []token, error) {
 	v, rest, err := readMuDimen(toks, true)
 	if err != nil {
-		return nil, nil, p.fail(toks, fmt.Sprintf(`\%s: %s`, cmd.text, err))
+		s, r := readLengthToks(toks)
+		l, ok := readLength(s)
+		if !ok || l.Unit == Mu {
+			return nil, nil, p.fail(toks, fmt.Sprintf(`\%s: %s`, cmd.text, err))
+		}
+		if err := p.checkLength(toks, `\`+cmd.text, l); err != nil {
+			return nil, nil, err
+		}
+		if cmd.text == "mskip" {
+			r = r[skipGlue(r, 0):]
+		}
+		return p.add(Space{Width: l}), r, nil
 	}
 	if !(math.Abs(v) <= maxLength*18) {
 		return nil, nil, p.limit(toks, fmt.Sprintf(`\%s: the width %gmu is more than %d em`, cmd.text, v, maxLength))
@@ -81,6 +94,12 @@ func readMuDimen(toks []token, glue bool) (float64, []token, error) {
 	if !glue {
 		return v, toks[i:], nil
 	}
+	return v, toks[skipGlue(toks, i):], nil
+}
+
+// skipGlue returns the index after the stretch and the shrink of glue that
+// start at i in toks, or i when there are none.
+func skipGlue(toks []token, i int) int {
 	// The stretch and the shrink of \mskip are read and dropped. "plus 1mu
 	// minus 2mu" and "plus1fil" both come here.
 	for _, kw := range []string{"plus", "minus"} {
@@ -106,7 +125,7 @@ func readMuDimen(toks []token, glue bool) (float64, []token, error) {
 			i = j
 		}
 	}
-	return v, toks[i:], nil
+	return i
 }
 
 // hasWord reports whether the tokens at i spell w as characters.

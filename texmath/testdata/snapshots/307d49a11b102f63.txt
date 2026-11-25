@@ -1,7 +1,9 @@
 tex "\\Supset"
 
 style display
-error "parsing tex math: unknown command \\Supset"
+box 7.2 5.43 0.26 0
+glyph 1950 10 0 0 text "⋑" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Supset"
+box 7.2 5.43 0.26 0
+glyph 1950 10 0 0 text "⋑" color 0 0 0 1

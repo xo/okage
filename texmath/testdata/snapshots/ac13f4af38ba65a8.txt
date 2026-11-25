@@ -1,7 +1,9 @@
 tex "\\mathchoice{a}{b}{c}x"
 
 style display
-error "parsing tex math: \\mathchoice needs four {…} groups"
+box 5.55 4.79 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
 
 style text
-error "parsing tex math: \\mathchoice needs four {…} groups"
+box 5.2299999999999995 7.05 0.12 0.05
+glyph 3327 10 0 0 text "𝑏" color 0 0 0 1

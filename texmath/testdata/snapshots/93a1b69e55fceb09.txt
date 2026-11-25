@@ -1,7 +1,13 @@
 tex "\\Ket{\\psi}"
 
 style display
-error "parsing tex math: unknown command \\Ket"
+box 12.260000000000002 7.24 2.17 0
+glyph 1062 10 0 -0.1499999999999999 text "|" color 0 0 0 1
+glyph 908 10 2.67 0 text "ψ" color 0 0 0 1
+glyph 2497 10 8.870000000000001 0.1200000000000001 text "⟩" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Ket"
+box 12.260000000000002 7.24 2.17 0
+glyph 1062 10 0 -0.1499999999999999 text "|" color 0 0 0 1
+glyph 908 10 2.67 0 text "ψ" color 0 0 0 1
+glyph 2497 10 8.870000000000001 0.1200000000000001 text "⟩" color 0 0 0 1

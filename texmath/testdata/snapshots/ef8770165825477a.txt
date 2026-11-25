@@ -1,7 +1,11 @@
 tex "\\colonapprox"
 
 style display
-error "parsing tex math: unknown command \\colonapprox"
+box 12.43 5.33 0.14 0
+glyph 1754 10 0 0 text "∶" color 0 0 0 1
+glyph 1779 10 5.23 0 text "≈" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\colonapprox"
+box 12.43 5.33 0.14 0
+glyph 1754 10 0 0 text "∶" color 0 0 0 1
+glyph 1779 10 5.23 0 text "≈" color 0 0 0 1

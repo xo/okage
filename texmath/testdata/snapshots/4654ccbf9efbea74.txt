@@ -1,7 +1,9 @@
 tex "\\text{\\ss}"
 
 style display
-error "parsing tex math: unknown command \\ss"
+box 5.63 7.13 0.06 0
+glyph 465 10 0 0 text "ß" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ss"
+box 5.63 7.13 0.06 0
+glyph 465 10 0 0 text "ß" color 0 0 0 1

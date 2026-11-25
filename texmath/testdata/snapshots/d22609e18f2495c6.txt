@@ -1,7 +1,21 @@
 tex "\\projlim"
 
 style display
-error "parsing tex math: unknown command \\projlim"
+box 32.806666666666665 7.0600000000000005 2.35 0
+glyph 271 10 0 0 text "p" color 0 0 0 1
+glyph 273 10 5.37 0 text "r" color 0 0 0 1
+glyph 270 10 9.17 0 text "o" color 0 0 0 1
+glyph 265 10 14.309999999999999 0 text "j" color 0 0 0 1
+glyph 267 10 18.606666666666666 0 text "l" color 0 0 0 1
+glyph 263 10 21.436666666666667 0 text "i" color 0 0 0 1
+glyph 268 10 24.286666666666665 0 text "m" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\projlim"
+box 32.806666666666665 7.0600000000000005 2.35 0
+glyph 271 10 0 0 text "p" color 0 0 0 1
+glyph 273 10 5.37 0 text "r" color 0 0 0 1
+glyph 270 10 9.17 0 text "o" color 0 0 0 1
+glyph 265 10 14.309999999999999 0 text "j" color 0 0 0 1
+glyph 267 10 18.606666666666666 0 text "l" color 0 0 0 1
+glyph 263 10 21.436666666666667 0 text "i" color 0 0 0 1
+glyph 268 10 24.286666666666665 0 text "m" color 0 0 0 1

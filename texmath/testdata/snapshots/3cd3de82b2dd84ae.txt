@@ -1,7 +1,9 @@
 tex "\\text{\\textasciitilde}"
 
 style display
-error "parsing tex math: unknown command \\textasciitilde"
+box 5.57 3.36 0 0
+glyph 1109 10 0 0 text "~" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\textasciitilde"
+box 5.57 3.36 0 0
+glyph 1109 10 0 0 text "~" color 0 0 0 1

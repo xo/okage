@@ -72,7 +72,11 @@ func TestOperatorname(t *testing.T) {
 	for _, tex := range []string{`\operatorname{a{b}c}`, `\operatorname{a\,b}`, `\operatorname{a\nope b}`} {
 		mustParse(t, tex)
 	}
-	for _, tex := range []string{`\operatorname`, `\operatorname*`, `\operatorname x`, `\operatorname{argmax`, `\operatorname*{argmax`} {
+	// okage: \operatorname x is \operatorname{x}, as in KaTeX (D95).
+	if !sameTree(t, `\operatorname x`, `\operatorname{x}`) {
+		t.Error(`\operatorname x is not \operatorname{x}`)
+	}
+	for _, tex := range []string{`\operatorname`, `\operatorname*`, `\operatorname{argmax`, `\operatorname*{argmax`} {
 		if _, err := Parse(tex); err == nil {
 			t.Errorf("Parse(%q) should fail", tex)
 		}

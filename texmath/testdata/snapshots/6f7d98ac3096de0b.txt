@@ -1,7 +1,23 @@
 tex "\\overleftharpoon{ac}"
 
 style display
-error "parsing tex math: unknown command \\overleftharpoon"
+box 9.69 12.02 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 5.55 0 text "𝑐" color 0 0 0 1
+rule 0 -9.28 9.69 0.68 color 0 0 0 1
+path 0 0 color 0 0 0 1
+  M 0 -8.600000381469727
+  L 4.199999809265137 -11.34000015258789
+  L 4.199999809265137 -8.600000381469727
+  Z
 
 style text
-error "parsing tex math: unknown command \\overleftharpoon"
+box 9.69 12.02 0.12 0
+glyph 3326 10 0 0 text "𝑎" color 0 0 0 1
+glyph 3328 10 5.55 0 text "𝑐" color 0 0 0 1
+rule 0 -9.28 9.69 0.68 color 0 0 0 1
+path 0 0 color 0 0 0 1
+  M 0 -8.600000381469727
+  L 4.199999809265137 -11.34000015258789
+  L 4.199999809265137 -8.600000381469727
+  Z

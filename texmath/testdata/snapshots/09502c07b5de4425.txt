@@ -1,7 +1,7 @@
 tex "\\\\"
 
 style display
-error "parsing tex math: unknown command \\\\"
+box 0 0 0 0
 
 style text
-error "parsing tex math: unknown command \\\\"
+box 0 0 0 0

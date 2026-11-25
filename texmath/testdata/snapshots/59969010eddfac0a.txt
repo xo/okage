@@ -1,7 +1,17 @@
 tex "\\href{https://katex.org/}{\\KaTeX}"
 
 style display
-error "parsing tex math: unknown command \\href"
+box 24.859 6.734 2.365 0
+glyph 13 10 0 0 text "K" color 0 0 0 1
+glyph 3 7 5.32 -2.1 text "A" color 0 0 0 1
+glyph 22 10 8.846 0 text "T" color 0 0 0 1
+glyph 7 10 13.209 2.365 text "E" color 0 0 0 1
+glyph 26 10 18.219 0 text "X" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\href"
+box 24.859 6.734 2.365 0
+glyph 13 10 0 0 text "K" color 0 0 0 1
+glyph 3 7 5.32 -2.1 text "A" color 0 0 0 1
+glyph 22 10 8.846 0 text "T" color 0 0 0 1
+glyph 7 10 13.209 2.365 text "E" color 0 0 0 1
+glyph 26 10 18.219 0 text "X" color 0 0 0 1

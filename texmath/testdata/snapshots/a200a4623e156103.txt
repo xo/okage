@@ -1,7 +1,11 @@
 tex "\\Eqqcolon"
 
 style display
-error "parsing tex math: unknown command \\Eqqcolon"
+box 17.177777777777777 5.33 0.14 0
+glyph 1202 10 0 0 text "=" color 0 0 0 1
+glyph 1755 10 9.977777777777778 0 text "∷" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\Eqqcolon"
+box 17.177777777777777 5.33 0.14 0
+glyph 1202 10 0 0 text "=" color 0 0 0 1
+glyph 1755 10 9.977777777777778 0 text "∷" color 0 0 0 1

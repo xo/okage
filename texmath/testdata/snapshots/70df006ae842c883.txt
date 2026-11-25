@@ -1,7 +1,9 @@
 tex "\\varPhi"
 
 style display
-error "parsing tex math: unknown command \\varPhi"
+box 7.430000000000001 6.57 0 0.2
+glyph 4010 10 0 0 text "𝛷" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varPhi"
+box 7.430000000000001 6.57 0 0.2
+glyph 4010 10 0 0 text "𝛷" color 0 0 0 1

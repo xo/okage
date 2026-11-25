@@ -97,7 +97,7 @@ func TestCoverageCorners(t *testing.T) {
 	for _, bad := range []string{
 		`\left^ a \right)`, `\left_ a \right)`, `\left' a \right)`,
 		`\binom{\zz}{k}`, `\binom{a}{\zz}`, `\overset{\zz}{x}`, `\overset{a}{\zz}`,
-		`\underset{\zz}{x}`, `\substack{\zz}`, `\substack x`, `\substack{a`,
+		`\underset{\zz}{x}`, `\substack{\zz}`, `\substack{a`,
 		`\not\zz`, `\ket{\zz}`, `\ketbra{\zz}{y}`, `\ketbra{x}{\zz}`,
 		`\boxed{\zz}`, `\underbrace{\zz}`, `\phantom{\zz}`, `\bigl\zz`, `\xrightarrow{\zz}`, `\xrightarrow[\zz]{x}`,
 		`\ensuremath{\zz}`, `\mathbin{\zz}`, `\mathscr{\zz}`,

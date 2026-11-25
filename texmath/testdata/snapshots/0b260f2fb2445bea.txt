@@ -1,7 +1,11 @@
 tex "\\nleqq"
 
 style display
-error "parsing tex math: unknown command \\nleqq"
+box 7.2 7.3500000000000005 2.16 0
+glyph 1813 10 0 0 text "≦" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.5049999999999999 text "/" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\nleqq"
+box 7.2 7.3500000000000005 2.16 0
+glyph 1813 10 0 0 text "≦" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.5049999999999999 text "/" color 0 0 0 1

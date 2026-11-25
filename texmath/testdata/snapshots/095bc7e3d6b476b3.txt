@@ -1,7 +1,11 @@
 tex "\\lBrace~\\rBrace"
 
 style display
-error "parsing tex math: unknown command \\lBrace"
+box 12.113333333333333 7.36 1.96 0
+glyph 2665 10 0 0 text "⦃" color 0 0 0 1
+glyph 2670 10 7.723333333333333 0 text "⦄" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lBrace"
+box 12.113333333333333 7.36 1.96 0
+glyph 2665 10 0 0 text "⦃" color 0 0 0 1
+glyph 2670 10 7.723333333333333 0 text "⦄" color 0 0 0 1

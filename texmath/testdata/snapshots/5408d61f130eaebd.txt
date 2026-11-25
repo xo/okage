@@ -1,7 +1,9 @@
 tex "\\cdotp"
 
 style display
-error "parsing tex math: unknown command \\cdotp"
+box 2.93 3.2 0 0
+glyph 1938 10 0 0 text "⋅" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\cdotp"
+box 2.93 3.2 0 0
+glyph 1938 10 0 0 text "⋅" color 0 0 0 1

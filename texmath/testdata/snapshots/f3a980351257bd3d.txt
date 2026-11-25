@@ -1,7 +1,9 @@
 tex "\\succapprox"
 
 style display
-error "parsing tex math: unknown command \\succapprox"
+box 7.2 7.65 2.82 0
+glyph 3099 10 0 0 text "⪸" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\succapprox"
+box 7.2 7.65 2.82 0
+glyph 3099 10 0 0 text "⪸" color 0 0 0 1

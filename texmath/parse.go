@@ -74,6 +74,9 @@ type config struct {
 	noItalic bool // WithItalicCorrection(false)
 	noAttach bool // WithAccentAttachment(false)
 	noKern   bool // WithMathKern(false)
+
+	// okage: the width of the line of WithLineWidth, for \tag, or 0 (D95).
+	lineWidth float64
 }
 
 // newConfig returns the defaults, changed by opts.
@@ -523,6 +526,20 @@ func isMathDelim(t token) bool {
 // textSymbols are the control sequences that \text sets as a character.
 var textSymbols = map[string]string{
 	" ": " ", "%": "%", "#": "#", "&": "&", "_": "_", "$": "$", "{": "{", "}": "}",
+	// okage: the symbols of the text mode of KaTeX, from src/symbols.ts of
+	// KaTeX 0.18.11, a request of the maintainers on 2026-11-25 (D95).
+	"OE": "Œ", "oe": "œ", "AE": "Æ", "ae": "æ", "O": "Ø", "o": "ø",
+	"ss": "ß", "aa": "å", "AA": "Å", "i": "ı", "j": "ȷ",
+	"textunderscore": "_", "textendash": "–", "textemdash": "—",
+	"textdagger": "†", "dag": "†", "textdaggerdbl": "‡", "ddag": "‡",
+	"textasciitilde": "~", "textasciicircum": "^", "textellipsis": "…",
+	"textquoteleft": "‘", "textquoteright": "’",
+	"textquotedblleft": "“", "textquotedblright": "”", "textdollar": "$",
+	"textless": "<", "textgreater": ">", "textsterling": "£", "pounds": "£",
+	"textbar": "|", "textbardbl": "∥", "textbraceleft": "{", "textbraceright": "}",
+	"textbackslash": "\\", "textdegree": "°", "degree": "°", "S": "§",
+	"textcopyright": "©",
+	"yen":           "¥", "maltese": "✠", "circledR": "®",
 }
 
 // textOf returns the characters of t in a TextRun, and false when t is not
@@ -627,6 +644,12 @@ func (b *listBuilder) done() List {
 			f.NoRule = true
 		case "choose":
 			f.NoRule, f.Open, f.Close = true, '(', ')'
+		case "brace":
+			f.NoRule, f.Open, f.Close = true, '{', '}'
+		case "brack":
+			f.NoRule, f.Open, f.Close = true, '[', ']'
+		case "above":
+			f.NoRule = o.zero
 		}
 		l = p.list([]Node{p.add(f)})
 		p.leave()
@@ -758,6 +781,20 @@ func (b *listBuilder) next() int {
 			b.result = b.done()
 			return listDone
 		}
+		if b.st.text && toks[0].kind == tCtrl {
+			if _, ok := textAccents[toks[0].text]; ok {
+				// okage: an accent of the text mode, such as \'{a}, with its
+				// argument, joins the run (D95).
+				s, rest, ok := textAccentOf(toks)
+				if !ok {
+					b.result, b.toks, b.err = nil, nil, p.fail(toks, fmt.Sprintf(`\%s needs a character of text`, toks[0].text))
+					return listDone
+				}
+				b.text(s)
+				b.toks = rest
+				continue
+			}
+		}
 		if s, ok := textOf(toks[0]); ok && b.st.text {
 			// A character of \text. It joins the run, unless a script follows
 			// it, as in the source, where the script attaches to it.
@@ -827,7 +864,9 @@ func listCommandOf(name string) (listCommand, Style) {
 		return listSkip, 0
 	case "rm", "bf", "it", "sf", "tt", "cal", "sl":
 		return listFont, 0
-	case "over", "atop", "choose":
+	case "over", "atop", "choose", "above", "brace", "brack":
+		// okage: \above, \brace and \brack are the infix fractions of
+		// KaTeX that the maintainers asked for on 2026-11-25 (D95).
 		return listOver, 0
 	case "color":
 		return listColor, 0
@@ -900,6 +939,8 @@ func (p *parser) parseScriptsIn(nuc Node, toks []token, st alphabet) (Node, []to
 type overPart struct {
 	num List
 	cmd string
+	// okage: zero is a thickness of zero for \above (D95).
+	zero bool
 }
 
 // startOver ends the numerator of the \over, \atop or \choose at the start
@@ -914,13 +955,34 @@ type overPart struct {
 //go:noinline
 func (b *listBuilder) startOver(toks []token) error {
 	p := b.p
-	b.overs = append(b.overs, overPart{num: b.finish(), cmd: toks[0].text})
-	if err := p.enter(toks[1:]); err != nil {
+	part := overPart{num: b.finish(), cmd: toks[0].text}
+	rest := toks[1:]
+	if part.cmd == "above" {
+		// okage: \above takes the thickness of its rule, a length. A
+		// thickness of zero leaves the rule out, as \genfrac does (D95).
+		var s string
+		if len(rest) > 0 && rest[0].kind == tLBrace {
+			text, r, err := p.readOpName(rest)
+			if err != nil {
+				return err
+			}
+			s, rest = text, r
+		} else {
+			s, rest = readLengthToks(rest)
+		}
+		l, ok := readLength(s)
+		if !ok {
+			return p.fail(toks, fmt.Sprintf(`\above needs a thickness, not %q`, s))
+		}
+		part.zero = l.Value == 0
+	}
+	b.overs = append(b.overs, part)
+	if err := p.enter(rest); err != nil {
 		return err
 	}
 	b.items = nil
 	b.saved, b.hasSaved = alphabet{}, false
-	b.toks = toks[1:]
+	b.toks = rest
 	return nil
 }
 
@@ -1204,6 +1266,43 @@ func init() {
 		"mathllap":           (*parser).parseLap,
 		"mathrlap":           (*parser).parseLap,
 		"mathclap":           (*parser).parseLap,
+		// okage: the commands of KaTeX in katex.go that the maintainers
+		// asked for on 2026-11-25 (D95).
+		"smallint":            (*parser).parseSmallint,
+		`\`:                   (*parser).parseNewline,
+		"newline":             (*parser).parseNewline,
+		"underrightarrow":     (*parser).parseOverArrow,
+		"underleftarrow":      (*parser).parseOverArrow,
+		"underleftrightarrow": (*parser).parseOverArrow,
+		"overrightharpoon":    (*parser).parseOverArrow,
+		"overleftharpoon":     (*parser).parseOverArrow,
+		"overlinesegment":     (*parser).parseOverArrow,
+		"underlinesegment":    (*parser).parseOverArrow,
+		"overbracket":         (*parser).parseBrace,
+		"underbracket":        (*parser).parseBrace,
+		"overgroup":           (*parser).parseStretch,
+		"undergroup":          (*parser).parseStretch,
+		"utilde":              (*parser).parseStretch,
+		"Overrightarrow":      (*parser).parseStretch,
+		"vcenter":             (*parser).parseVCenter,
+		"angl":                (*parser).parseAngl,
+		"sout":                (*parser).parseCancel,
+		"sideset":             (*parser).parseSideset,
+		"mathreflectbox":      (*parser).parseScalebox,
+		"verb":                (*parser).parseVerb,
+		"url":                 (*parser).parseURL,
+		"href":                (*parser).parseHref,
+		"htmlId":              (*parser).parseHref,
+		"htmlClass":           (*parser).parseHref,
+		"htmlStyle":           (*parser).parseHref,
+		"htmlData":            (*parser).parseHref,
+		"includegraphics":     (*parser).parseIncludegraphics,
+		"xtwoheadrightarrow":  (*parser).parseXArrow,
+		"xtwoheadleftarrow":   (*parser).parseXArrow,
+		"xrightleftharpoons":  (*parser).parseXArrow,
+		"xleftrightharpoons":  (*parser).parseXArrow,
+		"xtofrom":             (*parser).parseXArrow,
+		"xlongequal":          (*parser).parseXArrow,
 	}
 }
 
@@ -1385,9 +1484,19 @@ func (p *parser) parseOverArrow(cmd *token, toks []token, st alphabet) (Node, []
 	if err != nil {
 		return nil, nil, err
 	}
-	left := name == "overleftarrow" || name == "overleftrightarrow"
-	right := name != "overleftarrow"
-	return p.add(OverArrow{Base: b, Left: left, Right: right}), r, nil
+	// okage: the arrows under the base, the harpoons and the line segments
+	// of KaTeX (D95).
+	n := OverArrow{Base: b, Right: true}
+	switch name {
+	case "overleftarrow", "underleftarrow", "overleftharpoon":
+		n.Left, n.Right = true, false
+	case "overleftrightarrow", "underleftrightarrow", "overlinesegment", "underlinesegment":
+		n.Left = true
+	}
+	n.Under = strings.HasPrefix(name, "under")
+	n.Harpoon = strings.HasSuffix(name, "harpoon")
+	n.Segment = strings.HasSuffix(name, "segment")
+	return p.add(n), r, nil
 }
 
 // parseAlphabet parses \text and its kin, such as \mbox, and the math
@@ -1446,7 +1555,16 @@ func (p *parser) parseBrace(cmd *token, toks []token, st alphabet) (Node, []toke
 	if err != nil {
 		return nil, nil, err
 	}
-	return p.add(Brace{Base: b, Under: name == "underbrace"}), r, nil
+	// okage: \overbracket and \underbracket of KaTeX take the square
+	// brackets U+23B4 and U+23B5 (D95).
+	n := Brace{Base: b, Under: strings.HasPrefix(name, "under")}
+	switch name {
+	case "overbracket":
+		n.Rune = '⎴'
+	case "underbracket":
+		n.Rune = '⎵'
+	}
+	return p.add(n), r, nil
 }
 
 // parseHidewidth parses \hidewidth.
@@ -1595,6 +1713,11 @@ func (p *parser) parseOperatorname(_ *token, toks []token, _ alphabet) (Node, []
 	limits := LimitsSide
 	if len(toks) > 0 && toks[0].kind == tChar && toks[0].r == '*' {
 		limits, toks = LimitsAuto, toks[1:]
+	}
+	if len(toks) > 0 && toks[0].kind == tChar {
+		// okage: a name of one character without braces, as KaTeX reads
+		// \operatorname x (D95).
+		return p.opAtom(toks[0].text, Op, limits), toks[1:], nil
 	}
 	opname, rest, err := p.readOpName(toks)
 	if err != nil {
@@ -1760,6 +1883,15 @@ func (p *parser) scaleboxHead(cmd *token, toks []token) (*Scale, []token, error)
 // for the scripts of a large operator. Layout half: e.gridLayout with
 // flatLeading.
 func (p *parser) parseSubstack(_ *token, toks []token, st alphabet) (Node, []token, error) {
+	if len(toks) > 0 && toks[0].kind == tChar {
+		// okage: a row of one character without braces, as KaTeX reads
+		// \substack x (D95).
+		a, rest, err := p.parseAtom(toks, st)
+		if err != nil {
+			return nil, nil, err
+		}
+		return p.add(Array{Kind: ArraySubstack, Rows: [][]Node{{p.list([]Node{a})}}}), rest, nil
+	}
 	if len(toks) == 0 || toks[0].kind != tLBrace {
 		return nil, nil, p.fail(toks, `\substack needs {…}`)
 	}
@@ -1963,6 +2095,7 @@ type envBuilder struct {
 	aligns []Align
 	vrules []int
 	hrules []int
+	dashed []bool
 	rows   [][]Node
 	row    []Node
 	toks   []token // the tokens still to read
@@ -1991,18 +2124,26 @@ func (p *parser) beginEnv(cmd *token, toks []token) (*envBuilder, error) {
 	if info.kind == ArrayArray {
 		e.aligns, e.vrules, e.toks = readColSpec(rest)
 	}
+	if strings.HasPrefix(env, "alignat") || env == "alignedat" {
+		_, r, ok := readGroupToks(e.toks)
+		if !ok {
+			return nil, p.fail(e.toks, fmt.Sprintf(`\begin{%s} needs {n}`, env))
+		}
+		e.toks = r
+	}
 	e.hlines()
 	return e, nil
 }
 
 // hlines reads the \hline and \hdashline commands at the start of a row, and
-// records a horizontal rule over the row for each. \hdashline is a solid
-// rule.
+// records a horizontal rule over the row for each. The rule of \hdashline
+// is dashed (D95).
 //
 // okage: the source has no \hline.
 func (e *envBuilder) hlines() {
 	for len(e.toks) > 0 && e.toks[0].kind == tCtrl && (e.toks[0].text == "hline" || e.toks[0].text == "hdashline") {
 		e.hrules = append(e.hrules, len(e.rows))
+		e.dashed = append(e.dashed, e.toks[0].text == "hdashline")
 		e.toks = e.toks[1:]
 	}
 }
@@ -2044,6 +2185,7 @@ func (e *envBuilder) cell(cell List, rest []token) (bool, error) {
 			Align:   e.aligns,
 			VRules:  e.vrules,
 			HRules:  e.hrules,
+			HDashed: dashedRules(e.dashed),
 			Open:    e.info.open,
 			Close:   e.info.close,
 			Stretch: e.info.stretch,
@@ -2051,6 +2193,15 @@ func (e *envBuilder) cell(cell List, rest []token) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// dashedRules returns dashed, or nil when no rule is dashed, so that an
+// Array without \hdashline has no HDashed.
+func dashedRules(dashed []bool) []bool {
+	if slices.Contains(dashed, true) {
+		return dashed
+	}
+	return nil
 }
 
 // readColSpec parses the column specification of array, such as {|c|c|} or
@@ -2350,6 +2501,11 @@ func parseCharCode(toks []token) (code int, rest []token, ok bool) {
 		case tChar:
 			return int(toks[0].r), toks[1:], true
 		default:
+			// okage: a character that the tokenizer reads as a token of its
+			// own, such as the ^ of \char`^ (D95).
+			if r, ok := specialRune(toks[0]); ok {
+				return int(r), toks[1:], true
+			}
 			return 0, toks, false
 		}
 	}
@@ -2370,6 +2526,26 @@ func parseCharCode(toks []token) (code int, rest []token, ok bool) {
 		return 0, toks, false
 	}
 	return int(v), toks, true
+}
+
+// specialRune returns the character of a token of its own kind, such as ^
+// for a tSup, and false for another token.
+func specialRune(t token) (rune, bool) {
+	switch t.kind {
+	case tSup:
+		return '^', true
+	case tSub:
+		return '_', true
+	case tLBrace:
+		return '{', true
+	case tRBrace:
+		return '}', true
+	case tAmp:
+		return '&', true
+	case tPrime:
+		return '\'', true
+	}
+	return 0, false
 }
 
 // isBaseDigit reports whether r is a digit in base 10 or 16.
@@ -2658,6 +2834,11 @@ var xArrows = map[string]rune{
 	"xhookrightarrow": '↪', "xhookleftarrow": '↩', "xmapsto": '↦',
 	"xrightharpoonup": '⇀', "xrightharpoondown": '⇁',
 	"xleftharpoonup": '↼', "xleftharpoondown": '↽',
+	// okage: the arrows of KaTeX that the maintainers asked for on
+	// 2026-11-25 (D95).
+	"xtwoheadrightarrow": '↠', "xtwoheadleftarrow": '↞',
+	"xrightleftharpoons": '⇌', "xleftrightharpoons": '⇋',
+	"xtofrom": '⇄', "xlongequal": '=',
 }
 
 // opInfo describes a named operator: the upright text, and whether it takes
@@ -2681,6 +2862,12 @@ var namedOps = map[string]opInfo{
 	"det": {"det", true}, "gcd": {"gcd", true}, "Pr": {"Pr", true},
 	"dim": {"dim", false}, "ker": {"ker", false}, "deg": {"deg", false},
 	"hom": {"hom", false}, "arg": {"arg", false},
+	// okage: the operators of KaTeX for the names of Russian books, which
+	// src/functions/op.ts of KaTeX defines, a request of the maintainers on
+	// 2026-11-25 (D95).
+	"arcctg": {"arcctg", false}, "arctg": {"arctg", false}, "ch": {"ch", false},
+	"cosec": {"cosec", false}, "cotg": {"cotg", false}, "cth": {"cth", false},
+	"ctg": {"ctg", false}, "sh": {"sh", false}, "tg": {"tg", false}, "th": {"th", false},
 }
 
 // envInfo describes an environment of \begin…\end.
@@ -2707,6 +2894,21 @@ var envTable = map[string]envInfo{
 	"split":       {kind: ArrayAligned},
 	"gathered":    {kind: ArrayGathered},
 	"smallmatrix": {kind: ArraySmallMatrix},
+	// okage: the environments of KaTeX that the maintainers asked for on
+	// 2026-11-25 (D95). align and alignat are aligned, gather is gathered,
+	// and equation is gathered with one row, as KaTeX sets them. The column
+	// count of alignat is read and dropped. rcases is cases with the brace at
+	// the right.
+	"align":     {kind: ArrayAligned},
+	"align*":    {kind: ArrayAligned},
+	"alignat":   {kind: ArrayAligned},
+	"alignat*":  {kind: ArrayAligned},
+	"alignedat": {kind: ArrayAligned},
+	"gather":    {kind: ArrayGathered},
+	"gather*":   {kind: ArrayGathered},
+	"equation":  {kind: ArrayGathered},
+	"equation*": {kind: ArrayGathered},
+	"rcases":    {kind: ArrayMatrix, close: '}', stretch: 1.2},
 }
 
 // symbols maps a control-sequence name to its glyph and atom class.
@@ -3049,6 +3251,139 @@ var symbols = map[string]sym{
 	"lneq":               {'⪇', Rel},        // U+2A87 less-than and single-line not equal to — amssymb.sty:183 [1 eq]
 	"lnsim":              {'⋦', Rel},        // U+22E6 less, not similar — amssymb.sty:189 [1 eq]
 	"ncong":              {'≇', Rel},        // U+2247 not congruent with — amssymb.sty:200 [1 eq]
+	// okage: the symbols of KaTeX that test/texmath/katex_parse.txt listed,
+	// with the code point and the class of src/symbols.ts of KaTeX 0.18.11,
+	// a request of the maintainers on 2026-11-25 (D95). The comment gives the
+	// group and the class of KaTeX. The pairs of the openers that KaTeX
+	// defines as macros follow them.
+	"And":                 {'&', Bin},        // main bin of KaTeX
+	"backepsilon":         {'\u220D', Rel},   // ams rel of KaTeX
+	"backprime":           {'\u2035', Ord},   // ams textord of KaTeX
+	"backsimeq":           {'\u22CD', Rel},   // ams rel of KaTeX
+	"barwedge":            {'\u22BC', Bin},   // ams bin of KaTeX
+	"bumpeq":              {'\u224F', Rel},   // ams rel of KaTeX
+	"Bumpeq":              {'\u224E', Rel},   // ams rel of KaTeX
+	"Cap":                 {'\u22D2', Bin},   // ams bin of KaTeX
+	"cdotp":               {'\u22C5', Punct}, // main punct of KaTeX
+	"centerdot":           {'\u22C5', Bin},   // ams bin of KaTeX
+	"circeq":              {'\u2257', Rel},   // ams rel of KaTeX
+	"circleddash":         {'\u229D', Bin},   // ams bin of KaTeX
+	"circledR":            {'\u00AE', Ord},   // ams textord of KaTeX
+	"circledS":            {'\u24C8', Ord},   // ams textord of KaTeX
+	"curlyeqprec":         {'\u22DE', Rel},   // ams rel of KaTeX
+	"curlyeqsucc":         {'\u22DF', Rel},   // ams rel of KaTeX
+	"curlyvee":            {'\u22CE', Bin},   // ams bin of KaTeX
+	"curlywedge":          {'\u22CF', Bin},   // ams bin of KaTeX
+	"dag":                 {'\u2020', Ord},   // main textord of KaTeX
+	"dashleftarrow":       {'\u21E0', Rel},   // ams rel of KaTeX
+	"ddag":                {'\u2021', Ord},   // main textord of KaTeX
+	"degree":              {'\u00B0', Ord},   // main textord of KaTeX
+	"diagdown":            {'\u2572', Ord},   // ams textord of KaTeX
+	"diagup":              {'\u2571', Ord},   // ams textord of KaTeX
+	"divideontimes":       {'\u22C7', Bin},   // ams bin of KaTeX
+	"Doteq":               {'\u2251', Rel},   // ams rel of KaTeX
+	"doublebarwedge":      {'\u2A5E', Bin},   // ams bin of KaTeX
+	"doublecap":           {'\u22D2', Bin},   // ams bin of KaTeX
+	"doublecup":           {'\u22D3', Bin},   // ams bin of KaTeX
+	"downdownarrows":      {'\u21CA', Rel},   // ams rel of KaTeX
+	"downharpoonleft":     {'\u21C3', Rel},   // ams rel of KaTeX
+	"downharpoonright":    {'\u21C2', Rel},   // ams rel of KaTeX
+	"eqcirc":              {'\u2256', Rel},   // ams rel of KaTeX
+	"eqsim":               {'\u2242', Rel},   // ams rel of KaTeX
+	"eqslantgtr":          {'\u2A96', Rel},   // ams rel of KaTeX
+	"eqslantless":         {'\u2A95', Rel},   // ams rel of KaTeX
+	"fallingdotseq":       {'\u2252', Rel},   // ams rel of KaTeX
+	"ggg":                 {'\u22D9', Rel},   // ams rel of KaTeX
+	"gggtr":               {'\u22D9', Rel},   // ams rel of KaTeX
+	"gnapprox":            {'\u2A8A', Rel},   // ams rel of KaTeX
+	"gneq":                {'\u2A88', Rel},   // ams rel of KaTeX
+	"gneqq":               {'\u2269', Rel},   // ams rel of KaTeX
+	"gnsim":               {'\u22E7', Rel},   // ams rel of KaTeX
+	"gtrdot":              {'\u22D7', Bin},   // ams bin of KaTeX
+	"gtreqless":           {'\u22DB', Rel},   // ams rel of KaTeX
+	"imageof":             {'\u22B7', Rel},   // main rel of KaTeX
+	"ldotp":               {'.', Punct},      // main punct of KaTeX
+	"leftarrowtail":       {'\u21A2', Rel},   // ams rel of KaTeX
+	"leftharpoondown":     {'\u21BD', Rel},   // main rel of KaTeX
+	"leftharpoonup":       {'\u21BC', Rel},   // main rel of KaTeX
+	"leftrightsquigarrow": {'\u21AD', Rel},   // ams rel of KaTeX
+	"leftthreetimes":      {'\u22CB', Bin},   // ams bin of KaTeX
+	"lessdot":             {'\u22D6', Bin},   // ams bin of KaTeX
+	"lesseqgtr":           {'\u22DA', Rel},   // ams rel of KaTeX
+	"lesseqqgtr":          {'\u2A8B', Rel},   // ams rel of KaTeX
+	"Lleftarrow":          {'\u21DA', Rel},   // ams rel of KaTeX
+	"llless":              {'\u22D8', Rel},   // ams rel of KaTeX
+	"lmoustache":          {'\u23B0', Open},  // main open of KaTeX
+	"lnapprox":            {'\u2A89', Rel},   // ams rel of KaTeX
+	"lneqq":               {'\u2268', Rel},   // ams rel of KaTeX
+	"looparrowleft":       {'\u21AB', Rel},   // ams rel of KaTeX
+	"lparen":              {'(', Open},       // main open of KaTeX
+	"Lsh":                 {'\u21B0', Rel},   // ams rel of KaTeX
+	"maltese":             {'\u2720', Ord},   // ams textord of KaTeX
+	"mathsterling":        {'\u00A3', Ord},   // main textord of KaTeX
+	"ngeq":                {'\u2271', Rel},   // ams rel of KaTeX
+	"ngtr":                {'\u226F', Rel},   // ams rel of KaTeX
+	"nleftarrow":          {'\u219A', Rel},   // ams rel of KaTeX
+	"nLeftarrow":          {'\u21CD', Rel},   // ams rel of KaTeX
+	"nleftrightarrow":     {'\u21AE', Rel},   // ams rel of KaTeX
+	"nLeftrightarrow":     {'\u21CE', Rel},   // ams rel of KaTeX
+	"nless":               {'\u226E', Rel},   // ams rel of KaTeX
+	"npreceq":             {'\u22E0', Rel},   // ams rel of KaTeX
+	"nsucc":               {'\u2281', Rel},   // ams rel of KaTeX
+	"nsupseteq":           {'\u2289', Rel},   // ams rel of KaTeX
+	"ntriangleleft":       {'\u22EA', Rel},   // ams rel of KaTeX
+	"ntrianglelefteq":     {'\u22EC', Rel},   // ams rel of KaTeX
+	"ntriangleright":      {'\u22EB', Rel},   // ams rel of KaTeX
+	"ntrianglerighteq":    {'\u22ED', Rel},   // ams rel of KaTeX
+	"nvdash":              {'\u22AC', Rel},   // ams rel of KaTeX
+	"nVdash":              {'\u22AE', Rel},   // ams rel of KaTeX
+	"nVDash":              {'\u22AF', Rel},   // ams rel of KaTeX
+	"oiiint":              {'\u2230', Op},    // main op of KaTeX
+	"oiint":               {'\u222F', Op},    // main op of KaTeX
+	"origof":              {'\u22B6', Rel},   // main rel of KaTeX
+	"owns":                {'\u220B', Rel},   // main rel of KaTeX
+	"pounds":              {'\u00A3', Ord},   // main textord of KaTeX
+	"precapprox":          {'\u2AB7', Rel},   // ams rel of KaTeX
+	"precnapprox":         {'\u2AB9', Rel},   // ams rel of KaTeX
+	"precnsim":            {'\u22E8', Rel},   // ams rel of KaTeX
+	"precsim":             {'\u227E', Rel},   // ams rel of KaTeX
+	"rightharpoondown":    {'\u21C1', Rel},   // main rel of KaTeX
+	"rightthreetimes":     {'\u22CC', Bin},   // ams bin of KaTeX
+	"risingdotseq":        {'\u2253', Rel},   // ams rel of KaTeX
+	"Rrightarrow":         {'\u21DB', Rel},   // ams rel of KaTeX
+	"Rsh":                 {'\u21B1', Rel},   // ams rel of KaTeX
+	"shortmid":            {'\u2223', Rel},   // ams rel of KaTeX
+	"shortparallel":       {'\u2225', Rel},   // ams rel of KaTeX
+	"subseteqq":           {'\u2AC5', Rel},   // ams rel of KaTeX
+	"succapprox":          {'\u2AB8', Rel},   // ams rel of KaTeX
+	"succnapprox":         {'\u2ABA', Rel},   // ams rel of KaTeX
+	"succneqq":            {'\u2AB6', Rel},   // ams rel of KaTeX
+	"succnsim":            {'\u22E9', Rel},   // ams rel of KaTeX
+	"Supset":              {'\u22D1', Rel},   // ams rel of KaTeX
+	"supseteqq":           {'\u2AC6', Rel},   // ams rel of KaTeX
+	"thickapprox":         {'\u2248', Rel},   // ams rel of KaTeX
+	"thicksim":            {'\u223C', Rel},   // ams rel of KaTeX
+	"Updownarrow":         {'\u21D5', Rel},   // main rel of KaTeX
+	"upharpoonleft":       {'\u21BF', Rel},   // ams rel of KaTeX
+	"upuparrows":          {'\u21C8', Rel},   // ams rel of KaTeX
+	"varpropto":           {'\u221D', Rel},   // ams rel of KaTeX
+	"veebar":              {'\u22BB', Bin},   // ams bin of KaTeX
+	"yen":                 {'\u00A5', Ord},   // ams textord of KaTeX
+	"rparen":              {')', Close},      // main close of KaTeX
+	"rmoustache":          {'⎱', Close},      // main close of KaTeX
+	"llcorner":            {'⌞', Open},       // \@llcorner of KaTeX, the pair of \lrcorner
+	"lBrace":              {'⦃', Open},       // the character of the MathML of \lBrace of KaTeX
+	"rBrace":              {'⦄', Close},      // the character of the MathML of \rBrace of KaTeX
+	"minuso":              {'⦵', Bin},        // the character of the MathML of \minuso of KaTeX
+	// The italic capital Greek letters of \varGamma and its kin, which KaTeX
+	// defines as \mathit{\Gamma}. The math alphabets of texmath map Latin
+	// letters only, so the table holds the code points of math italic.
+	"varGamma": {'\U0001D6E4', Ord}, "varDelta": {'\U0001D6E5', Ord}, "varLambda": {'\U0001D6EC', Ord},
+	"varXi": {'\U0001D6EF', Ord}, "varPi": {'\U0001D6F1', Ord}, "varSigma": {'\U0001D6F4', Ord},
+	"varUpsilon": {'\U0001D6F6', Ord}, "varPhi": {'\U0001D6F7', Ord}, "varPsi": {'\U0001D6F9', Ord},
+	"varOmega": {'\U0001D6FA', Ord},
+	// The negated relations that Unicode has no character for, which KaTeX
+	// draws with glyphs of its own, are in negatedSymbols.
 }
 
 // ── the layout halves ───────────────────────────────────────────────────────

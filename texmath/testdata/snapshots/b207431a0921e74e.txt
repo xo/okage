@@ -1,7 +1,11 @@
 tex "\\tg"
 
 style display
-error "parsing tex math: unknown command \\tg"
+box 7.99 6.1000000000000005 2.35 0
+glyph 275 10 0 0 text "t" color 0 0 0 1
+glyph 261 10 3.15 0 text "g" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\tg"
+box 7.99 6.1000000000000005 2.35 0
+glyph 275 10 0 0 text "t" color 0 0 0 1
+glyph 261 10 3.15 0 text "g" color 0 0 0 1

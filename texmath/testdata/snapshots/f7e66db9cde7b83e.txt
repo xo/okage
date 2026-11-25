@@ -1,7 +1,9 @@
 tex "\\lesseqqgtr"
 
 style display
-error "parsing tex math: unknown command \\lesseqqgtr"
+box 7.2 9.52 4.34 0
+glyph 3050 10 0 0 text "⪋" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lesseqqgtr"
+box 7.2 9.52 4.34 0
+glyph 3050 10 0 0 text "⪋" color 0 0 0 1

@@ -88,7 +88,9 @@ func TestTheAmsfontsBinaryAliasesShareTheGlyphAndNotTheClass(t *testing.T) {
 }
 
 func TestTheSymbolsWithNoCodepointStayOut(t *testing.T) {
-	for _, name := range []string{"moo", "fatsemi", "lhook", "nsubseteqq", "llceil", "llcorner"} {
+	// okage: \llcorner is in the table since D95, as U+231E, which KaTeX
+	// gives it, and \nsubseteqq is \not\subseteqq, a macro.
+	for _, name := range []string{"moo", "fatsemi", "lhook", "nsubseteqq", "llceil"} {
 		if s, ok := symbols[name]; ok {
 			t.Errorf(`\%s is in the table as %U`, name, s.r)
 		}

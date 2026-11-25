@@ -1,7 +1,11 @@
 tex "\\ngeqslant"
 
 style display
-error "parsing tex math: unknown command \\ngeqslant"
+box 7.2 6.484999999999999 1.495 0
+glyph 3037 10 0 0 text "⩾" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.605 text "/" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ngeqslant"
+box 7.2 6.484999999999999 1.495 0
+glyph 3037 10 0 0 text "⩾" color 0 0 0 1
+glyph 1060 10 1.6700000000000002 0.605 text "/" color 0 0 0 1

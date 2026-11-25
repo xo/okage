@@ -1,7 +1,11 @@
 tex "\\llcorner \\lrcorner"
 
 style display
-error "parsing tex math: unknown command \\llcorner"
+box 9.48 1.68 2.22 0
+glyph 2043 10 0 0 text "⌞" color 0 0 0 1
+glyph 2044 10 4.74 0 text "⌟" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\llcorner"
+box 9.48 1.68 2.22 0
+glyph 2043 10 0 0 text "⌞" color 0 0 0 1
+glyph 2044 10 4.74 0 text "⌟" color 0 0 0 1

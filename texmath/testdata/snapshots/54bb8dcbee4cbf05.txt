@@ -1,7 +1,9 @@
 tex "\\lessdot"
 
 style display
-error "parsing tex math: unknown command \\lessdot"
+box 7.2 5.47 0.25 0
+glyph 1955 10 0 0 text "⋖" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lessdot"
+box 7.2 5.47 0.25 0
+glyph 1955 10 0 0 text "⋖" color 0 0 0 1

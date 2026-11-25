@@ -1,7 +1,9 @@
 tex "\\varPsi"
 
 style display
-error "parsing tex math: unknown command \\varPsi"
+box 8 6.57 0 0.8
+glyph 4012 10 0 0 text "𝛹" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varPsi"
+box 8 6.57 0 0.8
+glyph 4012 10 0 0 text "𝛹" color 0 0 0 1

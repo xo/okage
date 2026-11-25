@@ -1,7 +1,17 @@
 tex "\\overlinesegment{AB}"
 
 style display
-error "parsing tex math: unknown command \\overlinesegment"
+box 13.040000000000001 13.84 0 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+rule 0 -11.1 13.040000000000001 0.68 color 0 0 0 1
+rule 0 -13.16 0.68 4.8 color 0 0 0 1
+rule 12.360000000000001 -13.16 0.68 4.8 color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\overlinesegment"
+box 13.040000000000001 13.84 0 0
+glyph 3300 10 0 0 text "𝐴" color 0 0 0 1
+glyph 3301 10 6.8100000000000005 0 text "𝐵" color 0 0 0 1
+rule 0 -11.1 13.040000000000001 0.68 color 0 0 0 1
+rule 0 -13.16 0.68 4.8 color 0 0 0 1
+rule 12.360000000000001 -13.16 0.68 4.8 color 0 0 0 1

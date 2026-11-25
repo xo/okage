@@ -1,7 +1,9 @@
 tex "\\text{\\O}"
 
 style display
-error "parsing tex math: unknown command \\O"
+box 7.37 6.75 0.2 0
+glyph 170 10 0 0 text "Ø" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\O"
+box 7.37 6.75 0.2 0
+glyph 170 10 0 0 text "Ø" color 0 0 0 1

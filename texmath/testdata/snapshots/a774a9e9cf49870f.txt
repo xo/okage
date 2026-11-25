@@ -1,7 +1,11 @@
 tex "\\lparen~\\rparen"
 
 style display
-error "parsing tex math: unknown command \\lparen"
+box 10.473333333333334 7.36 1.96 0
+glyph 1064 10 0 0 text "(" color 0 0 0 1
+glyph 1065 10 6.903333333333334 0 text ")" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\lparen"
+box 10.473333333333334 7.36 1.96 0
+glyph 1064 10 0 0 text "(" color 0 0 0 1
+glyph 1065 10 6.903333333333334 0 text ")" color 0 0 0 1

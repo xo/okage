@@ -1,7 +1,9 @@
 tex "\\oiiint"
 
 style display
-error "parsing tex math: unknown command \\oiiint"
+box 24.47 14.31 9.15 5.4
+glyph 1729 10 0 -0.019999999999999574 text "∰" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\oiiint"
+box 15.780000000000001 7.345000000000001 2.185 2.3000000000000003
+glyph 1728 10 0 -0.07500000000000018 text "∰" color 0 0 0 1

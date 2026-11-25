@@ -1,7 +1,11 @@
 tex "\\ch"
 
 style display
-error "parsing tex math: unknown command \\ch"
+box 10.23 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 262 10 4.46 0 text "h" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ch"
+box 10.23 7.0600000000000005 0.1 0
+glyph 257 10 0 0 text "c" color 0 0 0 1
+glyph 262 10 4.46 0 text "h" color 0 0 0 1

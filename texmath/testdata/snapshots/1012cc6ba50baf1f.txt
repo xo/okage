@@ -1,7 +1,9 @@
 tex "\\text{\\textbackslash}"
 
 style display
-error "parsing tex math: unknown command \\textbackslash"
+box 3.85 7.09 0.89 0
+glyph 1061 10 0 0 text "\\" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\textbackslash"
+box 3.85 7.09 0.89 0
+glyph 1061 10 0 0 text "\\" color 0 0 0 1

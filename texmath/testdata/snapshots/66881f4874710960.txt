@@ -1,7 +1,9 @@
 tex "\\curlyvee"
 
 style display
-error "parsing tex math: unknown command \\curlyvee"
+box 5.94 5.45 0.26 0
+glyph 1947 10 0 0 text "⋎" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\curlyvee"
+box 5.94 5.45 0.26 0
+glyph 1947 10 0 0 text "⋎" color 0 0 0 1

@@ -1,7 +1,7 @@
 tex "\\includegraphics[height=0.8em, totalheight=0.9em, width=0.9em, alt=KA logo]{https://katex.org/img/khan-academy.png}"
 
 style display
-error "parsing tex math: unknown command \\includegraphics"
+box 9 8 0.9999999999999998 0
 
 style text
-error "parsing tex math: unknown command \\includegraphics"
+box 9 8 0.9999999999999998 0

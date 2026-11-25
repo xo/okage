@@ -1,7 +1,9 @@
 tex "\\text{\\textcircled a}"
 
 style display
-error "parsing tex math: unknown command \\textcircled"
+box 8.55 7.0600000000000005 0.49 0
+glyph 2178 10 0 0 text "ⓐ" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\textcircled"
+box 8.55 7.0600000000000005 0.49 0
+glyph 2178 10 0 0 text "ⓐ" color 0 0 0 1

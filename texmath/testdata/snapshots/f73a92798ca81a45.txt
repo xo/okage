@@ -1,7 +1,11 @@
 tex "\\text{\\\"{a}}"
 
 style display
-error "parsing tex math: unknown command \\\""
+box 4.8 6.72 0.07 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 760 10 4.8 0 text "̈" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\\""
+box 4.8 6.72 0.07 0
+glyph 255 10 0 0 text "a" color 0 0 0 1
+glyph 760 10 4.8 0 text "̈" color 0 0 0 1

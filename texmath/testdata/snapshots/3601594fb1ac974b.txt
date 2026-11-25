@@ -1,7 +1,9 @@
 tex "\\varPi"
 
 style display
-error "parsing tex math: unknown command \\varPi"
+box 7.96 6.57 0 0.55
+glyph 4004 10 0 0 text "𝛱" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\varPi"
+box 7.96 6.57 0 0.55
+glyph 4004 10 0 0 text "𝛱" color 0 0 0 1

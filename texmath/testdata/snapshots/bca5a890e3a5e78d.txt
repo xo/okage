@@ -1,7 +1,17 @@
 tex "\\LaTeX"
 
 style display
-error "parsing tex math: unknown command \\LaTeX"
+box 21.789 6.734 2.365 0
+glyph 14 10 0 0 text "L" color 0 0 0 1
+glyph 3 7 2.250000000000001 -2.1 text "A" color 0 0 0 1
+glyph 22 10 5.776000000000001 0 text "T" color 0 0 0 1
+glyph 7 10 10.139000000000001 2.365 text "E" color 0 0 0 1
+glyph 26 10 15.149000000000001 0 text "X" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\LaTeX"
+box 21.789 6.734 2.365 0
+glyph 14 10 0 0 text "L" color 0 0 0 1
+glyph 3 7 2.250000000000001 -2.1 text "A" color 0 0 0 1
+glyph 22 10 5.776000000000001 0 text "T" color 0 0 0 1
+glyph 7 10 10.139000000000001 2.365 text "E" color 0 0 0 1
+glyph 26 10 15.149000000000001 0 text "X" color 0 0 0 1

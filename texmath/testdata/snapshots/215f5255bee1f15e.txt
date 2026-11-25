@@ -1,7 +1,9 @@
 tex "\\doublecap"
 
 style display
-error "parsing tex math: unknown command \\doublecap"
+box 6.3500000000000005 5.49 0.32 0
+glyph 1951 10 0 0 text "⋒" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\doublecap"
+box 6.3500000000000005 5.49 0.32 0
+glyph 1951 10 0 0 text "⋒" color 0 0 0 1

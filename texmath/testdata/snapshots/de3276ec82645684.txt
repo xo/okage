@@ -1,7 +1,9 @@
 tex "\\ntrianglelefteq"
 
 style display
-error "parsing tex math: unknown command \\ntrianglelefteq"
+box 6.5 7.47 2.35 0
+glyph 1981 10 0 0 text "⋬" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\ntrianglelefteq"
+box 6.5 7.47 2.35 0
+glyph 1981 10 0 0 text "⋬" color 0 0 0 1

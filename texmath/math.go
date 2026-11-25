@@ -546,10 +546,15 @@ func (l *layout) attachLimits(op, over, under *box, st Style) *box {
 // FractionNumeratorShiftUp over the baseline, and the baseline of the
 // denominator at least FractionDenominatorShiftDown under it, with the
 // constants of display style in display style. The source takes only the
-// gaps (math.go:553 and math.go:555), so a fraction was too flat.
+// gaps (math.go:553 and math.go:555), so a fraction was too flat. align
+// sets a numerator that is narrower than den at one side of it, for
+// \cfrac[l] and \cfrac[r] (D95).
 //
 //go:noinline
-func (l *layout) fraction(num, den *box, st Style) *box {
+func (l *layout) fraction(num, den *box, st Style, align Align) *box {
+	if align != AlignCenter {
+		num = alignNumerator(num, den, align)
+	}
 	px := l.px(st)
 	axis := l.axis(px)
 	rt := l.mc(font.FractionRuleThickness, px)
@@ -844,14 +849,17 @@ func (l *layout) boxed(b *box, st Style, n *Boxed) *box {
 // Op, which takes its scripts as limits.
 //
 // okage: the source draws a rule in place of the brace. A face without the
-// glyph still gets the rule.
+// glyph still gets the rule. r is the character of the brace, such as the
+// square bracket of \overbracket, or 0 for the curly brace (D95).
 //
 //go:noinline
-func (l *layout) brace(b *box, over bool, st Style) *box {
+func (l *layout) brace(b *box, r rune, over bool, st Style) *box {
 	px := l.px(st)
-	r := '⏟'
-	if over {
-		r = '⏞'
+	if r == 0 {
+		r = '⏟'
+		if over {
+			r = '⏞'
+		}
 	}
 	if _, ok := l.face.NominalGlyph(r); !ok {
 		var out *box
@@ -863,6 +871,15 @@ func (l *layout) brace(b *box, over bool, st Style) *box {
 		out.cls = Op
 		return out
 	}
+	return l.stretchOver(b, r, over, float64(px*0.1), float64(px*0.3), Op, px)
+}
+
+// stretchOver sets the character r over or under b, grown to the width of b
+// with the horizontal variants and the horizontal assembly of the MATH
+// table. The ink of r is gap from b, and the box goes beyond past the ink.
+// The box has the class cls. brace calls it for the braces, and
+// layoutStretch for \overgroup and its kin (D95).
+func (l *layout) stretchOver(b *box, r rune, over bool, gap, beyond float64, cls Class, px float64) *box {
 	br := l.stretchHorizontal(r, b.w, px, Ord)
 	// The ink of the brace, from its items, with y up.
 	top, bot := math.Inf(-1), math.Inf(1)
@@ -873,8 +890,7 @@ func (l *layout) brace(b *box, over bool, st Style) *box {
 	if len(br.items) == 0 {
 		top, bot = 0, 0
 	}
-	gap, beyond := float64(px*0.1), float64(px*0.3)
-	out := newBox(Op)
+	out := newBox(cls)
 	out.w = max(b.w, br.w)
 	bw, brw := b.w, br.w
 	out.h, out.d = b.h, b.d
@@ -1441,6 +1457,7 @@ type gridOpts struct {
 	colGap float64   // the gap between columns, and the margin of a vertical rule
 	vrules []int     // the column gaps, 0 to the column count, that carry a vertical rule
 	hrules []int     // the row gaps, 0 to the row count, that carry a horizontal rule
+	hdash  []bool    // for each rule of hrules, whether it is dashed
 	lead   leading   // the model of the space between the rows, see leading.go
 	axisPx float64   // the size of the axis and of the vertical rules
 }
@@ -1508,15 +1525,6 @@ func (l *layout) gridLayout(rows [][]*box, o gridOpts) *box {
 		hrt = l.mc(font.FractionRuleThickness, o.axisPx)
 		totalH += float64(float64(len(o.hrules)) * hrt)
 	}
-	hrulesAt := func(i int) int {
-		n := 0
-		for _, g := range o.hrules {
-			if g == i {
-				n++
-			}
-		}
-		return n
-	}
 	hasRule := func(g int) bool { return slices.Contains(o.vrules, g) }
 	x0 := 0.0
 	if hasRule(0) {
@@ -1558,8 +1566,15 @@ func (l *layout) gridLayout(rows [][]*box, o gridOpts) *box {
 		gw += o.colGap
 	}
 	hline := func(i int) {
-		for range hrulesAt(i) {
-			l.rule(grid, 0, y, gw, hrt)
+		for k, g := range o.hrules {
+			if g != i {
+				continue
+			}
+			if k < len(o.hdash) && o.hdash[k] {
+				l.dashedRule(grid, 0, y, gw, hrt, float64(hdashLength*o.axisPx))
+			} else {
+				l.rule(grid, 0, y, gw, hrt)
+			}
 			y += hrt
 		}
 	}
@@ -1584,6 +1599,28 @@ func (l *layout) gridLayout(rows [][]*box, o gridOpts) *box {
 	hline(len(rows))
 	grid.w = gw
 	return grid
+}
+
+// hdashLength is the length of a dash of \hdashline and of the gap after it,
+// in em: the 4pt of \dashlinedash and \dashlinegap of the package arydshln
+// at 10pt (D95).
+const hdashLength = 0.4
+
+// dashedRule draws a dashed horizontal rule of the width w and the
+// thickness h at (x, y): dashes of the length dash, with gaps of the same
+// length. The last dash is cut at the end of the rule.
+func (l *layout) dashedRule(dst *box, x, y, w, h, dash float64) {
+	if !(dash > 0) {
+		l.rule(dst, x, y, w, h)
+		return
+	}
+	for i := 0; ; i++ {
+		x0 := float64(float64(2*i) * dash)
+		if x0 >= w {
+			return
+		}
+		l.rule(dst, x+x0, y, min(dash, w-x0), h)
+	}
 }
 
 // alignedAligns returns the columns of aligned and split: right and left in
@@ -1641,7 +1678,7 @@ func (l *layout) finishEnv(n *Array, rows [][]*box, cst, st Style) *box {
 	switch n.Kind {
 	case ArrayArray:
 		return l.gridLayout(rows, gridOpts{aligns: n.Align, colGap: float64(p * 0.5),
-			lead: strutLeading{baselineskip: bl(p)}, vrules: n.VRules, hrules: n.HRules, axisPx: outer})
+			lead: strutLeading{baselineskip: bl(p)}, vrules: n.VRules, hrules: n.HRules, hdash: n.HDashed, axisPx: outer})
 	// aligned and gathered take the same grid and \jot: \openup\jot of
 	// amsmath opens each row of a display by \jot. Measured with tectonic,
 	// both have one row of 12pt, the plain strut, and a pitch of 15pt.
@@ -1676,7 +1713,7 @@ func (l *layout) finishEnv(n *Array, rows [][]*box, cst, st Style) *box {
 		return grid
 	default: // the matrix family
 		grid := l.gridLayout(rows, gridOpts{colGap: float64(p * 0.6),
-			lead: strutLeading{baselineskip: bl(p), stretch: n.Stretch}, hrules: n.HRules, axisPx: outer})
+			lead: strutLeading{baselineskip: bl(p), stretch: n.Stretch}, hrules: n.HRules, hdash: n.HDashed, axisPx: outer})
 		if n.Open == 0 && n.Close == 0 {
 			return grid
 		}

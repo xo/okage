@@ -1,7 +1,9 @@
 tex "\\copyright"
 
 style display
-error "parsing tex math: unknown command \\copyright"
+box 7.8100000000000005 6.76 0.14 0
+glyph 1117 10 0 0 text "©" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\copyright"
+box 7.8100000000000005 6.76 0.14 0
+glyph 1117 10 0 0 text "©" color 0 0 0 1

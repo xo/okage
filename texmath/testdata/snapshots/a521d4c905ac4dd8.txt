@@ -1,7 +1,9 @@
 tex "\\supseteqq"
 
 style display
-error "parsing tex math: unknown command \\supseteqq"
+box 7.2 7.34 2.16 0
+glyph 3113 10 0 0 text "⫆" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\supseteqq"
+box 7.2 7.34 2.16 0
+glyph 3113 10 0 0 text "⫆" color 0 0 0 1

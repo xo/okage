@@ -1,7 +1,9 @@
 tex "\\fallingdotseq"
 
 style display
-error "parsing tex math: unknown command \\fallingdotseq"
+box 7.2 6.25 1.08 0
+glyph 1791 10 0 0 text "≒" color 0 0 0 1
 
 style text
-error "parsing tex math: unknown command \\fallingdotseq"
+box 7.2 6.25 1.08 0
+glyph 1791 10 0 0 text "≒" color 0 0 0 1
