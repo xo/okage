@@ -136,7 +136,7 @@ func lineThroughThickness(fonts *fontCache, id FontID, variations []FontVariatio
 	if style.strikeThrough == nil {
 		return underline
 	}
-	thickness := wide.TruncI32(round32(style.strikeThrough.thickness))
+	thickness := wide.TruncI32(round32(style.strikeThrough.thickness.toF32()))
 	if thickness <= 0 || thickness > math.MaxUint16 {
 		return underline
 	}

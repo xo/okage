@@ -428,9 +428,25 @@ func outline(pf *parsedFace, face *font.Face, glyphID GlyphID) (*path.Path, bool
 	return builder.builder.Finish()
 }
 
+// bitmapPixels is the case of Pixels of read-fonts
+// src/model/glyph/bitmap.rs.
+type bitmapPixels uint8
+
+// The cases of Pixels of read-fonts.
+const (
+	// bitmapPixelsPNG is Pixels::Png.
+	bitmapPixelsPNG bitmapPixels = iota
+	// bitmapPixelsBGRA is Pixels::Bgra.
+	bitmapPixelsBGRA
+	// bitmapPixelsMask is Pixels::Mask.
+	bitmapPixelsMask
+)
+
 // bitmapGlyph is BitmapGlyph of read-fonts src/model/glyph/bitmap.rs, with
-// the fields that usvg reads, for a glyph with PNG data.
+// the fields that usvg reads. Only a glyph of PNG pixels keeps its data,
+// because usvg draws no other glyph.
 type bitmapGlyph struct {
+	pixels        bitmapPixels
 	png           []byte
 	isSbix        bool
 	width         uint32
@@ -487,12 +503,8 @@ const maxSbixDupes = 8
 
 // bitmapStrikes is BitmapStrikes::new of read-fonts
 // src/model/glyph/bitmap.rs, which usvg calls with font.bitmap_strikes. It
-// returns the strikes of the first of the tables sbix and CBDT that the face
-// has.
-//
-// Port: read-fonts also reads the table EBDT, whose glyphs are masks with no
-// PNG data, which usvg does not draw. The strikes of EBDT are left out, and
-// usvg draws the outline of such a glyph, as it does with read-fonts.
+// returns the strikes of the first of the tables sbix, CBDT and EBDT that
+// the face has.
 func bitmapStrikes(pf *parsedFace) []bitmapStrike {
 	numGlyphs := 0
 	if maxp := pf.rawTable("maxp"); len(maxp) >= 6 {
@@ -513,31 +525,51 @@ func bitmapStrikes(pf *parsedFace) []bitmapStrike {
 		}
 	}
 
-	cblcRaw, cbdt := pf.rawTable("CBLC"), pf.rawTable("CBDT")
-	if cblcRaw != nil && cbdt != nil {
-		if cblc, _, err := tables.ParseCBLC(cblcRaw); err == nil {
-			strikes := make([]bitmapStrike, 0, len(cblc.BitmapSizes))
-			for i, size := range cblc.BitmapSizes {
-				// Port: go-text keeps the bit depth private. It is the byte
-				// 46 of the record of the size, which starts at 8.
-				var bitDepth uint8
-				if off := 8 + 48*i + 46; off < len(cblcRaw) {
-					bitDepth = cblcRaw[off]
-				}
-				subtables := cblc.IndexSubTables[i]
-				strikes = append(strikes, bitmapStrike{
-					ppemX: uint16(size.PpemX),
-					ppemY: uint16(size.PpemY),
-					lookup: func(glyphID GlyphID) (bitmapGlyph, bool) {
-						return cbdtGlyph(size, bitDepth, subtables, cbdt, glyphID)
-					},
-				})
-			}
-			return strikes
-		}
+	if strikes, ok := bdtStrikes(pf.rawTable("CBLC"), pf.rawTable("CBDT"), true); ok {
+		return strikes
+	}
+	// The glyphs of EBDT are masks, which usvg does not draw. Their strikes
+	// still count, as in read-fonts (D100).
+	if strikes, ok := bdtStrikes(pf.rawTable("EBLC"), pf.rawTable("EBDT"), false); ok {
+		return strikes
 	}
 
 	return nil
+}
+
+// bdtStrikes returns the strikes of the location table blc and the data
+// table bdt: CBLC and CBDT when isColor is true, EBLC and EBDT otherwise. It
+// returns false when the font does not have both tables, or when go-text
+// cannot parse the location table.
+func bdtStrikes(blc, bdt []byte, isColor bool) ([]bitmapStrike, bool) {
+	if blc == nil || bdt == nil {
+		return nil, false
+	}
+	parsed, _, err := tables.ParseCBLC(blc)
+	if err != nil {
+		return nil, false
+	}
+	strikes := make([]bitmapStrike, 0, len(parsed.BitmapSizes))
+	for i, size := range parsed.BitmapSizes {
+		// Port: go-text keeps the glyph range and the bit depth private.
+		// They are the bytes 40 to 43 and the byte 46 of the record of the
+		// size, which starts at 8.
+		var r bdtSizeRange
+		if off := 8 + 48*i; off+47 <= len(blc) {
+			r.startGlyph = tables.GlyphID(binary.BigEndian.Uint16(blc[off+40:]))
+			r.endGlyph = tables.GlyphID(binary.BigEndian.Uint16(blc[off+42:]))
+			r.bitDepth = blc[off+46]
+		}
+		subtables := parsed.IndexSubTables[i]
+		strikes = append(strikes, bitmapStrike{
+			ppemX: uint16(size.PpemX),
+			ppemY: uint16(size.PpemY),
+			lookup: func(glyphID GlyphID) (bitmapGlyph, bool) {
+				return bdtGlyph(size, r, subtables, bdt, isColor, glyphID)
+			},
+		})
+	}
+	return strikes, true
 }
 
 // sbixGlyph is sbix_glyph in read-fonts src/model/glyph/bitmap.rs. It reads
@@ -599,110 +631,220 @@ func sbixGlyph(strike tables.Strike, pf *parsedFace, glyph GlyphID) (bitmapGlyph
 	return bitmapGlyph{}, false
 }
 
-// cbdtGlyph is Strike::get of read-fonts src/model/glyph/bitmap.rs for a
-// strike of CBDT, with BitmapGlyph::from_bdt, for a glyph with PNG data.
-func cbdtGlyph(size tables.BitmapSize, bitDepth uint8, subtables []tables.BitmapSubtable, cbdt []byte, glyphID GlyphID) (bitmapGlyph, bool) {
-	gid := tables.GlyphID(glyphID)
+// bdtSizeRange holds the fields of BitmapSize that go-text keeps private:
+// the range of the glyphs of the size and its bit depth.
+type bdtSizeRange struct {
+	startGlyph tables.GlyphID
+	endGlyph   tables.GlyphID
+	bitDepth   uint8
+}
+
+// bdtLocation is BitmapLocation of read-fonts src/tables/bitmap.rs: where the
+// data of a glyph is in the data table, and its format.
+type bdtLocation struct {
+	format     uint16
+	start, end int
+	metrics    *tables.BigGlyphMetrics
+}
+
+// locate is BitmapSize::location of read-fonts src/tables/bitmap.rs. It
+// finds the data of gid in the first index subtable whose range holds it.
+func (r bdtSizeRange) locate(subtables []tables.BitmapSubtable, gid tables.GlyphID) (bdtLocation, bool) {
+	if gid < r.startGlyph || gid > r.endGlyph {
+		return bdtLocation{}, false
+	}
 	for _, st := range subtables {
 		if gid < st.FirstGlyph || gid > st.LastGlyph {
 			continue
 		}
-		var start, end int
-		var bigMetrics *tables.BigGlyphMetrics
+		loc := bdtLocation{format: st.ImageFormat}
 		base := int(st.ImageDataOffset)
 		index := int(gid - st.FirstGlyph)
 		switch data := st.IndexData.(type) {
 		case tables.IndexData1:
 			if index+1 >= len(data.SbitOffsets) {
-				return bitmapGlyph{}, false
+				return bdtLocation{}, false
 			}
-			start, end = base+int(data.SbitOffsets[index]), base+int(data.SbitOffsets[index+1])
+			loc.start, loc.end = base+int(data.SbitOffsets[index]), base+int(data.SbitOffsets[index+1])
 		case tables.IndexData3:
 			if index+1 >= len(data.SbitOffsets) {
-				return bitmapGlyph{}, false
+				return bdtLocation{}, false
 			}
-			start, end = base+int(data.SbitOffsets[index]), base+int(data.SbitOffsets[index+1])
+			loc.start, loc.end = base+int(data.SbitOffsets[index]), base+int(data.SbitOffsets[index+1])
 		case tables.IndexData2:
-			start = base + int(data.ImageSize)*index
-			end = start + int(data.ImageSize)
-			bigMetrics = &data.BigMetrics
+			loc.start = base + int(data.ImageSize)*index
+			loc.end = loc.start + int(data.ImageSize)
+			loc.metrics = &data.BigMetrics
 		case tables.IndexData4:
 			i := slices.IndexFunc(data.GlyphArray, func(p tables.GlyphIdOffsetPair) bool { return p.GlyphID == gid })
 			if i < 0 || i+1 >= len(data.GlyphArray) {
-				return bitmapGlyph{}, false
+				return bdtLocation{}, false
 			}
-			start, end = base+int(data.GlyphArray[i].SbitOffset), base+int(data.GlyphArray[i+1].SbitOffset)
+			loc.start, loc.end = base+int(data.GlyphArray[i].SbitOffset), base+int(data.GlyphArray[i+1].SbitOffset)
 		case tables.IndexData5:
 			i := slices.Index(data.GlyphIdArray, gid)
 			if i < 0 {
-				return bitmapGlyph{}, false
+				return bdtLocation{}, false
 			}
-			start = base + int(data.ImageSize)*i
-			end = start + int(data.ImageSize)
-			bigMetrics = &data.BigMetrics
+			loc.start = base + int(data.ImageSize)*i
+			loc.end = loc.start + int(data.ImageSize)
+			loc.metrics = &data.BigMetrics
 		default:
-			return bitmapGlyph{}, false
+			return bdtLocation{}, false
 		}
-		if start < 0 || end > len(cbdt) || start > end {
-			return bitmapGlyph{}, false
+		if loc.end < loc.start {
+			return bdtLocation{}, false
 		}
-		b := cbdt[start:end]
-
-		var metrics tables.SmallGlyphMetrics
-		var png []byte
-		readPNG := func(b []byte) ([]byte, bool) {
-			if len(b) < 4 {
-				return nil, false
-			}
-			n := int(binary.BigEndian.Uint32(b))
-			if len(b) < 4+n {
-				return nil, false
-			}
-			return b[4 : 4+n], true
-		}
-		var ok bool
-		switch st.ImageFormat {
-		case 17:
-			if len(b) < 5 {
-				return bitmapGlyph{}, false
-			}
-			metrics = tables.SmallGlyphMetrics{
-				Height: b[0], Width: b[1], BearingX: int8(b[2]), BearingY: int8(b[3]), Advance: b[4],
-			}
-			png, ok = readPNG(b[5:])
-		case 18:
-			if len(b) < 8 {
-				return bitmapGlyph{}, false
-			}
-			metrics = tables.SmallGlyphMetrics{
-				Height: b[0], Width: b[1], BearingX: int8(b[2]), BearingY: int8(b[3]), Advance: b[4],
-			}
-			png, ok = readPNG(b[8:])
-		case 19:
-			if bigMetrics == nil {
-				return bitmapGlyph{}, false
-			}
-			metrics = bigMetrics.SmallGlyphMetrics
-			png, ok = readPNG(b)
-		default:
-			// Port: the other formats hold BGRA or mask data, which usvg
-			// does not draw.
-			return bitmapGlyph{}, false
-		}
-		if !ok || bitDepth != 32 {
-			return bitmapGlyph{}, false
-		}
-		return bitmapGlyph{
-			png:           png,
-			width:         uint32(metrics.Width),
-			height:        uint32(metrics.Height),
-			innerXBearing: int32(metrics.BearingX),
-			innerYBearing: int32(metrics.BearingY),
-			ppemX:         uint16(size.PpemX),
-			ppemY:         uint16(size.PpemY),
-		}, true
+		return loc, true
 	}
-	return bitmapGlyph{}, false
+	return bdtLocation{}, false
+}
+
+// bdtFormat is BitmapDataFormat of read-fonts src/tables/bitmap.rs: how the
+// pixels of a glyph are stored.
+type bdtFormat uint8
+
+// The cases of BitmapDataFormat of read-fonts.
+const (
+	// bdtByteAligned is BitmapDataFormat::ByteAligned.
+	bdtByteAligned bdtFormat = iota
+	// bdtBitAligned is BitmapDataFormat::BitAligned.
+	bdtBitAligned
+	// bdtPNG is BitmapDataFormat::Png.
+	bdtPNG
+)
+
+// bdtGlyph is Strike::get of read-fonts src/model/glyph/bitmap.rs for a
+// strike of CBDT or EBDT, with bitmap_data of src/tables/bitmap.rs and
+// BitmapGlyph::from_bdt. isColor is true for CBDT, the one table whose
+// glyphs can hold PNG data. A glyph of BGRA or mask pixels has no PNG data,
+// but it is a glyph all the same, as in read-fonts (D100).
+func bdtGlyph(size tables.BitmapSize, r bdtSizeRange, subtables []tables.BitmapSubtable, bdt []byte, isColor bool, glyphID GlyphID) (bitmapGlyph, bool) {
+	loc, ok := r.locate(subtables, tables.GlyphID(glyphID))
+	if !ok || loc.start < 0 || loc.end > len(bdt) {
+		return bitmapGlyph{}, false
+	}
+	b := bdt[loc.start:loc.end]
+	smallMetrics := func() (tables.SmallGlyphMetrics, bool) {
+		if len(b) < 5 {
+			return tables.SmallGlyphMetrics{}, false
+		}
+		m := tables.SmallGlyphMetrics{
+			Height: b[0], Width: b[1], BearingX: int8(b[2]), BearingY: int8(b[3]), Advance: b[4],
+		}
+		b = b[5:]
+		return m, true
+	}
+	// The big metrics start with the fields of the small metrics. Their
+	// three vertical fields follow, which usvg does not read.
+	bigMetrics := func() (tables.SmallGlyphMetrics, bool) {
+		if len(b) < 8 {
+			return tables.SmallGlyphMetrics{}, false
+		}
+		m, _ := smallMetrics()
+		b = b[3:]
+		return m, true
+	}
+	read := func(n int) ([]byte, bool) {
+		if n > len(b) {
+			return nil, false
+		}
+		return b[:n], true
+	}
+	depth := int(r.bitDepth)
+
+	var metrics tables.SmallGlyphMetrics
+	var format bdtFormat
+	var data []byte
+	switch loc.format {
+	case 1, 6:
+		if loc.format == 1 {
+			metrics, ok = smallMetrics()
+		} else {
+			metrics, ok = bigMetrics()
+		}
+		if !ok {
+			return bitmapGlyph{}, false
+		}
+		// The data for each row is padded to a byte boundary
+		pitch := (int(metrics.Width)*depth + 7) / 8
+		format = bdtByteAligned
+		data, ok = read(pitch * int(metrics.Height))
+	case 2, 5, 7:
+		switch loc.format {
+		case 2:
+			metrics, ok = smallMetrics()
+		case 7:
+			metrics, ok = bigMetrics()
+		default:
+			if loc.metrics == nil {
+				return bitmapGlyph{}, false
+			}
+			metrics, ok = loc.metrics.SmallGlyphMetrics, true
+		}
+		if !ok {
+			return bitmapGlyph{}, false
+		}
+		// The data is tightly packed
+		format = bdtBitAligned
+		data, ok = read((int(metrics.Width)*depth*int(metrics.Height) + 7) / 8)
+	case 17, 18, 19:
+		if !isColor {
+			return bitmapGlyph{}, false
+		}
+		switch loc.format {
+		case 17:
+			metrics, ok = smallMetrics()
+		case 18:
+			metrics, ok = bigMetrics()
+		default:
+			if loc.metrics == nil {
+				return bitmapGlyph{}, false
+			}
+			metrics, ok = loc.metrics.SmallGlyphMetrics, true
+		}
+		if !ok || len(b) < 4 {
+			return bitmapGlyph{}, false
+		}
+		n := int(binary.BigEndian.Uint32(b))
+		b = b[4:]
+		format = bdtPNG
+		data, ok = read(n)
+	default:
+		// Composite bitmaps, formats 8 and 9, are assembled from others,
+		// which nothing here does yet. No other format is valid.
+		return bitmapGlyph{}, false
+	}
+	if !ok {
+		return bitmapGlyph{}, false
+	}
+
+	width, height := int(metrics.Width), int(metrics.Height)
+	glyph := bitmapGlyph{
+		width:         uint32(width),
+		height:        uint32(height),
+		innerXBearing: int32(metrics.BearingX),
+		innerYBearing: int32(metrics.BearingY),
+		ppemX:         uint16(size.PpemX),
+		ppemY:         uint16(size.PpemY),
+	}
+	switch {
+	case depth == 32 && format == bdtPNG:
+		glyph.png = data
+	case depth == 32 && format == bdtByteAligned:
+		// Bgra::new needs four bytes for each pixel.
+		if len(data) < width*height*4 {
+			return bitmapGlyph{}, false
+		}
+		glyph.pixels = bitmapPixelsBGRA
+	case (depth == 1 || depth == 2 || depth == 4 || depth == 8) && format != bdtPNG:
+		// Mask::new needs the bytes that bitmap_data reads, so it does not
+		// fail here.
+		glyph.pixels = bitmapPixelsMask
+	default:
+		return bitmapGlyph{}, false
+	}
+	return glyph, true
 }
 
 // selectBitmap is BitmapStrikes::select_bitmap of read-fonts
@@ -805,6 +947,10 @@ func raster(l *loadedFont, glyphID GlyphID) (*bitmapImage, bool) {
 	// No size selects the largest image available.
 	image, ok := selectBitmap(l.bitmapStrikes(), glyphID)
 	if !ok {
+		return nil, false
+	}
+	// TODO: implement other bitmap formats
+	if image.pixels != bitmapPixelsPNG {
 		return nil, false
 	}
 
@@ -978,7 +1124,8 @@ func colr(pf *parsedFace, face *font.Face, glyphID GlyphID, palette int, foregro
 		opt:              opt,
 	}
 
-	if !colrpaint.Paint(pf.font, face.Coords(), colrpaint.GlyphID(glyphID), glyphPainter) {
+	// usvg walks the graph with the font model of read-fonts 0.46 (D100).
+	if !colrpaint.PaintModel(pf.font, face.Coords(), colrpaint.GlyphID(glyphID), glyphPainter) {
 		return nil, false
 	}
 	svg.EndElement()

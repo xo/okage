@@ -3,16 +3,19 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package colr walks the paint graph of a COLR glyph, as
-// ColorGlyph::paint of skrifa 0.44 does (D32). svg draws the color glyphs of
-// a text with it, as usvg src/text/colr.rs does, and pdf draws the color
+// Package colr walks the paint graph of a COLR glyph. Paint walks it as
+// ColorGlyph::paint of skrifa 0.44 does (D32), and pdf draws the color
 // glyphs of a Type 3 font with it, as krilla src/text/glyph/colr.rs does.
-// D62 moved it out of svg so that both packages share it.
+// PaintModel walks it as ColorGlyph::paint of the font model of read-fonts
+// 0.46 does, and svg draws the color glyphs of a text with it, as usvg
+// src/text/colr.rs does (D100). D62 moved the walk out of svg so that both
+// packages share it.
 //
 // go-text parses the tables COLR and CPAL, but it does not walk the graph
-// (D9). This file walks it as skrifa does: ColorGlyph::paint of
+// (D9). This file walks it as skrifa 0.44 does: ColorGlyph::paint of
 // src/color/mod.rs, traverse.rs, instance.rs and transform.rs of src/color.
-// Each item names the item of skrifa that it replaces.
+// model.go walks it as read-fonts 0.46 does. Each item names the item of
+// skrifa or read-fonts that it replaces.
 package colr
 
 import (
@@ -261,6 +264,7 @@ type resolvedPaint struct {
 
 	layers     []tables.PaintTable
 	firstLayer uint32
+	numLayers  uint32
 
 	paletteIndex uint16
 	alpha        float32
@@ -660,224 +664,12 @@ func traverseWithCallbacks(
 			}
 		}
 		return true
-	case resolvedSolid:
-		painter.Fill(Brush{Kind: BrushSolid, PaletteIndex: paint.paletteIndex, Alpha: paint.alpha})
-		return true
-	case resolvedLinearGradient:
-		p0 := Point{paint.x0, paint.y0}
-		p1 := Point{paint.x1, paint.y1}
-		p2 := Point{paint.x2, paint.y2}
-
-		sub := func(a, b Point) Point { return Point{a.X - b.X, a.Y - b.Y} }
-		crossProduct := func(a, b Point) float32 { return float32(a.X*b.Y) - float32(a.Y*b.X) }
-
-		resolvedStops := makeSortedResolvedStops(paint.colorStops)
-
-		// If p0p1 or p0p2 are degenerate probably nothing should be drawn.
-		// If p0p1 and p0p2 are parallel then one side is the first color and the other side is
-		// the last color, depending on the direction.
-		// For now, just use the first color.
-		if p1 == p0 || p2 == p0 || crossProduct(sub(p1, p0), sub(p2, p0)) == 0.0 {
-			if len(resolvedStops) != 0 {
-				stop := resolvedStops[0]
-				painter.Fill(Brush{Kind: BrushSolid, PaletteIndex: stop.PaletteIndex, Alpha: stop.Alpha})
-			}
-			return true
+	case resolvedSolid, resolvedLinearGradient, resolvedRadialGradient, resolvedSweepGradient:
+		// Port: skrifa 0.44 makes the brush here, as asBrush makes it for
+		// read-fonts 0.46, and fills only a brush that paints.
+		if brush, kind := paint.asBrush(); kind == maybeBrushSome {
+			painter.Fill(brush)
 		}
-
-		perpendicularToP2 := sub(p2, p0)
-		perpendicularToP2 = Point{perpendicularToP2.Y, -perpendicularToP2.X}
-		proj := projectOnto(sub(p1, p0), perpendicularToP2)
-		p3 := Point{p0.X + proj.X, p0.Y + proj.Y}
-
-		if len(resolvedStops) != 0 {
-			firstStop := resolvedStops[0]
-			lastStop := resolvedStops[len(resolvedStops)-1]
-			colorStopRange := lastStop.Offset - firstStop.Offset
-
-			// Nothing can be drawn for this situation.
-			if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
-				return true
-			}
-
-			// In the Pad case, for providing normalized stops in the 0 to 1 range to the client,
-			// insert a color stop at the end. Adding this stop will paint the equivalent gradient,
-			// because: All font-specified color stops are in the same spot, mode is pad, so
-			// everything before this spot is painted with the first color, everything after this spot
-			// is painted with the last color. Not adding this stop would skip the projection below along
-			// the p0-p3 axis and result in specifying non-normalized color stops to the shader.
-
-			if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
-				extraStop := lastStop
-				extraStop.Offset += 1.0
-				resolvedStops = append(resolvedStops, extraStop)
-
-				colorStopRange = 1.0
-			}
-
-			if colorStopRange != 1.0 || firstStop.Offset != 0.0 {
-				p0p3 := sub(p3, p0)
-				p0Offset := Point{float32(p0p3.X * firstStop.Offset), float32(p0p3.Y * firstStop.Offset)}
-				p3Offset := Point{float32(p0p3.X * lastStop.Offset), float32(p0p3.Y * lastStop.Offset)}
-
-				p3 = Point{p0.X + p3Offset.X, p0.Y + p3Offset.Y}
-				p0 = Point{p0.X + p0Offset.X, p0.Y + p0Offset.Y}
-
-				scaleFactor := 1.0 / colorStopRange
-				startOffset := firstStop.Offset
-
-				for i := range resolvedStops {
-					resolvedStops[i].Offset = (resolvedStops[i].Offset - startOffset) * scaleFactor
-				}
-			}
-
-			painter.Fill(Brush{
-				Kind:       BrushLinearGradient,
-				P0:         p0,
-				P1:         p3,
-				ColorStops: resolvedStops,
-				Extend:     paint.extend,
-			})
-		}
-
-		return true
-	case resolvedRadialGradient:
-		c0 := Point{paint.x0, paint.y0}
-		c1 := Point{paint.x1, paint.y1}
-		radius0 := paint.radius0
-		radius1 := paint.radius1
-
-		resolvedStops := makeSortedResolvedStops(paint.colorStops)
-
-		if len(resolvedStops) != 0 {
-			firstStop := resolvedStops[0]
-			lastStop := resolvedStops[len(resolvedStops)-1]
-			colorStopRange := lastStop.Offset - firstStop.Offset
-			// Nothing can be drawn for this situation.
-			if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
-				return true
-			}
-
-			// In the Pad case, for providing normalized stops in the 0 to 1 range to the client,
-			// insert a color stop at the end. See LinearGradient for more details.
-
-			if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
-				extraStop := lastStop
-				extraStop.Offset += 1.0
-				resolvedStops = append(resolvedStops, extraStop)
-				colorStopRange = 1.0
-			}
-
-			// If the colorline is not normalized, normalize it by modifying the circles.
-			if colorStopRange != 1.0 || firstStop.Offset != 0.0 {
-				c0ToC1 := Point{c1.X - c0.X, c1.Y - c0.Y}
-				radiusDiff := radius1 - radius0
-				scaleFactor := 1.0 / colorStopRange
-
-				c0Offset := Point{float32(c0ToC1.X * firstStop.Offset), float32(c0ToC1.Y * firstStop.Offset)}
-				c1Offset := Point{float32(c0ToC1.X * lastStop.Offset), float32(c0ToC1.Y * lastStop.Offset)}
-				stopsStartOffset := firstStop.Offset
-
-				c1 = Point{c0.X + c1Offset.X, c0.Y + c1Offset.Y}
-				c0 = Point{c0.X + c0Offset.X, c0.Y + c0Offset.Y}
-				radius1 = radius0 + float32(radiusDiff*lastStop.Offset)
-				radius0 += float32(radiusDiff * firstStop.Offset)
-
-				for i := range resolvedStops {
-					resolvedStops[i].Offset = (resolvedStops[i].Offset - stopsStartOffset) * scaleFactor
-				}
-			}
-
-			painter.Fill(Brush{
-				Kind:       BrushRadialGradient,
-				C0:         c0,
-				R0:         radius0,
-				C1:         c1,
-				R1:         radius1,
-				ColorStops: resolvedStops,
-				Extend:     paint.extend,
-			})
-		}
-		return true
-	case resolvedSweepGradient:
-		// OpenType 1.9.1 adds a shift to the angle to ease specifying a 0 to 360
-		// degree sweep.
-		sweepAngleToDegrees := func(angle float32) float32 { return float32(angle*180.0) + 180.0 }
-
-		startAngle := sweepAngleToDegrees(paint.startAngle)
-		endAngle := sweepAngleToDegrees(paint.endAngle)
-
-		// Stop normalization for sweep:
-
-		sectorAngle := endAngle - startAngle
-
-		resolvedStops := makeSortedResolvedStops(paint.colorStops)
-		if len(resolvedStops) == 0 {
-			return true
-		}
-
-		firstStop := resolvedStops[0]
-		lastStop := resolvedStops[len(resolvedStops)-1]
-		colorStopRange := lastStop.Offset - firstStop.Offset
-
-		startAngleScaled := float32(sectorAngle*firstStop.Offset) + startAngle
-		endAngleScaled := float32(sectorAngle*lastStop.Offset) + startAngle
-
-		startOffset := firstStop.Offset
-
-		// Nothing can be drawn for this situation.
-		if colorStopRange == 0.0 && paint.extend != tables.ExtendPad {
-			return true
-		}
-
-		// In the Pad case, if the color_stop_range is 0 insert a color stop at the end.
-		if colorStopRange == 0.0 && paint.extend == tables.ExtendPad {
-			offsetLast := lastStop
-			offsetLast.Offset += 1.0
-			resolvedStops = append(resolvedStops, offsetLast)
-			colorStopRange = 1.0
-		}
-
-		scaleFactor := 1.0 / colorStopRange
-
-		for i := range resolvedStops {
-			resolvedStops[i].Offset = (resolvedStops[i].Offset - startOffset) * scaleFactor
-		}
-
-		// /* https://docs.microsoft.com/en-us/typography/opentype/spec/colr#sweep-gradients
-		//  * "The angles are expressed in counter-clockwise degrees from
-		//  * the direction of the positive x-axis on the design
-		//  * grid. [...]  The color line progresses from the start angle
-		//  * to the end angle in the counter-clockwise direction;" -
-		//  * Convert angles and stops from counter-clockwise to clockwise
-		//  * for the shader if the gradient is not already reversed due to
-		//  * start angle being larger than end angle. */
-		startAngleScaled = 360.0 - startAngleScaled
-		endAngleScaled = 360.0 - endAngleScaled
-
-		if startAngleScaled >= endAngleScaled {
-			startAngleScaled, endAngleScaled = endAngleScaled, startAngleScaled
-			slices.Reverse(resolvedStops)
-			for i := range resolvedStops {
-				resolvedStops[i].Offset = 1.0 - resolvedStops[i].Offset
-			}
-		}
-
-		// https://learn.microsoft.com/en-us/typography/opentype/spec/colr#sweep-gradients
-		// "If the starting and ending angles are the same, a sweep gradient
-		// is not drawn."
-		if startAngleScaled == endAngleScaled && paint.extend != tables.ExtendPad {
-			return true
-		}
-
-		painter.Fill(Brush{
-			Kind:       BrushSweepGradient,
-			C0:         Point{paint.x0, paint.y0},
-			StartAngle: startAngleScaled,
-			EndAngle:   endAngleScaled,
-			ColorStops: resolvedStops,
-			Extend:     paint.extend,
-		})
 		return true
 	case resolvedGlyph:
 		glyphID := GlyphID(paint.glyphID)

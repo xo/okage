@@ -1430,9 +1430,29 @@ func formGlyphClusters(glyphs []glyph, text string, fontSize float32) glyphClust
 // The ascender is above the baseline and the descender below it, whatever
 // sign a font stores them with.
 type lineBox struct {
-	ascender  float32
-	descender float32
-	lineGap   float32
+	ascender  f48Dot16
+	descender f48Dot16
+	lineGap   f48Dot16
+}
+
+// f48Dot16 is F48Dot16 of font-types src/fixed.rs: a number in the 48.16
+// fixed-point format, an int64 with 16 bits of fraction. read-fonts keeps
+// each metric of a font in it, with the delta of MVAR added, and usvg
+// converts it to a float32 only when it reads it (D100).
+type f48Dot16 int64
+
+// f48Dot16FromI32 is F48Dot16::from_i32 of font-types.
+func f48Dot16FromI32(i int32) f48Dot16 { return f48Dot16(int64(i) << 16) }
+
+// toF32 is F48Dot16::to_f32 of font-types.
+func (f f48Dot16) toF32() float32 { return float32(float64(f) * (1.0 / 65536)) }
+
+// abs is F48Dot16::abs of font-types, which wraps at the smallest value.
+func (f f48Dot16) abs() f48Dot16 {
+	if f < 0 {
+		return -f
+	}
+	return f
 }
 
 // hasNonzeroExtent is LineBox::has_nonzero_extent of read-fonts. It reports
@@ -1444,10 +1464,10 @@ func (l lineBox) hasNonzeroExtent() bool {
 // newLineBox is line_box of read-fonts src/model/metrics/global.rs. It
 // returns a line with its ascender above the baseline and its descender
 // below it.
-func newLineBox(ascender, descender, lineGap float32) lineBox {
+func newLineBox(ascender, descender, lineGap f48Dot16) lineBox {
 	return lineBox{
-		ascender:  abs32(ascender),
-		descender: -abs32(descender),
+		ascender:  ascender.abs(),
+		descender: -descender.abs(),
 		lineGap:   lineGap,
 	}
 }
@@ -1466,15 +1486,15 @@ type fontMetrics struct {
 	typoLine       *lineBox
 	useTypoMetrics bool
 	winLine        *lineBox
-	xHeight        *float32
+	xHeight        *f48Dot16
 }
 
 // decorationMetrics is Decoration of read-fonts
 // src/model/metrics/style.rs: the position and the thickness of an
 // underline or a strikethrough, in font units.
 type decorationMetrics struct {
-	position  float32
-	thickness float32
+	position  f48Dot16
+	thickness f48Dot16
 }
 
 // styleMetrics is StyleMetrics of read-fonts src/model/metrics/style.rs,
@@ -1482,8 +1502,8 @@ type decorationMetrics struct {
 // reads. A nil field is None. Of a script, usvg reads only the vertical
 // offset.
 type styleMetrics struct {
-	subscriptYOffset   *float32
-	superscriptYOffset *float32
+	subscriptYOffset   *f48Dot16
+	superscriptYOffset *f48Dot16
 	underline          *decorationMetrics
 	strikeThrough      *decorationMetrics
 }
@@ -1530,44 +1550,97 @@ func readMVAR(face *parsedFace) (tables.MVAR, bool) {
 	return mvar, err == nil
 }
 
-// mvarMetricDelta is MvarInstance::get of read-fonts. It returns the delta
-// of the metric tag at coords, or 0.
-func mvarMetricDelta(mvar tables.MVAR, tag string, coords []tables.Coord) float32 {
+// mvarMetricDelta is MvarInstance::get of read-fonts src/tables/mvar.rs,
+// with unwrap_or_default. It returns the delta of the metric tag at coords,
+// unrounded, or 0 for a metric that the font does not vary (D100).
+//
+// Port: MvarInstance::get finds the record with binary_search_by of the
+// Rust standard library. The port follows that search, so that it finds
+// the same record in a table whose records are not sorted.
+func mvarMetricDelta(mvar tables.MVAR, tag string, coords []tables.Coord) f48Dot16 {
 	t := ot.MustNewTag(tag)
-	for _, rec := range mvar.ValueRecords {
-		if rec.ValueTag == t {
-			return mvar.ItemVariationStore.GetDelta(rec.Index, coords)
-		}
+	records := mvar.ValueRecords
+	size := len(records)
+	if size == 0 {
+		return 0
 	}
-	return 0
+	base := 0
+	for size > 1 {
+		half := size / 2
+		if mid := base + half; records[mid].ValueTag <= t {
+			base = mid
+		}
+		size -= half
+	}
+	if records[base].ValueTag != t {
+		return 0
+	}
+	return itemVariationDelta(mvar.ItemVariationStore, records[base].Index, coords)
 }
 
-// metricDeltas returns the function that the function metric of read-fonts
-// src/model/metrics.rs applies: a design-unit metric with the delta of its
-// location. At the default location, MVAR is not read.
-func metricDeltas(face *parsedFace, coords []tables.Coord) func(value float32, tag string) float32 {
+// itemVariationDelta is ItemVariationStore::compute_delta of read-fonts
+// src/tables/variations.rs, with unwrap_or_default. It adds the product of
+// each delta and the scalar of its region in the 48.16 format, and does not
+// round the sum (D100). An index or a region that is not in the store gives
+// 0, where read-fonts gives None.
+//
+// Port: tables.ItemVarStore.GetDelta computes the same sum, but returns it
+// as a float32, which loses bits that read-fonts keeps.
+func itemVariationDelta(store tables.ItemVarStore, index tables.VariationStoreIndex, coords []tables.Coord) f48Dot16 {
+	const noVariationIndex = 0xFFFF
+	if len(coords) == 0 || index.DeltaSetOuter == noVariationIndex && index.DeltaSetInner == noVariationIndex {
+		return 0
+	}
+	if int(index.DeltaSetOuter) >= len(store.ItemVariationDatas) {
+		return 0
+	}
+	data := store.ItemVariationDatas[index.DeltaSetOuter]
+	if int(index.DeltaSetInner) >= len(data.DeltaSets) {
+		return 0
+	}
+	deltaSet := data.DeltaSets[index.DeltaSetInner]
+	regions := store.VariationRegionList.VariationRegions
+	var accum f48Dot16
+	for i, regionIndex := range data.RegionIndexes {
+		if i >= len(deltaSet) {
+			break
+		}
+		if int(regionIndex) >= len(regions) {
+			return 0
+		}
+		if deltaSet[i] == 0 {
+			continue
+		}
+		accum += f48Dot16(int64(regions[regionIndex].EvaluateFixed(coords)) * int64(deltaSet[i]))
+	}
+	return accum
+}
+
+// metricDeltas returns the function metric of read-fonts
+// src/model/metrics.rs: a design-unit metric with the delta of its location
+// added in the 48.16 format (D100). At the default location, MVAR is not
+// read.
+func metricDeltas(face *parsedFace, coords []tables.Coord) func(value int32, tag string) f48Dot16 {
 	if !allZero(coords) {
 		if mvar, ok := readMVAR(face); ok {
-			return func(value float32, tag string) float32 {
-				return value + mvarMetricDelta(mvar, tag, coords)
+			return func(value int32, tag string) f48Dot16 {
+				return f48Dot16FromI32(value) + mvarMetricDelta(mvar, tag, coords)
 			}
 		}
 	}
-	return func(value float32, _ string) float32 { return value }
+	return func(value int32, _ string) f48Dot16 { return f48Dot16FromI32(value) }
 }
 
 // newFontMetrics is Metrics::from_sfnt of read-fonts
 // src/model/metrics/global.rs. coords is the location of the face in its
 // normalized variation space.
-//
-// Port: read-fonts keeps a metric as an F48Dot16. Go keeps it as a float32.
 func newFontMetrics(face *parsedFace, coords []tables.Coord) fontMetrics {
 	metric := metricDeltas(face, coords)
-	i16 := func(b []byte, off int) float32 {
-		return float32(int16(binary.BigEndian.Uint16(b[off:])))
+	i16 := func(b []byte, off int) int32 {
+		return int32(int16(binary.BigEndian.Uint16(b[off:])))
 	}
-	u16 := func(b []byte, off int) float32 {
-		return float32(binary.BigEndian.Uint16(b[off:]))
+	u16 := func(b []byte, off int) int32 {
+		return int32(binary.BigEndian.Uint16(b[off:]))
 	}
 
 	var metrics fontMetrics
@@ -1640,8 +1713,8 @@ func (m *fontMetrics) hLine() (lineBox, bool) {
 // normalized variation space.
 func newStyleMetrics(face *parsedFace, coords []tables.Coord) styleMetrics {
 	metric := metricDeltas(face, coords)
-	i16 := func(b []byte, off int) float32 {
-		return float32(int16(binary.BigEndian.Uint16(b[off:])))
+	i16 := func(b []byte, off int) int32 {
+		return int32(int16(binary.BigEndian.Uint16(b[off:])))
 	}
 
 	var metrics styleMetrics
@@ -1702,13 +1775,17 @@ func resolveFont(id FontID, variations []FontVariation, fonts *fontCache) (*reso
 	}
 	unitsPerEm := metrics.rawUnitsPerEm
 
-	line, _ := metrics.hLine()
-	ascent := line.ascender
-	descent := line.descender
+	line, ok := metrics.hLine()
+	if !ok {
+		// unwrap_or_default
+		line = lineBox{}
+	}
+	ascent := line.ascender.toF32()
+	descent := line.descender.toF32()
 
 	var xHeight uint16
-	if metrics.xHeight != nil && *metrics.xHeight > 0.0 {
-		if v := wide.TruncI32(round32(*metrics.xHeight)); v >= 0 && v <= math.MaxUint16 {
+	if metrics.xHeight != nil && metrics.xHeight.toF32() > 0.0 {
+		if v := wide.TruncI32(round32(metrics.xHeight.toF32())); v >= 0 && v <= math.MaxUint16 {
 			xHeight = uint16(v)
 		}
 	}
@@ -1726,7 +1803,7 @@ func resolveFont(id FontID, variations []FontVariation, fonts *fontCache) (*reso
 
 	var lineThroughPosition int16
 	if style.strikeThrough != nil {
-		lineThroughPosition = asI16(round32(style.strikeThrough.position))
+		lineThroughPosition = asI16(round32(style.strikeThrough.position.toF32()))
 	} else {
 		lineThroughPosition = int16(xHeight) / 2
 	}
@@ -1734,14 +1811,14 @@ func resolveFont(id FontID, variations []FontVariation, fonts *fontCache) (*reso
 	var underlinePosition int16
 	var underlineThickness uint16
 	if style.underline != nil {
-		thickness := wide.TruncI32(round32(style.underline.thickness))
+		thickness := wide.TruncI32(round32(style.underline.thickness.toF32()))
 		if thickness > 0 && thickness <= math.MaxUint16 {
 			underlineThickness = uint16(thickness)
 		} else {
 			underlineThickness = unitsPerEm / 12
 		}
 
-		underlinePosition = asI16(round32(style.underline.position))
+		underlinePosition = asI16(round32(style.underline.position.toF32()))
 	} else {
 		underlinePosition = -int16(unitsPerEm) / 9
 		underlineThickness = unitsPerEm / 12
@@ -1750,13 +1827,13 @@ func resolveFont(id FontID, variations []FontVariation, fonts *fontCache) (*reso
 	// 0.2 and 0.4 are generic offsets used by some applications (Inkscape/librsvg).
 	var subscriptOffset int16
 	if style.subscriptYOffset != nil {
-		subscriptOffset = asI16(round32(*style.subscriptYOffset))
+		subscriptOffset = asI16(round32(style.subscriptYOffset.toF32()))
 	} else {
 		subscriptOffset = asI16(round32(float32(unitsPerEm) / 0.2))
 	}
 	var superscriptOffset int16
 	if style.superscriptYOffset != nil {
-		superscriptOffset = asI16(round32(*style.superscriptYOffset))
+		superscriptOffset = asI16(round32(style.superscriptYOffset.toF32()))
 	} else {
 		superscriptOffset = asI16(round32(float32(unitsPerEm) / 0.4))
 	}

@@ -20,9 +20,9 @@ import (
 
 // This file ports usvg src/text/colr.rs.
 //
-// Port: the trait ColorPainter of skrifa becomes the interface Painter
-// of internal/colr, which walks the paint graph of a COLR glyph on
-// the tables of go-text (D9). A text that upstream writes with `{}` of an
+// Port: the trait PaintSink of read-fonts 0.46 becomes the interface Painter
+// of internal/colr, whose function PaintModel walks the paint graph of a
+// COLR glyph on the tables of go-text (D9, D100). A text that upstream writes with `{}` of an
 // f32 is written with fmtF32, which writes the same text.
 
 // colrBuilder is Builder in usvg src/text/colr.rs.
@@ -446,14 +446,14 @@ func (p *glyphPainter) paletteIndexToColor(paletteIndex uint16, alpha float32) s
 	return color
 }
 
-// PushTransform is ColorPainter::push_transform for GlyphPainter in usvg
+// PushTransform is PaintSink::push_transform for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PushTransform(transform colrpaint.Transform) {
 	p.transformsStack = append(p.transformsStack, p.transform)
 	p.transform = p.transform.Mul(transform)
 }
 
-// PopTransform is ColorPainter::pop_transform for GlyphPainter in usvg
+// PopTransform is PaintSink::pop_transform for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PopTransform() {
 	if n := len(p.transformsStack); n > 0 {
@@ -462,7 +462,7 @@ func (p *glyphPainter) PopTransform() {
 	}
 }
 
-// FillGlyph is ColorPainter::fill_glyph for GlyphPainter in usvg
+// FillGlyph is PaintSink::fill_glyph for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) FillGlyph(glyphID colrpaint.GlyphID, brushTransform *colrpaint.Transform, brush colrpaint.Brush) {
 	// Fill the glyph outline directly instead of the default
@@ -479,7 +479,7 @@ func (p *glyphPainter) FillGlyph(glyphID colrpaint.GlyphID, brushTransform *colr
 	}
 }
 
-// PushClipGlyph is ColorPainter::push_clip_glyph for GlyphPainter in usvg
+// PushClipGlyph is PaintSink::push_clip_glyph for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PushClipGlyph(glyphID colrpaint.GlyphID) {
 	bounds, hasBounds := p.outlineGlyph(GlyphID(glyphID))
@@ -499,7 +499,7 @@ func (p *glyphPainter) PushClipGlyph(glyphID colrpaint.GlyphID) {
 	p.clipStack = append(p.clipStack, rootBounds)
 }
 
-// PushClipBox is ColorPainter::push_clip_box for GlyphPainter in usvg
+// PushClipBox is PaintSink::push_clip_box for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PushClipBox(clipBox colrpaint.BoundingBox) {
 	xMin := clipBox.XMin
@@ -525,7 +525,7 @@ func (p *glyphPainter) PushClipBox(clipBox colrpaint.BoundingBox) {
 	p.clipStack = append(p.clipStack, bounds)
 }
 
-// PopClip is ColorPainter::pop_clip for GlyphPainter in usvg
+// PopClip is PaintSink::pop_clip for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PopClip() {
 	p.svg.EndElement()
@@ -534,7 +534,7 @@ func (p *glyphPainter) PopClip() {
 	}
 }
 
-// Fill is ColorPainter::fill for GlyphPainter in usvg src/text/colr.rs.
+// Fill is PaintSink::fill for GlyphPainter in usvg src/text/colr.rs.
 func (p *glyphPainter) Fill(brush colrpaint.Brush) {
 	// A fill paints the intersection of all currently active clips.
 	// Paint a rectangle covering that intersection and let the enclosing
@@ -580,7 +580,7 @@ func (p *glyphPainter) Fill(brush colrpaint.Brush) {
 }
 
 // compositeModeBlendModes holds the composite modes that
-// ColorPainter::push_layer for GlyphPainter in usvg src/text/colr.rs
+// PaintSink::push_layer for GlyphPainter in usvg src/text/colr.rs
 // matches, with the blend mode whose name upstream writes.
 //
 // Port: BlendMode.String writes the same names.
@@ -603,7 +603,7 @@ var compositeModeBlendModes = map[tables.CompositeMode]BlendMode{
 	tables.CompositeHslLuminosity: BlendModeLuminosity,
 }
 
-// PushLayer is ColorPainter::push_layer for GlyphPainter in usvg
+// PushLayer is PaintSink::push_layer for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PushLayer(compositeMode tables.CompositeMode) {
 	// TODO: Need to figure out how to represent the other blend modes in SVG.
@@ -620,7 +620,7 @@ func (p *glyphPainter) PushLayer(compositeMode tables.CompositeMode) {
 	p.svg.WriteAttributeFmt("style", "mix-blend-mode: %s; isolation: isolate", mode)
 }
 
-// PopLayer is ColorPainter::pop_layer for GlyphPainter in usvg
+// PopLayer is PaintSink::pop_layer for GlyphPainter in usvg
 // src/text/colr.rs.
 func (p *glyphPainter) PopLayer() {
 	p.svg.EndElement()
