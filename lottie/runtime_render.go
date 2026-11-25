@@ -229,72 +229,139 @@ func (r *Renderer) renderLayer(animation *Composition, layerSet []EvaluatedLayer
 
 // renderMasks draws the coverage of masks in a layer with the blend mode
 // destination-in, so that it cuts the content of the layer below (D43). It
-// ports no velato function. The masks combine in their order: a mask that
-// adds draws its shape, one that subtracts takes it out, one that
-// intersects keeps the common area, and one of the mode difference keeps the
-// area that one of them covers. A first mask that subtracts starts from the
-// whole canvas. An inverted mask uses the canvas without its shape. A
-// positive expansion grows the shape by a round stroke, and a negative one
-// shrinks it. The modes lighten and darken work as add and intersect.
+// ports no velato function. It follows ThorVG, and skips the masks of the
+// mode none. The other masks form shapes. A mask joins the shape of the
+// mask before it when the two have the same mode and the same opacity, and
+// the mode is subtract or difference. A shape fills the paths of its masks
+// as one path with the nonzero rule, with the opacity of its masks.
+//
+// Each shape combines with the result of all the shapes after it, by the
+// mode of the next shape. So for the shapes s1, s2 and s3, the coverage is
+// s1 combined with the result of s2 and s3. A mode add gives the area of
+// both, subtract takes the result out of the shape, intersect keeps the
+// common area, and difference keeps the area that only one of them covers.
+// The modes lighten and darken work as add and intersect. When the first
+// mask subtracts, the coverage is the canvas without that result.
+//
+// The shape of an inverted mask is the canvas without the shape of the
+// mask, and such a mask joins no other mask. ThorVG and velato do not
+// invert a mask, so this follows no oracle.
 func (r *Renderer) renderMasks(masks []Mask, frame float64, transform kurbo.Affine, clipBounds kurbo.Rect, sink Sink) {
-	full := clipBounds.PathElements(0.1)
-	effective := false
-	for i := range masks {
-		if masks[i].MaskMode != MaskModeNone {
-			effective = true
-		}
-	}
-	if !effective {
+	first := slices.IndexFunc(masks, func(m Mask) bool { return m.MaskMode != MaskModeNone })
+	if first < 0 {
 		// Masks of the mode none do not mask the content.
 		return
 	}
+	full := clipBounds.PathElements(0.1)
 	sink.PushLayer(blendCompose(ComposeDestIn), 1.0, kurbo.IdentityAffine, full)
-	first := true
+	pops := 1
+	if masks[first].MaskMode == MaskModeSubtract {
+		opaque := solidBrush(ColorBlack)
+		sink.Draw(nil, kurbo.IdentityAffine, &opaque, full)
+		sink.PushLayer(blendCompose(ComposeDestOut), 1.0, kurbo.IdentityAffine, full)
+		pops++
+	}
+	for i := first; i < len(masks); {
+		m := &masks[i]
+		alpha := clampUpTo(m.Opacity.Evaluate(frame)/100.0, 1)
+		end := i + 1
+		if (m.MaskMode == MaskModeSubtract || m.MaskMode == MaskModeDifference) && !m.Inverted {
+			for end < len(masks) {
+				next := &masks[end]
+				if next.MaskMode != MaskModeNone && (next.MaskMode != m.MaskMode || next.Inverted || clampUpTo(next.Opacity.Evaluate(frame)/100.0, 1) != alpha) {
+					break
+				}
+				end++
+			}
+		}
+		if i > first {
+			sink.PushLayer(blendCompose(maskCompose(m.MaskMode)), 1.0, kurbo.IdentityAffine, full)
+			pops++
+		}
+		r.renderMaskShape(masks[i:end], alpha, frame, transform, full, sink)
+		for i = end; i < len(masks) && masks[i].MaskMode == MaskModeNone; i++ {
+		}
+	}
+	for range pops {
+		sink.PopLayer()
+	}
+}
+
+// maskCompose returns the compose mode that combines the result of a shape
+// of masks with the mode m, and of the shapes after it, with the shape
+// before it (D43).
+func maskCompose(m MaskMode) Compose {
+	switch m {
+	case MaskModeSubtract:
+		return ComposeDestOut
+	case MaskModeIntersect, MaskModeDarken:
+		return ComposeDestIn
+	case MaskModeDifference:
+		return ComposeXor
+	}
+	return ComposeSrcOver
+}
+
+// renderMaskShape draws the shape of masks with the opacity alpha, as
+// renderMasks says (D43). It skips the masks of the mode none. masks holds
+// one inverted mask at most, with no other mask. A positive
+// expansion of a mask grows its shape by a round stroke of twice its
+// amount, and a negative one shrinks it in the same way.
+func (r *Renderer) renderMaskShape(masks []Mask, alpha, frame float64, transform kurbo.Affine, full []kurbo.PathEl, sink Sink) {
+	opaque := solidBrush(ColorBlack)
+	expands, inverted := false, false
+	r.maskElements = r.maskElements[:0]
+	for i := range masks {
+		if masks[i].MaskMode == MaskModeNone {
+			continue
+		}
+		r.maskElements = masks[i].Geometry.Evaluate(frame, r.maskElements)
+		if masks[i].Expand.Evaluate(frame) != 0 {
+			expands = true
+		}
+		inverted = inverted || masks[i].Inverted
+	}
+	if alpha == 1 && !expands && !inverted {
+		sink.Draw(nil, transform, &opaque, slices.Clone(r.maskElements))
+		r.maskElements = r.maskElements[:0]
+		return
+	}
+	sink.PushLayer(blendMix(MixNormal), float32(alpha), kurbo.IdentityAffine, full)
+	if inverted {
+		sink.Draw(nil, kurbo.IdentityAffine, &opaque, full)
+		sink.PushLayer(blendCompose(ComposeDestOut), 1.0, kurbo.IdentityAffine, full)
+	}
+	if !expands {
+		sink.Draw(nil, transform, &opaque, slices.Clone(r.maskElements))
+	}
+	r.maskElements = r.maskElements[:0]
+	// With an expansion, each mask draws its own shape, so that the
+	// shrink of one mask does not cut the others.
 	for i := range masks {
 		m := &masks[i]
-		var compose Compose
-		switch m.MaskMode {
-		case MaskModeNone:
+		if !expands || m.MaskMode == MaskModeNone {
 			continue
-		case MaskModeSubtract:
-			compose = ComposeDestOut
-			if first {
-				opaque := solidBrush(ColorBlack)
-				sink.Draw(nil, kurbo.IdentityAffine, &opaque, full)
-			}
-		case MaskModeIntersect, MaskModeDarken:
-			compose = ComposeDestIn
-			if first {
-				compose = ComposeSrcOver
-			}
-		case MaskModeDifference:
-			compose = ComposeXor
-		default:
-			compose = ComposeSrcOver
 		}
-		first = false
-		alpha := clampUpTo(m.Opacity.Evaluate(frame)/100.0, 1)
 		shape := m.Geometry.Evaluate(frame, nil)
 		expand := m.Expand.Evaluate(frame)
-		opaque := solidBrush(ColorBlack)
-		sink.PushLayer(blendCompose(compose), float32(alpha), kurbo.IdentityAffine, full)
-		if m.Inverted {
-			sink.Draw(nil, kurbo.IdentityAffine, &opaque, full)
-			sink.PushLayer(blendCompose(ComposeDestOut), 1.0, kurbo.IdentityAffine, full)
-		}
-		sink.Draw(nil, transform, &opaque, slices.Clone(shape))
-		if expand > 0 {
+		switch {
+		case expand > 0:
 			stroke := newStroke(2 * expand)
-			sink.Draw(&stroke, transform, &opaque, slices.Clone(shape))
-		} else if expand < 0 {
+			sink.Draw(nil, transform, &opaque, slices.Clone(shape))
+			sink.Draw(&stroke, transform, &opaque, shape)
+		case expand < 0:
 			stroke := newStroke(-2 * expand)
+			sink.PushLayer(blendMix(MixNormal), 1.0, kurbo.IdentityAffine, full)
+			sink.Draw(nil, transform, &opaque, slices.Clone(shape))
 			sink.PushLayer(blendCompose(ComposeDestOut), 1.0, kurbo.IdentityAffine, full)
 			sink.Draw(&stroke, transform, &opaque, shape)
 			sink.PopLayer()
-		}
-		if m.Inverted {
 			sink.PopLayer()
+		default:
+			sink.Draw(nil, transform, &opaque, shape)
 		}
+	}
+	if inverted {
 		sink.PopLayer()
 	}
 	sink.PopLayer()
@@ -344,6 +411,10 @@ type geometryData struct {
 	mergeID   int
 	mergeMode MergeMode
 	operand   int
+	// Port: merged reports if the geometry holds the result of a merge
+	// path, whose contours a sequential trim trims as paths of their own
+	// (D94).
+	merged bool
 }
 
 // opacityCopies is GeometryData::opacity_copies in velato
@@ -408,6 +479,9 @@ func evaluatePaths(shapes []Shape, transform kurbo.Affine, frame float64) [][]ku
 func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame float64, collectDraws bool) {
 	geometryStart := len(b.geometries)
 	drawStart := len(b.draws)
+	// Port: the items of this group, for the order of a sequential trim
+	// (D43).
+	items := trimItems{first: -1, thorvg: true}
 	if b.mergePaths {
 		// Port: the scale of the shapes of this group, for the tolerance
 		// of the result of a merge path (D94).
@@ -435,11 +509,17 @@ func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame fl
 					b.geometries[i].operand = b.nextOperand
 				}
 			}
+			if items.first < 0 && len(b.geometries) > groupStart {
+				items.first = len(b.geometries) - geometryStart
+			}
 		case ShapeGeometry:
 			b.pushGeometry(&shape.Geometry, kurbo.IdentityAffine, frame)
 			// Port: each geometry is one operand of a merge path (D42).
 			b.nextOperand++
 			b.geometries[len(b.geometries)-1].operand = b.nextOperand
+			if items.first < 0 {
+				items.first, items.geometry = len(b.geometries)-geometryStart, true
+			}
 		case ShapeMerge:
 			// Port: a merge path combines the paths above it in its group
 			// (D42). Mode 1 makes them one operand of a later merge path.
@@ -470,6 +550,7 @@ func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame fl
 		case ShapeRepeater:
 			repeater := shape.Repeater.Evaluate(frame)
 			b.repeat(&repeater, geometryStart, drawStart)
+			items.thorvg = false
 		case ShapeTrim:
 			trim := shape.Trim.Evaluate(frame)
 			// Port: a trim path after a merge path trims the path of the
@@ -477,7 +558,7 @@ func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame fl
 			if b.mergePaths {
 				b.collapseMerges(geometryStart, mergeTolerance/b.scale)
 			}
-			b.applyTrim(&trim, geometryStart)
+			b.applyTrim(&trim, geometryStart, items)
 		}
 	}
 	for i := geometryStart; i < len(b.geometries); i++ {
@@ -567,8 +648,20 @@ func (b *batch) repeat(repeater *FixedRepeater, geometryStart, drawStart int) {
 	b.repeatDraws = b.repeatDraws[:0]
 }
 
+// trimItems tells applyTrim about the items of the group of a trim path.
+// first is the number of geometries up to the end of the first item that
+// holds a path, a geometry or a group, and geometry reports if that item is
+// a geometry. thorvg
+// reports if a sequential trim follows the order of ThorVG, which is false
+// after a repeater (D43).
+type trimItems struct {
+	first    int
+	geometry bool
+	thorvg   bool
+}
+
 // applyTrim is Batch::apply_trim in velato src/runtime/render.rs.
-func (b *batch) applyTrim(trim *FixedTrim, geometryStart int) {
+func (b *batch) applyTrim(trim *FixedTrim, geometryStart int, items trimItems) {
 	first, second, ok := trim.Normalized()
 	if !ok {
 		for i := geometryStart; i < len(b.geometries); i++ {
@@ -595,19 +688,49 @@ func (b *batch) applyTrim(trim *FixedTrim, geometryStart int) {
 			paths[i] = append(paths[i], el)
 		}
 	}
-	intervals := make([][2]float64, len(paths))
+	// Port: a sequential trim trims each contour of the result of a merge
+	// path as a path of its own (D94), so each geometry has one part, or one
+	// part for each contour of such a result.
+	var parts [][]kurbo.PathEl
+	var owner []int
+	for i, p := range paths {
+		if !sequential || !tail[i].merged {
+			parts, owner = append(parts, p), append(owner, i)
+			continue
+		}
+		for start, end := 0, 1; end <= len(p); end++ {
+			if end == len(p) || p[end].Kind == kurbo.PathElMoveTo || p[end-1].Kind == kurbo.PathElClosePath {
+				parts, owner = append(parts, p[start:end]), append(owner, i)
+				start = end
+			}
+		}
+	}
+	intervals := make([][2]float64, len(parts))
 	if sequential {
-		lengths := make([]float64, len(paths))
+		lengths := make([]float64, len(parts))
 		total := 0.0
-		for i, p := range paths {
+		for i, p := range parts {
 			lengths[i] = pathLength(p)
 			total += lengths[i]
 		}
-		order := make([]int, len(paths))
+		order := make([]int, len(parts))
 		for i := range order {
 			order[i] = i
 		}
-		slices.SortFunc(order, func(a, c int) int { return tail[a].trimOrder - tail[c].trimOrder })
+		slices.SortStableFunc(order, func(a, c int) int { return tail[owner[a]].trimOrder - tail[owner[c]].trimOrder })
+		if items.thorvg && !lottiecompat.Velato {
+			// Port: ThorVG trims the paths of the first item backwards, and
+			// then the paths of the other items backwards (D43).
+			k := 0
+			for k < len(order) && owner[order[k]] < items.first {
+				k++
+			}
+			if items.geometry && k > 1 && tail[0].merged {
+				k = 1
+			}
+			slices.Reverse(order[:k])
+			slices.Reverse(order[k:])
+		}
 		offset := 0.0
 		for _, index := range order {
 			intervals[index] = [2]float64{offset, total}
@@ -618,13 +741,15 @@ func (b *batch) applyTrim(trim *FixedTrim, geometryStart int) {
 	if second != nil {
 		ranges = append(ranges, *second)
 	}
-	for i := range tail {
+	for i, part := 0, 0; i < len(tail); i++ {
 		newStart := len(b.trimElements)
-		var seq *[2]float64
-		if sequential {
-			seq = &intervals[i]
+		for ; part < len(parts) && owner[part] == i; part++ {
+			var seq *[2]float64
+			if sequential {
+				seq = &intervals[part]
+			}
+			b.trimElements = trimPath(parts[part], ranges, seq, b.trimElements)
 		}
-		b.trimElements = trimPath(paths[i], ranges, seq, b.trimElements)
 		tail[i].elements = [2]int{newStart, len(b.trimElements)}
 		if !sequential {
 			tail[i].transform = kurbo.IdentityAffine
@@ -953,6 +1078,7 @@ func (b *batch) collapseMerges(start int, tolerance float64) {
 			g.mergeID = 0
 		}
 		b.geometries[i].elements[0] = first
+		b.geometries[i].merged = true
 		i += n
 	}
 }

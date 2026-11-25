@@ -15,12 +15,17 @@ const mergeTransform = `{"ty": "tr", "a": {"a": 0, "k": [0, 0]}, "p": {"a": 0, "
 
 // mergeShapes are the operands of the tests of the merge paths, as shape
 // items: a square, a circle that overlaps its corner, a rounded rectangle
-// across both, and an ellipse at the left.
+// across both, an ellipse at the left, a bar across the square, a circle
+// inside the square, a path in the shape of a U, and a bar across its arms.
 var mergeShapes = []string{
 	`{"ty": "rc", "p": {"a": 0, "k": [150, 130]}, "s": {"a": 0, "k": [140, 140]}, "r": {"a": 0, "k": 0}}`,
 	`{"ty": "el", "p": {"a": 0, "k": [230, 200]}, "s": {"a": 0, "k": [150, 150]}}`,
 	`{"ty": "rc", "p": {"a": 0, "k": [200, 220]}, "s": {"a": 0, "k": [260, 50]}, "r": {"a": 0, "k": 15}}`,
 	`{"ty": "el", "p": {"a": 0, "k": [110, 170]}, "s": {"a": 0, "k": [90, 200]}}`,
+	`{"ty": "rc", "p": {"a": 0, "k": [150, 130]}, "s": {"a": 0, "k": [200, 30]}, "r": {"a": 0, "k": 0}}`,
+	`{"ty": "el", "p": {"a": 0, "k": [150, 130]}, "s": {"a": 0, "k": [60, 60]}}`,
+	`{"ty": "sh", "ks": {"a": 0, "k": {"c": true, "v": [[60, 210], [120, 210], [120, 250], [180, 250], [180, 210], [240, 210], [240, 280], [60, 280]], "i": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]], "o": [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]}}}`,
+	`{"ty": "rc", "p": {"a": 0, "k": [150, 230]}, "s": {"a": 0, "k": [240, 20]}, "r": {"a": 0, "k": 0}}`,
 }
 
 // mergeLayer returns a shape layer with one group of the shape items items.
@@ -134,6 +139,9 @@ func mergeCases() []struct {
 		{"three", []int{0, 1, 2}, false},
 		{"ellipses", []int{1, 3}, false},
 		{"four", []int{3, 0, 2, 1}, false},
+		{"bar", []int{0, 4}, false},
+		{"hole", []int{0, 5}, false},
+		{"u", []int{6, 7}, false},
 	}
 }
 
@@ -192,13 +200,25 @@ func TestThorVGMergeArea(t *testing.T) {
 // TestThorVGMergeStroke compares a stroke and a trim path after the merge
 // paths of modes 2 to 5 with Renderer.MergePaths with ThorVG (D94). ThorVG
 // strokes and trims the contours of the result of pathbool as paths of the
-// file, from the start point and in the direction that pathbool gives them.
-// okage draws the file with the merge path. The trim path takes 10 to 70
-// percent of the outline. okage trims the result as one path, as velato
-// trims a path with several contours, and ThorVG trims each path of the
-// file. So the test compares a trim only for a result with one contour.
+// file, one path for each contour, in the order, from the start point and
+// in the direction that pathbool gives them. okage draws the file with the
+// merge path. The trim path takes 10 to 70 percent of the outline, once
+// with the mode simultaneously and once with the mode individually. In the
+// mode simultaneously, okage trims each contour of the result on its own,
+// as velato trims each contour of a path, and ThorVG trims each path of the
+// file on its own. In the mode individually, both trim the contours as one
+// outline, each contour as a path of its own, in the order of ThorVG that
+// TestThorVGTrimIndividually tests (D43). So the test pins the order, the
+// start points and the directions of the contours of a result with several
+// contours.
 func TestThorVGMergeStroke(t *testing.T) {
-	trim := `{"ty": "tm", "s": {"a": 0, "k": 10}, "e": {"a": 0, "k": 70}, "o": {"a": 0, "k": 0}, "m": 1}`
+	trims := []struct {
+		name string
+		item string
+	}{
+		{"trim", `{"ty": "tm", "s": {"a": 0, "k": 10}, "e": {"a": 0, "k": 70}, "o": {"a": 0, "k": 0}, "m": 1}`},
+		{"trim-individually", `{"ty": "tm", "s": {"a": 0, "k": 10}, "e": {"a": 0, "k": 70}, "o": {"a": 0, "k": 0}, "m": 2}`},
+	}
 	var cases []compatCase
 	for _, mc := range mergeCases() {
 		var items []string
@@ -216,15 +236,62 @@ func TestThorVGMergeStroke(t *testing.T) {
 				thorvg:     mergeDocument(mergeLayer(append(pathItems(result), mergeStroke)...)),
 				mergePaths: true,
 			})
-			if len(bezierJSON(result)) != 1 {
-				continue
+			for _, trim := range trims {
+				trimmed := slicesConcat(items, []string{merge, trim.item, mergeStroke})
+				cases = append(cases, compatCase{
+					name:       fmt.Sprintf("merge-%s-%s-%d-contours-%d", trim.name, mc.name, mode, len(bezierJSON(result))),
+					doc:        mergeDocument(mergeLayer(trimmed...)),
+					thorvg:     mergeDocument(mergeLayer(append(pathItems(result), trim.item, mergeStroke)...)),
+					mergePaths: true,
+				})
 			}
-			trimmed := slicesConcat(items, []string{merge, trim, mergeStroke})
+		}
+	}
+	compareCases(t, cases)
+}
+
+// trimSquare returns a shape item of the square i of a row of squares of 50
+// pixels.
+func trimSquare(i int) string {
+	return fmt.Sprintf(`{"ty": "rc", "p": {"a": 0, "k": [%d, 60]}, "s": {"a": 0, "k": [50, 50]}, "r": {"a": 0, "k": 0}}`, 50+70*i)
+}
+
+// trimGroup returns a shape item of a group of the shape items items.
+func trimGroup(items ...string) string {
+	return fmt.Sprintf(`{"ty": "gr", "it": [%s]}`, strings.Join(slicesConcat(items, []string{mergeTransform}), ", "))
+}
+
+// TestThorVGTrimIndividually compares the order in which a trim path with
+// the mode individually trims the paths of its group with ThorVG (D43).
+// ThorVG trims the paths of the first item that holds a path backwards, and
+// then the paths of the other items backwards. That item is a path or a
+// group with a path. Each file has five squares of the same length, in
+// groups or not, and the trim path takes 0 to 20.5, 40.5, 60.5 and 80.5
+// percent of the outline, so each image shows which squares come first.
+// velato trims the paths in their order. The outline of a rectangle of
+// ThorVG starts at another point than the one of velato, so the start of
+// the next square differs in a few pixels.
+func TestThorVGTrimIndividually(t *testing.T) {
+	sq := trimSquare
+	layouts := []struct {
+		name  string
+		items []string
+	}{
+		{"flat", []string{sq(0), sq(1), sq(2), sq(3), sq(4)}},
+		{"group-second", []string{sq(0), trimGroup(sq(1), sq(2)), sq(3), sq(4)}},
+		{"groups", []string{trimGroup(sq(0), sq(1)), trimGroup(sq(2), sq(3)), sq(4)}},
+		{"group-first", []string{trimGroup(sq(0), sq(1), sq(2)), sq(3), sq(4)}},
+		{"group-nested", []string{trimGroup(sq(0), trimGroup(sq(1), sq(2))), sq(3), sq(4)}},
+		{"group-no-path", []string{trimGroup(mergeFill), sq(0), sq(1), sq(2), sq(3), sq(4)}},
+		{"fill-first", []string{mergeFill, sq(0), sq(1), sq(2), sq(3), sq(4)}},
+	}
+	var cases []compatCase
+	for _, l := range layouts {
+		for _, end := range []string{"20.5", "40.5", "60.5", "80.5"} {
+			trim := `{"ty": "tm", "s": {"a": 0, "k": 0}, "e": {"a": 0, "k": ` + end + `}, "o": {"a": 0, "k": 0}, "m": 2}`
 			cases = append(cases, compatCase{
-				name:       fmt.Sprintf("merge-trim-%s-%d", mc.name, mode),
-				doc:        mergeDocument(mergeLayer(trimmed...)),
-				thorvg:     mergeDocument(mergeLayer(append(pathItems(result), trim, mergeStroke)...)),
-				mergePaths: true,
+				name: fmt.Sprintf("trim-individually-%s-%s", l.name, end),
+				doc:  mergeDocument(mergeLayer(slicesConcat(l.items, []string{trim, mergeStroke})...)),
 			})
 		}
 	}
