@@ -18,5 +18,8 @@
 // (D75). TestThorVGText and TestThorVGEffects compare text layers, Gaussian
 // blurs and drop shadows in the same way, with files that they make too
 // (D79). The tests of compat_test.go compare the prototypes of D82 in the
-// same way, with files that they make. The package has no code of its own.
+// same way, with files that they make. TestThorVGQuality compares the blurs
+// and the shadows at other qualities, and the tests of merge_test.go compare
+// the result of a merge path for a fill, a stroke and a trim path, with
+// files that they make (D94). The package has no code of its own.
 package lottie

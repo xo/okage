@@ -17,18 +17,25 @@ import (
 	"github.com/xo/okage/internal/boxblur"
 )
 
-// thorvgBlurLevels is the number of box blurs that ThorVG applies at the
-// quality 50, its default: int(3 * (50 - 1) / 100) + 1.
-const thorvgBlurLevels = 2
+// defaultQuality is the quality of the blurs and the shadows of ThorVG when
+// the program does not set one (D79).
+const defaultQuality = 50
+
+// thorvgBlurLevels returns the number of box blurs that ThorVG applies at
+// the quality quality, from 0 to 100: int(3 * (quality - 1) / 100) + 1. That
+// is 1 up to the quality 34, 2 up to 67 and 3 above (D94).
+func thorvgBlurLevels(quality int) int {
+	return 3*(quality-1)/100 + 1
+}
 
 // thorvgBlur returns the size of the blur of ThorVG for the standard
-// deviation sigma in pixels: the standard deviation of its box blurs
-// together, and the number of pixels that they spread a pixel by. Both are 0
-// when ThorVG does not blur. ThorVG computes the sizes of three boxes, as
-// _gaussianInit does, and applies the first thorvgBlurLevels of them. The
-// variance of a box of the radius r is ((2r+1)^2 - 1) / 12, and the variances
-// of the boxes add up.
-func thorvgBlur(sigma float64) (float64, int) {
+// deviation sigma in pixels, with levels box blurs: the standard deviation
+// of its box blurs together, and the number of pixels that they spread a
+// pixel by. Both are 0 when ThorVG does not blur. ThorVG computes the sizes
+// of three boxes, as _gaussianInit does, and applies the first levels of
+// them. The variance of a box of the radius r is ((2r+1)^2 - 1) / 12, and
+// the variances of the boxes add up.
+func thorvgBlur(sigma float64, levels int) (float64, int) {
 	const maxLevel = 3
 	v := float32(sigma * sigma)
 	if !(v > 1.1920929e-07) {
@@ -42,7 +49,7 @@ func thorvgBlur(sigma float64) (float64, int) {
 	mi := (float32(12*v) - float32(maxLevel*wl*wl) - float32(4*maxLevel*wl) - 3*maxLevel) / float32(-4*wl-4)
 	m := int(mi + 0.5)
 	extends, variance := 0, 0.0
-	for i := range thorvgBlurLevels {
+	for i := range levels {
 		w := wu
 		if i < m {
 			w = wl
@@ -57,6 +64,19 @@ func thorvgBlur(sigma float64) (float64, int) {
 	return math.Sqrt(variance), extends
 }
 
+// WithQuality sets the quality of the Gaussian blurs and the drop shadows,
+// from 0, the fastest, to 100, the best. The sink blurs as ThorVG does at that
+// quality: with one box blur up to the quality 34, two up to 67, and three
+// above. A value below 0 is 0, and a value above 100 is 100. Without this
+// option, the quality is 50, the default of ThorVG. velato has no such field.
+// The option follows the quality of tvg_lottie_animation_set_quality of
+// ThorVG (D20, D94).
+func WithQuality(quality int) SinkOption {
+	return func(s *PixmapSink) {
+		s.quality = min(max(quality, 0), 100)
+	}
+}
+
 // applyFilter applies the effect of the filter layer l to its pixels, and
 // returns the pixels that the result can touch.
 func (s *PixmapSink) applyFilter(l *sinkLayer) pixRect {
@@ -67,8 +87,9 @@ func (s *PixmapSink) applyFilter(l *sinkLayer) pixRect {
 	scale := math.Sqrt(float64(t[0]*t[0]) + float64(t[2]*t[2]))
 	switch f.Kind {
 	case EffectGaussianBlur:
-		sx, ex := thorvgBlur(f.StdDeviation.X * scale)
-		sy, ey := thorvgBlur(f.StdDeviation.Y * scale)
+		levels := thorvgBlurLevels(s.quality)
+		sx, ex := thorvgBlur(f.StdDeviation.X*scale, levels)
+		sy, ey := thorvgBlur(f.StdDeviation.Y*scale, levels)
 		if (ex == 0 && ey == 0) || l.dirty.empty() {
 			return l.dirty
 		}
@@ -160,7 +181,7 @@ func (s *PixmapSink) dropShadow(l *sinkLayer, scale float64) pixRect {
 	sin, cos := math.Sincos(theta)
 	ox := int(scale * (f.Offset.X*cos - f.Offset.Y*sin))
 	oy := int(scale * (f.Offset.X*sin + f.Offset.Y*cos))
-	sigma, extends := thorvgBlur(f.ShadowStdDeviation * scale)
+	sigma, extends := thorvgBlur(f.ShadowStdDeviation*scale, thorvgBlurLevels(s.quality))
 
 	// The alpha of the layer, blurred, in the pixels of blurred. The blur
 	// repeats the pixels at the edge of the canvas outside it, as ThorVG

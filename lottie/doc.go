@@ -1,5 +1,5 @@
 // Package lottie renders Lottie animations with okage. It is a port of the
-// crate velato, with the changes of D42, D43, D79, D82 and D85 (D41).
+// crate velato, with the changes of D42, D43, D79, D82, D85 and D94 (D41).
 //
 // Parse reads a Lottie file into a Composition. RenderFrame draws a frame of
 // it onto an okage pixmap:
@@ -35,14 +35,15 @@
 // text layer draws the glyphs of the list chars of its file. A PixmapSink
 // shapes each other character with the fonts of WithFontDatabase. A text
 // layer also draws its text animators, the capitals of its text and its
-// text on a path, as ThorVG does (D85). The
-// PixmapSink also draws the Gaussian blur and the drop shadow of a layer, as
-// ThorVG does (D79):
+// text on a path, as ThorVG does (D85). The PixmapSink also draws the
+// Gaussian blur and the drop shadow of a layer, as ThorVG does (D79), at the
+// quality of WithQuality (D94):
 //
 //	sink := lottie.NewPixmapSink(&m, lottie.WithFontDatabase(db))
 //	err := lottie.NewRenderer().Append(c, frame, lottie.IdentityAffine, 1, sink)
 //
-// The package draws as ThorVG does where velato differs, as D43 lists. The
-// test module compares it with velato and with ThorVG on the Noto animated
-// emoji.
+// The package draws as ThorVG does where velato differs, as D43 lists. It
+// ignores expressions, as velato does, and draws the values of the keyframes
+// (D91). The test module compares it with velato and with ThorVG on the Noto
+// animated emoji.
 package lottie

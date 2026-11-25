@@ -8,9 +8,11 @@ package lottie
 // This file ports velato src/runtime/render.rs.
 
 import (
+	"math"
 	"slices"
 
 	"github.com/xo/okage/internal/lottiecompat"
+	"github.com/xo/okage/internal/pathbool"
 	"github.com/xo/okage/kurbo"
 )
 
@@ -43,10 +45,12 @@ type Sink interface {
 // Renderer is Renderer in velato src/runtime/render.rs: it renders a
 // composition onto a Sink.
 type Renderer struct {
-	// MergePaths draws the merge paths of modes 2 to 5 by compositing, as
-	// After Effects combines them (D42). It is false by default, because
-	// ThorVG and velato draw a merge path as a compound path, and ThorVG is
-	// the reference of the tests (D43).
+	// MergePaths draws the merge paths of modes 2 to 5 as After Effects
+	// combines them (D42). A fill of the result draws by compositing. A
+	// stroke or a trim path of the result draws the path of the geometric
+	// boolean operation (D94). It is false by default, because ThorVG and
+	// velato draw a merge path as a compound path, and ThorVG is the
+	// reference of the tests (D43).
 	MergePaths bool
 
 	batch        batch
@@ -204,6 +208,7 @@ func (r *Renderer) renderLayer(animation *Composition, layerSet []EvaluatedLayer
 		renderText(animation, layer, frame, transform, alpha, sink)
 	case ContentShape:
 		r.batch.mergePaths = r.MergePaths
+		r.batch.scale = 1
 		r.batch.evaluate(layer.Content.Shapes, transform, alpha, frame, true)
 		r.batch.render(sink, clipBounds)
 		r.batch.clear()
@@ -374,6 +379,11 @@ type batch struct {
 	nextMerge   int
 	nextOperand int
 	mergePaths  bool
+	// Port: scale is the largest scale from the coordinates of the shapes
+	// that evaluate reads to the pixels, for the tolerance of the result of
+	// a merge path, and operands holds the operands of a merge path (D94).
+	scale    float64
+	operands [][]kurbo.PathEl
 }
 
 // evaluatePaths is evaluate_paths in velato src/runtime/render.rs.
@@ -398,6 +408,13 @@ func evaluatePaths(shapes []Shape, transform kurbo.Affine, frame float64) [][]ku
 func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame float64, collectDraws bool) {
 	geometryStart := len(b.geometries)
 	drawStart := len(b.draws)
+	if b.mergePaths {
+		// Port: the scale of the shapes of this group, for the tolerance
+		// of the result of a merge path (D94).
+		outer := b.scale
+		b.scale *= affineScale(transform)
+		defer func() { b.scale = outer }()
+	}
 	for i := range shapes {
 		shape := &shapes[i]
 		switch shape.Kind {
@@ -438,6 +455,9 @@ func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame fl
 				}
 				continue
 			}
+			// Port: the result of a merge path in a group above is one
+			// operand (D94).
+			b.collapseMerges(geometryStart, mergeTolerance/b.scale)
 			b.nextMerge++
 			for i := geometryStart; i < len(b.geometries); i++ {
 				b.geometries[i].mergeID = b.nextMerge
@@ -452,12 +472,12 @@ func (b *batch) evaluate(shapes []Shape, transform kurbo.Affine, alpha, frame fl
 			b.repeat(&repeater, geometryStart, drawStart)
 		case ShapeTrim:
 			trim := shape.Trim.Evaluate(frame)
-			b.applyTrim(&trim, geometryStart)
-			// Port: a trim path after a merge path needs the path of the
-			// result, so the merge falls back to a compound path (D42).
-			for i := geometryStart; i < len(b.geometries); i++ {
-				b.geometries[i].mergeID = 0
+			// Port: a trim path after a merge path trims the path of the
+			// result (D94).
+			if b.mergePaths {
+				b.collapseMerges(geometryStart, mergeTolerance/b.scale)
 			}
+			b.applyTrim(&trim, geometryStart)
 		}
 	}
 	for i := geometryStart; i < len(b.geometries); i++ {
@@ -707,6 +727,15 @@ func (b *batch) renderDraw(draw *drawData, styleInverse kurbo.Affine, geometries
 	if draw.alpha != 1.0 {
 		brush = draw.brush.MultiplyAlpha(float32(draw.alpha))
 	}
+	if draw.stroke != nil && b.mergePaths && slices.ContainsFunc(geometries, func(g geometryData) bool { return g.mergeID != 0 }) {
+		// Port: a stroke after a merge path draws the path of the result
+		// (D94).
+		path = b.mergedPath(geometries, styleInverse, mergeTolerance/affineScale(draw.transform), path[:0])
+		if len(path) > 0 {
+			sink.Draw(draw.stroke, draw.transform, &brush, slices.Clone(path))
+		}
+		return path
+	}
 	if draw.stroke == nil && geometries[0].mergeID != 0 {
 		allMerged := true
 		for _, g := range geometries {
@@ -817,6 +846,115 @@ func (b *batch) renderMerge(draw *drawData, styleInverse kurbo.Affine, geometrie
 	sink.PopLayer()
 	sink.PopLayer()
 	return path
+}
+
+// mergeTolerance is the largest distance in pixels between a curve of an
+// operand of a merge path and the lines of the result of its geometric
+// boolean operation (D94). velato draws an ellipse with the same tolerance.
+const mergeTolerance = 0.1
+
+// affineScale returns the largest scale of a, its larger singular value, as
+// Affine::svd in kurbo kurbo/src/affine.rs computes it.
+func affineScale(a kurbo.Affine) float64 {
+	s1 := math.Hypot(a[0]+a[3], a[1]-a[2])
+	s2 := math.Hypot(a[0]-a[3], a[1]+a[2])
+	return 0.5 * (s1 + s2)
+}
+
+// mergeOp returns the operation of pathbool for the merge mode m (D94).
+func mergeOp(m MergeMode) pathbool.Op {
+	switch m {
+	case MergeModeSubtract:
+		return pathbool.Difference
+	case MergeModeIntersect:
+		return pathbool.Intersection
+	case MergeModeExcludeIntersections:
+		return pathbool.Xor
+	}
+	return pathbool.Union
+}
+
+// mergeRun returns the end of the run of geometries from the start of
+// geometries that one merge path combines: the geometries with the merge
+// path of the first one and with its copies of a repeater.
+func mergeRun(geometries []geometryData) int {
+	n := 1
+	for n < len(geometries) && geometries[n].mergeID == geometries[0].mergeID && copiesEqual(geometries[n].copies, geometries[0].copies) {
+		n++
+	}
+	return n
+}
+
+// combine appends to path the result of the merge path of the run of
+// geometries, each with its transform followed by transform, with the
+// tolerance tolerance, and returns path (D94). The operands of the merge
+// path go in the order of geometries, as renderMerge composites them.
+func (b *batch) combine(geometries []geometryData, transform kurbo.Affine, tolerance float64, path []kurbo.PathEl) []kurbo.PathEl {
+	b.operands = b.operands[:0]
+	for i, g := range geometries {
+		if i == 0 || g.operand != geometries[i-1].operand {
+			b.operands = append(b.operands, nil)
+		}
+		t := transform.Mul(g.transform)
+		if !t.IsFinite() {
+			continue
+		}
+		operand := b.operands[len(b.operands)-1]
+		for _, el := range b.elements[g.elements[0]:g.elements[1]] {
+			operand = append(operand, t.MulPathEl(el))
+		}
+		b.operands[len(b.operands)-1] = operand
+	}
+	return pathbool.Combine(mergeOp(geometries[0].mergeMode), b.operands, tolerance, path)
+}
+
+// mergedPath appends to path the compound path of geometries in the
+// coordinates of the style whose inverse transform is styleInverse, with
+// the result of each merge path in place of its operands, and returns path
+// (D94).
+func (b *batch) mergedPath(geometries []geometryData, styleInverse kurbo.Affine, tolerance float64, path []kurbo.PathEl) []kurbo.PathEl {
+	for len(geometries) > 0 {
+		g := &geometries[0]
+		if g.mergeID == 0 {
+			if transform := styleInverse.Mul(g.transform); transform.IsFinite() {
+				for _, el := range b.elements[g.elements[0]:g.elements[1]] {
+					path = append(path, transform.MulPathEl(el))
+				}
+			}
+			geometries = geometries[1:]
+			continue
+		}
+		n := mergeRun(geometries)
+		path = b.combine(geometries[:n], styleInverse, tolerance, path)
+		geometries = geometries[n:]
+	}
+	return path
+}
+
+// collapseMerges puts the result of the merge path of each run of the
+// geometries from start that a merge path combines into the first geometry
+// of the run, with the tolerance tolerance, and leaves the other geometries
+// of the run empty, so that a trim path after it trims that result (D94).
+// The geometries keep their places, because the draws refer to them by
+// their index.
+func (b *batch) collapseMerges(start int, tolerance float64) {
+	for i := start; i < len(b.geometries); {
+		if b.geometries[i].mergeID == 0 {
+			i++
+			continue
+		}
+		n := mergeRun(b.geometries[i:])
+		first := len(b.elements)
+		b.elements = b.combine(b.geometries[i:i+n], kurbo.IdentityAffine, tolerance, b.elements)
+		for j := i; j < i+n; j++ {
+			g := &b.geometries[j]
+			g.elements = [2]int{len(b.elements), len(b.elements)}
+			g.transform = kurbo.IdentityAffine
+			g.mergeID = 0
+		}
+		b.geometries[i].elements[0] = first
+		i += n
+	}
 }
 
 // clear is Batch::clear in velato src/runtime/render.rs.

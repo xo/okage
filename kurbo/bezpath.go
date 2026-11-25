@@ -54,6 +54,109 @@ func (a Affine) MulPathEl(el PathEl) PathEl {
 	return el
 }
 
+// toQuadTol is TO_QUAD_TOL in kurbo kurbo/src/bezpath.rs.
+//
+// The share of the tolerance of Flatten that goes to the conversion of a
+// cubic into quadratics.
+const toQuadTol float64 = 0.1
+
+// Flatten is flatten in kurbo kurbo/src/bezpath.rs. It appends to dst the
+// elements of path with each curve flattened to lines, and returns dst.
+//
+// The tolerance value controls the maximum distance between the curved input
+// segments and their polyline approximations. (In technical terms, this is
+// the Hausdorff distance). The algorithm attempts to bound this distance by
+// tolerance but this is not absolutely guaranteed. The number of segments
+// tends to scale as the inverse square root of tolerance.
+//
+// Port: kurbo calls a callback with each element. Flatten appends them to a
+// slice, so that it takes no closure (D25, D94).
+func Flatten(path []PathEl, tolerance float64, dst []PathEl) []PathEl {
+	sqrtTol := Sqrt(tolerance)
+	var lastPt Point
+	hasLast := false
+	var quadBuf []quadFlatten
+	for _, el := range path {
+		switch el.Kind {
+		case PathElMoveTo, PathElLineTo:
+			lastPt, hasLast = el.P[0], true
+			dst = append(dst, el)
+		case PathElQuadTo:
+			if hasLast {
+				q := NewQuadBez(lastPt, el.P[0], el.P[1])
+				params := q.estimateSubdiv(sqrtTol)
+				n := max(f64ToUsize(Ceil(0.5*params.val/sqrtTol)), 1)
+				step := 1.0 / float64(n)
+				for i := uint(1); i < n; i++ {
+					u := float64(i) * step
+					t := q.determineSubdivT(&params, u)
+					dst = append(dst, LineTo(q.Eval(t)))
+				}
+				dst = append(dst, LineTo(el.P[1]))
+			}
+			lastPt, hasLast = el.P[1], true
+		case PathElCurveTo:
+			if hasLast {
+				c := NewCubicBez(lastPt, el.P[0], el.P[1], el.P[2])
+
+				// Subdivide into quadratics, and estimate the number of
+				// subdivisions required for each, summing to arrive at an
+				// estimate for the number of subdivisions for the cubic.
+				// Also retain these parameters for later.
+				iter := c.ToQuads(tolerance * toQuadTol)
+				quadBuf = quadBuf[:0]
+				sqrtRemainTol := sqrtTol * Sqrt(1.0-toQuadTol)
+				sum := 0.0
+				for {
+					_, _, q, ok := iter.Next()
+					if !ok {
+						break
+					}
+					params := q.estimateSubdiv(sqrtRemainTol)
+					sum += params.val
+					quadBuf = append(quadBuf, quadFlatten{q: q, params: params})
+				}
+				n := max(f64ToUsize(Ceil(0.5*sum/sqrtRemainTol)), 1)
+
+				// Iterate through the quadratics, outputting the points of
+				// subdivisions that fall within that quadratic.
+				step := sum / float64(n)
+				i := uint(1)
+				valSum := 0.0
+				for k := range quadBuf {
+					qp := &quadBuf[k]
+					target := float64(i) * step
+					recipVal := 1 / qp.params.val
+					for target < valSum+qp.params.val {
+						u := (target - valSum) * recipVal
+						t := qp.q.determineSubdivT(&qp.params, u)
+						dst = append(dst, LineTo(qp.q.Eval(t)))
+						i++
+						if i == n+1 {
+							break
+						}
+						target = float64(i) * step
+					}
+					valSum += qp.params.val
+				}
+				dst = append(dst, LineTo(el.P[2]))
+			}
+			lastPt, hasLast = el.P[2], true
+		case PathElClosePath:
+			hasLast = false
+			dst = append(dst, el)
+		}
+	}
+	return dst
+}
+
+// quadFlatten is a quadratic of a cubic and its parameters, the element of
+// quad_buf in flatten in kurbo kurbo/src/bezpath.rs.
+type quadFlatten struct {
+	q      QuadBez
+	params flattenParams
+}
+
 // PathSegKind is the variant of PathSeg in kurbo kurbo/src/bezpath.rs (D27).
 type PathSegKind uint8
 

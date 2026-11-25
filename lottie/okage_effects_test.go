@@ -23,12 +23,12 @@ func effectFile(effect string) []byte {
 // TestThorVGBlur checks the size of the blur of ThorVG for a few standard
 // deviations.
 func TestThorVGBlur(t *testing.T) {
-	if s, e := thorvgBlur(0); s != 0 || e != 0 {
+	if s, e := thorvgBlur(0, 2); s != 0 || e != 0 {
 		t.Errorf("the sigma 0 gives %v and %d", s, e)
 	}
 	// For the variance 100, the boxes have the width 19 and the radius 9,
 	// and two of them have the variance 2 * (19 * 19 - 1) / 12 = 60.
-	if s, e := thorvgBlur(10); math.Abs(s-math.Sqrt(60)) > 1e-9 || e != 18 {
+	if s, e := thorvgBlur(10, 2); math.Abs(s-math.Sqrt(60)) > 1e-9 || e != 18 {
 		t.Errorf("the sigma 10 gives %v and %d", s, e)
 	}
 }

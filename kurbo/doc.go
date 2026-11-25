@@ -11,7 +11,8 @@
 // traits ParamCurve, ParamCurveDeriv and ParamCurveArclen, and the parts of
 // common.rs that they use. velato and subsetter call a few more items, such
 // as CubicBez::to_quads. SUBSET.md lists each item, with the file of
-// svgtypes, usvg, velato or subsetter that uses it.
+// svgtypes, usvg, velato or subsetter that uses it. flatten serves the merge
+// paths of lottie (D94).
 //
 // The arithmetic gives the same bits as the Rust code. A multiply that is
 // followed by an add is written as float64(x*y) + z, so that the Go compiler

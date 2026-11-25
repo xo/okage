@@ -140,6 +140,89 @@ func TestMergePaths(t *testing.T) {
 	}
 }
 
+// blackStroke is a black stroke item of the width 4.
+const blackStroke = `{"ty": "st", "o": {"a": 0, "k": 100}, "c": {"a": 0, "k": [0, 0, 0, 1]}, "w": {"a": 0, "k": 4}, "lc": 2, "lj": 1, "ml": 4}`
+
+// TestMergePathsStroke checks a stroke and a trim path after the merge paths
+// of modes 2 to 5 with Renderer.MergePaths (D94). The first rectangle covers
+// x and y from 10 to 60, and the second from 40 to 90. The stroke draws the
+// outline of the result of the merge path. The test looks at the points
+// (25, 10), on the top edge of the first rectangle, (40, 50), on the left
+// edge of the second, (60, 50), on the right edge of the first, (75, 90), on
+// the bottom edge of the second, and (50, 50), in the middle of the overlap.
+// Without MergePaths, the stroke draws both rectangles, as ThorVG does (D43).
+func TestMergePathsStroke(t *testing.T) {
+	type sample struct {
+		x, y uint32
+		want bool
+	}
+	for _, c := range []struct {
+		mode    int
+		samples []sample
+	}{
+		{2, []sample{{25, 10, true}, {40, 50, false}, {60, 50, false}, {75, 90, true}, {50, 50, false}}},
+		{3, []sample{{25, 10, true}, {40, 50, true}, {60, 50, false}, {75, 90, false}, {50, 50, false}}},
+		{4, []sample{{25, 10, false}, {40, 50, true}, {60, 50, true}, {75, 90, false}, {50, 50, false}}},
+		{5, []sample{{25, 10, true}, {40, 50, true}, {60, 50, true}, {75, 90, true}, {50, 50, false}}},
+	} {
+		t.Run(fmt.Sprintf("mode %d", c.mode), func(t *testing.T) {
+			items := fmt.Sprintf(`{"ty": "gr", "it": [%s, %s, {"ty": "mm", "mm": %d}, %s,
+				{"ty": "tr", "p": {"a": 0, "k": [0, 0]}}]}`, rect(35, 35, 50, 50), rect(65, 65, 50, 50), c.mode, blackStroke)
+			if pm := render(t, lottieFile(items), 0); pixel(t, pm, 40, 50)[3] != 255 || pixel(t, pm, 60, 50)[3] != 255 {
+				t.Error("the default renderer applied the merge path")
+			}
+			pm := renderWith(t, &Renderer{MergePaths: true}, lottieFile(items), 0)
+			for _, s := range c.samples {
+				if got := pixel(t, pm, s.x, s.y)[3] > 128; got != s.want {
+					t.Errorf("(%d, %d): painted is %v, want %v", s.x, s.y, got, s.want)
+				}
+			}
+		})
+	}
+
+	// A trim path of the half of the outline of the union draws a part of
+	// it, which a trim of the two rectangles does not draw.
+	items := fmt.Sprintf(`{"ty": "gr", "it": [%s, %s, {"ty": "mm", "mm": 2},
+		{"ty": "tm", "s": {"a": 0, "k": 0}, "e": {"a": 0, "k": 50}, "o": {"a": 0, "k": 0}, "m": 1}, %s,
+		{"ty": "tr", "p": {"a": 0, "k": [0, 0]}}]}`, rect(35, 35, 50, 50), rect(65, 65, 50, 50), blackStroke)
+	trimmed := renderWith(t, &Renderer{MergePaths: true}, lottieFile(items), 0)
+	painted := 0
+	for y := range uint32(100) {
+		for x := range uint32(100) {
+			if pixel(t, trimmed, x, y)[3] > 128 {
+				painted++
+			}
+		}
+	}
+	// The outline of the union is 280 long, and the stroke is 4 wide, so
+	// half of it covers about 560 pixels.
+	if painted < 450 || painted > 700 {
+		t.Errorf("the trimmed outline covers %d pixels", painted)
+	}
+	if p := pixel(t, trimmed, 40, 50)[3]; p > 128 {
+		t.Error("the trim path draws the edge of a rectangle inside the union")
+	}
+}
+
+// TestMergePathsNested checks that the result of a merge path is one operand
+// of a later merge path with Renderer.MergePaths (D94). The intersection of
+// two rectangles, from x 40 to 60, joins a third rectangle at the right, from
+// x 80 to 95, and the fill does not cover the parts of the first two
+// rectangles outside their intersection.
+func TestMergePathsNested(t *testing.T) {
+	items := fmt.Sprintf(`{"ty": "gr", "it": [%s, %s, {"ty": "mm", "mm": 4}, %s, {"ty": "mm", "mm": 2}, %s,
+		{"ty": "tr", "p": {"a": 0, "k": [0, 0]}}]}`, rect(35, 50, 50, 50), rect(65, 50, 50, 50), rect(87, 50, 14, 20), red)
+	pm := renderWith(t, &Renderer{MergePaths: true}, lottieFile(items), 0)
+	for _, s := range []struct {
+		x    uint32
+		want bool
+	}{{20, false}, {50, true}, {75, false}, {87, true}} {
+		if got := pixel(t, pm, s.x, 50)[3] == 255; got != s.want {
+			t.Errorf("x %d: painted is %v, want %v", s.x, got, s.want)
+		}
+	}
+}
+
 // TestSolidLayer checks that a solid layer fills its rectangle with its
 // color (D43).
 func TestSolidLayer(t *testing.T) {

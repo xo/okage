@@ -194,3 +194,20 @@ func TestThorVGEffects(t *testing.T) {
 	}
 	report(t, results)
 }
+
+// TestThorVGQuality compares the Gaussian blur and the drop shadow of a
+// layer with ThorVG at other qualities than its default, 50 (D94). ThorVG
+// applies one box blur up to the quality 34, two up to 67, and three above.
+// okage sets the quality with WithQuality.
+func TestThorVGQuality(t *testing.T) {
+	blur := fmt.Sprintf(`{"ty": 29, "en": 1, "ef": [%s, %s, %s]}`, effectParam("16"), effectParam("1"), effectParam("0"))
+	shadow := fmt.Sprintf(`{"ty": 25, "en": 1, "ef": [%s, %s, %s, %s, %s]}`,
+		effectParam("[0.1, 0.1, 0.4, 1]"), effectParam("160"), effectParam("135"), effectParam("14"), effectParam("24"))
+	var cases []compatCase
+	for _, quality := range []int{1, 20, 34, 35, 67, 68, 100} {
+		cases = append(cases,
+			compatCase{name: fmt.Sprintf("blur-quality-%d", quality), doc: textDocument(`{"list": []}`, "[]", effectLayer(blur)), quality: quality},
+			compatCase{name: fmt.Sprintf("shadow-quality-%d", quality), doc: textDocument(`{"list": []}`, "[]", effectLayer(shadow)), quality: quality})
+	}
+	compareCases(t, cases)
+}

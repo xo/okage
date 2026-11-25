@@ -44,6 +44,9 @@ type PixmapSink struct {
 	// (D79).
 	fonts *svg.FontDatabase
 	faces map[string]*textFace
+	// quality is the quality of the blurs and the shadows, from 0 to 100
+	// (D94).
+	quality int
 }
 
 // pixRect is a rectangle of pixels, from (x0, y0) to (x1, y1), exclusive. It
@@ -94,7 +97,7 @@ type sinkLayer struct {
 // NewPixmapSink returns a sink that draws onto target, with the options
 // opts.
 func NewPixmapSink(target *okage.PixmapMut, opts ...SinkOption) *PixmapSink {
-	s := &PixmapSink{target: target, width: target.Width(), height: target.Height(), images: newImageCache()}
+	s := &PixmapSink{target: target, width: target.Width(), height: target.Height(), images: newImageCache(), quality: defaultQuality}
 	for _, o := range opts {
 		o(s)
 	}

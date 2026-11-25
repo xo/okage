@@ -16,9 +16,12 @@ import (
 
 // compatCase is a Lottie document that okage draws, and the document that
 // ThorVG draws to compare with it. When thorvg is nil, ThorVG draws doc.
+// quality and mergePaths are the fields of frameConfig.
 type compatCase struct {
 	name        string
 	doc, thorvg []byte
+	quality     int
+	mergePaths  bool
 }
 
 // compareCases compares each case of cases with ThorVG, with the sink
@@ -41,7 +44,7 @@ func compareCases(t *testing.T, cases []compatCase, opts ...okagelottie.SinkOpti
 		if other == nil {
 			other = tc.doc
 		}
-		results = append(results, compareFrames(ctx, r, tc.name, c, other, opts...)...)
+		results = append(results, compareFramesConfig(ctx, r, tc.name, c, other, frameConfig{quality: tc.quality, mergePaths: tc.mergePaths, opts: opts})...)
 	}
 	for _, res := range results {
 		if res.err == "" {

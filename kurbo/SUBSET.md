@@ -66,6 +66,7 @@ The port differs from upstream in one place: `Arc.AppendIter` makes at most
 | `impl ParamCurve for QuadBez` | `QuadBez.Eval`, `Subsegment`, `Subdivide`, `Start`, `End` | usvg `text/layout.rs` (`deriv().eval`) |
 | `impl ParamCurveDeriv for QuadBez` | `QuadBez.Deriv` | the trait |
 | `impl ParamCurveArclen for QuadBez` | `QuadBez.Arclen`, `QuadBez.InvArclen` | the trait |
+| `QuadBez::estimate_subdiv`, `determine_subdiv_t`, `FlattenParams`, `approx_parabola_integral`, `approx_parabola_inv_integral` | `QuadBez.estimateSubdiv`, `QuadBez.determineSubdivT`, `flattenParams`, `approxParabolaIntegral`, `approxParabolaInvIntegral` | for the subset: `flatten` |
 
 ## cubicbez.rs, in cubicbez.go
 
@@ -77,7 +78,7 @@ The port differs from upstream in one place: `Arc.AppendIter` makes at most
 | `impl ParamCurveDeriv for CubicBez` | `CubicBez.Deriv` | usvg `text/layout.rs` |
 | `arclen_quadrature_core`, `arclen_rec` | `arclenQuadratureCore`, `arclenRec` | for the subset: `CubicBez::arclen` |
 | `impl ParamCurveArclen for CubicBez` | `CubicBez.Arclen`, `CubicBez.InvArclen` | usvg `parser/text.rs` (`arclen`), `text/layout.rs` (`arclen`, `inv_arclen`) |
-| `CubicBez::to_quads`, `ToQuads` with its impl of `Iterator` | `CubicBez.ToQuads`, `ToQuads`, `ToQuads.Next`, `ToQuads.Len` (`size_hint`) | subsetter `interjector.rs` |
+| `CubicBez::to_quads`, `ToQuads` with its impl of `Iterator` | `CubicBez.ToQuads`, `ToQuads`, `ToQuads.Next`, `ToQuads.Len` (`size_hint`) | subsetter `interjector.rs`, and `flatten` |
 
 ## svg.rs, in svg.go
 
@@ -122,10 +123,12 @@ it makes, `PathEl::CurveTo`. `Arc.PathElements` makes the path elements.
 | `PathEl`, `impl Mul<PathEl> for Affine` | `PathEl`, with `MoveTo`, `LineTo`, `QuadTo`, `CurveTo`, `ClosePath`, and `Affine.MulPathEl` | velato, the paths of every shape |
 | `PathSeg`, with its impls of `ParamCurve` and `ParamCurveArclen`, `as_path_el`, `reverse` | `PathSeg` and its methods | velato `runtime/trim.rs` |
 | `segments`, `Segments` | `Segments` | velato `runtime/trim.rs` |
+| `flatten`, `TO_QUAD_TOL` | `Flatten`, `toQuadTol` | the merge paths of `lottie`, through `internal/pathbool` (D94) |
 
 `PathEl` and `PathSeg` are structs with a kind (D27). `Segments` returns a
 slice, and a `ClosePath` before any point gives no segment, where kurbo
-panics.
+panics. `Flatten` appends the elements to a slice, where kurbo calls a
+callback with each one.
 
 ## rect.rs and size.rs, in rect.go
 

@@ -164,7 +164,35 @@ func compareFile(ctx context.Context, r *lottie.Renderer, file string) []result 
 // each frame with RenderFrame, and else with a PixmapSink with the options
 // opts.
 func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okagelottie.Composition, data []byte, opts ...okagelottie.SinkOption) []result {
-	a, err := r.Load(ctx, data, lottie.Options{})
+	return compareFramesConfig(ctx, r, name, c, data, frameConfig{opts: opts})
+}
+
+// frameConfig is the configuration of a comparison of frames.
+type frameConfig struct {
+	// quality is the quality of the blurs and the shadows of both
+	// renderers, or 0 for the default of ThorVG (D94).
+	quality int
+	// mergePaths sets Renderer.MergePaths of okage (D42, D94).
+	mergePaths bool
+	// opts are the options of the PixmapSink of okage.
+	opts []okagelottie.SinkOption
+}
+
+// sinkOptions returns the options of the PixmapSink of cfg, with the
+// quality, and whether okage needs a sink of its own.
+func (cfg frameConfig) sinkOptions() ([]okagelottie.SinkOption, bool) {
+	opts := cfg.opts
+	if cfg.quality > 0 {
+		opts = append(slices.Clip(opts), okagelottie.WithQuality(cfg.quality))
+	}
+	return opts, len(opts) > 0 || cfg.mergePaths
+}
+
+// compareFramesConfig compares five frames of the composition c of okage
+// with the frames of ThorVG for the Lottie document data, with the
+// configuration cfg.
+func compareFramesConfig(ctx context.Context, r *lottie.Renderer, name string, c *okagelottie.Composition, data []byte, cfg frameConfig) []result {
+	a, err := r.Load(ctx, data, lottie.Options{Quality: cfg.quality})
 	if err != nil {
 		return []result{{name: name, err: "thorvg: " + err.Error()}}
 	}
@@ -187,7 +215,7 @@ func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okag
 			continue
 		}
 		m := pm.AsMut()
-		if err := renderFrame(c, c.Frames[0]+float64(f), &m, opts); err != nil {
+		if err := renderFrame(c, c.Frames[0]+float64(f), &m, cfg); err != nil {
 			res.err = "okage: " + err.Error()
 			results = append(results, res)
 			continue
@@ -200,7 +228,7 @@ func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okag
 			_ = os.WriteFile(filepath.Join(dump, fmt.Sprintf("%s-%03d-thorvg.png", name, int(f))), b, 0o644)
 			pm2, _ := okage.NewPixmap(uint32(c.Width), uint32(c.Height))
 			m2 := pm2.AsMut()
-			_ = renderFrame(c, c.Frames[0]+float64(f), &m2, opts)
+			_ = renderFrame(c, c.Frames[0]+float64(f), &m2, cfg)
 			_ = pm2.SavePNG(filepath.Join(dump, fmt.Sprintf("%s-%03d-okage.png", name, int(f))))
 		}
 		results = append(results, res)
@@ -208,13 +236,17 @@ func compareFrames(ctx context.Context, r *lottie.Renderer, name string, c *okag
 	return results
 }
 
-// renderFrame draws the frame of c onto pixmap, with RenderFrame when opts
-// is empty, and else with a PixmapSink with the options opts.
-func renderFrame(c *okagelottie.Composition, frame float64, pixmap *okage.PixmapMut, opts []okagelottie.SinkOption) error {
-	if len(opts) == 0 {
+// renderFrame draws the frame of c onto pixmap, with RenderFrame when cfg
+// needs no sink of its own, and else with a Renderer and a PixmapSink of
+// the configuration cfg.
+func renderFrame(c *okagelottie.Composition, frame float64, pixmap *okage.PixmapMut, cfg frameConfig) error {
+	opts, own := cfg.sinkOptions()
+	if !own {
 		return okagelottie.RenderFrame(c, frame, okagelottie.IdentityAffine, pixmap)
 	}
-	return okagelottie.NewRenderer().Append(c, frame, okagelottie.IdentityAffine, 1, okagelottie.NewPixmapSink(pixmap, opts...))
+	renderer := okagelottie.NewRenderer()
+	renderer.MergePaths = cfg.mergePaths
+	return renderer.Append(c, frame, okagelottie.IdentityAffine, 1, okagelottie.NewPixmapSink(pixmap, opts...))
 }
 
 // report logs the results, worst first.

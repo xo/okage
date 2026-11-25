@@ -7,7 +7,11 @@ package kurbo
 
 // This file ports the subset of kurbo kurbo/src/quadbez.rs that svgtypes and
 // usvg need: QuadBez, QuadBez::raise, and the impls of ParamCurve,
-// ParamCurveDeriv and ParamCurveArclen.
+// ParamCurveDeriv and ParamCurveArclen. It also ports the parts that
+// flatten needs: QuadBez::estimate_subdiv, QuadBez::determine_subdiv_t,
+// FlattenParams and the approximations of the parabola integral (D94).
+
+import "math"
 
 // QuadBez is QuadBez in kurbo kurbo/src/quadbez.rs.
 //
@@ -148,4 +152,78 @@ func (q QuadBez) Arclen(_ float64) float64 {
 // in kurbo kurbo/src/param_curve.rs.
 func (q QuadBez) InvArclen(arclen, accuracy float64) float64 {
 	return invArclenParamCurve(q, arclen, accuracy)
+}
+
+// estimateSubdiv is QuadBez::estimate_subdiv in kurbo kurbo/src/quadbez.rs.
+//
+// Estimate the number of subdivisions for flattening.
+func (q QuadBez) estimateSubdiv(sqrtTol float64) flattenParams {
+	// Determine transformation to $y = x^2$ parabola.
+	d01 := q.P1.Sub(q.P0)
+	d12 := q.P2.Sub(q.P1)
+	dd := d01.Sub(d12)
+	cross := q.P2.Sub(q.P0).Cross(dd)
+	x0 := d01.Dot(dd) * (1 / cross)
+	x2 := d12.Dot(dd) * (1 / cross)
+	scale := Abs(cross / (dd.Hypot() * (x2 - x0)))
+
+	// Compute number of subdivisions needed.
+	a0 := approxParabolaIntegral(x0)
+	a2 := approxParabolaIntegral(x2)
+	val := 0.0
+	if !math.IsInf(scale, 0) && !math.IsNaN(scale) {
+		da := Abs(a2 - a0)
+		sqrtScale := Sqrt(scale)
+		if Signum(x0) == Signum(x2) {
+			val = da * sqrtScale
+		} else {
+			// Handle cusp case (segment contains curvature maximum)
+			xmin := sqrtTol / sqrtScale
+			val = sqrtTol * da / approxParabolaIntegral(xmin)
+		}
+	}
+	u0 := approxParabolaInvIntegral(a0)
+	u2 := approxParabolaInvIntegral(a2)
+	uscale := 1 / (u2 - u0)
+	return flattenParams{a0: a0, a2: a2, u0: u0, uscale: uscale, val: val}
+}
+
+// determineSubdivT is QuadBez::determine_subdiv_t in kurbo
+// kurbo/src/quadbez.rs.
+//
+// Maps a value from 0..1 to 0..1.
+func (q QuadBez) determineSubdivT(params *flattenParams, x float64) float64 {
+	a := params.a0 + float64((params.a2-params.a0)*x)
+	u := approxParabolaInvIntegral(a)
+	return (u - params.u0) * params.uscale
+}
+
+// flattenParams is FlattenParams in kurbo kurbo/src/quadbez.rs.
+type flattenParams struct {
+	a0     float64
+	a2     float64
+	u0     float64
+	uscale float64
+	// The number of `subdivisions * 2 * sqrt_tol`.
+	val float64
+}
+
+// approxParabolaIntegral is approx_parabola_integral in kurbo
+// kurbo/src/quadbez.rs.
+//
+// An approximation to $\int (1 + 4x^2) ^ -0.25 dx$
+//
+// This is used for flattening curves.
+func approxParabolaIntegral(x float64) float64 {
+	d := 0.67
+	return x / (1.0 - d + Sqrt(Sqrt(Powi(d, 4)+float64(0.25*x*x))))
+}
+
+// approxParabolaInvIntegral is approx_parabola_inv_integral in kurbo
+// kurbo/src/quadbez.rs.
+//
+// An approximation to the inverse parabola integral.
+func approxParabolaInvIntegral(x float64) float64 {
+	b := 0.39
+	return x * (1.0 - b + Sqrt(float64(b*b)+float64(0.25*x*x)))
 }
