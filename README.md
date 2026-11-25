@@ -1,11 +1,11 @@
 <div align="center">
   <img src="docs/okage.svg" alt="okage" width="600"/>
   <br/>
-  <a href="#status" title="Status">Status</a> |
   <a href="#installing" title="Installing">Installing</a> |
-  <a href="#simd" title="SIMD">SIMD</a> |
+  <a href="#examples" title="Examples">Examples</a> |
+  <a href="#packages" title="Packages">Packages</a> |
+  <a href="#simd-and-tinygo" title="SIMD and TinyGo">SIMD and TinyGo</a> |
   <a href="#documents" title="Documents">Documents</a> |
-  <a href="#differences-from-upstream" title="Differences from upstream">Differences from upstream</a> |
   <a href="https://pkg.go.dev/github.com/xo/okage" title="Go Reference">Reference</a> |
   <a href="#license" title="License">License</a>
 </div>
@@ -28,73 +28,237 @@
 
 # okage
 
-`okage` is a pure Go port of [tiny-skia][ts] and of [resvg][resvg].
+`okage` draws 2D graphics in pure Go. It fills and strokes paths, renders
+SVG files, draws Lottie animations, lays out text and math, and writes PDF
+files. It needs the Go toolchain and nothing else: no cgo, no C library and
+no WebAssembly runtime.
 
-1. tiny-skia is a small 2D renderer in Rust, and it is a subset of
-   [Skia][skia], the renderer of Chrome. It fills and strokes paths with a
-   solid color, a gradient or a pattern. It dashes strokes, clips with a mask
-   and blends images. It renders on the CPU only. okage ports it into the root
-   package and the package `path`.
-2. resvg renders SVG files with tiny-skia. okage ports it into the package
-   `svg`.
-3. [velato][velato] renders Lottie animations. okage ports it into the package
-   `lottie`, which draws with okage (D41).
-4. [tinyhtml5][tinyhtml5], [tinycss2][tinycss2] and [cssselect2][cssselect2]
-   parse HTML, parse CSS and match CSS selectors in Python, for WeasyPrint.
-   okage ports them into the packages `html`, `tinycss2` and `cssselect2`
-   (D49, D50).
-5. [go-tex/math][gotexmath] lays out TeX math with the OpenType MATH table
-   of a font, in Go. okage ports it into the package `texmath`, on the fonts
-   of `typesetting`. The package `texmath/stixtwomath` holds the font STIX
-   Two Math, which has a MATH table (D78).
-
-Today [`xo/resvg`][xoresvg] wraps resvg through cgo and a static archive for
-each platform. A program that imports okage needs the Go toolchain and nothing
-else.
-
-okage uses SIMD where Go can, and its scalar code is the fallback. SIMD
-(single instruction, multiple data) means one instruction that works on
-several values at once. A build with [TinyGo][tinygo], most of all for
-WebAssembly, is a goal that the port keeps in mind.
-
-## Status
-
-The port of tiny-skia is done, in the root package and in `path`. It gives
-the same bytes as tiny-skia in the scalar build, in the SIMD build and with
-TinyGo, and the 157 integration tests of tiny-skia pass. It is about 1.2 to
-3 times slower than the scalar code of tiny-skia, and work that makes it
-faster stays open (D35). The package `svg` is the port of usvg and
-resvg. It parses and renders each test file of resvg: without text and
-without a raster image, with the same pixels as resvg, and with text or an
-image, within the tolerance of D31. The package `lottie` is the port of
-velato. It gives the same calls to its sink as velato for each of the 879
-Noto animated emoji, and each sampled frame of them is within the tolerance of
-D43 of ThorVG. [docs/PLAN.md](docs/PLAN.md) holds the plan, the phases and the
-open questions.
-
-The port starts from resvg `v0.49.0` and from the versions of the crates that
-it uses, such as tiny-skia `v0.12.0`. After each base port, okage follows each
-upstream commit. On 2026-11-20 okage follows resvg up to its commit `433d0213`
-of 2026-11-17. `docs/upstream/upstreams.tsv` lists the upstream
-repositories, and one ledger for each records what okage did with each commit.
+okage is a port of [tiny-skia][ts], the small 2D renderer of the Rust
+ecosystem, and of [resvg][resvg], which renders SVG files with tiny-skia.
+The renderer gives the same bytes as tiny-skia. okage also ports the
+projects around them, such as [velato][velato] for Lottie and
+[krilla][krilla] for PDF. [Packages](#packages) lists each one.
 
 ## Installing
 
-Install okage with this command:
+Add okage to a Go module with this command:
 
 ```sh
 go get github.com/xo/okage
 ```
 
-The renderer imports only the Go standard library. The package `svg` also
-uses `typesetting` for text, and `golang.org/x/image/webp` for WebP files.
-`typesetting` is a public copy of [`go-text/typesetting`][typesetting] in
-okage (D52). okage does not use cgo, so a program that imports it builds with
-`CGO_ENABLED=0` for every platform that Go supports.
+A program that imports okage builds with `CGO_ENABLED=0` for each platform
+that Go supports.
 
-## SIMD
+## Examples
 
-Go 1.27 has SIMD only as an experiment, so okage has two builds:
+Each example below is a part of a test in `test/readme`. The test also
+draws each image of this section. The example of Lottie draws one frame,
+and the test draws four frames for its image.
+
+### Draw shapes
+
+The root package fills and strokes paths onto a `Pixmap`, with a solid
+color, a gradient or a pattern. This example fills a circle with a radial
+gradient, and strokes a curve with round dashes:
+
+```go
+pixmap, _ := okage.NewPixmap(480, 240)
+pixmap.Fill(okage.ColorFromRGBA8(255, 255, 255, 255))
+
+// Fill a circle with a radial gradient.
+circle, _ := okage.PathFromCircle(120, 120, 96)
+paint := okage.DefaultPaint()
+paint.AntiAlias = true
+paint.Shader, _ = okage.NewRadialGradient(
+	okage.PointFromXY(84, 84), 0,
+	okage.PointFromXY(120, 120), 96,
+	[]okage.GradientStop{
+		okage.NewGradientStop(0, okage.ColorFromRGBA8(255, 214, 102, 255)),
+		okage.NewGradientStop(1, okage.ColorFromRGBA8(232, 89, 60, 255)),
+	},
+	okage.SpreadModePad,
+	okage.IdentityTransform(),
+)
+pixmap.FillPath(circle, &paint, okage.FillRuleWinding, okage.IdentityTransform(), nil)
+
+// Stroke a curve with round dashes.
+pb := okage.NewPathBuilder()
+pb.MoveTo(250, 200)
+pb.CubicTo(290, 20, 400, 20, 450, 200)
+curve, _ := pb.Finish()
+paint.SetColorRGBA8(59, 113, 96, 255)
+stroke := okage.DefaultStroke()
+stroke.Width = 10
+stroke.LineCap = okage.LineCapRound
+stroke.Dash, _ = okage.NewStrokeDash([]float32{18, 18}, 0)
+pixmap.StrokePath(curve, &paint, &stroke, okage.IdentityTransform(), nil)
+
+if err := pixmap.SavePNG("shapes.png"); err != nil {
+	return err
+}
+```
+
+<img src="docs/images/shapes.png" alt="A circle with a gradient, and a dashed curve" width="480"/>
+
+### Render an SVG file
+
+`svg.New` makes a `Renderer`, which renders SVG data into an `*image.RGBA`
+in one call:
+
+```go
+data, err := os.ReadFile("docs/okage.svg")
+if err != nil {
+	return err
+}
+r := svg.New(svg.WithWidth(480))
+img, err := r.Render(data)
+if err != nil {
+	return err
+}
+```
+
+<img src="docs/images/svg.png" alt="The okage logo, rendered from SVG" width="480"/>
+
+A `Renderer` loads the fonts of the system on its first call. The package
+also registers the format `svg`, so `image.Decode` reads SVG data.
+
+### Draw text
+
+`svg` shapes text with `typesetting`, which handles each script, the
+direction of the text and the fallback from one font to the next. For an
+image that is the same on each machine, give the fonts and turn off the
+fonts of the system:
+
+```go
+data := []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="480" height="80">
+  <rect width="100%" height="100%" fill="white"/>
+  <text x="240" y="52" font-family="Noto Sans" font-size="32"
+        text-anchor="middle" fill="#3B7160">Hello, مرحبا, こんにちは</text>
+</svg>`)
+r := svg.New(
+	svg.WithLoadSystemFonts(false),
+	svg.WithFontFile(latin),
+	svg.WithFontFile(arabic),
+	svg.WithFontFile(japanese),
+)
+img, err := r.Render(data)
+if err != nil {
+	return err
+}
+```
+
+<img src="docs/images/text.png" alt="Hello in English, Arabic and Japanese" width="480"/>
+
+`svg.ShapeText` gives the glyphs and the outlines of a run of text without
+SVG data. The package `typesetting/shaping` gives the line breaks and the
+shaping of whole paragraphs.
+
+### Lay out math
+
+`texmath` lays out TeX math with the OpenType MATH table of a font, by the
+rules of TeX. The package `texmath/stixtwomath` holds the font STIX Two
+Math:
+
+```go
+f, err := stixtwomath.Font()
+if err != nil {
+	return err
+}
+tex := `x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}`
+box, err := texmath.LayoutTeX(tex, font.NewFace(f), 40, texmath.Display)
+if err != nil {
+	return err
+}
+w := uint32(math.Ceil(box.Width)) + 32
+h := uint32(math.Ceil(box.Height+box.Depth)) + 32
+pixmap, _ := okage.NewPixmap(w, h)
+pixmap.Fill(okage.ColorFromRGBA8(255, 255, 255, 255))
+paint := okage.DefaultPaint()
+paint.AntiAlias = true
+box.Draw(pixmap, okage.TransformFromTranslate(16, 16+float32(box.Height)), &paint)
+```
+
+<img src="docs/images/math.png" alt="The quadratic formula" width="360"/>
+
+`Box.Path` gives the outline of the formula as one path, for a writer of
+SVG or PDF.
+
+### Draw a Lottie animation
+
+`lottie` reads Lottie files and dotLottie archives, and draws each frame:
+
+```go
+c, err := lottie.Load(data)
+if err != nil {
+	return nil, err
+}
+// Draw the middle frame at 256 by 256 pixels.
+img, err := c.Image(c.FrameCount()/2, 256, 256)
+if err != nil {
+	return nil, err
+}
+```
+
+<img src="docs/images/lottie.png" alt="Four frames of the animated fire emoji" width="640"/>
+
+The animation is the fire emoji of the [Noto animated emoji][noto], under
+the [CC BY 4.0][ccby] license.
+
+### Write a PDF file
+
+`pdf` writes PDF files, with paths, gradients, images and text with
+subsets of the fonts. `pdfsvg` draws a tree of `svg` onto a page, so this
+example converts an SVG file to PDF:
+
+```go
+tree, err := svg.FromData(data)
+if err != nil {
+	return nil, err
+}
+d := pdf.NewDocument(pdf.WithSVGGlyphs(pdfsvg.RenderGlyph))
+ps, _ := pdf.PageSettingsFromWH(tree.Size().Width(), tree.Size().Height())
+page := d.StartPage(ps)
+pdfsvg.Draw(page.Surface(), tree, tree.Size())
+page.Finish()
+if err := d.Finish(&w); err != nil {
+	return nil, err
+}
+```
+
+## Packages
+
+| Package | What it does | Port of |
+| --- | --- | --- |
+| [`okage`][pkg-okage] | Fills and strokes paths, with gradients, patterns, masks and blend modes | [tiny-skia][ts] |
+| [`path`][pkg-path] | Builds, transforms, strokes and dashes paths | [tiny-skia-path][ts] |
+| [`svg`][pkg-svg] | Parses SVG files into a tree, and renders the tree | [resvg][resvg] and usvg |
+| [`lottie`][pkg-lottie] | Reads Lottie files and dotLottie archives, and draws their frames | [velato][velato] |
+| [`pdf`][pkg-pdf] | Writes PDF files | [krilla][krilla] |
+| [`pdfsvg`][pkg-pdfsvg] | Draws a tree of `svg` onto a page of `pdf` | krilla-svg |
+| [`texmath`][pkg-texmath] | Parses TeX math and lays it out with the MATH table of a font | [go-tex/math][gotexmath] |
+| [`typesetting`][pkg-typesetting] | Reads fonts, shapes text, breaks lines and runs the bidi algorithm | a copy of [go-text/typesetting][typesetting] |
+| [`html`][pkg-html] | Parses HTML documents, and lays out the HTML-like labels of Graphviz | [tinyhtml5][tinyhtml5] |
+| [`tinycss2`][pkg-tinycss2] | Parses CSS | [tinycss2][tinycss2] |
+| [`cssselect2`][pkg-cssselect2] | Matches CSS selectors | [cssselect2][cssselect2] |
+| [`webfont`][pkg-webfont] | Converts WOFF, WOFF2 and EOT fonts to TrueType or OpenType data | none |
+| [`roxmltree`][pkg-roxmltree] | Parses XML into a read-only tree | [roxmltree][roxmltree] |
+| [`kurbo`][pkg-kurbo] | Curves, shapes and their geometry | a subset of [kurbo][kurbo] |
+
+The root package imports only the Go standard library. `svg` also uses
+`golang.org/x/image/webp` for WebP files.
+
+okage differs from its upstreams only where a decision says so.
+[docs/DIFFERENCES.md](docs/DIFFERENCES.md) lists each difference, and each
+API that okage adds. [docs/STATUS.md](docs/STATUS.md) gives the state of each
+package, and the upstream commit that it follows.
+
+## SIMD and TinyGo
+
+okage uses SIMD where Go can, and its scalar code is the fallback. SIMD
+(single instruction, multiple data) means one instruction that works on
+several values at once. Go 1.27 has SIMD only as an experiment, so okage
+has two builds:
 
 1. The scalar build is the default.
 2. The SIMD build uses the package `simd/archsimd` of Go on amd64, arm64 and
@@ -104,338 +268,36 @@ Go 1.27 has SIMD only as an experiment, so okage has two builds:
 GOEXPERIMENT=simd go build ./...
 ```
 
-Both builds give the same bytes for every image. On an amd64 CPU without
-AVX2, the SIMD build uses the scalar code. TinyGo always uses the scalar code.
-When Go makes SIMD a standard feature, the SIMD build becomes the default.
-[docs/SIMD.md](docs/SIMD.md) holds the details.
+Both builds give the same bytes for each image. On an amd64 CPU without
+AVX2, the SIMD build uses the scalar code. When Go makes SIMD a standard
+feature, the SIMD build becomes the default. [docs/SIMD.md](docs/SIMD.md)
+holds the details.
+
+okage also builds with [TinyGo][tinygo], which always uses the scalar code.
+A build for WebAssembly is a goal that each package keeps in mind.
 
 ## Documents
 
 | Document | What it holds |
 | --- | --- |
+| [docs/STATUS.md](docs/STATUS.md) | the state of each package, and the upstream commits that okage follows |
+| [docs/DIFFERENCES.md](docs/DIFFERENCES.md) | each difference from upstream, and each API that okage adds |
 | [docs/PLAN.md](docs/PLAN.md) | the plan, the testing plan, the phases and the open questions |
 | [docs/UPSTREAM.md](docs/UPSTREAM.md) | the rules for porting each upstream repository and each change that it makes |
 | [docs/SIMD.md](docs/SIMD.md) | the rules for the vector code, the two builds and the SIMD packages of Go |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | the work that is known and not done |
 | [docs/FORMATS.md](docs/FORMATS.md) | a survey of the work to support other vector formats, such as PDF, EPS and DWG |
-| [docs/decisions/](docs/decisions/README.md) | every decision, one file each, with an index |
+| [docs/decisions/](docs/decisions/README.md) | each decision, one file each, with an index |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | how to change okage |
 | [AGENTS.md](AGENTS.md) | the rules for a coding agent, which also hold for a person |
 
-## Differences from upstream
-
-okage differs from upstream only where a decision says so:
-
-1. The SIMD build computes a reciprocal exactly. The SIMD backends of
-   tiny-skia approximate it in the blend modes color dodge and color burn,
-   and its scalar backend computes it exactly (D16).
-2. `svg` decodes PNG, JPEG and GIF files with the standard library, and WebP
-   files with `golang.org/x/image/webp`, in place of the decoders of resvg
-   (D7).
-3. `svg` finds fonts and shapes text with `typesetting`, the copy of
-   [`go-text/typesetting`][typesetting] in okage, in place of the crates of
-   resvg. Its text can differ from the text of resvg (D9, D52).
-4. Each package logs to a `*slog.Logger` that the caller gives (D20).
-5. An elliptical arc makes at most 4,096 cubic curves. kurbo has no limit, so
-   an arc with a radius of about 4.23e20 or more does not end in upstream
-   (D30).
-6. The gamma stages give one result for every NaN. Upstream reads the bits
-   of a NaN there, and they differ between x86 and ARM (D34).
-7. The fallback of text skips a character that no font draws, and goes on
-   with the characters after it. Upstream stops at that character, so the
-   characters after it get no fallback (D39). The fallback also replaces
-   whole clusters, where upstream copies glyphs one by one, so an emoji
-   sequence such as a flag falls back with the text around it (D39).
-8. The fallback of text also goes on for an emoji that the font does not
-   draw as an emoji: a character with U+FE0F without a color glyph, such as
-   "©️" in a text font, and an emoji sequence that the font draws as several
-   glyphs. Upstream falls back only for a missing glyph (D40).
-
-9. `lottie` draws as ThorVG where velato differs: the opacity, the opacity
-   stops, the radius and the highlight of gradients, solid layers, time
-   remap, easing, spatial positions, the closing of animated shapes, the
-   opacity and the blend mode of layers, masks and stroke dashes (D43).
-   `Renderer.MergePaths` draws merge paths by compositing, which velato and
-   ThorVG do not, and it is off by default (D42).
-10. `html` builds a tree with a node for each run of text, where tinyhtml5
-    builds an ElementTree of Python. It goes on where upstream raises an
-    error, and options bound the depth, the nodes and the issues of a parse
-    (D49).
-11. `tinycss2` nests at most 256 blocks and `cssselect2` at most 32
-    selectors, where upstream has no limit. Where upstream raises an
-    exception for a selector or a color, the port returns a `SelectorError`
-    or no color (D50).
-12. A fill clamps each side of the bounds of a path to 2^26 pixels from the
-    origin before it rounds them. Upstream panics or leaves out rows for an
-    antialiased fill with a point past about 2^29 pixels, and draws nothing
-    for a fill without antialiasing of a path wider or taller than 2^31
-    pixels. `DrawPixmap` of an image that is aligned to the pixels skips the
-    stages of the pipeline, with the same bytes (D53).
-13. A hairline on a pixmap of 1 or 2 rows or columns draws its pixels.
-    Upstream draws nothing there (D54).
-14. The subsetter of fonts of `internal/subsetter` runs at most 1,000,000
-    operators for one glyph of a CFF font, and makes at most 1,000,000
-    instructions. Past either limit, it returns an error. Upstream has no
-    such limit, so a small font can make it run for a very long time. It
-    also returns `okage.ErrSubsetTooLarge` when a subset grows larger than
-    8 times the font data plus 1 MiB (D74). Where
-    subsetter panics on a font, the port returns an error. The package
-    comment of `internal/subsetter` lists the other differences (D62).
-15. `pdf` writes no XMP metadata, where krilla writes it by default, and it
-    has no validators of PDF/A and PDF/UA. It compresses with
-    `compress/zlib`, so the bytes of a compressed stream differ from krilla,
-    and its data does not. It returns an error where krilla panics, such as
-    for a box of a page that does not fit the coordinates of PDF, for a
-    pop of a surface without a push, for a gradient with a transform that
-    cannot be inverted, or for the stops of a gradient in two color spaces. It also returns an error
-    for a path to stroke with a point that is NaN or a coordinate above
-    2^60, where krilla can panic or not end. `Document.StartPage` and
-    `Document.Finish` finish the page that is open, and `Page.Finish`
-    finishes the surface of the page, which Rust does not let a program
-    leave open (D62, D66). It also returns an error for a destination to a
-    page that does not exist, and for a link with no target, where krilla
-    panics.
-16. The stroker of `path` treats a quadratic curve as a line where the
-    products of `findQuadMaxCurvature` overflow to NaN. tiny-skia panics
-    there (D66).
-17. The images of `pdf` decode with `image/png`, `image/jpeg`, `image/gif`
-    and `golang.org/x/image/webp`, where krilla uses the crates png,
-    zune-jpeg, gif and image-webp. `pdf` reads the headers of the files as
-    those crates do, so it writes the same objects. The decoded samples of
-    an image hold at most 256 MiB, and above that a function that makes an
-    image returns an error. krilla has no such limit. `ImageFromImage`
-    takes an `image.Image` of Go in place of the trait `CustomImage` of
-    krilla (D62).
-18. The text of `pdf` reads the fonts with `typesetting`, by the rules of
-    skrifa, and shapes a text with `typesetting/harfbuzz` in place of
-    harfrust. It shapes a text with no language, as harfrust does, where
-    `typesetting` takes the language of the locale. It returns an error for
-    a glyph whose range is not a range of its text, where krilla panics.
-    The package comment of `pdf` lists the other differences of the text
-    (D62, D65).
-19. `NewLinearGradient` takes the stops of a degenerate gradient with the
-    spread mode repeat or reflect in the order of `newGradient`, and clamps
-    the average color to 0..=1. tiny-skia panics there for stops that are
-    not in order. Stops in order give the bytes of tiny-skia (D68).
-20. `pdfsvg` draws the tree of `svg`, which follows a later usvg than
-    krilla-svg. A group without a layer bounding box draws no filter. A
-    group with the blend mode `PlusLighter`, which PDF does not have, is
-    drawn into an image with `svg`, with the groups that it blends with.
-    `svg` draws the filters into images, where krilla-svg uses resvg.
-    `Draw` and `RenderGlyph` return false where krilla-svg panics. The
-    package comment of `pdfsvg` lists the changes (D62).
-21. `pdf` writes a stitching function of more than 256 functions as a tree
-    of stitching functions. Each one holds at most 256 functions, because
-    MuPDF 1.28 reads no more. krilla writes one stitching function. The
-    tree draws the same gradient (D69).
-22. `Path.Stroke` and `PathStroker.Stroke` of `path` return no path, and
-    `false`, for a path with a point that is NaN or infinite. tiny-skia does
-    not end for some of these paths. A path whose points are finite gives
-    the bytes of tiny-skia (D74).
-23. When the subset of a font fails, `pdf` draws the glyphs of that font
-    as paths, with the fill and the stroke of the text. The text stays in
-    the file as invisible text, in the font without its font program, so
-    that a reader can copy and search it. `Document.Finish` returns no
-    error for the font, and logs it to the logger of `pdf.WithLogger`.
-    krilla returns an error and writes no file. `pdf.WithSubsetFallback`
-    with `false` gives the error of krilla. `pdf.CheckGlyphs` checks the
-    ranges and the glyph IDs of a run before `Surface.DrawGlyphs`. It
-    returns the error that `Document.Finish` returns for the run (D80).
-24. `texmath` is a fork of go-tex/math, and fixes its faults (D78). Its
-    parser makes a tree, and its layout makes a box of glyphs, rectangles
-    and paths, where the source writes SVG text. The layout reads exact font
-    units with `typesetting` at a size that is a `float64`, where the source
-    rounds each value to a whole pixel. Limits bound the depth, the nodes,
-    the macros, the items and the lengths, and their errors wrap the
-    sentinel errors of the root package. The layout follows TeX Appendix G
-    where the source approximates it: three sizes of scripts, the spaces of
-    script style, a kern that is not an atom, the rules of a binary
-    operator, the shifts of scripts, limits, fractions and stacks with all
-    the constants of the MATH table, a radical sign that centers its body, a
-    large operator on the math axis, and delimiters with
-    `\delimiterfactor` and `\delimitershortfall`. The parts of an assembly go
-    from the bottom up, so a tall parenthesis is not upside down. The
-    additions of phase 26 of D78 use the italic correction, the top accent
-    attachment and the math kerning of the MATH table, and an option turns
-    each one off. They set `\text` and its kin with a text face, shaped with
-    `typesetting/shaping`, or with the math alphabets of the math face, and
-    keep the spaces of `\text`. They add `\color`, `\textcolor`,
-    `\colorbox`, `\fcolorbox`, `\fbox`, `\cancel`, `\phase`, `\tag`,
-    `\hline`, `\cfrac`, `\kern`, `\hspace`, `\llap` and the other missing
-    commands of KaTeX that Mermaid labels use, `\newcommand`, and the macros
-    of KaTeX such as `\R`. `\overbrace` and `\underbrace` draw a brace that grows,
-    the wide accents grow, `\middle` grows to its fence, `\smash` removes
-    the extent, and the size commands such as `\large` change the size. The
-    package comment of `texmath` lists each fault with its line in the
-    source, and each addition.
-
-When upstream changes the code of a difference, okage removes its own code
-and ports the change of upstream. D40 gives the steps for items 7 and 8, and
-D42 and D43 give them for item 9.
-
-okage also adds APIs that upstream does not have:
-
-1. A `Pixmap` gives an `*image.RGBA` that shares its bytes, and it implements
-   `image.Image` and `draw.Image` (D19).
-2. `svg.New` makes a `Renderer`, which renders SVG data into an
-   `*image.RGBA` in one call, as `xo/resvg` does. It loads the fonts of the
-   system on its first call, and sets each generic family to the first of a
-   list of common fonts that is installed. The package registers the format
-   `svg` with `image.RegisterFormat`, so `image.Decode` reads SVG data (D36).
-   `FontDatabase.LoadOSFonts` loads the same fonts into a database of the
-   program (D46).
-3. `svg.ShapeText` lays out a run of text with the fonts, the fallback and
-   the shaping of `svg`, and gives its advance width and the outlines of its
-   glyphs as a path, so that a program can draw text without SVG data (D37).
-   `TextRun.RenderColorGlyphs` draws its color glyphs, such as color emoji
-   (D39).
-4. `html.Parse` parses an HTML-like label of Graphviz, `label=<...>` in DOT,
-   and `Label.Layout` lays it out as `dot` does: the boxes of the tables and
-   the cells, the rules, the runs of text and the ports (D38).
-5. `lottie.Parse` reads a Lottie file, and `lottie.RenderFrame` draws a
-   frame of it onto an okage pixmap through `PixmapSink`, the sink of
-   `lottie` that draws with okage (D41). The sink draws the image assets in
-   PNG, JPEG, GIF and WebP, as velato leaves them to the sink. It decodes an
-   image that the file embeds as a `data:` URL, and it reads an image file
-   from the `fs.FS` of the option `lottie.WithFS` (D75). The sink also
-   draws the Gaussian blur and the drop shadow of a layer, as ThorVG does.
-   `lottie.Parse` reads the text layers, which velato does not parse. A text
-   layer draws the glyphs of the list `chars` of the file. The sink shapes
-   each other character with the fonts of the option
-   `lottie.WithFontDatabase`. Without that option, it logs the character
-   and draws nothing. The size, the fill and the stroke, the justification,
-   the line height, the tracking and the box of a text document apply
-   (D79). So do the text animators with the alignment of their groups, the
-   capitals of the key `ca`, and the text on a path (D85). As in ThorVG, the
-   blur and the shadow repeat the pixels at the edge of the canvas, the
-   tracking of a text that the sink shapes multiplies its advances, and an
-   image that turns by an angle fades its edge over one pixel of the image
-   (D82).
-6. `lottie.Detect` finds a Lottie document from the start of a file, and
-   `lottie.OpenDotLottie` reads a dotLottie archive. `lottie.Load` parses
-   either one. `Composition.Image` draws a frame into an `*image.RGBA` of a
-   given size, and `FrameCount` and `Duration` count and time the frames
-   (D44). A composition of a dotLottie archive draws the image files of the
-   archive (D75).
-7. `FontDatabase.LoadFontData` loads a font in WOFF, WOFF2 or EOT, as well
-   as TrueType and OpenType data. `svg.ConvertFontData` converts such a font
-   to TrueType or OpenType data. `FontDatabase.FaceName` returns a string of
-   the name table of a face, such as the version or the sample text (D45).
-   The package `webfont` gives the same conversion to a program that does not
-   use `svg` (D51).
-8. `Paint.Coverage` fills a path with 8 by 8 samples in each pixel, in place
-   of the 4 by 4 of tiny-skia, and `Paint.StrokeAdjust` moves a thin stroke
-   onto the pixel grid, as stroke adjustment does in PDF (D54).
-9. `MeshGradient`, which `NewMeshGradient` makes, fills a mesh of triangles
-   with a color at each corner, for the shadings of the types 4 to 7 of PDF
-   and PostScript. `SpreadModeDecal` makes a gradient transparent before its
-   start and after its end, as the decal tile mode of Skia does (D55).
-10. `MaskFromLuminance` and `Mask.ApplyTransfer` make the soft masks of PDF
-    with a backdrop color and a transfer function. `Pixmap.RemoveBackdrop`
-    and `Pixmap.Knockout` composite the groups of PDF that are not isolated
-    and the knockout groups (D56).
-11. `TextStyle` also takes the stretch, the variations, the features, the
-    language and the spacing of a run, and `TextRun.Clusters` gives the
-    bytes, the advance and the glyphs of each cluster. `FontDatabase` gives
-    the parsed faces, the cmaps and the metrics that it keeps, and
-    `AutoFontVariations` maps a CSS weight, stretch and style to the axes of
-    a variable font. `FontDatabase.ColorGlyph` gives a glyph of COLR or of
-    the table SVG as a tree (D57).
-12. `svg.ReadDimensions` reads the size and the viewBox of an SVG image
-    before the parse. `svg.FromXMLTree` and `svg.FromXMLNode` make a tree
-    from a document of roxmltree, and `roxmltree.Builder` makes such a
-    document without XML text. `svg.WithZeroSize` accepts an image of size
-    zero (D58).
-13. The package `typesetting/font/cff` exports the predefined charsets of
-    CFF, and draws the accented glyphs of `seac` and the FontMatrix of each
-    font dictionary (D59).
-14. `internal/subsetter` returns an error where subsetter panics, such as on
-    the glyph after 65,535 glyphs. Its closure of composite glyphs reads
-    each glyph once, where upstream can take time and memory that grow with
-    the square of the number of components, and it gives the same order. It
-    normalizes the coordinates of a variable font in float32 with avar
-    version 1, as `typesetting` does, where skrifa uses fixed point and
-    avar version 2. It hashes the glyphs in little-endian order on every
-    machine (D62).
-15. `NewRadialGradientExtend` makes a radial gradient with the rule of the
-    radial shadings of PDF and PostScript. A point takes the color of the
-    largest t in 0..=1 whose circle has a radius of at least 0. Two flags
-    let t go below 0 or above 1, as the key `Extend` of PDF does (D64).
-16. `typesetting` applies five commits of go-text out of order, for the
-    variable fonts of `internal/subsetter`. It maps a coordinate with the
-    table avar as skrifa does, with a rounded division. A malformed font
-    gives an empty glyph, an advance of 0 or an error where go-text panics
-    (D65). It also applies the 23 commits of go-text that fix a panic, a
-    loop or a missing bound on malformed input, out of order, and fixes two
-    more panics of the feature indexes of GSUB and GPOS and of the table
-    cmap (D67).
-    `internal/subsetter` makes the instances of variable fonts with
-    `typesetting`. `typesetting` computes the deltas of the variations in
-    the 16.16 fixed-point numbers of OpenType, as skrifa does, so each
-    instance is the instance of subsetter, byte for byte (D62, D84).
-17. `pdf` adds what the PDF device of ivy needs and krilla does not have:
-    `Surface.PushGroup` for the transparency groups with the flags `I` and
-    `K`, `Mask.WithBackdrop` and `Mask.WithTransfer` for the entries `BC`
-    and `TR` of a soft mask, the field `Extend` of a linear and a radial
-    gradient, the paint `MeshGradient` as a shading of type 4,
-    `Surface.FillStencil` for a stencil of 8 bits,
-    `Surface.PushStrokeAdjustment` for the entry `SA`,
-    `Surface.PaintFromShader`, which converts a shader of okage, and
-    `Surface.DrawRaster`, which draws a part of a page with okage as an
-    image, with the option `WithRasterArea`. `pdfsvg` draws the filters of
-    SVG with `Surface.DrawRaster` too. The shaders of okage give their
-    parameters with the method `Parameters` for that conversion (D68).
-18. `StrokeDash` gives its dash array and its dash offset with the methods
-    `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
-    with them (D69).
-19. `typesetting/font` reads the OpenType MATH table, which go-text does not
-    read. `Font.HasMath`, `Face.MathConstant` and the other methods of D78
-    give its values in font units, as the API `hb-ot-math` of HarfBuzz does.
-    A malformed MATH table is left out of the font, and never panics (D78).
-20. `texmath.Parse` reads TeX math into a tree of nodes, and a program can
-    build such a tree itself, for example from MathML. `texmath.Layout` lays
-    out a tree with a face that has a MATH table, and `texmath.LayoutTeX`
-    parses and lays out TeX math. The `Box` that they return gives its
-    width, its height, its depth and its items. `Box.Draw` fills it into a
-    pixmap, and `Box.Path` and `Box.ItemPath` give its outlines without a
-    `FontDatabase`. The options `WithColor` and `WithLogger` set the color of
-    the items and log a character without a glyph. `WithTextFace` and
-    `WithTextFamily` give the faces of `\text` and its kin (D78).
-21. `NewRectMask` makes a mask that is 255 on a rectangle and 0 elsewhere,
-    and holds the rectangle in place of its pixels. A draw through it gives
-    the same bytes as through a mask of those pixels, and skips the stage
-    `mask_u8` inside the rectangle. The first method that reads or writes
-    the pixels of the mask makes them (D86).
-
-The output of `svg` is compared with resvg and with libvips within a
-tolerance, not byte for byte (D23). The renderer gives the same bytes as
-tiny-skia.
-
 ## License
 
-The root package and `path` are under the BSD-3-Clause license of tiny-skia.
-See [LICENSE](LICENSE), which keeps the copyright lines of upstream. The
-package `svg` and the packages that it uses take the MIT license of resvg and
-of its crates, in a `LICENSE` file in each folder (D13). The package `html`
-takes the MIT license of tinyhtml5, in [html/LICENSE](html/LICENSE). That
-license also covers the parser of the labels of Graphviz (D49). The packages
-`tinycss2` and `cssselect2` keep the BSD-3-Clause licenses of their upstreams,
-in [tinycss2/LICENSE](tinycss2/LICENSE) and
-[cssselect2/LICENSE](cssselect2/LICENSE) (D50).
-The brotli decoder in `internal/brotli` is a copy of the one of
-`github.com/dsnet/compress`, and keeps its BSD-3-Clause license, in
-[internal/brotli/LICENSE](internal/brotli/LICENSE) (D45). The packages
-under `typesetting` are a copy of go-text, and keep its license, the
-Unlicense or the BSD-3-Clause license, in
-[typesetting/LICENSE](typesetting/LICENSE). The package `harfbuzz` keeps the
-MIT license of HarfBuzz in
-[typesetting/harfbuzz/LICENSE](typesetting/harfbuzz/LICENSE) (D52). The
-package `lottie` takes the MIT license of velato, in
-[lottie/LICENSE](lottie/LICENSE). Its test files are Noto animated emoji
-under CC BY 4.0, as [lottie/testdata/NOTICE](lottie/testdata/NOTICE) says.
-The font STIX Two Math in `texmath/stixtwomath` is under the SIL Open Font
-License 1.1, in [texmath/stixtwomath/OFL.txt](texmath/stixtwomath/OFL.txt)
-(D78).
+okage keeps the license of each upstream project. Each folder that holds
+code from an upstream project holds the license of that project, in a file
+`LICENSE`, `NOTICE` or `OFL.txt`. [LICENSE](LICENSE) in the root is the
+BSD-3-Clause license of tiny-skia, and it covers the root package and
+`path`.
 
 <div align="center">
   <a href="https://github.com/xo/usql" title="A command line client for many databases">usql</a> |
@@ -451,13 +313,30 @@ License 1.1, in [texmath/stixtwomath/OFL.txt](texmath/stixtwomath/OFL.txt)
 </div>
 
 [ts]: https://github.com/linebender/tiny-skia
-[skia]: https://skia.org
 [resvg]: https://github.com/linebender/resvg
 [velato]: https://github.com/linebender/velato
+[krilla]: https://github.com/LaurenzV/krilla
 [tinyhtml5]: https://github.com/CourtBouillon/tinyhtml5
 [tinycss2]: https://github.com/Kozea/tinycss2
 [cssselect2]: https://github.com/Kozea/cssselect2
-[xoresvg]: https://github.com/xo/resvg
+[roxmltree]: https://github.com/RazrFalcon/roxmltree
+[kurbo]: https://github.com/linebender/kurbo
 [tinygo]: https://tinygo.org
 [typesetting]: https://github.com/go-text/typesetting
 [gotexmath]: https://github.com/go-tex/math
+[noto]: https://googlefonts.github.io/noto-emoji-animation/
+[ccby]: https://creativecommons.org/licenses/by/4.0/
+[pkg-okage]: https://pkg.go.dev/github.com/xo/okage
+[pkg-path]: https://pkg.go.dev/github.com/xo/okage/path
+[pkg-svg]: https://pkg.go.dev/github.com/xo/okage/svg
+[pkg-lottie]: https://pkg.go.dev/github.com/xo/okage/lottie
+[pkg-pdf]: https://pkg.go.dev/github.com/xo/okage/pdf
+[pkg-pdfsvg]: https://pkg.go.dev/github.com/xo/okage/pdfsvg
+[pkg-texmath]: https://pkg.go.dev/github.com/xo/okage/texmath
+[pkg-typesetting]: https://pkg.go.dev/github.com/xo/okage/typesetting
+[pkg-html]: https://pkg.go.dev/github.com/xo/okage/html
+[pkg-tinycss2]: https://pkg.go.dev/github.com/xo/okage/tinycss2
+[pkg-cssselect2]: https://pkg.go.dev/github.com/xo/okage/cssselect2
+[pkg-webfont]: https://pkg.go.dev/github.com/xo/okage/webfont
+[pkg-roxmltree]: https://pkg.go.dev/github.com/xo/okage/roxmltree
+[pkg-kurbo]: https://pkg.go.dev/github.com/xo/okage/kurbo
