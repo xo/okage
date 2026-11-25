@@ -44,6 +44,44 @@ func TestMalformedCFFReturnsError(t *testing.T) {
 	}
 }
 
+// TestUnsortedTableDirectoryIsSearchable is
+// unsorted_table_directory_is_searchable in subsetter src/lib.rs.
+func TestUnsortedTableDirectoryIsSearchable(t *testing.T) {
+	// Two table records deliberately stored in non-alphabetical order (head
+	// before cmap): the directory violates the spec's sort requirement, but
+	// both tables must still be found.
+	var font []byte
+	font = binary.BigEndian.AppendUint32(font, 0x00010000)
+	font = binary.BigEndian.AppendUint16(font, 2)
+	font = binary.BigEndian.AppendUint16(font, 0)
+	font = binary.BigEndian.AppendUint16(font, 0)
+	font = binary.BigEndian.AppendUint16(font, 0)
+	// Directory (2 records of 16 bytes, data starts at 12 + 32 = 44).
+	font = append(font, "head"...)
+	font = binary.BigEndian.AppendUint32(font, 0)
+	font = binary.BigEndian.AppendUint32(font, 44)
+	font = binary.BigEndian.AppendUint32(font, 4)
+	font = append(font, "cmap"...)
+	font = binary.BigEndian.AppendUint32(font, 0)
+	font = binary.BigEndian.AppendUint32(font, 48)
+	font = binary.BigEndian.AppendUint32(font, 4)
+	// Table payloads.
+	font = append(font, 1, 2, 3, 4)
+	font = append(font, 5, 6, 7, 8)
+
+	f, err := parse(font, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if data, ok := f.table(tagHEAD); !ok || !bytes.Equal(data, []byte{1, 2, 3, 4}) {
+		t.Errorf("the head table is % x, %t", data, ok)
+	}
+	if data, ok := f.table(Tag{'c', 'm', 'a', 'p'}); !ok || !bytes.Equal(data, []byte{5, 6, 7, 8}) {
+		t.Errorf("the cmap table is % x, %t", data, ok)
+	}
+}
+
 // TestTableRecordWithInvalidBoundsReturnsNone is
 // table_record_with_invalid_bounds_returns_none in subsetter src/lib.rs.
 func TestTableRecordWithInvalidBoundsReturnsNone(t *testing.T) {

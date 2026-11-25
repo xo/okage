@@ -230,6 +230,12 @@ func parse(data []byte, index uint32) (*face, error) {
 		records = append(records, record)
 	}
 
+	// Face::table binary-searches by tag, but fonts in the wild violate the
+	// spec's requirement that the directory be sorted.
+	slices.SortStableFunc(records, func(a, b tableRecord) int {
+		return a.tag.compare(b.tag)
+	})
+
 	return &face{data: data, records: records}, nil
 }
 
@@ -364,6 +370,9 @@ type context struct {
 	customHmtxData []hmtxMetric
 	// longLoca tells whether the long loca format was chosen.
 	longLoca bool
+	// fontBBox is the font bounding box (xMin, yMin, xMax, yMax), or nil,
+	// which is None, if there are no glyphs with outlines.
+	fontBBox *[4]int16
 	// maxGlyfSize is the largest size of the glyph data of the subset, which
 	// upstream does not have (D74).
 	maxGlyfSize int
@@ -459,8 +468,8 @@ func (f *face) hasTable(tag Tag) bool {
 // binarySearchRecords is records.binary_search_by(|record|
 // record.tag.cmp(&tag)) in Face::table of subsetter src/lib.rs. It follows
 // the algorithm of slice::binary_search_by of the Rust standard library, so
-// that a directory whose records are not sorted, or that holds a tag twice,
-// gives the record that upstream gives.
+// that a directory that holds a tag twice gives the record that upstream
+// gives.
 func binarySearchRecords(records []tableRecord, tag Tag) (int, bool) {
 	size := len(records)
 	if size == 0 {

@@ -5,11 +5,14 @@
 
 package subsetter
 
+import "encoding/binary"
+
 // This file ports subsetter src/head.rs.
 //
 // The `head` table mostly contains information that can be reused from the
 // old table, except for the `loca` format, which depends on the size of the
-// glyph data. The checksum will be recalculated in the very end.
+// glyph data, and the bounds which can change when instancing. The checksum
+// will be recalculated in the very end.
 
 // subsetHead is subset in subsetter src/head.rs.
 func subsetHead(ctx *context) error {
@@ -23,6 +26,18 @@ func subsetHead(ctx *context) error {
 	head[51] = 0
 	if ctx.longLoca {
 		head[51] = 1
+	}
+
+	// We are (potentially) instancing a variable font, recalculate the font
+	// bounds.
+	if ctx.interjector.isSkrifa() {
+		var bbox [4]int16
+		if ctx.fontBBox != nil {
+			bbox = *ctx.fontBBox
+		}
+		for i, v := range bbox {
+			binary.BigEndian.PutUint16(head[36+2*i:], uint16(v))
+		}
 	}
 	ctx.push(tagHEAD, head)
 	return nil

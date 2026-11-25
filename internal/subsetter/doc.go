@@ -3,8 +3,9 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package subsetter is a port of the Rust crate subsetter 0.2.6, at the
-// commit c3f23c67 (D62). It makes the subsets of OpenType fonts with
+// Package subsetter is a port of the Rust crate subsetter 0.2.6, from the
+// base commit c3f23c67 (D62). docs/STATUS.md names the last commit of
+// subsetter that it follows. It makes the subsets of OpenType fonts with
 // TrueType or CFF outlines for embedding in PDF files. The PDF writer of
 // okage embeds the subset of each font of a document, as krilla does.
 //

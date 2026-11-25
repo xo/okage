@@ -191,6 +191,19 @@ func subsetWith(ctx *context, glyphDataFn func(oldGid uint16, ctx *context) ([]b
 	if err != nil {
 		return err
 	}
+	ctx.fontBBox = nil
+	for _, entry := range subsettedEntries {
+		b, ok := glyphBBox(entry)
+		if !ok {
+			continue
+		}
+		if ctx.fontBBox == nil {
+			ctx.fontBBox = &b
+			continue
+		}
+		a := ctx.fontBBox
+		*a = [4]int16{min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])}
+	}
 
 	subGlyf := newWriter()
 	subLoca := newWriter()
@@ -219,6 +232,22 @@ func subsetWith(ctx *context, glyphDataFn func(oldGid uint16, ctx *context) ([]b
 	ctx.push(tagGLYF, subGlyf.finish())
 
 	return nil
+}
+
+// glyphBBox is glyph_bbox in subsetter src/glyf.rs. It reads xMin, yMin,
+// xMax and yMax from the header of the description of a glyph. It returns
+// false, which is None, for a glyph without an outline.
+func glyphBBox(glyphData []byte) ([4]int16, bool) {
+	r := newReaderAt(glyphData, 2)
+	var b [4]int16
+	for i := range b {
+		v, ok := r.readI16()
+		if !ok {
+			return [4]int16{}, false
+		}
+		b[i] = v
+	}
+	return b, true
 }
 
 // tableGlyf is Table in subsetter src/glyf.rs. A glyf + loca table.

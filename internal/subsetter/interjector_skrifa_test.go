@@ -45,6 +45,8 @@ var fontToolsVariations = []struct {
 	{"NotoSans-Regular_var.ttf", "10,40,58,201-205", []Variation{{Tag{'w', 'g', 'h', 't'}, 800}, {Tag{'w', 'd', 't', 'h'}, 70}}, "NotoSans-Regular_var_3.ttx", ""},
 	{"Cantarell-VF.otf", "1,15,30-35,40,103-105", []Variation{{Tag{'w', 'g', 'h', 't'}, 400}}, "Cantarell-VF_1.ttx", ""},
 	{"Cantarell-VF.otf", "1,15,30-35,40,103-105", []Variation{{Tag{'w', 'g', 'h', 't'}, 800}}, "Cantarell-VF_2.ttx", ""},
+	// Glyph 1 at MSHQ=200 is outside the head bounds of the font.
+	{"Astrolabe_subset.ttf", "1", []Variation{{Tag{'M', 'S', 'H', 'Q'}, 200}}, "Astrolabe_subset_1.ttx", ""},
 }
 
 // TestFontToolsVariations is test_font_tools in subsetter
@@ -70,7 +72,23 @@ func TestFontToolsVariations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			want := readTTX(t, filepath.Join("testdata", tc.ttx))
+			ttx := filepath.Join("testdata", tc.ttx)
+			sub, err := parse(subset, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			head, ok := sub.table(tagHEAD)
+			if !ok || len(head) < 44 {
+				t.Fatal("the instance has no head table")
+			}
+			var bounds [4]int
+			for i := range bounds {
+				bounds[i] = int(int16(binary.BigEndian.Uint16(head[36+2*i:])))
+			}
+			if wantBounds := readTTXHeadBounds(t, ttx); bounds != wantBounds {
+				t.Errorf("the head table has the bounds %v, and the ttx file has %v", bounds, wantBounds)
+			}
+			want := readTTX(t, ttx)
 			got := readGlyphTables(t, subset)
 			if int(got.numGlyphs) != len(want) {
 				t.Fatalf("the instance has %d glyphs, and the ttx file has %d", got.numGlyphs, len(want))
@@ -160,6 +178,40 @@ func readTTX(t *testing.T, name string) []ttxGlyph {
 		}
 	}
 	return glyphs
+}
+
+// readTTXHeadBounds reads xMin, yMin, xMax and yMax of the head table of a
+// file of fonttools ttx.
+func readTTXHeadBounds(t *testing.T, name string) [4]int {
+	t.Helper()
+	text, err := os.ReadFile(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc, err := roxmltree.Parse(string(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bounds [4]int
+	for n := range doc.Root().Descendants() {
+		if !n.IsElement() || n.TagName().Name() != "head" {
+			continue
+		}
+		for c := range n.Children() {
+			if !c.IsElement() {
+				continue
+			}
+			i := slices.Index([]string{"xMin", "yMin", "xMax", "yMax"}, c.TagName().Name())
+			if i < 0 {
+				continue
+			}
+			v, _ := c.Attribute(roxmltree.ExpandedNameFromStr("value"))
+			if bounds[i], err = strconv.Atoi(v); err != nil {
+				t.Fatalf("%s: the attribute value of %s: %v", name, c.TagName().Name(), err)
+			}
+		}
+	}
+	return bounds
 }
 
 // within1 tells whether two values differ by at most 1.

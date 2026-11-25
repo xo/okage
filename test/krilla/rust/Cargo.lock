@@ -253,7 +253,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "krilla"
 version = "0.8.2"
-source = "git+https://github.com/LaurenzV/krilla?rev=7d36506c9d566ffe265fe898dc4f64d4b150bdb0#7d36506c9d566ffe265fe898dc4f64d4b150bdb0"
+source = "git+https://github.com/LaurenzV/krilla?rev=7b15610d6e016298989ba8d5298ca93ec16dcc4e#7b15610d6e016298989ba8d5298ca93ec16dcc4e"
 dependencies = [
  "base64",
  "bumpalo",
@@ -273,6 +273,7 @@ dependencies = [
  "smallvec",
  "subsetter",
  "tiny-skia-path",
+ "xmlwriter",
  "xmp-writer",
  "yoke",
  "zune-jpeg",
@@ -281,7 +282,7 @@ dependencies = [
 [[package]]
 name = "krilla-svg"
 version = "0.8.1"
-source = "git+https://github.com/LaurenzV/krilla?rev=7d36506c9d566ffe265fe898dc4f64d4b150bdb0#7d36506c9d566ffe265fe898dc4f64d4b150bdb0"
+source = "git+https://github.com/LaurenzV/krilla?rev=7b15610d6e016298989ba8d5298ca93ec16dcc4e#7b15610d6e016298989ba8d5298ca93ec16dcc4e"
 dependencies = [
  "flate2",
  "fontdb",
@@ -639,8 +640,7 @@ dependencies = [
 [[package]]
 name = "subsetter"
 version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38803281d1c23166c5ebcb455439a5d2afe711cc909cf88af72448c297756ad6"
+source = "git+https://github.com/typst/subsetter?rev=8221117c99ef413f327a0834aa70779c48d4cb1a#8221117c99ef413f327a0834aa70779c48d4cb1a"
 dependencies = [
  "kurbo",
  "rustc-hash",
@@ -832,8 +832,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 [[package]]
 name = "xmp-writer"
 version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
+source = "git+https://github.com/typst/xmp-writer?rev=9498ae2b2ab874c11c22edb9e393470584e419c8#9498ae2b2ab874c11c22edb9e393470584e419c8"
 
 [[package]]
 name = "yoke"
