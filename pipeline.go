@@ -504,12 +504,15 @@ func (b *rasterPipelineBuilder) compile() *rasterPipeline {
 			}
 		}
 
-		return &rasterPipeline{
+		rp := &rasterPipeline{
 			kind:              rasterPipelineKindHigh,
 			highFunctions:     functions,
 			highTailFunctions: tailFunctions,
 			ctx:               b.ctx,
 		}
+		// Port (D98): find the fused program of the stages.
+		rp.fused, rp.fusedCtx = matchFused(rp.kind, stages, &rp.ctx)
+		return rp
 	}
 
 	functions := make([]func(*lowpPipeline), 0, len(stages)+1)
@@ -538,12 +541,15 @@ func (b *rasterPipelineBuilder) compile() *rasterPipeline {
 		}
 	}
 
-	return &rasterPipeline{
+	rp := &rasterPipeline{
 		kind:             rasterPipelineKindLow,
 		lowFunctions:     functions,
 		lowTailFunctions: tailFunctions,
 		ctx:              b.ctx,
 	}
+	// Port (D98): find the fused program of the stages.
+	rp.fused, rp.fusedCtx = matchFused(rp.kind, stages, &rp.ctx)
+	return rp
 }
 
 // compileWithout compiles the pipeline of b without the stage s, and leaves
@@ -579,7 +585,9 @@ const (
 // Port: highp and lowp hold the state of a run. Upstream makes a new Pipeline
 // on the stack for each run. In Go, a pipeline that the stages reach through
 // a function value moves to the heap, so the rasterPipeline keeps one and
-// reuses it, and a run does not allocate (D25).
+// reuses it, and a run does not allocate (D25). fused is the fused program
+// that matches the stages, with its values in fusedCtx, and a run draws
+// with it in place of the stages (D98).
 type rasterPipeline struct {
 	kind              rasterPipelineKind
 	highFunctions     []func(*highpPipeline)
@@ -590,6 +598,9 @@ type rasterPipeline struct {
 
 	highp highpPipeline
 	lowp  lowpPipeline
+
+	fused    wide.FusedProgram
+	fusedCtx wide.FusedCtx
 }
 
 // run is RasterPipeline::run in tiny-skia src/pipeline/mod.rs.
@@ -600,6 +611,10 @@ func (rp *rasterPipeline) run(
 	pixmapSrc PixmapRef,
 	pixmapDst *subPixmapMut,
 ) {
+	// Port (D98): a fused program draws in place of the stages.
+	if rp.fused != wide.FusedNone && useFused && rp.runFused(rect, &maskCtx, pixmapDst) {
+		return
+	}
 	switch rp.kind {
 	case rasterPipelineKindHigh:
 		startHighp(

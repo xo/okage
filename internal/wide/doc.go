@@ -23,6 +23,13 @@
 // text that is outside a set of ranges, for the text code of typesetting
 // (D92). widegen does not write its files. "The scan of runes" in
 // docs/SIMD.md describes them.
+//
+// FusedRow runs a fused program: a copy of a common program of stages of
+// the raster pipeline that keeps its values in registers, with archsimd on
+// amd64 and with scalar code in the other builds (D98). The program fusegen
+// in internal/fusegen writes the fused programs from its table. Run
+// "go generate ./internal/wide" after a change to that table.
 package wide
 
 //go:generate go run ./internal/widegen
+//go:generate go run ./internal/fusegen

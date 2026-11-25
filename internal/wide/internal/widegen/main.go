@@ -24,9 +24,11 @@
 // u16x16.go), convert.go, doc.go, wide.go, the CPU checks
 // (cpu_simd_amd64.go, cpu_simd_arm64.go, cpu_simd_wasm.go), the helpers of
 // the SIMD code (wide_simd_amd64.go, wide_simd_128.go), the helpers of the
-// build without it (wide_scalar.go), and the scan of runes of D92 with its
+// build without it (wide_scalar.go), the scan of runes of D92 with its
 // two implementations (runes.go, runes_scalar.go, runes_simd.go,
-// runes_simd_amd64.go, runes_simd_128.go).
+// runes_simd_amd64.go, runes_simd_128.go), and the type FusedCtx of the
+// fused programs of D98 (fused.go). The tool fusegen writes the other files
+// of the fused programs.
 //
 // The table below lists, for each method, the SIMD code and whether the SIMD
 // build uses it. A method whose SIMD code is off calls its scalar code

@@ -2,7 +2,10 @@
 
 package wide
 
-import "simd/archsimd"
+import (
+	"encoding/binary"
+	"simd/archsimd"
+)
 
 // This file holds the helpers of the SIMD code on amd64: the loads, and the
 // operations that must give the bits of the scalar code. The suffix of each
@@ -145,6 +148,42 @@ func vTrunc8(x archsimd.Float32x8) archsimd.Int32x8 {
 // ldH16 loads 16 uint16 lanes from s.
 func ldH16(s []uint16) archsimd.Uint16x16 {
 	return archsimd.LoadUint16x16Array((*[16]uint16)(s))
+}
+
+// vLoadPixels8 loads the 8 pixels of RGBA bytes at the start of b, one
+// pixel in each lane, for the fused programs of D98.
+func vLoadPixels8(b []byte) archsimd.Uint32x8 {
+	return archsimd.LoadUint8x32Array((*[32]uint8)(b)).AsUint32x8()
+}
+
+// vStorePixels8 stores the 8 pixels of v at the start of b, one pixel in
+// each lane, for the fused programs of D98.
+func vStorePixels8(b []byte, v archsimd.Uint32x8) {
+	v.AsUint8x32().StoreArray((*[32]uint8)(b))
+}
+
+// vLoadBytes8 loads the 8 bytes at the start of b, one byte in each lane,
+// for the fused programs of D98.
+func vLoadBytes8(b []byte) archsimd.Uint32x8 {
+	return archsimd.BroadcastUint64x2(binary.LittleEndian.Uint64(b)).AsUint8x16().ExtendLo8ToUint32()
+}
+
+// vUnnorm8 is unnorm of highp on each lane: LaneRoundIntByte of
+// LaneMin(LaneMax(x, 0), 1) * 255. NaN gives 0, as in LaneRoundIntByte.
+func vUnnorm8(x archsimd.Float32x8) archsimd.Uint32x8 {
+	v := vMin8(vMax8(x, archsimd.BroadcastFloat32x8(0)), archsimd.BroadcastFloat32x8(1)).Mul(archsimd.BroadcastFloat32x8(255))
+	r := v.Add(archsimd.BroadcastFloat32x8(0x1p23)).ToBits().Sub(archsimd.BroadcastUint32x8(0x4b000000))
+	return r.And(v.Equal(v).ToInt32x8().AsUint32x8())
+}
+
+// vTruncU16x8 is TruncU16 on each lane: 0 for NaN and for a value of 0 or
+// less, 65535 for a value of 65535 or more, and the value truncated toward
+// zero otherwise.
+func vTruncU16x8(x archsimd.Float32x8) archsimd.Uint32x8 {
+	big := x.GreaterEqual(archsimd.BroadcastFloat32x8(65535))
+	pos := x.Greater(archsimd.BroadcastFloat32x8(0)).ToInt32x8().AsUint32x8()
+	r := archsimd.BroadcastUint32x8(65535).IfElse(big, x.ConvertToInt32().AsUint32x8())
+	return r.And(pos)
 }
 
 // hasAVX reports whether the CPU has AVX, which VZEROUPPER needs.
