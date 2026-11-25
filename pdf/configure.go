@@ -11,11 +11,15 @@ import (
 	"github.com/xo/okage"
 )
 
-// The validators of PDF/A and PDF/UA are not in the base port (D62), so a
-// configuration holds a version and an empty set of validators. The types
-// Configuration and ConfigurationBuilder of upstream are public. The port
-// keeps them unexported until a decision adds the validators, and the option
-// WithPDFVersion sets the version through them.
+// This file ports krilla src/configure/mod.rs. The types Configuration and
+// ConfigurationBuilder of upstream are public. The port keeps them
+// unexported, and the options WithPDFVersion and WithArchivalValidator set
+// the version and the validator through them. NewDocument builds the
+// configuration after the last option, so the order of the options does
+// not matter (D99). pdf has no validator of PDF/UA, so the builder has no
+// method with_accessibility_validator.
+//
+// Configuring PDF version and export mode.
 
 // configuration is Configuration in krilla src/configure/mod.rs.
 //
@@ -32,11 +36,12 @@ func defaultConfiguration() configuration {
 }
 
 // configurationBuilder is ConfigurationBuilder in krilla
-// src/configure/mod.rs, without the validators. The methods set_validator,
-// with_archival_validator and with_accessibility_validator wait for them.
+// src/configure/mod.rs. The field validators of upstream, a
+// ValidatorsBuilder, is the validator of PDF/A. Zero is None.
 //
 // A configuration of validator and PDF version.
 type configurationBuilder struct {
+	archival   Archival
 	version    PDFVersion
 	hasVersion bool
 }
@@ -51,24 +56,41 @@ func (b configurationBuilder) withVersion(version PDFVersion) configurationBuild
 	return b
 }
 
+// withArchivalValidator is ConfigurationBuilder::with_archival_validator in
+// krilla src/configure/mod.rs.
+//
+// Set the PDF/A validator, overwriting the current one if already set.
+func (b configurationBuilder) withArchivalValidator(archival Archival) configurationBuilder {
+	b.archival = archival
+	return b
+}
+
 // finish is ConfigurationBuilder::finish in krilla src/configure/mod.rs.
-// Upstream narrows the range of the versions to the range that each
-// validator allows. With no validator, the range is PDFVersionMin to
-// PDFVersionMax. So the port has only the error
-// ConfigurationError::VersionDoesNotMatchValidatorsRange, as ErrPDFVersion,
-// for a version that is not one of the constants of PDFVersion. The error
-// NoOverlappingValidatorsRange needs two validators.
+// ConfigurationError::VersionDoesNotMatchValidatorsRange is ErrPDFVersion,
+// also for a version or a validator that is not one of the constants. The
+// error NoOverlappingValidatorsRange needs two validators, which pdf does
+// not have.
 //
 // Build the Configuration, returning an error if the validators and version
 // are incompatible.
 func (b configurationBuilder) finish() (configuration, error) {
-	var validators validators
-	low, high := PDFVersionMin, PDFVersionMax
+	if b.archival != 0 && (b.archival < ArchivalA1A || b.archival > ArchivalA4E) {
+		return configuration{}, fmt.Errorf("%w: %s", okage.ErrPDFVersion, b.archival)
+	}
+	validators := validators{a: b.archival}
+
+	low, ok := validators.min()
+	if !ok {
+		low = PDFVersionMin
+	}
+	high := validators.max()
 	switch {
 	case b.hasVersion && low <= b.version && b.version <= high:
 		return configuration{validators: validators, version: b.version}, nil
 	case b.hasVersion:
 		return configuration{}, fmt.Errorf("%w: %s", okage.ErrPDFVersion, b.version)
+	case !validators.isEmpty():
+		return configuration{validators: validators, version: high}, nil
 	default:
 		return configuration{validators: validators, version: defaultConfiguration().version}, nil
 	}

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use base64::Engine;
 use krilla::blend::BlendMode;
 use krilla::color::{cmyk, luma, rgb, Color};
-use krilla::configure::{ConfigurationBuilder, PdfVersion};
+use krilla::configure::{Archival, ConfigurationBuilder, PdfVersion};
 use krilla::geom::{PathBuilder, Point, Rect, Size, Transform};
 use krilla::image::Image;
 use krilla::mask::{Mask, MaskType};
@@ -37,6 +37,9 @@ pub struct SettingsSpec {
     enable_tagging: Option<bool>,
     /// "1.4", "1.5", "1.6", "1.7" or "2.0".
     version: Option<String>,
+    /// The name of a case of Archival, such as "A3_B", for
+    /// ConfigurationBuilder::with_archival_validator.
+    archival: Option<String>,
     /// false leaves the SVG glyphs out, as the default function of krilla
     /// does.
     svg_glyphs: Option<bool>,
@@ -56,19 +59,39 @@ fn settings(s: &SettingsSpec) -> Result<SerializeSettings, String> {
     if s.svg_glyphs.unwrap_or(true) {
         out.render_svg_glyph_fn = krilla_svg::render_svg_glyph;
     }
-    if let Some(v) = &s.version {
-        let version = match v.as_str() {
-            "1.4" => PdfVersion::Pdf14,
-            "1.5" => PdfVersion::Pdf15,
-            "1.6" => PdfVersion::Pdf16,
-            "1.7" => PdfVersion::Pdf17,
-            "2.0" => PdfVersion::Pdf20,
-            _ => return Err(format!("the version {v:?} is not known")),
-        };
-        out.configuration = ConfigurationBuilder::new()
-            .with_version(version)
+    if s.version.is_some() || s.archival.is_some() {
+        let mut builder = ConfigurationBuilder::new();
+        if let Some(v) = &s.version {
+            let version = match v.as_str() {
+                "1.4" => PdfVersion::Pdf14,
+                "1.5" => PdfVersion::Pdf15,
+                "1.6" => PdfVersion::Pdf16,
+                "1.7" => PdfVersion::Pdf17,
+                "2.0" => PdfVersion::Pdf20,
+                _ => return Err(format!("the version {v:?} is not known")),
+            };
+            builder = builder.with_version(version);
+        }
+        if let Some(a) = &s.archival {
+            let archival = match a.as_str() {
+                "A1_A" => Archival::A1_A,
+                "A1_B" => Archival::A1_B,
+                "A2_A" => Archival::A2_A,
+                "A2_B" => Archival::A2_B,
+                "A2_U" => Archival::A2_U,
+                "A3_A" => Archival::A3_A,
+                "A3_B" => Archival::A3_B,
+                "A3_U" => Archival::A3_U,
+                "A4" => Archival::A4,
+                "A4F" => Archival::A4F,
+                "A4E" => Archival::A4E,
+                _ => return Err(format!("the validator {a:?} is not known")),
+            };
+            builder = builder.with_archival_validator(archival);
+        }
+        out.configuration = builder
             .finish()
-            .map_err(|e| format!("the version {v:?}: {e:?}"))?;
+            .map_err(|e| format!("the configuration: {e:?}"))?;
     }
     Ok(out)
 }

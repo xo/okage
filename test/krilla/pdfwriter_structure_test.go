@@ -46,6 +46,9 @@ func init() {
 	writerStreams["metadata"] = func(c *pdfwriter.Chunk, id pdfwriter.Ref, data []byte) *pdfwriter.Stream {
 		return c.Metadata(id, data).Stream
 	}
+	writerStreams["embedded_file"] = func(c *pdfwriter.Chunk, id pdfwriter.Ref, data []byte) *pdfwriter.Stream {
+		return c.EmbeddedFile(id, data).Stream
+	}
 	pdfDicts["catalog"] = func(p *pdfwriter.Pdf, id pdfwriter.Ref) *pdfwriter.Dict {
 		return p.Catalog(id).Dict
 	}
@@ -1070,6 +1073,7 @@ func stKrillaDocument() []any {
 			stc("pair", "Custom", pw.Text("value")),
 		}},
 		structureObject{ID: 23, Start: "metadata", Data: base64.StdEncoding.EncodeToString([]byte("<x:xmpmeta/>"))},
+		structureObject{ID: 25, Start: "embedded_file", Data: base64.StdEncoding.EncodeToString([]byte("an embedded file"))},
 		structureObject{ID: 24, Start: "catalog", Structure: []structureCall{
 			stc("pages", 12), stc("metadata", 23), stc("pair", "PageLabels", pw.Ref(2)), stc("lang", "en-US"),
 			stThen("viewer_preferences", stc("display_doc_title", true), stc("direction", "R2L")),

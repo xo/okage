@@ -11,17 +11,15 @@ import (
 	"strings"
 
 	"github.com/xo/okage/internal/pdfwriter"
+	"github.com/xo/okage/internal/xmpwriter"
 )
 
 // This file ports krilla src/interchange/metadata/mod.rs: the metadata of the
-// information dictionary and of the catalog. The base port has no XMP
-// metadata (D62), so serialize_xmp_metadata and xmp_date have no port. The
-// part of serialize_xmp_metadata that registers a validation error is in
-// chunkContainer.finish, as finishMetadata. The custom XMP metadata has no
-// port either: the methods custom_xmp_property, custom_xmp_schema,
-// relax_ng_schema and extension_schemas, and the modules custom.rs,
-// extension_schema.rs, predefined.rs, relax_ng.rs and xmp.rs of the folder
-// src/interchange/metadata.
+// information dictionary, of the catalog and of the XMP metadata (D99). The
+// modules custom.rs, extension_schema.rs, predefined.rs, relax_ng.rs and
+// xmp.rs of the folder src/interchange/metadata are metadata_custom.go,
+// metadata_extension_schema.go, metadata_predefined.go,
+// metadata_relax_ng.go and metadata_xmp.go.
 //
 // Setting document metadata.
 //
@@ -32,7 +30,8 @@ import (
 // Metadata is Metadata in krilla src/interchange/metadata/mod.rs. Each field
 // of upstream that is an Option is a pointer here, and nil is None. A method
 // that sets a field returns a copy of the metadata, as the builder of upstream
-// does. The copy shares no slice and no map with the metadata it came from.
+// does. The copy shares no slice and no map with the metadata it came from,
+// so a slice that a method extends is copied first.
 //
 // Metadata for a PDF document.
 type Metadata struct {
@@ -50,6 +49,10 @@ type Metadata struct {
 	pageLayout      *PageLayout
 	displayDocTitle bool
 	trapped         *bool
+	// customXMPProperties and customXMPSchemas hold the custom XMP metadata
+	// of CustomXMPProperty and CustomXMPSchema.
+	customXMPProperties []Property
+	customXMPSchemas    []Schema
 	// customFields holds the custom fields of the information dictionary.
 	// Upstream keeps them in a BTreeMap, so the port writes them in the
 	// order of their names.
@@ -169,8 +172,7 @@ func (m Metadata) DocumentID(documentID string) Metadata {
 }
 
 // VersionID is Metadata::version_id in krilla src/interchange/metadata/mod.rs.
-// Upstream writes it only to the XMP metadata, so the base port does not
-// write it (D62).
+// It goes only into the XMP metadata.
 //
 // A version ID.
 //
@@ -220,6 +222,24 @@ func (m Metadata) Trapped(trapped bool) Metadata {
 	return m
 }
 
+// CustomXMPProperty is Metadata::custom_xmp_property in krilla
+// src/interchange/metadata/mod.rs.
+//
+// Add a custom XMP property.
+func (m Metadata) CustomXMPProperty(property Property) Metadata {
+	m.customXMPProperties = append(slices.Clip(m.customXMPProperties), property)
+	return m
+}
+
+// CustomXMPSchema is Metadata::custom_xmp_schema in krilla
+// src/interchange/metadata/mod.rs.
+//
+// Add a schema describing the properties of a custom XMP namespace.
+func (m Metadata) CustomXMPSchema(schema Schema) Metadata {
+	m.customXMPSchemas = append(slices.Clip(m.customXMPSchemas), schema)
+	return m
+}
+
 // CustomField is Metadata::custom_field in krilla
 // src/interchange/metadata/mod.rs. It returns false where upstream returns
 // None, with the metadata as it was.
@@ -258,14 +278,167 @@ func (m *Metadata) hasDocumentInfo() bool {
 		len(m.customFields) != 0
 }
 
+// serializeXMPMetadata is Metadata::serialize_xmp_metadata in krilla
+// src/interchange/metadata/mod.rs.
+func (m *Metadata) serializeXMPMetadata(xmp *xmpwriter.Writer, sc *serializeContext, instanceID string) error {
+	if m.title != nil {
+		xmp.Title(xmpwriter.LangAlt{Value: *m.title})
+	}
+
+	if m.description != nil {
+		xmp.Description(xmpwriter.LangAlt{Value: *m.description})
+	}
+
+	if m.keywords != nil {
+		xmp.PDFKeywords(strings.Join(m.keywords, ", "))
+	}
+
+	if m.authors != nil {
+		if sc.serializeSettings().pdfVersion() >= PDF20 {
+			// PDF 2.0+ deprecates the document information dictionary, so
+			// we can use the array here.
+			xmp.Creator(m.authors...)
+		} else {
+			// Turns out that if the authors are given in both the document
+			// information dictionary and the XMP metadata, Acrobat takes a
+			// little bit of both: The first author from the document
+			// information dictionary and the remaining authors from the XMP
+			// metadata.
+			//
+			// To fix this for Acrobat, we could omit the remaining authors
+			// or all metadata from the document information catalog (it is
+			// optional) and only write XMP. However, not all other tools
+			// (including Apple Preview) read the XMP data. This means we do
+			// want to include all authors in the document information
+			// dictionary.
+			//
+			// Thus, the only alternative is to fold all authors into a
+			// single <rdf:li> in the XMP metadata. This is, in fact, exactly
+			// what the PDF/A spec Part 1 section 6.7.3 has to say about the
+			// matter. It's a bit weird to not use the array (and it makes
+			// Acrobat show the author list in quotes), but there's not much
+			// we can do about that.
+			xmp.Creator(strings.Join(m.authors, ", "))
+		}
+	}
+
+	if m.creator != nil {
+		xmp.CreatorTool(*m.creator)
+	}
+
+	if m.producer != nil {
+		xmp.Producer(*m.producer)
+	}
+
+	if m.versionID != nil {
+		xmp.VersionID(*m.versionID)
+	}
+
+	if m.language != nil {
+		xmp.Language(xmpwriter.LangID(*m.language))
+	}
+
+	if m.trapped != nil {
+		xmp.Trapped(*m.trapped)
+	}
+
+	if m.creationDate != nil {
+		date := xmpDate(*m.creationDate)
+		xmp.ModifyDate(date)
+		xmp.CreateDate(date)
+
+		validators := sc.serializeSettings().validators()
+		if validators.requiresFileProvenanceInformation() {
+			history := xmp.History()
+			saved := history.AddEvent()
+
+			saved.Action(xmpwriter.ResourceEventActionSaved).When(date)
+
+			if !validators.prohibitsInstanceIDInXMPMetadata() {
+				saved.InstanceID(instanceID + "_source")
+			}
+
+			saved.Finish()
+
+			converted := history.AddEvent()
+
+			converted.Action(xmpwriter.ResourceEventActionConverted).When(date)
+
+			if m.creator != nil {
+				converted.SoftwareAgent(*m.creator)
+			}
+
+			if !validators.prohibitsInstanceIDInXMPMetadata() {
+				converted.InstanceID(instanceID + "_source")
+			}
+			converted.Finish()
+			history.Finish()
+		}
+	} else {
+		sc.registerValidationError(validationError{kind: validationMissingDocumentDate})
+	}
+
+	return m.serializeCustomXMP(xmp, sc)
+}
+
+// relaxNGSchema is Metadata::relax_ng_schema in krilla
+// src/interchange/metadata/mod.rs.
+//
+// A RELAX NG schema describing the XMP metadata of the document.
+func (m *Metadata) relaxNGSchema() string {
+	schemas := mergeSchemas(managedSchemas(), m.customXMPSchemas)
+	var undescribed []undescribedProperty
+	for i := range m.customXMPProperties {
+		property := &m.customXMPProperties[i]
+		uri := property.Namespace.uri
+		described := slices.ContainsFunc(schemas, func(s Schema) bool {
+			_, ok := s.get(property.Name)
+			return s.namespace.uri == uri && ok
+		})
+		listed := slices.ContainsFunc(undescribed, func(u undescribedProperty) bool {
+			return u.namespace.uri == uri && u.name == property.Name
+		})
+		if !described && !listed {
+			undescribed = append(undescribed, undescribedProperty{namespace: property.Namespace, name: property.Name})
+		}
+	}
+
+	return relaxNGSchema(schemas, undescribed)
+}
+
+// extensionSchemas is Metadata::extension_schemas in krilla
+// src/interchange/metadata/mod.rs.
+//
+// The attached schemas that need a PDF/A extension schema, without the
+// descriptions of predefined properties.
+func (m *Metadata) extensionSchemas(validators validators) []Schema {
+	xmp2005 := validators.usesXMP2005PredefinedSchemas()
+	var schemas []Schema
+	for _, schema := range m.customXMPSchemas {
+		uri := schema.namespace.uri
+		isPredefined := func(desc PropertyDescription) bool {
+			return isPredefinedPDFAProperty(uri, desc.name, xmp2005)
+		}
+		if !slices.ContainsFunc(schema.properties, isPredefined) {
+			schemas = append(schemas, schema)
+			continue
+		}
+
+		schema.properties = slices.DeleteFunc(slices.Clone(schema.properties), isPredefined)
+		if len(schema.properties) != 0 {
+			schemas = append(schemas, schema)
+		}
+	}
+	return schemas
+}
+
 // serializeDocumentInfo is Metadata::serialize_document_info in krilla
 // src/interchange/metadata/mod.rs. Upstream starts the dictionary lazily, with
 // a LazyCell, so that it writes no dictionary when it has no entry. The port
 // starts it at the first entry in the same way. The reference is taken even
 // when no entry is written, as upstream does.
 //
-// The validators of PDF/A-2 and PDF/A-3 leave out the custom fields. The base
-// port has no validator (D62), so it writes them always.
+// The validators of PDF/A-2 and PDF/A-3 leave out the custom fields.
 func (m *Metadata) serializeDocumentInfo(ref *pdfwriter.Ref, pdf *pdfwriter.Pdf, config configuration) {
 	if config.validators.prohibitsInfoDict() {
 		return
@@ -319,13 +492,17 @@ func (m *Metadata) serializeDocumentInfo(ref *pdfwriter.Ref, pdf *pdfwriter.Pdf,
 		documentInfo().CreationDate(pdfDate(*m.creationDate))
 	}
 
-	names := make([]string, 0, len(m.customFields))
-	for name := range m.customFields {
-		names = append(names, name)
-	}
-	slices.Sort(names)
-	for _, name := range names {
-		documentInfo().Pair(pdfwriter.Name(name), pdfwriter.TextStr(m.customFields[name]))
+	// See https://github.com/LaurenzV/krilla/pull/419#issuecomment-5142992957.
+	archival, ok := config.validators.archival()
+	if !ok || !archival.isA2A3() {
+		names := make([]string, 0, len(m.customFields))
+		for name := range m.customFields {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+		for _, name := range names {
+			documentInfo().Pair(pdfwriter.Name(name), pdfwriter.TextStr(m.customFields[name]))
+		}
 	}
 
 	if info != nil {
@@ -342,18 +519,6 @@ func isStandardDocumentInfoField(name string) bool {
 		return true
 	}
 	return false
-}
-
-// finishMetadata is the part of ChunkContainer::finish and
-// Metadata::serialize_xmp_metadata in krilla src/chunk_container.rs and
-// src/interchange/metadata/mod.rs that does not write XMP metadata. It
-// registers the validation error of a document without a creation date.
-// Upstream registers it for each document with metadata, also when it writes
-// no XMP metadata.
-func finishMetadata(sc *serializeContext, m *Metadata) {
-	if m != nil && m.creationDate == nil {
-		sc.registerValidationError(validationError{kind: validationMissingDocumentDate})
-	}
 }
 
 // metadataDocumentID is the part of ChunkContainer::finish in krilla
@@ -530,6 +695,28 @@ func orU8(v uint8, ok bool, def uint8) uint8 {
 	return def
 }
 
+// xmpDate is xmp_date in krilla src/interchange/metadata/mod.rs.
+//
+// Converts a datetime to an xmp-writer datetime.
+func xmpDate(d DateTime) xmpwriter.DateTime {
+	timezone := xmpwriter.Timezone{}
+	if d.hasUTCOffsetHour {
+		timezone = xmpwriter.Timezone{Local: true, Hour: d.utcOffsetHour, Minute: int8(d.utcOffsetMinute)}
+	}
+
+	// We always assume a full date with all fields because for some reason
+	// Acrobat doesn't like PDF/A-1 files without everything set.
+	return xmpwriter.NewDateTime(
+		d.year,
+		orU8(d.month, d.hasMonth, 1),
+		orU8(d.day, d.hasDay, 1),
+		orU8(d.hour, d.hasHour, 0),
+		orU8(d.minute, d.hasMinute, 0),
+		orU8(d.second, d.hasSecond, 0),
+		timezone,
+	)
+}
+
 // pdfDate is pdf_date in krilla src/interchange/metadata/mod.rs.
 //
 // Converts a datetime to a pdf-writer date.
@@ -629,16 +816,4 @@ func (l PageLayout) toPDF() pdfwriter.PageLayout {
 // Set the metadata of the document.
 func (d *Document) SetMetadata(metadata Metadata) {
 	d.cc.metadata = &metadata
-}
-
-// prohibitsInfoDict is Validators::prohibits_info_dict in krilla
-// src/configure/validate.rs.
-func (validators) prohibitsInfoDict() bool {
-	return false
-}
-
-// requiresDisplayDocTitle is Validators::requires_display_doc_title in
-// krilla src/configure/validate.rs.
-func (validators) requiresDisplayDocTitle() bool {
-	return false
 }

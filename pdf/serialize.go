@@ -6,6 +6,7 @@
 package pdf
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/xo/okage/internal/pdfwriter"
@@ -24,10 +25,9 @@ const (
 )
 
 // serializeSettings is SerializeSettings in krilla src/serialize.rs. The
-// public fields of upstream are the options of NewDocument (D20). The base
-// port leaves out the field xmp_metadata, because it has no XMP metadata
-// (D62). It keeps enable_tagging without an option. The field
-// render_svg_glyph_fn is the option WithSVGGlyphs.
+// public fields of upstream are the options of NewDocument (D20). The port
+// keeps enable_tagging without an option, because pdf has no tags (D62).
+// The field render_svg_glyph_fn is the option WithSVGGlyphs.
 //
 // Settings that should be applied when creating a PDF document.
 type serializeSettings struct {
@@ -46,8 +46,13 @@ type serializeSettings struct {
 	// cmykProfile is the ICC profile for CMYK colors when noDeviceCS is
 	// true. Nil is None.
 	cmykProfile *ICCProfile
+	// xmpMetadata says whether the PDF should include XMP metadata. A
+	// validator can turn it on.
+	xmpMetadata bool
 	// configuration holds the validators and the PDF version.
+	// NewDocument builds it from builder after the last option.
 	configuration configuration
+	builder       configurationBuilder
 	// enableTagging is the field enable_tagging of upstream, which is true by
 	// default. The tags are not in the base port, so no option changes it.
 	// It still decides the key /Tabs of a page with annotations, as in
@@ -80,6 +85,16 @@ func (s *serializeSettings) validators() validators {
 	return s.configuration.validators
 }
 
+// supportsAssociatedFiles is SerializeSettings::supports_associated_files
+// in krilla src/serialize.rs.
+//
+// Whether the /AF key is supported, accounting for the PDF version and
+// active standards.
+func (s *serializeSettings) supportsAssociatedFiles() bool {
+	return s.configuration.version.specifiesAssociatedFiles() ||
+		s.configuration.validators.specifiesAssociatedFiles()
+}
+
 // defaultSerializeSettings is the Default of SerializeSettings in krilla
 // src/serialize.rs.
 func defaultSerializeSettings() serializeSettings {
@@ -88,6 +103,7 @@ func defaultSerializeSettings() serializeSettings {
 		asciiCompatible:        false,
 		compressContentStreams: true,
 		noDeviceCS:             false,
+		xmpMetadata:            true,
 		configuration:          defaultConfiguration(),
 		enableTagging:          true,
 		subsetFallback:         true,
@@ -163,19 +179,47 @@ func WithCMYKProfile(profile *ICCProfile) Option {
 	}
 }
 
-// WithPDFVersion is the field configuration of SerializeSettings in krilla
-// src/serialize.rs, with the version only, as
-// ConfigurationBuilder::new().with_version(version).finish() makes it. The
-// default is PDF17. A version that is not one of the constants of PDFVersion
-// makes Document.Finish return ErrPDFVersion.
+// WithXMPMetadata is the field xmp_metadata of SerializeSettings in krilla
+// src/serialize.rs. The default is true.
+//
+// Whether the PDF should include XMP metadata.
+//
+// Note that this value might be overridden depending on which validator
+// you use. For example, when exporting to PDF/A, this value will be set to
+// true, regardless of what value will be passed.
+func WithXMPMetadata(xmpMetadata bool) Option {
+	return func(s *serializeSettings) {
+		s.xmpMetadata = xmpMetadata
+	}
+}
+
+// WithPDFVersion is the version of the field configuration of
+// SerializeSettings in krilla src/serialize.rs, as
+// ConfigurationBuilder::with_version sets it. NewDocument builds the
+// configuration with ConfigurationBuilder::finish after the last option.
+// The default is PDF17, or the highest version of the validator of
+// WithArchivalValidator. A version that is not one of the constants of
+// PDFVersion, or that the validator does not allow, makes Document.Finish
+// return ErrPDFVersion.
 func WithPDFVersion(version PDFVersion) Option {
 	return func(s *serializeSettings) {
-		c, err := configurationBuilder{}.withVersion(version).finish()
-		if err != nil {
-			s.err = err
-			return
-		}
-		s.configuration = c
+		s.builder = s.builder.withVersion(version)
+	}
+}
+
+// WithArchivalValidator is the validator of PDF/A of the field
+// configuration of SerializeSettings in krilla src/serialize.rs, as
+// ConfigurationBuilder::with_archival_validator sets it (D99). The default
+// is no validator.
+//
+// With a validator, the document is written in a way that conforms to the
+// standard, for example with its metadata, and Document.Finish returns an
+// error that wraps ErrPDFValidation for each input that the standard does
+// not allow. Some requirements are semantic in nature and cannot be
+// validated. The caller must make sure that they are fulfilled.
+func WithArchivalValidator(archival Archival) Option {
+	return func(s *serializeSettings) {
+		s.builder = s.builder.withArchivalValidator(archival)
 	}
 }
 
@@ -237,9 +281,8 @@ type pageEntry struct {
 
 // globalObjects is GlobalObjects in krilla src/serialize.rs. The wrapper
 // MaybeTaken of upstream makes sure that the serializer takes each field
-// once. The port sets a field to nil when it takes it. The forms, the tags,
-// the embedded files and the embedded PDF files are not in the base port
-// (D62).
+// once. The port sets a field to nil when it takes it. The forms, the tags
+// and the embedded PDF files are not in pdf (D62).
 type globalObjects struct {
 	// namedDestinations holds all named destinations that have been
 	// registered, with the reference of their destination and the
@@ -260,6 +303,10 @@ type globalObjects struct {
 	// finds the container of a font by its hash.
 	fontMap   []*fontContainer
 	fontIndex map[siphasher.Hash128]*fontContainer
+	// embeddedFiles holds the association of the names of embedded files to
+	// their references, for the catalog dictionary. Upstream keeps them in
+	// a BTreeMap, so the port writes them in the order of their names.
+	embeddedFiles map[string]pdfwriter.Ref
 }
 
 // serializeContext is SerializeContext in krilla src/serialize.rs. It is
@@ -312,6 +359,7 @@ func newSerializeContext(settings serializeSettings) *serializeContext {
 	// Override flags as required by the validator.
 	settings.noDeviceCS = settings.noDeviceCS || settings.validators().requiresNoDeviceCS()
 	settings.enableTagging = settings.enableTagging || settings.validators().requiresTagging()
+	settings.xmpMetadata = settings.xmpMetadata || settings.validators().requiresXMPMetadata()
 
 	curRef := pdfwriter.NewRef(1)
 	pageTreeRef := curRef.Bump()
@@ -376,11 +424,11 @@ func (sc *serializeContext) newPDFWithCapacity(capacity int) *pdfwriter.Pdf {
 // finish is SerializeContext::finish in krilla src/serialize.rs. The objects
 // are serialized in the right order: an object that one step takes cannot
 // be read by a later step. The fonts come after the page tree, and the
-// destinations after the fonts, as upstream does. The output intents of
-// PDF/A, the forms, the tags and the embedded PDF files are not in the base
-// port (D62).
+// destinations after the fonts, as upstream does. The forms, the tags and
+// the embedded PDF files are not in pdf (D62).
 func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 	// Serialize all objects that can only be written in the end.
+	sc.serializeDestinationProfiles(cc)
 	sc.serializePageLabelTree(cc)
 	sc.serializeOutline(cc)
 	if err := sc.serializePages(cc); err != nil {
@@ -397,6 +445,7 @@ func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 		return nil, err
 	}
 	sc.serializeTagTree()
+	sc.serializeXMPSchema(cc)
 
 	// Create the final PDF.
 	pdf, err := cc.finish(sc)
@@ -495,6 +544,76 @@ func (sc *serializeContext) registerPageLabel(cc *chunkContainer, label PageLabe
 	ref := sc.newRef()
 	label.serialize(cc, ref)
 	return ref
+}
+
+// serializeDestinationProfiles is
+// SerializeContext::serialize_destination_profiles in krilla
+// src/serialize.rs.
+func (sc *serializeContext) serializeDestinationProfiles(cc *chunkContainer) {
+	subtype, ok := sc.settings.validators().outputIntent()
+	if !ok {
+		return
+	}
+	rootRef := sc.newRef()
+	chunk := sc.newChunk()
+
+	oiRef := sc.newRef()
+	oi := pdfwriter.Start[pdfwriter.OutputIntent](chunk.Indirect(oiRef))
+	iccProfile := sc.settings.pdfVersion().rgbICC()
+
+	// NOTE: when support for CMYK or custom RBG output intents is added,
+	// revisit ContentBuilder::get_color_space.
+	metadata := iccProfile.metadata()
+	oi.DestOutputProfile(sc.registerCacheable(cc, iccProfile)).
+		Subtype(subtype).
+		OutputConditionIdentifier(pdfwriter.TextStr("Custom")).
+		OutputCondition(pdfwriter.TextStr("sRGB")).
+		RegistryName(pdfwriter.TextStr("")).
+		Info(pdfwriter.TextStr(fmt.Sprintf("sRGB v%d.%d", metadata.major, metadata.minor)))
+	oi.Finish()
+
+	array := chunk.Indirect(rootRef).Array()
+	array.Item(oiRef)
+	array.Finish()
+
+	cc.nonStream.destinationProfiles = &refChunk{ref: rootRef, chunk: chunk}
+}
+
+// serializeXMPSchema is SerializeContext::serialize_xmp_schema in krilla
+// src/serialize.rs.
+func (sc *serializeContext) serializeXMPSchema(cc *chunkContainer) {
+	const path = "xmp-metadata.rng"
+
+	metadata := cc.metadata
+	if metadata == nil {
+		return
+	}
+
+	if !sc.settings.validators().recommendsXMPRelaxNGSchema() ||
+		len(metadata.customXMPProperties) == 0 {
+		return
+	}
+	// The schema is only recommended, so a file the user embedded under the
+	// same name takes precedence.
+	if _, ok := sc.globalObjects.embeddedFiles[path]; ok {
+		return
+	}
+
+	mimeType, _ := NewMIMEType("application/xml")
+	description := "RELAX NG schema of the XMP metadata"
+	file := &EmbeddedFile{
+		Path:             path,
+		MIMEType:         mimeType,
+		Description:      &description,
+		AssociationKind:  AssociationKindSchema,
+		Data:             []byte(metadata.relaxNGSchema()),
+		ModificationDate: metadata.creationDate,
+	}
+
+	sc.embedFile(cc, file)
+	if ref, ok := sc.globalObjects.embeddedFiles[path]; ok {
+		cc.xmpSchema = &ref
+	}
 }
 
 // serializePageLabelTree is SerializeContext::serialize_page_label_tree in

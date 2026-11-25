@@ -310,9 +310,3 @@ func (l LinkAnnotation) serializeType(sc *serializeContext, cc *chunkContainer, 
 
 	return annotation, nil
 }
-
-// requiresAnnotationFlags is Validators::requires_annotation_flags in krilla
-// src/configure/validate.rs.
-func (validators) requiresAnnotationFlags() bool {
-	return false
-}

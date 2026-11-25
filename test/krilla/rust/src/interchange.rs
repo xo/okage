@@ -7,11 +7,17 @@ use krilla::annotation::{Annotation, LinkAnnotation, LinkBorder, Target};
 use krilla::color::{cmyk, luma, rgb, Color};
 use krilla::destination::{Destination, NamedDestination, XyzDestination};
 use krilla::geom::{Point, Quadrilateral, Rect};
+use krilla::embed::{AssociationKind, EmbeddedFile, MimeType};
+use krilla::metadata::xmp::{
+    Namespace, PredefinedStruct, Property, PropertyDescription, Schema, SimpleType, StructType,
+    Value, ValueType,
+};
 use krilla::metadata::{DateTime, Metadata, PageLayout, TextDirection};
 use krilla::outline::{Outline, OutlineNode};
 use krilla::page::Page;
 use krilla::action::{Action, LinkAction};
 use krilla::Document;
+use base64::Engine;
 use serde::Deserialize;
 
 /// The fields of a scene for the metadata, the outline and the named
@@ -25,6 +31,108 @@ pub struct DocSpec {
     /// The destinations of Document::register_named_destination, which the
     /// oracle registers before the pages.
     named_destinations: Vec<NamedSpec>,
+    /// The files of Document::embed_file, which the oracle embeds after the
+    /// pages, before the metadata.
+    embedded_files: Vec<EmbedSpec>,
+}
+
+/// An embedded file (D99).
+#[derive(Deserialize)]
+struct EmbedSpec {
+    path: String,
+    #[serde(default)]
+    mime: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
+    /// The name of a case of AssociationKind, such as "Alternative".
+    kind: String,
+    /// The bytes of the file in base64.
+    data: String,
+    #[serde(default)]
+    date: Option<DateSpec>,
+    #[serde(default)]
+    compress: Option<bool>,
+}
+
+/// A custom XMP property: the prefix and the URI of its namespace, its
+/// name and its value (D99).
+#[derive(Deserialize)]
+struct PropertySpec {
+    ns: (String, String),
+    name: String,
+    value: ValueSpec,
+}
+
+/// A value of Value.
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum ValueSpec {
+    Text(String),
+    Uri(String),
+    Bool(bool),
+    Int(i64),
+    Real(f64),
+    Rational(i64, u64),
+    Date(DateSpec),
+    Seq(Vec<ValueSpec>),
+    Bag(Vec<ValueSpec>),
+    Alt(Vec<ValueSpec>),
+    Lang(Vec<(Option<String>, String)>),
+    Struct(Vec<PropertySpec>),
+}
+
+/// A value type of ValueType. A simple type is the name of its case of
+/// SimpleType, such as "Text" or "GUID", and a predefined structure type
+/// the name of its case of PredefinedStruct.
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum TypeSpec {
+    Simple(String),
+    Open(String, Vec<String>),
+    Closed(String, Vec<String>),
+    Seq(Box<TypeSpec>),
+    Bag(Box<TypeSpec>),
+    Alt(Box<TypeSpec>),
+    Lang,
+    Predefined(String),
+    Struct(StructSpec),
+}
+
+/// A user-defined structure type.
+#[derive(Deserialize)]
+struct StructSpec {
+    ns: (String, String),
+    name: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    fields: Vec<DescSpec>,
+}
+
+/// A description of a property or a field.
+#[derive(Deserialize)]
+struct DescSpec {
+    name: String,
+    #[serde(rename = "type")]
+    ty: TypeSpec,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    internal: bool,
+    #[serde(default)]
+    required: bool,
+}
+
+/// A schema of a custom namespace.
+#[derive(Deserialize)]
+struct SchemaSpec {
+    ns: (String, String),
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    properties: Vec<DescSpec>,
 }
 
 #[derive(Deserialize, Default)]
@@ -49,6 +157,10 @@ struct MetadataSpec {
     /// Pairs of a name and a value, for Metadata::custom_field in their
     /// order. A field that krilla does not accept is left out.
     custom_fields: Vec<(String, String)>,
+    /// The properties of Metadata::custom_xmp_property, in their order.
+    custom_xmp_properties: Vec<PropertySpec>,
+    /// The schemas of Metadata::custom_xmp_schema, in their order.
+    custom_xmp_schemas: Vec<SchemaSpec>,
 }
 
 #[derive(Deserialize, Default)]
@@ -312,12 +424,153 @@ fn metadata(s: &MetadataSpec) -> Result<Metadata, String> {
             m = next;
         }
     }
+    for p in &s.custom_xmp_properties {
+        m = m.custom_xmp_property(property(p)?);
+    }
+    for sc in &s.custom_xmp_schemas {
+        let mut schema = Schema::new(namespace(&sc.ns));
+        if let Some(n) = &sc.name {
+            schema = schema.name(n.clone());
+        }
+        if let Some(d) = &sc.description {
+            schema = schema.description(d.clone());
+        }
+        for d in &sc.properties {
+            schema = schema.property(description(d)?);
+        }
+        m = m.custom_xmp_schema(schema);
+    }
     Ok(m)
 }
 
-/// finish_document sets the metadata and the outline of a scene, after its
-/// pages.
+fn namespace(ns: &(String, String)) -> Namespace {
+    Namespace::new(ns.0.clone(), ns.1.clone())
+}
+
+fn property(p: &PropertySpec) -> Result<Property, String> {
+    Ok(Property::new(namespace(&p.ns), p.name.clone(), value(&p.value)?))
+}
+
+fn value(v: &ValueSpec) -> Result<Value, String> {
+    let list = |items: &[ValueSpec]| items.iter().map(value).collect::<Result<Vec<_>, _>>();
+    Ok(match v {
+        ValueSpec::Text(s) => Value::Text(s.clone()),
+        ValueSpec::Uri(s) => Value::Uri(s.clone()),
+        ValueSpec::Bool(b) => Value::Bool(*b),
+        ValueSpec::Int(i) => Value::Integer(*i),
+        ValueSpec::Real(r) => Value::Real(*r),
+        ValueSpec::Rational(n, d) => Value::Rational(*n, *d),
+        ValueSpec::Date(d) => Value::Date(date(d)),
+        ValueSpec::Seq(items) => Value::OrderedArray(list(items)?),
+        ValueSpec::Bag(items) => Value::UnorderedArray(list(items)?),
+        ValueSpec::Alt(items) => Value::AlternativeArray(list(items)?),
+        ValueSpec::Lang(items) => Value::LanguageAlternative(items.clone()),
+        ValueSpec::Struct(fields) => {
+            Value::Struct(fields.iter().map(property).collect::<Result<Vec<_>, _>>()?)
+        }
+    })
+}
+
+fn simple_type(name: &str) -> Result<SimpleType, String> {
+    Ok(match name {
+        "Text" => SimpleType::Text,
+        "Boolean" => SimpleType::Boolean,
+        "Integer" => SimpleType::Integer,
+        "Real" => SimpleType::Real,
+        "Date" => SimpleType::Date,
+        "AgentName" => SimpleType::AgentName,
+        "GUID" => SimpleType::Guid,
+        "Locale" => SimpleType::Locale,
+        "MIMEType" => SimpleType::MimeType,
+        "ProperName" => SimpleType::ProperName,
+        "RenditionClass" => SimpleType::RenditionClass,
+        "URI" => SimpleType::Uri,
+        "URL" => SimpleType::Url,
+        "Rational" => SimpleType::Rational,
+        "FrameRate" => SimpleType::FrameRate,
+        "FrameCount" => SimpleType::FrameCount,
+        "Part" => SimpleType::Part,
+        "XPath" => SimpleType::XPath,
+        _ => return Err(format!("the simple type {name:?} is not known")),
+    })
+}
+
+fn value_type(t: &TypeSpec) -> Result<ValueType, String> {
+    Ok(match t {
+        TypeSpec::Simple(n) => ValueType::Simple(simple_type(n)?),
+        TypeSpec::Open(n, v) => ValueType::open_choice(simple_type(n)?, v.clone()),
+        TypeSpec::Closed(n, v) => ValueType::closed_choice(simple_type(n)?, v.clone()),
+        TypeSpec::Seq(item) => ValueType::ordered_array(value_type(item)?),
+        TypeSpec::Bag(item) => ValueType::unordered_array(value_type(item)?),
+        TypeSpec::Alt(item) => ValueType::alternative_array(value_type(item)?),
+        TypeSpec::Lang => ValueType::LanguageAlternative,
+        TypeSpec::Predefined(n) => ValueType::PredefinedStruct(match n.as_str() {
+            "Dimensions" => PredefinedStruct::Dimensions,
+            "Thumbnail" => PredefinedStruct::Thumbnail,
+            "ResourceEvent" => PredefinedStruct::ResourceEvent,
+            "ResourceRef" => PredefinedStruct::ResourceRef,
+            "Version" => PredefinedStruct::Version,
+            "Job" => PredefinedStruct::Job,
+            "Colorant" => PredefinedStruct::Colorant,
+            "Font" => PredefinedStruct::Font,
+            _ => return Err(format!("the predefined structure {n:?} is not known")),
+        }),
+        TypeSpec::Struct(st) => {
+            let mut ty = StructType::new(namespace(&st.ns), st.name.clone(), st.description.clone());
+            for f in &st.fields {
+                ty = ty.field(description(f)?);
+            }
+            ty.into()
+        }
+    })
+}
+
+fn description(d: &DescSpec) -> Result<PropertyDescription, String> {
+    let mut desc = PropertyDescription::new(d.name.clone(), value_type(&d.ty)?, d.description.clone());
+    if d.internal {
+        desc = desc.internal();
+    }
+    if d.required {
+        desc = desc.required();
+    }
+    Ok(desc)
+}
+
+fn embedded_file(e: &EmbedSpec) -> Result<EmbeddedFile, String> {
+    let mime_type = match &e.mime {
+        Some(m) => Some(MimeType::new(m).ok_or_else(|| format!("the mime type {m:?} is not valid"))?),
+        None => None,
+    };
+    let association_kind = match e.kind.as_str() {
+        "Source" => AssociationKind::Source,
+        "Data" => AssociationKind::Data,
+        "Alternative" => AssociationKind::Alternative,
+        "Supplement" => AssociationKind::Supplement,
+        "Schema" => AssociationKind::Schema,
+        "Unspecified" => AssociationKind::Unspecified,
+        k => return Err(format!("the association kind {k:?} is not known")),
+    };
+    let data = base64::engine::general_purpose::STANDARD
+        .decode(&e.data)
+        .map_err(|err| format!("the data of {}: {err}", e.path))?;
+    Ok(EmbeddedFile {
+        path: e.path.clone(),
+        mime_type,
+        description: e.description.clone(),
+        association_kind,
+        data: data.into(),
+        modification_date: e.date.as_ref().map(date),
+        compress: e.compress,
+        location: None,
+    })
+}
+
+/// finish_document embeds the files, then sets the metadata and the outline
+/// of a scene, after its pages.
 pub fn finish_document(doc: &mut Document, s: &DocSpec) -> Result<(), String> {
+    for e in &s.embedded_files {
+        let _ = doc.embed_file(embedded_file(e)?);
+    }
     if let Some(m) = &s.metadata {
         doc.set_metadata(metadata(m)?);
     }

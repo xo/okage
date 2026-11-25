@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/xo/okage/internal/pdfwriter"
+	"github.com/xo/okage/internal/xmpwriter"
 )
 
 // PDFVersion is PdfVersion in krilla src/configure/version.rs. The versions
@@ -59,12 +60,32 @@ func (v PDFVersion) String() string {
 	return "PDFVersion(" + strconv.Itoa(int(v)) + ")"
 }
 
-// The method write_xmp of PdfVersion is for the XMP metadata, which the base
-// port leaves out (D62). The methods rgb_icc and grey_icc give the ICC
-// profiles of graphics/icc.rs, and the port of that file adds them. The
-// methods supports_icc and supports_bit_depth are for the images, and they
-// are in graphics_image.go. specifies_associated_files is for the
-// embedded files, which the base port leaves out.
+// The methods rgb_icc and grey_icc of PdfVersion give the ICC profiles of
+// graphics/icc.rs, and the port of that file adds them. The methods
+// supports_icc and supports_bit_depth are for the images, and they are in
+// graphics_image.go.
+
+// writeXMP is PdfVersion::write_xmp in krilla src/configure/version.rs.
+func (v PDFVersion) writeXMP(xmp *xmpwriter.Writer) {
+	switch v {
+	case PDF14:
+		xmp.PDFVersion("1.4")
+	case PDF15:
+		xmp.PDFVersion("1.5")
+	case PDF16:
+		xmp.PDFVersion("1.6")
+	case PDF17:
+		xmp.PDFVersion("1.7")
+	case PDF20:
+		xmp.PDFVersion("2.0")
+	}
+}
+
+// specifiesAssociatedFiles is PdfVersion::specifies_associated_files in
+// krilla src/configure/version.rs.
+func (v PDFVersion) specifiesAssociatedFiles() bool {
+	return v >= PDF20
+}
 
 // setVersion is PdfVersion::set_version in krilla src/configure/version.rs.
 func (v PDFVersion) setVersion(pdf *pdfwriter.Pdf) {

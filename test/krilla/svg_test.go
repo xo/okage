@@ -105,7 +105,7 @@ func goSVG(file string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parsing %s: %w", file, err)
 	}
-	d := pdf.NewDocument(pdf.WithSVGGlyphs(pdfsvg.RenderGlyph))
+	d := pdf.NewDocument(pdf.WithSVGGlyphs(pdfsvg.RenderGlyph), pdf.WithXMPMetadata(false))
 	ps, ok := pdf.PageSettingsFromWH(tree.Size().Width(), tree.Size().Height())
 	if !ok {
 		return nil, fmt.Errorf("the size of %s is not valid", file)

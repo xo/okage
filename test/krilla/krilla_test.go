@@ -94,8 +94,8 @@ func TestLogo(t *testing.T) {
 // the file of the first settings of its group. The objects must compare
 // equal (D62). The setting pretty also changes the white space of the content
 // streams, which the comparison does not ignore, so each group has one value
-// of pretty. The files have no XMP metadata, which the base port leaves out
-// (D62). Its InstanceID is a hash of the compressed bytes, as /ID is.
+// of pretty. The files have no XMP metadata, because its InstanceID is a
+// hash of the compressed bytes, as /ID is.
 func TestCompareIgnoresTheEncoding(t *testing.T) {
 	logo := abs(t, "docs", "okage.svg")
 	groups := [][]map[string]any{

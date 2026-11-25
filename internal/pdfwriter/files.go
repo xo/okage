@@ -7,11 +7,9 @@ package pdfwriter
 
 import "fmt"
 
-// This file ports the part of pdf-writer src/files.rs that the port needs:
-// FileSpec and AssociationKind, which xobject.go uses, with
-// Chunk::file_spec. The writers EmbeddedFile and EmbeddingParams, and
-// Chunk::embedded_file, write the embedded files, which D62 leaves out of
-// the base port of krilla. They have no port.
+// This file ports pdf-writer src/files.rs: FileSpec, EmbeddedFile,
+// EmbeddingParams and AssociationKind, with Chunk::file_spec and
+// Chunk::embedded_file. The embedded files of krilla use them (D99).
 
 // FileSpec is FileSpec in pdf-writer src/files.rs.
 //
@@ -176,4 +174,99 @@ func (k AssociationKind) toName() Name {
 // Start writing a file specification dictionary.
 func (c *Chunk) FileSpec(id Ref) *FileSpec {
 	return Start[FileSpec](c.Indirect(id))
+}
+
+// EmbeddedFile is EmbeddedFile in pdf-writer src/files.rs.
+//
+// Writer for an embedded file stream.
+//
+// This struct is created by Chunk.EmbeddedFile.
+type EmbeddedFile struct {
+	*Stream
+}
+
+// startEmbeddedFile is EmbeddedFile::start in pdf-writer src/files.rs.
+//
+// Create a new embedded file writer.
+func startEmbeddedFile(stream *Stream) *EmbeddedFile {
+	stream.Pair(Name("Type"), Name("EmbeddedFile"))
+	return &EmbeddedFile{Stream: stream}
+}
+
+// Subtype is EmbeddedFile::subtype in pdf-writer src/files.rs.
+//
+// Write the /Subtype attribute to set the file type.
+//
+// This can either be a MIME type or a name prefixed by a first class PDF
+// prefix. Note that special characters must be encoded as described in
+// section 7.3.5 of the PDF 1.7 specification, e.g. image/svg+xml would
+// become Name("image#2Fsvg+xml").
+func (e *EmbeddedFile) Subtype(subtype Name) *EmbeddedFile {
+	e.Pair(Name("Subtype"), subtype)
+	return e
+}
+
+// Params is EmbeddedFile::params in pdf-writer src/files.rs.
+//
+// Start writing the /Params dictionary.
+func (e *EmbeddedFile) Params() *EmbeddingParams {
+	return Start[EmbeddingParams](e.Insert(Name("Params")))
+}
+
+// EmbeddingParams is EmbeddingParams in pdf-writer src/files.rs.
+//
+// Writer for an embedded file parameter dictionary.
+//
+// This struct is created by EmbeddedFile.Params.
+type EmbeddingParams struct {
+	*Dict
+}
+
+// start is the macro writer! for EmbeddingParams in pdf-writer
+// src/files.rs.
+func (p *EmbeddingParams) start(obj Obj) {
+	p.Dict = obj.Dict()
+}
+
+// Size is EmbeddingParams::size in pdf-writer src/files.rs.
+//
+// Write the /Size attribute to set the uncompressed file size in bytes.
+func (p *EmbeddingParams) Size(size int32) *EmbeddingParams {
+	p.Pair(Name("Size"), Int(size))
+	return p
+}
+
+// CreationDate is EmbeddingParams::creation_date in pdf-writer
+// src/files.rs.
+//
+// Write the /CreationDate attribute to set the file creation date.
+func (p *EmbeddingParams) CreationDate(date Date) *EmbeddingParams {
+	p.Pair(Name("CreationDate"), date)
+	return p
+}
+
+// ModificationDate is EmbeddingParams::modification_date in pdf-writer
+// src/files.rs.
+//
+// Write the /ModDate attribute to set the file modification date.
+func (p *EmbeddingParams) ModificationDate(date Date) *EmbeddingParams {
+	p.Pair(Name("ModDate"), date)
+	return p
+}
+
+// Checksum is EmbeddingParams::checksum in pdf-writer src/files.rs.
+//
+// Write the /CheckSum attribute to set the file checksum.
+//
+// The checksum shall be a 16-byte MD5 string.
+func (p *EmbeddingParams) Checksum(checksum Str) *EmbeddingParams {
+	p.Pair(Name("CheckSum"), checksum)
+	return p
+}
+
+// EmbeddedFile is Chunk::embedded_file in pdf-writer src/chunk.rs.
+//
+// Start writing an embedded file stream.
+func (c *Chunk) EmbeddedFile(id Ref, bytes []byte) *EmbeddedFile {
+	return startEmbeddedFile(c.Stream(id, bytes))
 }

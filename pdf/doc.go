@@ -30,32 +30,34 @@
 //
 // Phases 14, 15 and 16 of "The PDF writer" in docs/PLAN.md are done. They
 // port the document, the pages, the serializer, the surface, the graphics,
-// the images, the text, the metadata, the outline and the links. These files
-// are ported: geom.rs, num.rs, util.rs, error.rs, data.rs, lib.rs,
-// stream.rs, resource.rs, chunk_container.rs, serialize.rs, document.rs,
-// page.rs, configure/, content.rs, surface.rs, graphics/ without
-// graphics/separation.rs, text/ without the standard fonts,
-// interchange/metadata/mod.rs, interchange/outline.rs, interactive/action.rs,
+// the images, the text, the metadata, the outline and the links. D99 adds
+// the XMP metadata, the custom XMP metadata, the embedded files and the
+// validators of PDF/A. These files are ported: geom.rs, num.rs, util.rs,
+// error.rs, data.rs, lib.rs, stream.rs, resource.rs, chunk_container.rs,
+// serialize.rs, document.rs, page.rs, configure/ without the validator of
+// PDF/UA, content.rs, surface.rs, graphics/ without graphics/separation.rs,
+// text/ without the standard fonts, interchange/metadata/,
+// interchange/embed.rs, interchange/outline.rs, interactive/action.rs,
 // interactive/annotation.rs and interactive/destination.rs.
 //
 // Each file of graphics/ is a file graphics_<name>.go, and the ICC profiles
 // of krilla are in the folder icc. graphics/image/mod.rs and png.rs are
 // graphics_image.go and graphics_image_png.go. graphics_image_decode.go
 // reads the headers of the image files in place of the decoders of
-// upstream. The section Text names the files of text/. metadata.rs,
-// outline.rs, destination.rs, action.rs and annotation.rs are metadata.go,
-// outline.go, destination.go, action.go and annotation.go, without the
-// forms. Document.SetMetadata, Document.SetOutline,
+// upstream. The section Text names the files of text/. metadata/mod.rs,
+// embed.rs, outline.rs, destination.rs, action.rs and annotation.rs are
+// metadata.go, embed.go, outline.go, destination.go, action.go and
+// annotation.go, without the forms. The section XMP metadata names the
+// other files of interchange/metadata/. Document.SetMetadata,
+// Document.EmbedFile, Document.SetOutline,
 // Document.RegisterNamedDestination and Page.AddAnnotation take them.
 //
 // The file lib.rs of upstream holds the documentation of the crate, which is
 // this comment. The file data.rs holds the type Data, a shared slice of
 // bytes. A []byte does that work in Go, so it has no port.
 //
-// The base port leaves out the tags of PDF/UA, the forms, the validators of
-// PDF/A and PDF/UA with their XMP metadata, the embedded files, the
-// separation colors and the pages of other PDF files (D62). krilla writes
-// XMP metadata by default. pdf writes none.
+// pdf leaves out the tags of PDF/UA, the forms, the validator of PDF/UA, the
+// separation colors and the pages of other PDF files (D62, D99).
 //
 // # How the port is built
 //
@@ -100,6 +102,10 @@
 //     - ErrPDFFont for a font that Document.Finish cannot embed, which
 //     krilla returns too. Finish returns it only with
 //     WithSubsetFallback(false) (D80).
+//     - ErrPDFValidation for a document that the validator of
+//     WithArchivalValidator does not allow, and an *XMPError that wraps
+//     ErrPDFXMP for custom XMP metadata that is not valid, which krilla
+//     returns too (D99).
 //  4. The cache of the serializer keys each object with a hash. sipHash
 //     hashes a name of the type, then the value, as sip_hash of upstream
 //     hashes a type_id, then the value. stableHash128 gives the hash of
@@ -137,7 +143,7 @@
 //     maybeDeviceColorSpace of serialize.rs. graphics_icc.go holds
 //     PDFVersion.rgbICC and PDFVersion.greyICC of configure/version.rs. A
 //     unit that needs another method of Validators adds it to validators, in
-//     its own file, with the answer of an empty set of validators.
+//     its own file. configure_validate.go holds the methods of Validators.
 //  4. A surface gives its stream to the code that made it with a function,
 //     as the finish_fn of upstream. The number of marked content IDs of
 //     upstream is for the tags, so the function takes the stream only.
@@ -148,6 +154,29 @@
 // serializeContext.finish and chunkContainer.finish. The annotations of interactive/annotation.rs
 // satisfy the interface annotation of page.go, and Page.AddAnnotation
 // appends them to Page.annotations.
+//
+// # XMP metadata
+//
+// D99 ports the XMP metadata, the custom XMP metadata and the validators of
+// PDF/A, which D62 left out. internal/xmpwriter, the port of the crate
+// xmp-writer, writes the XMP metadata. As krilla does by default, pdf
+// writes it for each document, and WithXMPMetadata(false) turns it off. A
+// validator of PDF/A turns it on. The modules of src/interchange/metadata
+// are metadata.go for mod.rs, and metadata_custom.go,
+// metadata_extension_schema.go, metadata_predefined.go,
+// metadata_relax_ng.go and metadata_xmp.go for custom.rs,
+// extension_schema.rs, predefined.rs, relax_ng.rs and xmp.rs. The module
+// xmp of upstream is public as krilla::metadata::xmp. Its types, such as
+// Namespace, Schema, Property and Value, are in this package with their
+// Rust names. internal/xmlwriter writes the RELAX NG schema of PDF/A-4f and
+// PDF/A-4e.
+//
+// WithArchivalValidator sets a validator of PDF/A, the type Archival of
+// src/configure/validate.rs. The validator of PDF/UA, Accessibility::UA1,
+// is left out, because it requires the tags of PDF/UA, which pdf does not
+// have. For the same reason, a document with ArchivalA1A, ArchivalA2A or
+// ArchivalA3A fails with the validation error MissingTagging. The list of
+// the validation errors of ErrPDFValidation is not public (D99).
 //
 // # Text
 //
@@ -226,9 +255,15 @@
 //     pixmap as an image (D62 item 10).
 //   - A stitching function of more than 256 functions becomes a tree of
 //     stitching functions, because MuPDF 1.28 reads no more (D69).
+//   - NewImageFont makes a font whose glyphs are images that the caller
+//     adds with Font.AddImageGlyph, each a mask or an image with its
+//     advance. DrawGlyphs draws them into Type 3 fonts with their text. A
+//     mask glyph is a shape glyph with d1, which takes the fill of the
+//     text, and an image glyph is a color glyph with d0. The file
+//     pdf/ivy_type3.go holds them (D89).
 //
 // A change to a file of the port for them has a comment that starts with
-// okage: and names D68 or D69. Each one keeps the bytes and the hashes of
+// okage: and names D68, D69 or D89. Each one keeps the bytes and the hashes of
 // every input of krilla, except a stitching function of more than 256
 // functions. MuPDF does not read such a function (D69).
 package pdf

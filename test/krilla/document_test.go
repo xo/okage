@@ -44,9 +44,13 @@ func goScene(s scene) ([]byte, error) {
 		case "no_device_cs":
 			opts = append(opts, pdf.WithNoDeviceCS(flag))
 		case "xmp_metadata":
-			if flag {
-				return nil, errors.New("pdf has no XMP metadata")
+			opts = append(opts, pdf.WithXMPMetadata(flag))
+		case "archival":
+			archival, ok := archivals[v]
+			if !ok {
+				return nil, fmt.Errorf("the validator %v is not known", v)
 			}
+			opts = append(opts, pdf.WithArchivalValidator(archival))
 		case "svg_glyphs":
 			svgGlyphs = flag
 		case "version":
@@ -98,6 +102,13 @@ func goScene(s scene) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// archivals maps the names of the setting "archival" to the validators.
+var archivals = map[any]pdf.Archival{
+	"A1_A": pdf.ArchivalA1A, "A1_B": pdf.ArchivalA1B, "A2_A": pdf.ArchivalA2A, "A2_B": pdf.ArchivalA2B,
+	"A2_U": pdf.ArchivalA2U, "A3_A": pdf.ArchivalA3A, "A3_B": pdf.ArchivalA3B, "A3_U": pdf.ArchivalA3U,
+	"A4": pdf.ArchivalA4, "A4F": pdf.ArchivalA4F, "A4E": pdf.ArchivalA4E,
 }
 
 // goPageSettings makes the page settings of a page of a scene, as

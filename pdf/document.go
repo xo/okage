@@ -32,8 +32,8 @@ type Location uint64
 // finish the page that is open.
 //
 // The methods SetMetadata, SetOutline and RegisterNamedDestination are in
-// metadata.go, outline.go and destination.go. The base port leaves out
-// embed_pdf_pages, set_field_tree, set_tag_tree and embed_file (D62).
+// metadata.go, outline.go and destination.go, and EmbedFile is in embed.go.
+// pdf leaves out embed_pdf_pages, set_field_tree and set_tag_tree (D62).
 type Document struct {
 	sc *serializeContext
 	cc *chunkContainer
@@ -51,6 +51,11 @@ func NewDocument(opts ...Option) *Document {
 	settings := defaultSerializeSettings()
 	for _, opt := range opts {
 		opt(&settings)
+	}
+	if c, err := settings.builder.finish(); err != nil {
+		settings.err = err
+	} else {
+		settings.configuration = c
 	}
 	sc := newSerializeContext(settings)
 	return &Document{

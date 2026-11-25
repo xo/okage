@@ -845,8 +845,11 @@ func normalized(o *pdfObject) any {
 // files. The data of each stream is compared after the reader decodes it.
 // /Length, the filters that the reader decodes and their parameters, and /ID
 // of the trailer can differ (D62). So can the data of a cross-reference
-// stream, which holds offsets. It returns one line for each difference.
+// stream, which holds offsets. The XMP metadata holds the two strings of
+// /ID, so each stream is compared with the strings of /ID of its file
+// replaced (D99). It returns one line for each difference.
 func comparePDF(got, want *pdfFile) []string {
+	gotIDs, wantIDs := fileIDs(got), fileIDs(want)
 	var diffs []string
 	if got.Version != want.Version {
 		diffs = append(diffs, fmt.Sprintf("the header: got version %s, want %s", got.Version, want.Version))
@@ -888,11 +891,38 @@ func comparePDF(got, want *pdfFile) []string {
 			diffs = append(diffs, fmt.Sprintf("%s: a stream does not decode: got %v, want %v", name, g.DecodeErr, w.DecodeErr))
 			continue
 		}
-		if s := firstDiff(g.Data, w.Data); s != "" {
+		if s := firstDiff(withoutIDs(g.Data, gotIDs), withoutIDs(w.Data, wantIDs)); s != "" {
 			diffs = append(diffs, fmt.Sprintf("%s: the data of the stream differs: %s", name, s))
 		}
 	}
 	return diffs
+}
+
+// fileIDs returns the strings of /ID of the trailer of a file, the longest
+// first, so that a string that holds the other is replaced first. A string
+// of fewer than 16 bytes, such as the IDs of the files of TestReader, is
+// left out, so that a short ID does not match data by chance. The IDs of
+// krilla and pdf are hashes in base64, which are longer.
+func fileIDs(f *pdfFile) [][]byte {
+	a, _ := f.Trailer.get("ID").(pdfArray)
+	var ids [][]byte
+	for _, v := range a {
+		if str, ok := v.(pdfString); ok && len(str.Bytes) >= 16 {
+			ids = append(ids, str.Bytes)
+		}
+	}
+	slices.SortFunc(ids, func(x, y []byte) int { return len(y) - len(x) })
+	return ids
+}
+
+// withoutIDs replaces each string of /ID in the data of a stream.
+func withoutIDs(data []byte, ids [][]byte) []byte {
+	for _, id := range ids {
+		if bytes.Contains(data, id) {
+			data = bytes.ReplaceAll(data, id, []byte("<ID>"))
+		}
+	}
+	return data
 }
 
 // withoutID returns a copy of a trailer without /ID, and without the keys of

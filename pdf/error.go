@@ -17,8 +17,9 @@ import (
 // be in the file of its unit: fontError of KrillaError::Font is in
 // text_cid.go, the error of DuplicateNamedDestination is in destination.go,
 // and the errors of KrillaError::Image and SixteenBitImage are in
-// graphics_image.go. KrillaError::StandardFont, and the cases of the tags
-// and of embedded PDF files, are not in the base port (D62).
+// graphics_image.go, and XMPError of KrillaError::Xmp is in metadata_xmp.go.
+// KrillaError::StandardFont, and the cases of the tags and of embedded PDF
+// files, are not in pdf (D62).
 
 // limitError is LimitError in krilla src/error.rs.
 //
@@ -51,16 +52,33 @@ func (e limitError) err() error {
 	}
 }
 
-// validationFailed is KrillaError::Validation of krilla src/error.rs. It
-// wraps ErrPDFValidation with the number of errors, as the Display text of
-// upstream gives it.
-func validationFailed(errors []validationEntry) error {
-	count := len(errors)
+// validationFailedError is KrillaError::Validation of krilla src/error.rs: the
+// validation errors with the validators that raised them. It wraps
+// ErrPDFValidation, and its text gives the number of errors, as the Display
+// text of upstream does. The list of errors is not public (D99).
+type validationFailedError struct {
+	entries []validationEntry
+}
+
+// Error gives the text of ErrPDFValidation with the number of errors.
+func (e *validationFailedError) Error() string {
+	count := len(e.entries)
 	noun := "errors"
 	if count == 1 {
 		noun = "error"
 	}
-	return fmt.Errorf("%w with %d %s", okage.ErrPDFValidation, count, noun)
+	return fmt.Sprintf("%s with %d %s", okage.ErrPDFValidation, count, noun)
+}
+
+// Unwrap returns ErrPDFValidation.
+func (e *validationFailedError) Unwrap() error {
+	return okage.ErrPDFValidation
+}
+
+// validationFailed returns KrillaError::Validation of krilla src/error.rs
+// for the errors.
+func validationFailed(errors []validationEntry) error {
+	return &validationFailedError{entries: errors}
 }
 
 // locationText is write_location of krilla src/error.rs. It gives the text

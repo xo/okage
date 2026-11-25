@@ -224,43 +224,52 @@ func (sc *serializeContext) serializeXYZDestinations(cc *chunkContainer) error {
 	return nil
 }
 
-// serializeNamedDestinations is the part of ChunkContainer::finish in krilla
-// src/chunk_container.rs that writes the name tree of the named
-// destinations into the catalog. The embedded files of the same dictionary
-// /Names are not in the base port (D62).
-func serializeNamedDestinations(catalog *pdfwriter.Catalog, named map[string]namedDestinationEntry, remapper map[pdfwriter.Ref]pdfwriter.Ref) {
-	if len(named) == 0 {
+// serializeNamedDestinations is the part of ChunkContainer::finish in
+// krilla src/chunk_container.rs that writes the name dictionary of the
+// catalog: the named destinations, sorted by their names, and the embedded
+// files, which embeddedFiles writes when writeEmbeddedFiles is true.
+func serializeNamedDestinations(catalog *pdfwriter.Catalog, named map[string]namedDestinationEntry,
+	remapper map[pdfwriter.Ref]pdfwriter.Ref, embeddedFiles func(*pdfwriter.Names), writeEmbeddedFiles bool,
+) {
+	if len(named) == 0 && !writeEmbeddedFiles {
 		return
 	}
 
 	// Cannot use pdf-writer API here because it requires Ref's, while we
 	// write our destinations directly into the array.
 	names := catalog.Names()
-	destNameTree := names.Destinations()
-	destNameEntries := destNameTree.Names()
 
-	// "The Names entries in the leaf (or root) nodes shall contain the
-	// tree's keys and their associated values, arranged in key-value pairs
-	// and shall be sorted lexically in ascending order by key. Shorter keys
-	// shall appear before longer ones beginning with the same byte sequence.
-	// Any encoding of the keys may be used as long as it is
-	// self-consistent; keys shall be compared for equality on a simple
-	// byte-by-byte basis."
-	sorted := make([]string, 0, len(named))
-	for name := range named {
-		sorted = append(sorted, name)
+	if len(named) != 0 {
+		destNameTree := names.Destinations()
+		destNameEntries := destNameTree.Names()
+
+		// "The Names entries in the leaf (or root) nodes shall contain the
+		// tree's keys and their associated values, arranged in key-value
+		// pairs and shall be sorted lexically in ascending order by key.
+		// Shorter keys shall appear before longer ones beginning with the
+		// same byte sequence. Any encoding of the keys may be used as long
+		// as it is self-consistent; keys shall be compared for equality on
+		// a simple byte-by-byte basis."
+		sorted := make([]string, 0, len(named))
+		for name := range named {
+			sorted = append(sorted, name)
+		}
+		// Note that named destinations are guaranteed to be unique, hence
+		// just comparing by the name is enough. Go compares two strings
+		// byte by byte, as upstream does.
+		slices.Sort(sorted)
+
+		for _, name := range sorted {
+			destNameEntries.Insert(pdfwriter.Str(name), remapper[named[name].ref])
+		}
+
+		destNameEntries.Finish()
+		destNameTree.Finish()
 	}
-	// Note that named destinations are guaranteed to be unique, hence just
-	// comparing by the name is enough. Go compares two strings byte by
-	// byte, as upstream does.
-	slices.Sort(sorted)
 
-	for _, name := range sorted {
-		destNameEntries.Insert(pdfwriter.Str(name), remapper[named[name].ref])
+	if writeEmbeddedFiles {
+		embeddedFiles(names)
 	}
-
-	destNameEntries.Finish()
-	destNameTree.Finish()
 	names.Finish()
 }
 

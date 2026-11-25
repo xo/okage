@@ -26,6 +26,9 @@ type interchangeSpec struct {
 	// Outline calls SetOutline when it is not nil, even when it is empty.
 	Outline           *[]nodeSpec `json:"outline,omitempty"`
 	NamedDestinations []namedSpec `json:"named_destinations,omitempty"`
+	// EmbeddedFiles holds the files that the scene embeds after its pages,
+	// before its metadata (D99).
+	EmbeddedFiles []embedSpec `json:"embedded_files,omitempty"`
 }
 
 type metadataSpec struct {
@@ -44,6 +47,10 @@ type metadataSpec struct {
 	DisplayDocTitle *bool       `json:"display_doc_title,omitempty"`
 	Trapped         *bool       `json:"trapped,omitempty"`
 	CustomFields    [][2]string `json:"custom_fields,omitempty"`
+	// CustomXMPProperties and CustomXMPSchemas hold the custom XMP
+	// metadata (D99).
+	CustomXMPProperties []propertySpec `json:"custom_xmp_properties,omitempty"`
+	CustomXMPSchemas    []schemaSpec   `json:"custom_xmp_schemas,omitempty"`
 }
 
 // dateSpec is a DateTime. A nil field is not set.
@@ -311,12 +318,15 @@ func goMetadata(s metadataSpec) (pdf.Metadata, error) {
 	for _, f := range s.CustomFields {
 		m, _ = m.CustomField(f[0], f[1])
 	}
-	return m, nil
+	return goCustomXMP(m, s)
 }
 
-// goFinishDocument sets the metadata and the outline of a scene, as
-// finish_document of the oracle does.
+// goFinishDocument embeds the files, then sets the metadata and the outline
+// of a scene, as finish_document of the oracle does.
 func goFinishDocument(d *pdf.Document, s interchangeSpec) error {
+	if err := goEmbeddedFiles(d, s.EmbeddedFiles); err != nil {
+		return err
+	}
 	if s.Metadata != nil {
 		m, err := goMetadata(*s.Metadata)
 		if err != nil {
@@ -656,7 +666,7 @@ func TestInterchangeGoErrors(t *testing.T) {
 func randomInterchange(r *rand.Rand) scene {
 	versions := []string{"1.4", "1.5", "1.6", "1.7", "2.0"}
 	settings := map[string]any{
-		"xmp_metadata": false, "pretty": r.IntN(2) == 0, "ascii_compatible": r.IntN(2) == 0,
+		"xmp_metadata": r.IntN(2) == 0, "pretty": r.IntN(2) == 0, "ascii_compatible": r.IntN(2) == 0,
 		"compress_content_streams": r.IntN(4) == 0, "version": versions[r.IntN(len(versions))],
 	}
 	nPages := 1 + r.IntN(4)

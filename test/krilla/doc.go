@@ -155,8 +155,10 @@
 //
 // S holds the fields of SerializeSettings: "pretty", "ascii_compatible",
 // "compress_content_streams", "no_device_cs", "xmp_metadata" and
-// "enable_tagging" are booleans, and "version" is "1.4", "1.5", "1.6", "1.7"
-// or "2.0". Each field is optional. A missing field takes the value of
+// "enable_tagging" are booleans, "version" is "1.4", "1.5", "1.6", "1.7"
+// or "2.0", and "archival" is the name of a case of Archival, such as
+// "A3_B", for ConfigurationBuilder::with_archival_validator (D99). Each
+// field is optional. A missing field takes the value of
 // SerializeSettings::default. The settings draw the glyphs of SVG fonts with
 // render_svg_glyph of krilla-svg, as the tests of krilla do, unless
 // "svg_glyphs" is false. The Go side draws them with pdfsvg.RenderGlyph.
@@ -297,6 +299,36 @@
 // value] for Metadata::custom_field, in their order. The oracle leaves out
 // a field that krilla does not accept.
 //
+// The metadata has two more fields for the custom XMP metadata (D99).
+// "custom_xmp_properties" is a list of properties P for
+// Metadata::custom_xmp_property, and "custom_xmp_schemas" a list of
+// schemas for Metadata::custom_xmp_schema, each in their order:
+//
+//	P:      {"ns": ["prefix", "uri"], "name": "n", "value": V}
+//	schema: {"ns": ["prefix", "uri"], "name": "n", "description": "d", "properties": [D, ...]}
+//	D:      {"name": "n", "type": T, "description": "d", "internal": false, "required": false}
+//
+// A value V is one of {"text": "s"}, {"uri": "s"}, {"bool": true}, {"int":
+// 1}, {"real": 1.5}, {"rational": [16, 9]}, {"date": date}, {"seq": [V,
+// ...]}, {"bag": [V, ...]}, {"alt": [V, ...]}, {"lang": [[lang or null,
+// "text"], ...]} and {"struct": [P, ...]}. A type T is one of {"simple":
+// "Text"}, {"open": ["Text", ["a", ...]]}, {"closed": ["Text", ["a",
+// ...]]}, {"seq": T}, {"bag": T}, {"alt": T}, "lang", {"predefined":
+// "Dimensions"} and {"struct": {"ns": [...], "name": "n", "description":
+// "d", "fields": [D, ...]}}. A simple type is the name of a case of
+// SimpleType as SimpleType::as_str gives it, such as "GUID", and a
+// predefined structure the name of a case of PredefinedStruct.
+//
+// A scene has the field "embedded_files", a list of files for
+// Document::embed_file, which the oracle embeds after the pages and before
+// the metadata (D99):
+//
+//	{"path": "a.txt", "mime": "text/plain", "description": "d",
+//	 "kind": "Supplement", "data": "<base64>", "date": date, "compress": false}
+//
+// "kind" is the name of a case of AssociationKind. "mime", "description",
+// "date" and "compress" are optional.
+//
 // A node N of the outline is {"text": "Heading", "dest": {"page": 0, "x":
 // 0, "y": 0}, "open": false, "children": [N, ...]}. The destination is an
 // XyzDestination.
@@ -328,7 +360,11 @@
 // also for an instance of a variable font (D84). The tests of
 // interchange_test.go do the same for the metadata, the outlines and the
 // links, for fixed and for random scenes, and compare the errors where
-// krilla panics. The test of fallback_test.go draws text with a font whose
+// krilla panics. The tests of xmp_test.go do the same for the XMP metadata,
+// the custom XMP metadata, the embedded files and the validators of PDF/A,
+// and compare the errors of the custom XMP metadata and of the validators
+// (D99). The XMP metadata holds the strings of /ID, so comparePDF replaces
+// them in the data of each stream. The test of fallback_test.go draws text with a font whose
 // table post subsetter refuses, for the fallback of D80. krilla returns an
 // error for it. pdf returns the error with the fallback off. With the
 // fallback on, the reader reads the file of pdf, MuPDF and Poppler render

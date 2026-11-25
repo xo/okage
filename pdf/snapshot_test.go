@@ -16,10 +16,9 @@ import (
 )
 
 // settings1 is settings_1 of krilla tests/src/main.rs, the settings of the
-// snapshots: pretty, ASCII and no compression. The base port has no XMP
-// metadata, which settings_1 turns off.
+// snapshots: pretty, ASCII, no compression and no XMP metadata.
 func settings1() []Option {
-	return []Option{WithPretty(true), WithASCIICompatible(true), WithCompression(false)}
+	return []Option{WithPretty(true), WithASCIICompatible(true), WithCompression(false), WithXMPMetadata(false)}
 }
 
 // checkSnapshot is check_snapshot of krilla tests/src/main.rs. It compares

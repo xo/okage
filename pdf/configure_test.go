@@ -14,11 +14,45 @@ import (
 	"github.com/xo/okage/internal/pdfwriter"
 )
 
-// The tests invalid_combination_1 to invalid_combination_3,
+// The tests invalid_combination_2, invalid_combination_3,
 // multi_validator_pdf_a3b_pdf_ua1 and multi_validator_pdfa2a_pdfua1 of krilla
-// src/configure/mod.rs need the validators, which the base port leaves out
-// (D62). The tests of src/configure/version.rs need the ICC profiles of the
+// src/configure/mod.rs need the validator of PDF/UA, which pdf does not have
+// (D99). The tests of src/configure/version.rs need the ICC profiles of the
 // images.
+
+// TestInvalidCombination1 is the test invalid_combination_1 of krilla
+// src/configure/mod.rs.
+func TestInvalidCombination1(t *testing.T) {
+	// A1_B max is PDF 1.4; explicit PDF 1.7 is out of range.
+	_, err := configurationBuilder{}.withVersion(PDF17).withArchivalValidator(ArchivalA1B).finish()
+	if !errors.Is(err, okage.ErrPDFVersion) {
+		t.Errorf("got %v, want ErrPDFVersion", err)
+	}
+}
+
+// TestArchivalVersions checks that a validator without a version gives the
+// highest version that the validator allows, as ConfigurationBuilder::finish
+// of krilla src/configure/mod.rs does.
+func TestArchivalVersions(t *testing.T) {
+	for a := ArchivalA1A; a <= ArchivalA4E; a++ {
+		config, err := configurationBuilder{}.withArchivalValidator(a).finish()
+		if err != nil {
+			t.Fatalf("%s: %v", a, err)
+		}
+		if config.version != a.max() {
+			t.Errorf("%s gives %s, want %s", a, config.version, a.max())
+		}
+		if got, ok := config.validators.archival(); !ok || got != a {
+			t.Errorf("%s gives the validator %s", a, got)
+		}
+	}
+	if _, err := (configurationBuilder{}).withArchivalValidator(ArchivalA4E + 1).finish(); !errors.Is(err, okage.ErrPDFVersion) {
+		t.Errorf("an unknown validator gives %v", err)
+	}
+	if got := ArchivalA2U.String(); got != "PDF/A-2u" {
+		t.Errorf("ArchivalA2U is %q", got)
+	}
+}
 
 // TestEmptyValidators is the test empty_validators of krilla
 // src/configure/mod.rs.
@@ -103,7 +137,7 @@ func TestPDFVersion(t *testing.T) {
 // Validators of upstream does.
 func TestValidators(t *testing.T) {
 	var v validators
-	for k := validationTooLongString; k <= validationRequiresNewerPDFVersion; k++ {
+	for k := validationTooLongString; k <= validationUnsupportedXMPValueType; k++ {
 		if _, ok := v.prohibits(validationError{kind: k}); ok {
 			t.Errorf("%s is prohibited", k)
 		}
@@ -111,7 +145,7 @@ func TestValidators(t *testing.T) {
 			t.Errorf("the kind %d has no name", k)
 		}
 	}
-	if (validationRequiresNewerPDFVersion + 1).String() != "ValidationError(?)" {
+	if (validationUnsupportedXMPValueType + 1).String() != "ValidationError(?)" {
 		t.Error("an unknown kind has a name")
 	}
 	if v.requiresNoDeviceCS() || v.requiresTagging() || v.requiresBinaryHeader() || v.hasAccessibility() {

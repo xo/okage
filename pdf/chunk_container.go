@@ -6,7 +6,10 @@
 package pdf
 
 import (
+	"slices"
+
 	"github.com/xo/okage/internal/pdfwriter"
+	"github.com/xo/okage/internal/xmpwriter"
 )
 
 // refChunk is the Option<(Ref, Chunk)> of the fields of NonStreamChunks in
@@ -26,15 +29,18 @@ type chunkResult struct {
 }
 
 // chunkContainer is ChunkContainer in krilla src/chunk_container.rs. The
-// fields of upstream for the forms, the tags, the embedded files and the
-// embedded PDF files are not in the base port (D62).
+// fields of upstream for the forms, the tags and the embedded PDF files are
+// not in pdf (D62).
 //
 // Collects all chunks that we create while building the PDF and then writes
 // them out in an orderly manner.
 type chunkContainer struct {
 	streams streamChunks
 	// metadata is the metadata of Document.SetMetadata. nil is None.
-	metadata  *Metadata
+	metadata *Metadata
+	// xmpSchema is the reference of the embedded file that holds the RELAX
+	// NG schema of the XMP metadata. nil is None.
+	xmpSchema *pdfwriter.Ref
 	nonStream nonStreamChunks
 }
 
@@ -45,6 +51,7 @@ type streamChunks struct {
 	shadingFunctions []*pdfwriter.Chunk
 	patterns         []*pdfwriter.Chunk
 	pages            []*pdfwriter.Chunk
+	embeddedFiles    []*pdfwriter.Chunk
 	iccProfiles      []*pdfwriter.Chunk
 	xObjects         []*pdfwriter.Chunk
 	images           []chunkResult
@@ -52,14 +59,15 @@ type streamChunks struct {
 
 // nonStreamChunks is NonStreamChunks in krilla src/chunk_container.rs.
 type nonStreamChunks struct {
-	pageTree      *refChunk
-	outline       *refChunk
-	pageLabelTree *refChunk
-	pageLabels    *pdfwriter.Chunk
-	annotations   *pdfwriter.Chunk
-	colorSpaces   *pdfwriter.Chunk
-	destinations  *pdfwriter.Chunk
-	extGStates    *pdfwriter.Chunk
+	pageTree            *refChunk
+	outline             *refChunk
+	pageLabelTree       *refChunk
+	destinationProfiles *refChunk
+	pageLabels          *pdfwriter.Chunk
+	annotations         *pdfwriter.Chunk
+	colorSpaces         *pdfwriter.Chunk
+	destinations        *pdfwriter.Chunk
+	extGStates          *pdfwriter.Chunk
 	// resourceDictionaries holds the resource dictionaries of the pages and
 	// the streams.
 	resourceDictionaries *pdfwriter.Chunk
@@ -68,6 +76,7 @@ type nonStreamChunks struct {
 	shadingFunctions     *pdfwriter.Chunk
 	patterns             *pdfwriter.Chunk
 	pages                *pdfwriter.Chunk
+	embeddedFiles        *pdfwriter.Chunk
 }
 
 // newChunkContainer is ChunkContainer::new in krilla src/chunk_container.rs.
@@ -85,6 +94,7 @@ func newChunkContainer(sc *serializeContext) *chunkContainer {
 			shadingFunctions:     sc.newChunk(),
 			patterns:             sc.newChunk(),
 			pages:                sc.newChunk(),
+			embeddedFiles:        sc.newChunk(),
 		},
 	}
 }
@@ -93,9 +103,8 @@ func newChunkContainer(sc *serializeContext) *chunkContainer {
 // numbers the objects of the chunks in the order of the file, writes the
 // chunks, and writes the catalog.
 //
-// The port leaves out the parts that the base port does not have: the XMP
-// metadata, the forms, the output intents, the tags, the embedded files and
-// the associated files (D62).
+// The port leaves out the parts that pdf does not have: the forms and the
+// tags (D62).
 func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 	remappedRef := pdfwriter.NewRef(1)
 	remapper := map[pdfwriter.Ref]pdfwriter.Ref{}
@@ -160,12 +169,48 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 		h.bytes(pdf.AsBytes())
 	})
 	documentID := metadataDocumentID(sc, c.metadata, instanceID)
-	finishMetadata(sc, c.metadata)
 
+	xmp := xmpwriter.New()
+	if c.metadata != nil {
+		if err := c.metadata.serializeXMPMetadata(xmp, sc, instanceID); err != nil {
+			return nil, err
+		}
+	}
+
+	settings := sc.serializeSettings()
+	validators := settings.validators()
+	var extensionSchemas []Schema
+	if c.metadata != nil {
+		extensionSchemas = c.metadata.extensionSchemas(validators)
+	}
+	validators.writeXMP(xmp, extensionSchemas)
+
+	xmp.NumPages(uint32(len(sc.pageInfos)))
+	xmp.Format("application/pdf")
+	xmp.InstanceID(instanceID)
+	xmp.DocumentID(documentID)
 	pdf.SetFileID([]byte(documentID), []byte(instanceID))
+
+	xmp.RenditionClass(xmpwriter.RenditionClassProof)
+	settings.pdfVersion().writeXMP(xmp)
 
 	namedDestinations := sc.globalObjects.namedDestinations
 	sc.globalObjects.namedDestinations = nil
+	embeddedFiles := sc.globalObjects.embeddedFiles
+	sc.globalObjects.embeddedFiles = nil
+
+	var metaRef pdfwriter.Ref
+	if settings.xmpMetadata {
+		metaRef = remappedRef.Bump()
+		xmpBuf := xmp.Finish("")
+		stream := pdf.Stream(metaRef, []byte(xmpBuf))
+		stream.Pair(pdfwriter.Name("Type"), pdfwriter.Name("Metadata")).
+			Pair(pdfwriter.Name("Subtype"), pdfwriter.Name("XML"))
+		if c.xmpSchema != nil {
+			stream.Insert(pdfwriter.Name("AF")).Array().Item(remapper[*c.xmpSchema])
+		}
+		stream.Finish()
+	}
 
 	catalogRef := remappedRef.Bump()
 	catalog := pdf.Catalog(catalogRef)
@@ -175,8 +220,16 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 	}
 	catalog.Pages(remapper[pageTree.ref])
 
+	if metaRef != (pdfwriter.Ref{}) {
+		catalog.Metadata(metaRef)
+	}
+
 	if pl := c.nonStream.pageLabelTree; pl != nil {
 		catalog.Pair(pdfwriter.Name("PageLabels"), remapper[pl.ref])
+	}
+
+	if oi := c.nonStream.destinationProfiles; oi != nil {
+		catalog.Pair(pdfwriter.Name("OutputIntents"), remapper[oi.ref])
 	}
 
 	if c.metadata != nil && c.metadata.language != nil {
@@ -191,7 +244,33 @@ func (c *chunkContainer) finish(sc *serializeContext) (*pdfwriter.Pdf, error) {
 		catalog.Outlines(remapper[ol.ref])
 	}
 
-	serializeNamedDestinations(catalog, namedDestinations, remapper)
+	writeEmbeddedFiles := c.nonStream.embeddedFiles.Len() != 0 ||
+		validators.requiresEmbeddedFilesWhenEmpty()
+	names := make([]string, 0, len(embeddedFiles))
+	for name := range embeddedFiles {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	serializeNamedDestinations(catalog, namedDestinations, remapper, func(n *pdfwriter.Names) {
+		if !writeEmbeddedFiles {
+			return
+		}
+		tree := n.EmbeddedFiles()
+		entries := tree.Names()
+		for _, name := range names {
+			entries.Insert(pdfwriter.Str(name), remapper[embeddedFiles[name]])
+		}
+		entries.Finish()
+		tree.Finish()
+	}, writeEmbeddedFiles)
+
+	if len(embeddedFiles) != 0 && settings.supportsAssociatedFiles() {
+		associatedFiles := catalog.Insert(pdfwriter.Name("AF")).Array()
+		for _, name := range names {
+			associatedFiles.Item(remapper[embeddedFiles[name]])
+		}
+		associatedFiles.Finish()
+	}
 
 	catalog.Finish()
 
@@ -213,6 +292,7 @@ func (s *streamChunks) visit(f func(*pdfwriter.Chunk)) error {
 	visitChunks(s.shadingFunctions, f)
 	visitChunks(s.patterns, f)
 	visitChunks(s.pages, f)
+	visitChunks(s.embeddedFiles, f)
 	visitChunks(s.iccProfiles, f)
 	visitChunks(s.xObjects, f)
 	for _, image := range s.images {
@@ -229,6 +309,7 @@ func (n *nonStreamChunks) visit(f func(*pdfwriter.Chunk)) {
 	n.pageTree.visit(f)
 	n.outline.visit(f)
 	n.pageLabelTree.visit(f)
+	n.destinationProfiles.visit(f)
 	f(n.pageLabels)
 	f(n.annotations)
 	f(n.colorSpaces)
@@ -240,6 +321,7 @@ func (n *nonStreamChunks) visit(f func(*pdfwriter.Chunk)) {
 	f(n.shadingFunctions)
 	f(n.patterns)
 	f(n.pages)
+	f(n.embeddedFiles)
 }
 
 // visit is Visit for Option<(Ref, Chunk)> in krilla src/chunk_container.rs.

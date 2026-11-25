@@ -8,22 +8,35 @@ package pdf
 import (
 	"bytes"
 	"errors"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/xo/okage"
 )
 
 // The tests of this file port the snapshot tests of krilla
-// tests/src/metadata.rs and the test of src/interchange/metadata/mod.rs. A
-// snapshot with XMP metadata is compared without its XMP stream, with
-// checkSnapshotWithoutXMP, because the base port writes no XMP metadata
-// (D62). The snapshot metadata_full_with_xmp is metadata_full with XMP
-// metadata, and metadata_version_id_pdf_a1 needs the validator of PDF/A-1,
-// so they are left out.
+// tests/src/metadata.rs without custom XMP metadata, and the test
+// custom_field_returns_none_for_ignored_names of
+// src/interchange/metadata/mod.rs. metadata_custom_test.go ports the tests
+// with custom XMP metadata (D99).
+
+// settings5 is settings_5 of krilla tests/src/main.rs: settings_1 with XMP
+// metadata.
+func settings5() []Option {
+	return append(settings1(), WithXMPMetadata(true))
+}
+
+// settingsArchival is settings_1 of krilla tests/src/main.rs with a
+// validator of PDF/A: settings_19 is ArchivalA1B, settings_10 is
+// ArchivalA3B, settings_26 is ArchivalA4 and settings_27 is ArchivalA4F.
+func settingsArchival(a Archival) []Option {
+	return append(settings1(), WithArchivalValidator(a))
+}
+
+// settings30 is settings_30 of krilla tests/src/main.rs: settings_1 with
+// PDF 2.0 and XMP metadata.
+func settings30() []Option {
+	return append(settings1(), WithPDFVersion(PDF20), WithXMPMetadata(true))
+}
 
 // datetime is datetime of krilla tests/src/metadata.rs.
 func datetime() DateTime {
@@ -97,24 +110,41 @@ func TestMetadataCustomFields(t *testing.T) {
 	checkSnapshot(t, "metadata_custom_fields", d)
 }
 
+// TestMetadataFullWithXMP is the snapshot test metadata_full_with_xmp of
+// krilla tests/src/metadata.rs, with settings_5.
+func TestMetadataFullWithXMP(t *testing.T) {
+	d := NewDocument(settings5()...)
+	metadataImpl(d)
+	checkSnapshot(t, "metadata_full_with_xmp", d)
+}
+
 // TestMetadataVersionID is the snapshot test metadata_version_id of krilla
 // tests/src/metadata.rs, with settings_5. The version ID goes only into the
 // XMP metadata, so the file has no information dictionary.
 func TestMetadataVersionID(t *testing.T) {
-	d := NewDocument(settings1()...)
+	d := NewDocument(settings5()...)
 	d.SetMetadata(NewMetadata().VersionID("1.2.3"))
-	checkSnapshotWithoutXMP(t, "metadata_version_id", d)
+	checkSnapshot(t, "metadata_version_id", d)
+}
+
+// TestMetadataVersionIDPDFA1 is the snapshot test
+// metadata_version_id_pdf_a1 of krilla tests/src/metadata.rs, with
+// settings_19.
+func TestMetadataVersionIDPDFA1(t *testing.T) {
+	d := NewDocument(settingsArchival(ArchivalA1B)...)
+	d.SetMetadata(NewMetadata().CreationDate(datetime()).VersionID("1.2.3"))
+	checkSnapshotXMP(t, "metadata_version_id_pdf_a1", d)
 }
 
 // TestMetadataPDF20Author is the snapshot test metadata_pdf_20_author of
 // krilla tests/src/metadata.rs, with settings_30. PDF 2.0 writes the dates
 // and not the authors into the information dictionary.
 func TestMetadataPDF20Author(t *testing.T) {
-	d := NewDocument(append(settings1(), WithPDFVersion(PDF20))...)
+	d := NewDocument(settings30()...)
 	d.SetMetadata(NewMetadata().
 		Authors([]string{"John Doe", "Max Mustermann"}).
 		CreationDate(datetime()))
-	checkSnapshotWithoutXMP(t, "metadata_pdf_20_author", d)
+	checkSnapshot(t, "metadata_pdf_20_author", d)
 }
 
 // TestCustomFieldReturnsNoneForIgnoredNames is the test
@@ -241,63 +271,6 @@ func TestMetadataInfo(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-// snapshotObject matches an object of a file of the snapshots, xmpRef the
-// key of the catalog that names the XMP metadata, and pdfName a name.
-var (
-	snapshotObject = regexp.MustCompile(`(?s)\d+ 0 obj\n.*?\nendobj\n`)
-	xmpRef         = regexp.MustCompile(`\n  /Metadata \d+ 0 R`)
-	pdfName        = regexp.MustCompile(`/[A-Za-z]+`)
-)
-
-// objectsWithoutXMP returns the objects of a file of the snapshots, without
-// their numbers, without the object of the XMP metadata and without the key
-// of the catalog that names it.
-func objectsWithoutXMP(file []byte) []string {
-	var objects []string
-	for _, o := range snapshotObject.FindAllString(string(file), -1) {
-		if strings.Contains(o, "/Type /Metadata") {
-			continue
-		}
-		o = o[strings.Index(o, "\n")+1:]
-		objects = append(objects, xmpRef.ReplaceAllString(o, ""))
-	}
-	return objects
-}
-
-// checkSnapshotWithoutXMP compares the objects of the file with the objects
-// of the snapshot of krilla, for a snapshot with XMP metadata. The object of
-// the XMP metadata of the snapshot shifts the numbers of the objects after
-// it, so the objects are compared in their order, without their numbers.
-// The trailers must have the same keys. The cross-reference table and the
-// ID, which hashes the XMP metadata, are not compared.
-func checkSnapshotWithoutXMP(t *testing.T, name string, d *Document) {
-	t.Helper()
-	var buf bytes.Buffer
-	if err := d.Finish(&buf); err != nil {
-		t.Fatal(err)
-	}
-	want, err := os.ReadFile(filepath.Join("testdata", "snapshots", name+".txt"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, wantObjects := objectsWithoutXMP(buf.Bytes()), objectsWithoutXMP(want)
-	if len(got) != len(wantObjects) {
-		t.Fatalf("%s has %d objects without XMP metadata, want %d:\n%s", name, len(got), len(wantObjects), buf.Bytes())
-	}
-	for i := range got {
-		if got[i] != wantObjects[i] {
-			t.Errorf("%s differs in the object %d:\ngot  %q\nwant %q", name, i+1, got[i], wantObjects[i])
-		}
-	}
-	trailerKeys := func(b []byte) string {
-		trailer := b[bytes.LastIndex(b, []byte("trailer")):]
-		return strings.Join(pdfName.FindAllString(string(trailer), -1), " ")
-	}
-	if g, w := trailerKeys(buf.Bytes()), trailerKeys(want); g != w {
-		t.Errorf("%s has the trailer keys %s, want %s", name, g, w)
 	}
 }
 

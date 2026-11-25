@@ -100,6 +100,7 @@ func goOptions(settings map[string]any) ([]pdf.Option, error) {
 		case "no_device_cs":
 			opts = append(opts, pdf.WithNoDeviceCS(flag))
 		case "xmp_metadata":
+			opts = append(opts, pdf.WithXMPMetadata(flag))
 		case "version":
 			versions := map[any]pdf.PDFVersion{
 				"1.4": pdf.PDF14, "1.5": pdf.PDF15, "1.6": pdf.PDF16, "1.7": pdf.PDF17, "2.0": pdf.PDF20,

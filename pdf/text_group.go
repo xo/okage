@@ -343,9 +343,3 @@ func checkTextSpanProp(g *Glyph, text string, contextColor ColorRGB, fc *fontCon
 		pdfFont.setCodepoints(fg.glyph, glyphText, g.Location)
 	}
 }
-
-// requiresCodepointMappings is Validators::requires_codepoint_mappings in
-// krilla src/configure/validate.rs. No validator requires them.
-func (validators) requiresCodepointMappings() bool {
-	return false
-}

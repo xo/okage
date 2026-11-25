@@ -527,10 +527,15 @@ const (
 // the panics of krilla that a caller can cause (D62). The text after
 // "writing pdf: " is the Display text of upstream, where upstream has one.
 const (
-	// ErrPDFValidation is KrillaError::Validation of krilla. A validator
-	// found faults in the document. The base port has no validator (D62), so
-	// pdf does not return it yet.
+	// ErrPDFValidation is KrillaError::Validation of krilla. The validator
+	// of pdf.WithArchivalValidator found faults in the document (D99). The
+	// error gives the number of faults.
 	ErrPDFValidation Error = "writing pdf: validation failed"
+
+	// ErrPDFXMP is KrillaError::Xmp of krilla. The custom XMP metadata of
+	// the document is not valid (D99). Document.Finish returns a
+	// *pdf.XMPError that wraps it, with the case of XmpError and its name.
+	ErrPDFXMP Error = "writing pdf: invalid custom XMP metadata"
 
 	// ErrPDFTooLargeFloat is KrillaError::Limit with LimitError::TooLargeFloat
 	// of krilla. A float is larger than PDF 1.4 allows.
