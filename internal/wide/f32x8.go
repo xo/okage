@@ -310,44 +310,49 @@ func sqrtF32x8(v F32x8) F32x8 {
 // exp2. A lane that is 0 or 1 does not change. A NaN lane is first replaced
 // with the NaN of powfNaNBits (D34).
 func powfF32x8(v F32x8, exp float32) F32x8 {
-	v = powfNaN(v)
-	x := v
-	// We assume sign(x) is positive so we can use vectorized i32->f32
-	// conversions.
-	e := mulF32x8(toF32x8I32x8(toI32x8BitcastF32x8(x)), SplatF32x8(1.0/(1<<23)))
-	m := toF32x8BitcastU32x8(orU32x8(andU32x8(toU32x8BitcastF32x8(x), SplatU32x8(0x007fffff)), SplatU32x8(0x3f000000)))
-	log2X := subF32x8(e, SplatF32x8(124.225514990))
-	log2X = subF32x8(log2X, mulF32x8(SplatF32x8(1.498030302), m))
-	log2X = subF32x8(log2X, divF32x8(SplatF32x8(1.725879990), addF32x8(SplatF32x8(0.3520887068), m)))
-	x = mulF32x8(log2X, SplatF32x8(exp))
-	f := subF32x8(x, floorF32x8(x))
-	a := addF32x8(x, SplatF32x8(121.274057500))
-	a = subF32x8(a, mulF32x8(f, SplatF32x8(1.490129070)))
-	a = addF32x8(a, divF32x8(SplatF32x8(27.728023300), subF32x8(SplatF32x8(4.84252568), f)))
-	a = mulF32x8(a, SplatF32x8(1<<23))
-	infBits := SplatF32x8(float32(math.Float32bits(float32(math.Inf(1)))))
-	x = toF32x8BitcastI32x8(roundIntF32x8(minF32x8(maxF32x8(a, SplatF32x8(0.0)), infBits)))
-	skip := orF32x8(cmpEqF32x8(v, SplatF32x8(0.0)), cmpEqF32x8(v, SplatF32x8(1.0)))
-	return blendF32x8(skip, v, x)
+	// Port (D33, D96): one loop on the lanes, with LanePowf.
+	var r F32x8
+	for i := range r {
+		r[i] = LanePowf(v[i], exp)
+	}
+	return r
 }
+
+// LanePowf is one lane of the Powf method of F32x8. A stage that works on
+// one lane at a time calls it in place of Powf (D33). It does the
+// operations of the chain of methods in powfChainF32x8 in the same order,
+// so each lane gets the same bits.
+func LanePowf(v, exp float32) float32 {
+	if v != v {
+		v = math.Float32frombits(powfNaNBits)
+	}
+	bits := math.Float32bits(v)
+	e := float32(float32(int32(bits)) * (1.0 / (1 << 23)))
+	m := math.Float32frombits(bits&0x007fffff | 0x3f000000)
+	log2X := e - 124.225514990
+	log2X -= float32(1.498030302 * m)
+	log2X -= 1.725879990 / (0.3520887068 + m)
+	x := float32(log2X * exp)
+	f := x - floorLaneF32(x)
+	a := x + 121.274057500
+	a -= float32(f * 1.490129070)
+	a += 27.728023300 / (4.84252568 - f)
+	a = float32(a * (1 << 23))
+	x = math.Float32frombits(uint32(LaneRoundInt(fasterMin(fasterMax(a, 0.0), powfInf))))
+	if v == 0 || v == 1 {
+		return v
+	}
+	return x
+}
+
+// powfInf is the bits of +Inf as a float32, the bound of the result of
+// Powf before its bits become a float.
+const powfInf = float32(0x7f800000)
 
 // powfNaNBits is the bits of the NaN that Powf reads in place of any NaN
 // lane (D34). It is the NaN that x86 makes for an invalid operation, such as
 // 0/0, which is what the oracle of upstream gives on amd64.
 const powfNaNBits = 0xffc00000
-
-// powfNaN replaces each NaN lane of v with the NaN of powfNaNBits (D34).
-// Powf reads the bits of each lane, so the result for a NaN depends on its
-// payload, which differs between architectures, and between orders of the
-// operands of an addition. It ports no upstream function.
-func powfNaN(v F32x8) F32x8 {
-	for i, x := range v {
-		if x != x {
-			v[i] = math.Float32frombits(powfNaNBits)
-		}
-	}
-	return v
-}
 
 // addF32x8 is the scalar code of F32x8.Add.
 //

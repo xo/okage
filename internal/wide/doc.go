@@ -18,6 +18,11 @@
 // code from the plain functions and its own table. Its package comment lists
 // the files that it writes. Run "go generate ./internal/wide" after a change
 // to a plain function or to that table.
+//
+// RuneRanges is not a vector type of tiny-skia. It finds the first rune of a
+// text that is outside a set of ranges, for the text code of typesetting
+// (D92). widegen does not write its files. "The scan of runes" in
+// docs/SIMD.md describes them.
 package wide
 
 //go:generate go run ./internal/widegen
