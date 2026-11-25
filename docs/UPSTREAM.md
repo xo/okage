@@ -279,6 +279,40 @@ commits of HarfBuzz after 873dbc1e that change this code: 5a1c0c4660,
 `typesetting.tsv` holds only the commits of go-text, so these commits of
 HarfBuzz are not in it.
 
+The table of the USE shaper, `typesetting/harfbuzz/ot_shape_use_table.go`,
+is generated. The command `usegen` in `typesetting/harfbuzz/internal`
+ports `gen-use-table.py` of HarfBuzz 15.2.0 and writes the table (D101).
+It reads the files of the Unicode Character Database in
+`upstream/unicode-ucd`, a folder that git ignores (D11). The header of
+`src/hb-ot-shaper-use-table.hh` of HarfBuzz gives the version of each file.
+For HarfBuzz 15.2.0, `DerivedCoreProperties.txt` has the version 17.0.0,
+and the other files the version 18.0.0. Run these commands in the root of
+the repository to fetch the files. The folder must be new and empty:
+
+```bash
+mkdir -p upstream/unicode-ucd/ms-use
+cd upstream/unicode-ucd
+for f in IndicSyllabicCategory IndicPositionalCategory ArabicShaping \
+  UnicodeData Blocks Scripts; do
+  curl -sSfL -o "$f.txt" "https://www.unicode.org/Public/18.0.0/ucd/$f.txt"
+done
+curl -sSfL -o DerivedCoreProperties.txt \
+  https://www.unicode.org/Public/17.0.0/ucd/DerivedCoreProperties.txt
+for f in IndicSyllabicCategory-Additional.txt \
+  IndicPositionalCategory-Additional.txt COPYING; do
+  gh api "repos/harfbuzz/harfbuzz/contents/src/ms-use/$f?ref=15.2.0" \
+    -H 'Accept: application/vnd.github.raw' > "ms-use/$f"
+done
+```
+
+Make sure that the first two lines of each file are the same as the
+header of `hb-ot-shaper-use-table.hh` at the same tag. Then run
+`go generate ./typesetting/harfbuzz`. `TestUSETableGenerator` compares the
+table with the files, and skips when the folder is not there. When okage
+follows a new version of HarfBuzz, fetch the files of the versions that
+its header lists, and port the changes of `gen-use-table.py` to
+`typesetting/harfbuzz/internal/usetable`.
+
 ### krilla
 
 The port is in the packages `pdf` and `pdfsvg` (D62).

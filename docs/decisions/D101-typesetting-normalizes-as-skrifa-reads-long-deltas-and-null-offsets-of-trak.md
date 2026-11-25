@@ -4,9 +4,11 @@ Status: Decided, amends D84 and D100.
 
 On 2026-11-25 the maintainers chose four changes to `typesetting`, the
 copy of go-text in okage (D52). Each change of the copy has a comment that
-starts with `okage:` and names this decision. Three changes are done. The
-fourth, the generator of the USE table, stopped, because the Unicode data
-files that it reads are not on the disk.
+starts with `okage:` and names this decision. The four changes are done.
+The fourth, the generator of the USE table, first stopped, because the
+Unicode data files that it reads were not on the disk. Later on
+2026-11-25, the maintainers allowed the download of these files from
+unicode.org, and the generator was done.
 
 ## 1. The coordinates of a variable font
 
@@ -105,15 +107,83 @@ holds only the files of Microsoft for USE, `IndicSyllabicCategory-Additional.txt
 and `IndicPositionalCategory-Additional.txt`, and old copies of other
 projects at Unicode versions that do not match. The generators of
 `typesetting` read no Unicode data files either. They build from the
-generated tables. So this item stopped, and `useCategory` keeps the
-mapping of D97. The maintainers must choose a source for the Unicode data
-files. `docs/BACKLOG.md` holds the item.
+generated tables. So this item stopped, and `useCategory` kept the
+mapping of D97. The next section records how the item was done.
+
+## 5. The generator of the USE table, on 2026-11-25
+
+On 2026-11-25 the maintainers allowed the download of the files of the
+Unicode Character Database that the generator reads, from unicode.org
+only. The header of `hb-ot-shaper-use-table.hh` of HarfBuzz at the tag
+15.2.0 lists the files and their versions. The folder
+`upstream/unicode-ucd`, which git ignores (D11), holds them:
+
+| File | Version | Date in the header |
+| --- | --- | --- |
+| `IndicSyllabicCategory.txt` | 18.0.0 | 2026-07-02, 18:58:37 GMT |
+| `IndicPositionalCategory.txt` | 18.0.0 | 2026-06-24, 13:39:21 GMT |
+| `ArabicShaping.txt` | 18.0.0 | 2026-08-18, 19:02:41 GMT |
+| `DerivedCoreProperties.txt` | 17.0.0 | 2025-07-30, 23:55:08 GMT |
+| `UnicodeData.txt` | 18.0.0 | none, because the file has no header |
+| `Blocks.txt` | 18.0.0 | 2026-07-08 |
+| `Scripts.txt` | 18.0.0 | 2026-06-29, 15:25:26 GMT |
+
+The first two lines of each downloaded file are the same as the header
+that HarfBuzz lists. HarfBuzz lists no header for `UnicodeData.txt`, so
+it comes from `Public/18.0.0/ucd`, as the other files of version 18.0.0.
+`gen-use-table.py` also reads the two files of Microsoft
+`IndicSyllabicCategory-Additional.txt` and
+`IndicPositionalCategory-Additional.txt`. They come from `src/ms-use` of
+HarfBuzz at the tag 15.2.0, read with `gh api`. They are in
+`upstream/unicode-ucd/ms-use`, with their license `COPYING`. Their headers
+are the same as the headers that HarfBuzz lists. The copies of
+typesetting-utils in the module cache are older, so the generator does not
+use them. "typesetting" in `docs/UPSTREAM.md` gives the commands that fetch
+the files.
+
+The generator has three parts in `typesetting/harfbuzz/internal`:
+
+- `usetable` is the port of `gen-use-table.py` of HarfBuzz 15.2.0. It
+  reads the nine files and gives the USE category of each code point. The
+  generator of go-text, `writer_use.go` of typesetting-utils, follows an
+  older version of the script. It has no category SPACE, and it has rules
+  for positions that HarfBuzz 15.2.0 does not have. So the port follows
+  the script of HarfBuzz.
+- `packtab` is a copy of the package `packtab` of typesetting-utils. It
+  packs the table into the arrays of `ot_shape_use_table.go`, as for the
+  table of go-text. Its one change makes the name of a function without
+  the deprecated `strings.Title`.
+- `usegen` is the command that writes `ot_shape_use_table.go`. The command
+  `go generate ./typesetting/harfbuzz` runs it. It looks for
+  `upstream/unicode-ucd` in the working folder and in each folder above
+  it. The flag `-ucd` gives another folder.
+
+The generated table has the format of the table of go-text, with the
+headers of the input files in its first comment. It differs from the old
+table on 16 code points only: the space separators U+0020, U+1680, U+2000
+to U+200A, U+202F, U+205F and U+3000 have the category SPACE in place of
+OTHER. These are the 16 characters that D97 mapped by hand. `useCategory`
+is removed, and the USE shaper calls `useLookup`, as in go-text. The
+no-break space U+00A0 is a consonant placeholder, so it keeps the
+category GB.
+
+`TestUSETableGenerator` of `typesetting/harfbuzz` compares the category of
+each code point of the table with the category that `usetable` gives. It
+skips when `upstream/unicode-ucd` is not there. `TestUSECategoryValues`
+makes sure that the values of the categories of `usetable` are the
+constants of the syllable machine. `TestUSESpaceSeparators` of
+`test/harfbuzz` shapes Balinese text with other space separators, with a
+no-break space, and with marks after a space. It gives the glyphs, the
+clusters and the flags of HarfBuzz 15.2.0. With the old table, it fails,
+and `TestUSEWordEnds` of D97 fails too.
 
 ## The checks
 
 The tests of `svg` against resvg, the PDF oracle of krilla and subsetter
 in `test/krilla`, and all of `test/harfbuzz` with `-harfbuzz.all` pass
-against HarfBuzz 15.2.0.
+against HarfBuzz 15.2.0. With the generated USE table, all of
+`test/harfbuzz` with `-harfbuzz.all` passes again, and so do the tests of
+the USE shaper in `typesetting/harfbuzz`.
 
 A delta of an item variation store now takes 4 bytes in place of 2.
 `BenchmarkEndToEndOnce` of `test/textbench`, with the code before and
@@ -128,3 +198,15 @@ milliseconds are 1.34 and 1.35 for english, 8.46 and 8.38 for arabic, and
   shares.
 - D100: the first two differences of "What stays different" are closed.
   The third, the id of a paint for the decycler, stays.
+
+## 6. An int of 32 bits
+
+v0.22.0 failed the test of CI with an int of 32 bits, `GOARCH=386`. In
+both walks of `internal/colr`, `varDeltas` computed the count of the deltas
+as `int(math.MaxUint32-varIndexBase)`. With an int of 32 bits, that value
+is negative for a small base, so the walk read no delta, and a varied
+paint kept its default value. The count is now a `uint64` that is clamped
+to the number of deltas. The copy of `packtab` compared an `int` with
+2^32-1, which does not build with an int of 32 bits, and now compares an
+`int64`. The list of checks of `AGENTS.md` now runs the tests with
+`GOARCH=386`, as CI does.
