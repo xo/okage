@@ -152,7 +152,9 @@ func (inst *colrInstance) varDeltas(varIndexBase uint32, n int) []float32 {
 		varIndexBase == noVariationDeltas {
 		return deltas
 	}
-	actualCount := min(int(math.MaxUint32-varIndexBase), n)
+	// Port: the difference is a uint64, because an int of 32 bits cannot
+	// hold it, and a negative count then read no delta (D101).
+	actualCount := int(min(uint64(math.MaxUint32-varIndexBase), uint64(max(n, 0))))
 	varStore := inst.colr.ItemVariationStore
 	for i := range actualCount {
 		varIndex := varIndexBase + uint32(i)

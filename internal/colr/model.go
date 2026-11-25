@@ -108,7 +108,9 @@ func (inst *modelInstance) varDeltas(varIndexBase uint32, n int) []f48Dot16 {
 		return deltas
 	}
 	// Avoid overflow if var_index_base + N > u32::MAX
-	actualCount := min(int(math.MaxUint32-varIndexBase), n)
+	// Port: the difference is a uint64, because an int of 32 bits cannot
+	// hold it, and a negative count then read no delta (D101).
+	actualCount := int(min(uint64(math.MaxUint32-varIndexBase), uint64(max(n, 0))))
 	for i := range actualCount {
 		varIndex := varIndexBase + uint32(i)
 		var deltaIx tables.VariationStoreIndex
