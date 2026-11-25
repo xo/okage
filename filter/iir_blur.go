@@ -3,11 +3,11 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-package svg
+package filter
 
 import "math"
 
-// This file ports resvg src/filter/iir_blur.rs.
+// This file ports resvg src/filter/iir_blur.rs. It moved from svg for D88.
 //
 // An IIR blur.
 //
@@ -41,7 +41,7 @@ type blurData struct {
 	steps  int
 }
 
-// applyFilterIIRBlur is apply in resvg src/filter/iir_blur.rs. It applies an
+// applyIIRBlur is apply in resvg src/filter/iir_blur.rs. It applies an
 // IIR blur.
 //
 // Input image pixels should have a **premultiplied alpha**.
@@ -51,7 +51,7 @@ type blurData struct {
 // # Allocations
 //
 // This method will allocate a 2x `src` buffer.
-func applyFilterIIRBlur(sigmaX, sigmaY float64, src imageRefMut) {
+func applyIIRBlur(sigmaX, sigmaY float64, src imageRefMut) {
 	bufSize := int(src.width * src.height)
 	buf := make([]float64, bufSize)
 
@@ -177,4 +177,16 @@ func powi64(a float64, b int32) float64 {
 		return 1 / r
 	}
 	return r
+}
+
+// asU8F64 is the Rust cast "f as u8" for an f64. It truncates toward zero and
+// saturates, and NaN gives 0.
+func asU8F64(f float64) uint8 {
+	switch {
+	case f != f || f <= 0:
+		return 0
+	case f >= 255:
+		return 255
+	}
+	return uint8(f)
 }

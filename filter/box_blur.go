@@ -3,11 +3,7 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-// Package boxblur is the box blur of the filters of resvg. svg draws its
-// blurs and shadows with it, and lottie draws the Gaussian blur and the drop
-// shadow of a layer with it (D79). The package is internal, so that both
-// share one port.
-package boxblur
+package filter
 
 import (
 	"math"
@@ -15,8 +11,8 @@ import (
 	"github.com/xo/okage/internal/wide"
 )
 
-// This file ports resvg src/filter/box_blur.rs. It moved from svg, so that
-// lottie blurs with it too (D79).
+// This file ports resvg src/filter/box_blur.rs. It moved from svg to
+// internal/boxblur for D79, and from there to this package for D88.
 //
 // Based on https://github.com/fschutt/fastblur
 //
@@ -26,44 +22,6 @@ import (
 
 // steps is STEPS in resvg src/filter/box_blur.rs.
 const steps = 5
-
-// rgba8 is the type RGBA8 of the crate rgb: a pixel of 4 bytes.
-type rgba8 struct {
-	r, g, b, a uint8
-}
-
-// rgba8At returns the pixel at index i of data, which holds RGBA bytes. It is
-// data[i] of a Rust slice of RGBA8. It ports no upstream function.
-func rgba8At(data []byte, i int) rgba8 {
-	p := data[i*4 : i*4+4 : i*4+4]
-	return rgba8{r: p[0], g: p[1], b: p[2], a: p[3]}
-}
-
-// setRGBA8At sets the pixel at index i of data to p. It is data[i] = p of a
-// Rust slice of RGBA8. It ports no upstream function.
-func setRGBA8At(data []byte, i int, p rgba8) {
-	d := data[i*4 : i*4+4 : i*4+4]
-	d[0], d[1], d[2], d[3] = p.r, p.g, p.b, p.a
-}
-
-// imageRefMut is ImageRefMut in resvg src/filter/mod.rs: the RGBA bytes of
-// an image and its size.
-type imageRefMut struct {
-	data   []byte
-	width  uint32
-	height uint32
-}
-
-// newImageRefMut is ImageRefMut::new in resvg src/filter/mod.rs.
-func newImageRefMut(width, height uint32, data []byte) imageRefMut {
-	return imageRefMut{data: data, width: width, height: height}
-}
-
-// Apply blurs the image of width by height pixels whose RGBA bytes are in
-// data, in place.
-func Apply(sigmaX, sigmaY float64, data []byte, width, height uint32) {
-	apply(sigmaX, sigmaY, newImageRefMut(width, height, data))
-}
 
 // apply is apply in resvg src/filter/box_blur.rs. It applies a box blur.
 //
@@ -155,7 +113,12 @@ func boxBlurVert(blurRadius int, backbuf imageRefMut, frontbuf imageRefMut) {
 		colEnd := i + width*(height-1) // inclusive
 		ti := i
 		li := ti
-		ri := ti + blurRadius*width
+		// Port: upstream starts ri at ti + blur_radius*width. Where the
+		// radius is larger than the height, ri is past the column either
+		// way, and getBottom reads 0 there. The minimum keeps the product
+		// below the length of the data, so that it cannot overflow an int
+		// of 32 bits. The bytes are the same.
+		ri := ti + min(blurRadius, height)*width
 
 		fv := rgba8{}
 		lv := rgba8{}

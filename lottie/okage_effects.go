@@ -8,13 +8,14 @@ package lottie
 // This file ports no file of velato. It draws the Gaussian blur and the drop
 // shadow of a layer in the PixmapSink, as ThorVG draws them in
 // src/renderer/cpu_engine/tvgSwPostEffect.cpp, with the box blur of the
-// filters of svg (D79).
+// package filter (D79, D88).
 
 import (
 	"math"
 
 	"github.com/xo/okage"
-	"github.com/xo/okage/internal/boxblur"
+	"github.com/xo/okage/filter"
+	"github.com/xo/okage/path"
 )
 
 // defaultQuality is the quality of the blurs and the shadows of ThorVG when
@@ -99,7 +100,7 @@ func (s *PixmapSink) applyFilter(l *sinkLayer) pixRect {
 		// repeats the edge of the canvas.
 		outer := pixRect{l.dirty.x0 - blurPad(sx), l.dirty.y0 - blurPad(sy), l.dirty.x1 + blurPad(sx), l.dirty.y1 + blurPad(sy)}
 		buf := copyRegionClamped(l.pixmap, outer)
-		boxblur.Apply(sx, sy, buf, uint32(outer.x1-outer.x0), uint32(outer.y1-outer.y0))
+		blurBox(buf, outer, sx, sy)
 		region := outer.intersect(s.canvas())
 		pasteRegionFrom(l.pixmap, region, buf, outer)
 		return region
@@ -108,6 +109,18 @@ func (s *PixmapSink) applyFilter(l *sinkLayer) pixRect {
 	}
 	applyColorFilter(l.pixmap, f, l.dirty)
 	return l.dirty
+}
+
+// blurBox blurs buf, which holds the RGBA bytes of the pixels of r, with
+// the box blur of the package filter (D79, D88).
+func blurBox(buf []byte, r pixRect, sx, sy float64) {
+	size, ok := path.IntSizeFromWH(uint32(r.x1-r.x0), uint32(r.y1-r.y0))
+	if !ok {
+		return
+	}
+	if p, ok := okage.PixmapFromVec(buf, size); ok {
+		filter.Blur(p, sx, sy, filter.WithBoxBlur())
+	}
 }
 
 // blurPad returns the pixels that the box blur of svg spreads a pixel by,
@@ -142,6 +155,25 @@ func copyRegionClamped(p *okage.Pixmap, r pixRect) []byte {
 		}
 		for x = max(x, pw); x < r.x1; x++ {
 			copy(out[(x-r.x0)*4:(x-r.x0+1)*4], row[(pw-1)*4:pw*4])
+		}
+	}
+	return buf
+}
+
+// copyAlphaClamped returns the alpha of the pixels of p in r, one byte for
+// each pixel, where r can reach outside p. A pixel outside p repeats the
+// nearest pixel at the edge of p, as copyRegionClamped does.
+func copyAlphaClamped(p *okage.Pixmap, r pixRect) []byte {
+	w := r.x1 - r.x0
+	pw, ph := int(p.Width()), int(p.Height())
+	data := p.Data()
+	stride := pw * 4
+	buf := make([]byte, w*(r.y1-r.y0))
+	for y := r.y0; y < r.y1; y++ {
+		row := data[min(max(y, 0), ph-1)*stride:]
+		out := buf[(y-r.y0)*w : (y-r.y0+1)*w]
+		for x := range out {
+			out[x] = row[min(max(r.x0+x, 0), pw-1)*4+3]
 		}
 	}
 	return buf
@@ -190,12 +222,17 @@ func (s *PixmapSink) dropShadow(l *sinkLayer, scale float64) pixRect {
 	blurred := pixRect{l.dirty.x0 - pad, l.dirty.y0 - pad, l.dirty.x1 + pad, l.dirty.y1 + pad}
 	inside := blurred.intersect(s.canvas())
 	bw, bh := blurred.x1-blurred.x0, blurred.y1-blurred.y0
-	alpha := copyRegionClamped(l.pixmap, blurred)
-	for i := 0; i < len(alpha); i += 4 {
-		alpha[i], alpha[i+1], alpha[i+2] = 0, 0, 0
-	}
+	alpha := copyAlphaClamped(l.pixmap, blurred)
 	if extends > 0 {
-		boxblur.Apply(sigma, sigma, alpha, uint32(bw), uint32(bh))
+		// The blur of one channel gives the same bytes as the alpha of a
+		// blur of RGBA, with a quarter of the memory (D88).
+		size, ok := path.IntSizeFromWH(uint32(bw), uint32(bh))
+		if !ok {
+			return l.dirty
+		}
+		if m, ok := okage.MaskFromVec(alpha, size); ok {
+			filter.BlurMask(m, sigma, sigma, filter.WithBoxBlur())
+		}
 	}
 	moved := pixRect{inside.x0 + ox, inside.y0 + oy, inside.x1 + ox, inside.y1 + oy}
 	region := l.dirty.union(moved).intersect(s.canvas())
@@ -207,7 +244,7 @@ func (s *PixmapSink) dropShadow(l *sinkLayer, scale float64) pixRect {
 			px := x - ox
 			sa := 0
 			if px >= inside.x0 && py >= inside.y0 && px < inside.x1 && py < inside.y1 {
-				sa = div255(int(alpha[((py-blurred.y0)*bw+px-blurred.x0)*4+3]) * a8)
+				sa = div255(int(alpha[(py-blurred.y0)*bw+px-blurred.x0]) * a8)
 			}
 			if sa == 0 {
 				continue

@@ -504,3 +504,14 @@ func calcDiffuseAlpha(_, _, _ uint8) uint8 {
 func calcSpecularAlpha(r, g, b uint8) uint8 {
 	return max(max(r, g), b)
 }
+
+// radsPerDeg is the constant of f32::to_radians in Rust: consts::PI / 180.0,
+// computed in f32. A Go conversion of a constant rounds it, so
+// float32(math.Pi) is the f32 PI of Rust, and the division of two typed
+// constants rounds once, as the f32 division does.
+const radsPerDeg = float32(pi32) / 180.0
+
+// toRadians is f32::to_radians.
+func toRadians(x float32) float32 {
+	return x * radsPerDeg
+}

@@ -11,6 +11,7 @@ import (
 	"slices"
 
 	"github.com/xo/okage"
+	"github.com/xo/okage/filter"
 	"github.com/xo/okage/internal/wide"
 	"github.com/xo/okage/path"
 )
@@ -21,9 +22,14 @@ import (
 // take the name of the module as a suffix (D10): apply becomes applyFilter,
 // f32_bound becomes f32BoundFilter, the enum Error becomes errorFilter and
 // the struct Image becomes imageFilter. The function apply of each submodule
-// takes the path of its module, such as applyFilterBoxBlur for
-// filter/box_blur.rs, because a name such as applyColorMatrix is already the
-// port of apply_color_matrix of this module.
+// takes the path of its module, such as applyFilterMorphology for
+// filter/morphology.rs, because a name such as applyMorphology is already the
+// port of apply_morphology of this module.
+//
+// The submodules box_blur.rs, iir_blur.rs, color_matrix.rs and
+// component_transfer.rs are in the package filter, so that a caller can use
+// them alone (D88). This module calls filter.Blur, filter.ApplyColorMatrix
+// and filter.ApplyComponentTransfer for them.
 //
 // The type RGBA8 of the crate rgb is rgba8. Upstream views the bytes of a
 // pixmap as a slice of RGBA8 with bytemuck. Go cannot do that without the
@@ -745,12 +751,10 @@ func applyDropShadow(
 	}
 	shadowPixmap := inputPixmap.Clone()
 
-	if stdDx, stdDy, useBoxBlur, ok := resolveStdDev(fe.StdDevX().Get(), fe.StdDevY().Get(), ts); ok {
-		if useBoxBlur {
-			applyFilterBoxBlur(stdDx, stdDy, asImageRefMut(shadowPixmap))
-		} else {
-			applyFilterIIRBlur(stdDx, stdDy, asImageRefMut(shadowPixmap))
-		}
+	if stdDx, stdDy, _, ok := resolveStdDev(fe.StdDevX().Get(), fe.StdDevY().Get(), ts); ok {
+		// Port: filter.Blur resolves the sigmas again, with the same result,
+		// and takes the box blur or the IIR blur as upstream does (D88).
+		filter.Blur(shadowPixmap, stdDx, stdDy)
 	}
 
 	// flood
@@ -803,7 +807,7 @@ func applyBlur(
 	ts Transform,
 	input imageFilter,
 ) (imageFilter, error) {
-	stdDx, stdDy, useBoxBlur, ok := resolveStdDev(fe.StdDevX().Get(), fe.StdDevY().Get(), ts)
+	stdDx, stdDy, _, ok := resolveStdDev(fe.StdDevX().Get(), fe.StdDevY().Get(), ts)
 	if !ok {
 		return input, nil
 	}
@@ -817,11 +821,9 @@ func applyBlur(
 		return imageFilter{}, err
 	}
 
-	if useBoxBlur {
-		applyFilterBoxBlur(stdDx, stdDy, asImageRefMut(pixmap))
-	} else {
-		applyFilterIIRBlur(stdDx, stdDy, asImageRefMut(pixmap))
-	}
+	// Port: filter.Blur resolves the sigmas again, with the same result, and
+	// takes the box blur or the IIR blur as upstream does (D88).
+	filter.Blur(pixmap, stdDx, stdDy)
 
 	return imageFilterFromImage(pixmap, cs), nil
 }
@@ -1140,9 +1142,16 @@ func applyComponentTransfer(
 		return imageFilter{}, err
 	}
 
-	demultiplyAlpha(pixmap.DataMut())
-	applyFilterComponentTransfer(fe, asImageRefMut(pixmap))
-	multiplyAlpha(pixmap.DataMut())
+	// Port: filter.ApplyComponentTransfer demultiplies the pixels, applies
+	// the functions and multiplies the pixels again, as upstream does here
+	// (D88).
+	filter.ApplyComponentTransfer(
+		pixmap,
+		transferFunction(fe.FuncR()),
+		transferFunction(fe.FuncG()),
+		transferFunction(fe.FuncB()),
+		transferFunction(fe.FuncA()),
+	)
 
 	return imageFilterFromImage(pixmap, cs), nil
 }
@@ -1162,11 +1171,45 @@ func applyColorMatrix(
 		return imageFilter{}, err
 	}
 
-	demultiplyAlpha(pixmap.DataMut())
-	applyFilterColorMatrix(fe.Kind(), asImageRefMut(pixmap))
-	multiplyAlpha(pixmap.DataMut())
+	// Port: filter.ApplyColorMatrix demultiplies the pixels, applies the
+	// matrix and multiplies the pixels again, as upstream does here (D88).
+	filter.ApplyColorMatrix(pixmap, colorMatrix(fe.Kind()))
 
 	return imageFilterFromImage(pixmap, cs), nil
+}
+
+// colorMatrix returns the matrix of the package filter for the kind of a
+// feColorMatrix. It ports no upstream function (D88).
+func colorMatrix(kind ColorMatrixKindFilter) filter.ColorMatrix {
+	switch k := kind.(type) {
+	case ColorMatrixKindFilterMatrix:
+		var m [20]float32
+		copy(m[:], k)
+		return filter.NewColorMatrix(m)
+	case ColorMatrixKindFilterSaturate:
+		return filter.SaturateMatrix(PositiveF32(k).Get())
+	case ColorMatrixKindFilterHueRotate:
+		return filter.HueRotateMatrix(float32(k))
+	case ColorMatrixKindFilterLuminanceToAlpha:
+		return filter.LuminanceToAlphaMatrix()
+	}
+	return filter.ColorMatrix{}
+}
+
+// transferFunction returns the transfer function of the package filter for
+// a function of a feComponentTransfer. It ports no upstream function (D88).
+func transferFunction(fn TransferFunctionFilter) filter.TransferFunction {
+	switch f := fn.(type) {
+	case TransferFunctionFilterTable:
+		return filter.TransferTable(f)
+	case TransferFunctionFilterDiscrete:
+		return filter.TransferDiscrete(f)
+	case TransferFunctionFilterLinear:
+		return filter.TransferLinear(f.Slope, f.Intercept)
+	case TransferFunctionFilterGamma:
+		return filter.TransferGamma(f.Amplitude, f.Exponent, f.Offset)
+	}
+	return filter.TransferFunction{}
 }
 
 // applyConvolveMatrix is apply_convolve_matrix in resvg src/filter/mod.rs.
@@ -1437,7 +1480,7 @@ func applyToCanvas(
 // If the last flag is set, then a box blur should be used. Or IIR otherwise.
 //
 // Port: the last result is false where upstream returns None.
-func resolveStdDev(stdDx, stdDy float32, ts Transform) (float64, float64, bool, bool) {
+func resolveStdDev(stdDx, stdDy float32, ts Transform) (float64, float64, bool, bool) { //nolint:unparam // the result of upstream is kept, and filter.Blur makes the same choice
 	stdDx, stdDy, ok := scaleCoordinates(stdDx, stdDy, ts)
 	if !ok {
 		return 0, 0, false, false
