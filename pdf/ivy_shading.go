@@ -184,7 +184,7 @@ func (b *contentBuilder) writeMesh(m MeshGradient, bounds Rect, sc *serializeCon
 			stream:          meshMaskStream(sc, cc, m.Transform, opacities),
 			maskType:        MaskTypeLuminosity,
 			customBBox:      &bounds,
-			groupColorSpace: groupColorSpaceRGB,
+			groupColorSpace: groupColorSpaceLuma,
 		}
 		state := newExtGState().mask(mask, sc, cc)
 		b.usesMask = true
@@ -418,7 +418,7 @@ func (s *Surface) drawMeshFill(p *Path) bool {
 		stream:          meshMaskStream(s.sc, s.cc, m.Transform, opacities),
 		maskType:        MaskTypeLuminosity,
 		customBBox:      &bbox,
-		groupColorSpace: groupColorSpaceRGB,
+		groupColorSpace: groupColorSpaceLuma,
 	})
 	fill := *s.fill
 	fill.Paint = opaque

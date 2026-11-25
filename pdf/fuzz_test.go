@@ -196,6 +196,41 @@ func (r *fuzzReader) stencil() *image.Alpha {
 	return m
 }
 
+// imageFontGlyphs reads an image font of D89 with at most 3 glyphs, each a
+// stencil or an image, and draws a run of at most 4 of its glyphs, with IDs
+// that the font can lack.
+func (r *fuzzReader) imageFontGlyphs(s *Surface) {
+	f, err := NewImageFont(r.coord())
+	if err != nil {
+		return
+	}
+	for range r.u8() % 4 {
+		g := ImageGlyph{Advance: r.coord(), Transform: r.transform()}
+		switch r.u8() % 3 {
+		case 0:
+			g.Mask = r.stencil()
+		case 1:
+			src := image.NewGray(image.Rect(0, 0, 1+int(r.u8()%3), 1+int(r.u8()%3)))
+			for i := range src.Pix {
+				src.Pix[i] = r.u8()
+			}
+			g.Image, _ = ImageFromImage(src, false)
+		}
+		_, _ = f.AddImageGlyph(g)
+	}
+	text := r.text()
+	glyphs := make([]Glyph, r.u8()%5)
+	for i := range glyphs {
+		glyphs[i] = Glyph{
+			GlyphID:   GlyphID(r.u8() % 5),
+			TextRange: TextRange{Start: int(r.u8()) % (len(text) + 1), End: len(text)},
+			XAdvance:  r.coord(),
+			XOffset:   r.coord(),
+		}
+	}
+	s.DrawGlyphs(r.point(), glyphs, f, text, r.coord(), r.u8()%4 == 0)
+}
+
 // mask reads a mask whose stream draws its own calls, with a backdrop and a
 // transfer function or not.
 func (r *fuzzReader) mask(s *Surface, depth int) *Mask {
@@ -260,7 +295,7 @@ func (r *fuzzReader) path() *Path {
 // the conversion of a shader of okage.
 func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 	for range r.u8() % 32 {
-		switch r.u8() % 18 {
+		switch r.u8() % 19 {
 		case 0:
 			if r.u8()%4 == 0 {
 				s.SetFill(nil)
@@ -334,6 +369,8 @@ func fuzzSurface(r *fuzzReader, s *Surface, depth int) {
 			if p, o, ok := s.PaintFromShader(r.shader()); ok {
 				s.SetFill(&Fill{Paint: p, Opacity: o, Rule: FillRule(r.u8() % 2)})
 			}
+		case 16:
+			r.imageFontGlyphs(s)
 		default:
 			s.Pop()
 		}

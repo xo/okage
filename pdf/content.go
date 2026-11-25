@@ -521,6 +521,11 @@ func (b *contentBuilder) encodeConsecutiveGlyphRun(
 	for i := range glyphs {
 		glyph := &glyphs[i]
 		name, _ := pdfFont.font().postscriptName()
+		// okage: the glyph 0 of an image font is a glyph of the caller,
+		// not .notdef (D89).
+		if pdfFont.font().img != nil {
+			break
+		}
 		if glyph.GlyphID == 0 || name == "LastResort" {
 			sc.registerValidationError(validationError{
 				kind:     validationContainsNotDefGlyph,

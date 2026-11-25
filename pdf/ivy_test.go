@@ -263,12 +263,14 @@ func TestMeshGradient(t *testing.T) {
 	}
 
 	// A fill with an opacity draws in a group with a soft mask of the
-	// opacities, in gray.
+	// opacities, in gray. The group of the mask is a gray transparency
+	// group, as krilla writes the mask of a gradient since 63233fb4 (D89).
 	file, err = draw(MeshGradient{Triangles: meshTriangles(NormalizedF32(0.5)), Transform: path.IdentityTransform()}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantMatch(t, file, `/SMask \d+ 0 R`, `/S /Luminosity`, `/ColorSpace /DeviceGray`, `/Decode \[10 90 10 90 0 1\]`)
+	wantMatch(t, file, `/SMask \d+ 0 R`, `/S /Luminosity`, `/ColorSpace /DeviceGray`, `/Decode \[10 90 10 90 0 1\]`,
+		`/S /Transparency\s+/CS /DeviceGray`)
 	if n := strings.Count(file, "/ShadingType 4"); n != 2 {
 		t.Errorf("the file has %d shadings, want 2", n)
 	}
@@ -277,7 +279,7 @@ func TestMeshGradient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantMatch(t, file, `/SMask \d+ 0 R`, `/ColorSpace /DeviceGray`)
+	wantMatch(t, file, `/SMask \d+ 0 R`, `/ColorSpace /DeviceGray`, `/S /Transparency\s+/CS /DeviceGray`)
 
 	// The faults of a mesh.
 	bad := meshTriangles(NormalizedF32One)

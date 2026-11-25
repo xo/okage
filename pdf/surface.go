@@ -252,12 +252,23 @@ func (s *Surface) outlineGlyphs(glyphs []Glyph, contextColor ColorRGB, start Poi
 // fallback, text layouting, etc.
 func (s *Surface) DrawGlyphs(start Point, glyphs []Glyph, font *Font, text string, fontSize float32, outlined bool) {
 	contextColor := s.contextColor()
+	// okage: a glyph of an image font does not take the context color, so
+	// one code of its Type 3 font serves each color of the text (D89).
+	if font.img != nil {
+		contextColor = ColorRGB{}
+	}
 	if outlined {
 		s.outlineGlyphs(glyphs, contextColor, start, font, fontSize)
 		return
 	}
 	if err := CheckGlyphs(glyphs, text); err != nil {
 		s.sc.setError(err)
+		return
+	}
+	// okage: stroked text of an image font is filled, with the paint of
+	// the fill, or of the stroke without a fill (D89).
+	if font.img != nil {
+		s.drawImageFontGlyphs(start, glyphs, font, text, fontSize)
 		return
 	}
 	switch {
@@ -331,6 +342,11 @@ func isUTF8Continuation(b byte) bool {
 // If you need more advanced control over how your text looks, you can use
 // the method DrawGlyphs.
 func (s *Surface) DrawText(start Point, font *Font, fontSize float32, text string, outlined bool, direction TextDirection) {
+	// okage: an image font has no character map to shape with (D89).
+	if font.img != nil {
+		s.sc.setError(fmt.Errorf("%w: DrawText cannot shape the text of an image font", okage.ErrPDFInvalidFont))
+		return
+	}
 	glyphs := naiveShape(text, font, direction)
 
 	s.DrawGlyphs(start, glyphs, font, text, fontSize, outlined)

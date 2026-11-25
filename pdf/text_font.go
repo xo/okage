@@ -112,6 +112,10 @@ type Font struct {
 	strikesOnce   sync.Once
 	strikesFormat bitmapFormat
 	strikes       []bitmapStrike
+
+	// okage: img holds the glyphs of a font of NewImageFont, which has no
+	// font file. It is nil for a font of NewFont (D89).
+	img *imageFont
 }
 
 // NewFont is Font::new and Font::new_variable in krilla src/text/font.rs.
@@ -188,6 +192,10 @@ func fontLoader(data []byte, index uint32) (*ot.Loader, bool) {
 
 // table returns the bytes of a table of the font, or nil.
 func (f *Font) table(tag string) []byte {
+	// okage: an image font has no tables (D89).
+	if f.ld == nil {
+		return nil
+	}
 	b, err := f.ld.RawTable(ot.MustNewTag(tag))
 	if err != nil {
 		return nil
@@ -244,6 +252,12 @@ func (f *Font) descent() float32 {
 
 // numGlyphs is Font::num_glyphs in krilla src/text/font.rs.
 func (f *Font) numGlyphs() uint32 {
+	// okage: an image font grows until Document.Finish (D89).
+	if f.img != nil {
+		f.img.mu.Lock()
+		defer f.img.mu.Unlock()
+		return uint32(len(f.img.glyphs))
+	}
 	return f.info.numGlyphs
 }
 
@@ -261,11 +275,19 @@ func (f *Font) italicAngle() float32 {
 //
 // The units per em of the font.
 func (f *Font) UnitsPerEm() float32 {
+	// okage: the units per em of an image font are a float32 (D89).
+	if f.img != nil {
+		return f.img.unitsPerEm
+	}
 	return float32(f.info.unitsPerEm)
 }
 
 // bbox is Font::bbox in krilla src/text/font.rs.
 func (f *Font) bbox() Rect {
+	// okage: the bbox of an image font grows with its glyphs (D89).
+	if f.img != nil {
+		return f.img.fontBBox()
+	}
 	return f.info.globalBBox
 }
 
@@ -284,6 +306,11 @@ func (f *Font) fontData() []byte {
 // delta in the same way. typesetting computes the delta in float32, so a
 // width can differ from the width of krilla by 1 unit (D65).
 func (f *Font) advanceWidth(glyph GlyphID) (float32, bool) {
+	// okage: a glyph of an image font has the advance of the caller (D89).
+	if f.img != nil {
+		g, ok := f.img.glyph(glyph)
+		return g.advance, ok
+	}
 	maxp, hhea, hmtx := f.table("maxp"), f.table("hhea"), f.table("hmtx")
 	if len(maxp) < 6 || uint32(glyph) >= uint32(binary.BigEndian.Uint16(maxp[4:])) {
 		return 0, false

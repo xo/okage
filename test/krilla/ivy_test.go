@@ -248,6 +248,7 @@ func ivyScenes() []ivyScene {
 	scenes = append(scenes, stencilScenes()...)
 	scenes = append(scenes, strokeAdjustScenes()...)
 	scenes = append(scenes, rasterScenes()...)
+	scenes = append(scenes, imageFontScenes()...)
 	return scenes
 }
 

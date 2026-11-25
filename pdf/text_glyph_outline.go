@@ -21,6 +21,10 @@ import (
 // returns false where upstream returns None: for a glyph without an outline,
 // and for an outline without a segment.
 func glyphPath(font *Font, glyph GlyphID) (*Path, bool) {
+	// okage: a glyph of an image font has no outline (D89).
+	if font.img != nil {
+		return nil, false
+	}
 	b := newOutlineBuilder()
 	font.drawSkrifaOutline(glyph, b)
 	return b.finish()

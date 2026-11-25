@@ -82,6 +82,11 @@ func (g *Glyph) yAdvance(size float32) float32 {
 //
 // Draw a color glyph to a surface.
 func drawColorGlyph(font *Font, contextColor ColorRGB, glyph GlyphID, baseTransform Transform, surface *Surface) bool {
+	// okage: a glyph of an image font is an image or a mask (D89).
+	if font.img != nil {
+		return drawImageGlyph(font, glyph, baseTransform, surface)
+	}
+
 	surface.PushTransform(baseTransform)
 	surface.PushTransform(path.TransformFromScale(1.0, -1.0))
 
@@ -101,6 +106,10 @@ func drawColorGlyph(font *Font, contextColor ColorRGB, glyph GlyphID, baseTransf
 // shouldOutline is should_outline in krilla src/text/glyph/mod.rs. It
 // reports whether the glyph goes into the CID font of its font.
 func shouldOutline(font *Font, glyph GlyphID) bool {
+	// okage: each glyph of an image font goes into a Type 3 font (D89).
+	if font.img != nil {
+		return false
+	}
 	hasSVG := hasSVGData(font, glyph)
 	hasColr := hasColrData(font, glyph)
 	hasBitmap := hasBitmapData(font, glyph)

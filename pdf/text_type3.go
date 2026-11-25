@@ -138,6 +138,17 @@ func (t *type3Font) serialize(sc *serializeContext, cc *chunkContainer, rootRef 
 
 	glyphStreams := make([]pdfwriter.Ref, len(t.glyphs))
 	for index, glyph := range t.glyphs {
+		// okage: a mask glyph of an image font is a shape glyph, with d1
+		// and an image mask with no color (D89).
+		if t.f.img != nil && t.f.img.isMaskGlyph(glyph.glyphID) {
+			content := sc.newContent()
+			if bbox, ok := writeShapeGlyph(t.f, glyph.glyphID, sc, cc, rdBuilder, content); ok {
+				rectExpand(&fontBBox, bbox)
+			}
+			glyphStreams[index] = writeType3GlyphStream(sc, streamChunk, content)
+			continue
+		}
+
 		streamSurface := newStreamBuilder(sc, cc, path.IdentityTransform())
 		surface := streamSurface.Surface()
 
@@ -186,17 +197,7 @@ func (t *type3Font) serialize(sc *serializeContext, cc *chunkContainer, rootRef 
 			content.XObject(pdfwriter.Name(xName))
 		}
 
-		contentStream := content.Finish()
-
-		fontStream := newFilterStreamFromContentStream(contentStream.AsSlice(), sc.serializeSettings()).
-			finish(sc.serializeSettings())
-
-		streamRef := sc.newRef()
-		s := streamChunk.Stream(streamRef, fontStream.encodedData())
-		fontStream.writeFilters(s.Dict)
-		s.Finish()
-
-		glyphStreams[index] = streamRef
+		glyphStreams[index] = writeType3GlyphStream(sc, streamChunk, content)
 	}
 
 	resourceDictionary := rdBuilder.finish()
@@ -300,6 +301,23 @@ func (t *type3Font) serialize(sc *serializeContext, cc *chunkContainer, rootRef 
 	cmapWriter.WritingMode(pdfwriter.WModeHorizontal)
 	cmapWriter.Finish()
 	cc.streams.fonts = append(cc.streams.fonts, streamChunk)
+}
+
+// writeType3GlyphStream writes the content of a glyph as a stream of the
+// chunk, and returns its reference. It is the end of the loop on the glyphs
+// of Type3Font::serialize in krilla src/text/type3.rs, which the shape
+// glyphs of D89 share.
+func writeType3GlyphStream(sc *serializeContext, streamChunk *pdfwriter.Chunk, content *pdfwriter.Content) pdfwriter.Ref {
+	contentStream := content.Finish()
+
+	fontStream := newFilterStreamFromContentStream(contentStream.AsSlice(), sc.serializeSettings()).
+		finish(sc.serializeSettings())
+
+	streamRef := sc.newRef()
+	s := streamChunk.Stream(streamRef, fontStream.encodedData())
+	fontStream.writeFilters(s.Dict)
+	s.Finish()
+	return streamRef
 }
 
 // fontStretch is the match of the stretch of a font descriptor in
