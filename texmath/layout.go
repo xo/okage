@@ -77,6 +77,30 @@ func WithMathKern(on bool) Option {
 	}
 }
 
+// WithMathConstant sets the constant c of the MATH table to v, in the units
+// of the font, in place of the value of the face. The face does not change.
+// A caller can give a math font the shifts of TeX with it, such as sub1 of
+// Computer Modern for SubscriptShiftDown (D103).
+func WithMathConstant(c font.MathConstant, v float32) Option {
+	return func(cfg *config) {
+		if cfg.constants == nil {
+			cfg.constants = map[font.MathConstant]float32{}
+		}
+		cfg.constants[c] = v
+	}
+}
+
+// WithSubSupShiftDown sets the least shift down of a subscript that has a
+// superscript, in the units of the font. It is sub2 of TeX, where
+// SubscriptShiftDown is sub1. The MATH table has one shift for both, and
+// without this option a subscript takes SubscriptShiftDown in both cases
+// (D103).
+func WithSubSupShiftDown(v float32) Option {
+	return func(cfg *config) {
+		cfg.subSupShift, cfg.hasSubSup = v, true
+	}
+}
+
 // WithLogger sets the logger of the layout. It logs, once for each layout, a
 // character that has no glyph in the face, at the level Warn (D20). The
 // source has no logger, and sets such a character as an empty box.
@@ -491,6 +515,14 @@ func (l *layout) atom(n Node, st Style) *box {
 //go:noinline
 func (l *layout) scripts(n Node, st Style) *box {
 	s, _ := n.(Scripts)
+	// okage: an accent over one character takes its scripts as TeX
+	// Appendix G, rule 12, says: the scripts attach to the character, and
+	// the accent stays where it is over the character alone (D103).
+	if a, ok := s.Base.(Accent); ok {
+		if base := l.node(single(a.Base), st); base.char {
+			return l.accentScripts(base, a, s, st)
+		}
+	}
 	nuc := l.node(s.Base, st)
 	sst := scriptOf(st)
 	var sup, sub *box
@@ -499,6 +531,14 @@ func (l *layout) scripts(n Node, st Style) *box {
 	}
 	if s.Sub != nil {
 		sub = l.node(s.Sub, sst)
+	}
+	// okage: the primes are at the size of the nucleus, after it, and the
+	// scripts attach to them, as \prime in place of ' sets them. The
+	// prime of the math face is already small and high (D103).
+	if s.Primes > 0 && !takesLimits(s.Base, st) {
+		if _, ok := unwrapBrace(s.Base); !ok {
+			return l.primed(nuc, sup, sub, s.Primes, st)
+		}
 	}
 	if s.Primes > 0 {
 		pb := l.primeBox(s.Primes, sst)
@@ -518,6 +558,68 @@ func (l *layout) scripts(n Node, st Style) *box {
 		return l.attachLimits(nuc, sup, sub, st)
 	}
 	return l.attachScripts(nuc, sup, sub, st)
+}
+
+// single returns the one node of a List of one node, such as the argument
+// {y} of \hat{y}, and n in the other cases. TeX makes such a group one
+// character (D103).
+func single(n Node) Node {
+	for {
+		l, ok := n.(List)
+		if !ok || len(l) != 1 {
+			return n
+		}
+		n = l[0]
+	}
+}
+
+// primed sets n primes at the size of the style st after the nucleus, with
+// its italic correction between them, and attaches sup and sub to the
+// primes, as to one character (D103).
+func (l *layout) primed(nuc, sup, sub *box, n int, st Style) *box {
+	pb := l.primeBox(n, st)
+	pb.char = true
+	if sup != nil || sub != nil {
+		pb = l.attachScripts(pb, sup, sub, st)
+	}
+	x := nuc.w
+	if nuc.glyph {
+		x += nuc.ic
+	}
+	out := newBox(nuc.cls)
+	out.w, out.h, out.d = x+pb.w, max(nuc.h, pb.h), max(nuc.d, pb.d)
+	place(out, nuc, 0, 0)
+	place(out, pb, x, 0)
+	return out
+}
+
+// accentScripts sets the accent a over the box of one character, base, with
+// the primes and the scripts of s, by TeX Appendix G, rule 12: the scripts
+// attach to the character as to a nucleus of one character, and the
+// accent is where it is over the character alone (D103).
+func (l *layout) accentScripts(base *box, a Accent, s Scripts, st Style) *box {
+	hollow := *base
+	hollow.items = nil
+	sst := scriptOf(st)
+	var sup, sub *box
+	if s.Sup != nil {
+		sup = l.node(s.Sup, sst)
+	}
+	if s.Sub != nil {
+		sub = l.node(s.Sub, sst)
+	}
+	var scripted *box
+	if s.Primes > 0 {
+		scripted = l.primed(base, sup, sub, s.Primes, st)
+	} else {
+		scripted = l.attachScripts(base, sup, sub, st)
+	}
+	acc := l.accent(&hollow, a.Accent, a.Stretch, st)
+	out := newBox(Ord)
+	out.w, out.h, out.d = max(scripted.w, acc.w), max(scripted.h, acc.h), max(scripted.d, acc.d)
+	place(out, scripted, 0, 0)
+	place(out, acc, 0, 0)
+	return out
 }
 
 // takesLimits reports whether the scripts of the nucleus n go above and
@@ -796,8 +898,14 @@ func (l *layout) layoutBar(n Node, st Style) *box {
 func (l *layout) layoutArray(n Node, st Style) *box {
 	a, _ := n.(Array)
 	cst := cellStyle(st)
-	if a.Kind == ArraySmallMatrix || a.Kind == ArraySubstack {
+	switch a.Kind {
+	case ArraySmallMatrix, ArraySubstack:
 		cst = Script
+	case ArrayAligned, ArrayGathered:
+		// okage: the templates of aligned, alignedat, split and gathered
+		// of amsmath start each cell with \displaystyle, and KaTeX sets
+		// them in display style. The source sets them in text style (D103).
+		cst = Display
 	}
 	rows := make([][]*box, len(a.Rows))
 	for i, r := range a.Rows {

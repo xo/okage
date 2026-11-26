@@ -77,6 +77,12 @@ type config struct {
 
 	// okage: the width of the line of WithLineWidth, for \tag, or 0 (D95).
 	lineWidth float64
+
+	// okage: the constants of WithMathConstant, and the shift of a
+	// subscript with a superscript of WithSubSupShiftDown (D103).
+	constants   map[font.MathConstant]float32
+	subSupShift float32
+	hasSubSup   bool
 }
 
 // newConfig returns the defaults, changed by opts.
@@ -918,6 +924,12 @@ func (p *parser) parseScriptsIn(nuc Node, toks []token, st alphabet) (Node, []to
 			if err != nil {
 				return nil, nil, err
 			}
+			// okage: a superscript of primes only is primes (D103).
+			if k := primesOnly(g); k > 0 {
+				primes += k
+				toks = r
+				continue
+			}
 			sup, toks = g, r
 		case tSub:
 			g, r, err := p.parseGroupArg(toks[1:], st)
@@ -1319,7 +1331,7 @@ func (p *parser) parseAccent(cmd *token, toks []token, st alphabet) (Node, []tok
 // parseTableCommand parses a command of the tables that takes no argument
 // to parse: the \big family, a named operator, a space or a symbol. The
 // accents are in parseAccent.
-func (p *parser) parseTableCommand(cmd *token, toks []token, _ alphabet) (Node, []token, error) {
+func (p *parser) parseTableCommand(cmd *token, toks []token, st alphabet) (Node, []token, error) {
 	name := cmd.text
 	// \big \Big \bigg \Bigg, and their l, r and m forms, give the next
 	// delimiter a fixed height. Layout half: e.stretchVertical and
@@ -1341,6 +1353,11 @@ func (p *parser) parseTableCommand(cmd *token, toks []token, _ alphabet) (Node, 
 		}
 		return p.opAtom(op.text, Op, limits), toks, nil
 	}
+	// okage: the dots of fontmath.ltx and amsmath in math (D103). In
+	// text, they stay the one glyph of the table symbols.
+	if n, ok := p.dots(name, toks); ok && !st.text {
+		return n, toks, nil
+	}
 	// The spaces, in mu.
 	if mu, ok := spaces[name]; ok {
 		return p.add(Space{Width: Length{Value: mu, Unit: Mu}}), toks, nil
@@ -1359,6 +1376,95 @@ func (p *parser) parseTableCommand(cmd *token, toks []token, _ alphabet) (Node, 
 		return p.add(a), toks, nil
 	}
 	return nil, nil, p.unknown(cmd.pos, `unknown command \`+name, `\`+name)
+}
+
+// dotsKinds gives the dots of each command of dots: 'l' for the low dots,
+// 'c' for the dots at the center, 'i' for \dotsi, and 0 for \dots, which
+// looks at what follows it.
+var dotsKinds = map[string]byte{
+	"ldots": 'l', "mathellipsis": 'l', "dotsc": 'l', "dotso": 'l',
+	"cdots": 'c', "dotsb": 'c', "dotsm": 'c', "dotsi": 'i', "dots": 0,
+}
+
+// dots returns the node of a command of dots, and false for another name.
+// fontmath.ltx defines \ldots and \mathellipsis as
+// \mathinner{\ldotp\ldotp\ldotp}, and \cdots as
+// \mathinner{\cdotp\cdotp\cdotp}, where \ldotp and \cdotp are of the class
+// Punct. amsmath sets \dots at the center before a binary operator, a
+// relation or a large operator, and low in the other cases, and \dotsi is
+// \!\cdots.
+//
+// okage: the source sets U+2026 and U+22EF of the class Ord, which are
+// narrower than the dots of TeX: 1,\ldots,n was about 28.3 points wide at 10
+// points, where pdfLaTeX sets it 33.22 points wide (D103).
+func (p *parser) dots(name string, toks []token) (Node, bool) {
+	kind, ok := dotsKinds[name]
+	if !ok {
+		return nil, false
+	}
+	if kind == 0 {
+		kind = 'l'
+		if binaryFollows(toks) {
+			kind = 'c'
+		}
+	}
+	dot := symbols["ldotp"].r
+	if kind != 'l' {
+		dot = symbols["cdotp"].r
+	}
+	items := make([]Node, 3)
+	for i := range items {
+		items[i] = p.add(Atom{Class: Punct, Text: string(dot), Variant: Upright})
+	}
+	inner := p.add(Atom{Class: Inner, Body: p.list(items)})
+	if kind == 'i' {
+		return p.list([]Node{p.add(Space{Width: Length{Value: -3, Unit: Mu}}), inner}), true
+	}
+	return inner, true
+}
+
+// binaryFollows reports whether the next token is a binary operator, a
+// relation or a large operator, before which \dots of amsmath sets the dots
+// at the center.
+func binaryFollows(toks []token) bool {
+	if len(toks) == 0 {
+		return false
+	}
+	switch t := toks[0]; t.kind {
+	case tChar:
+		switch t.r {
+		case '+', '-', '=', '<', '>', '*', '−':
+			return true
+		}
+	case tCtrl:
+		if s, ok := symbols[t.text]; ok {
+			return s.cls == Bin || s.cls == Rel || s.cls == Op
+		}
+	}
+	return false
+}
+
+// primesOnly returns the number of primes of a superscript that holds only
+// \prime, such as ^\prime or ^{\prime\prime}, and 0 for any other
+// superscript. TeX reads x' as x^{\prime}, so x^\prime is x' (D103).
+func primesOnly(n Node) int {
+	switch n := n.(type) {
+	case Atom:
+		if n.Body == nil && n.Text != "" && strings.Trim(n.Text, "′") == "" {
+			return utf8.RuneCountInString(n.Text)
+		}
+	case List:
+		count := 0
+		for _, m := range n {
+			k := primesOnly(m)
+			if k == 0 {
+				return 0
+			}
+			count += k
+		}
+		return count
+	}
+	return 0
 }
 
 // parseFrac parses \frac, \tfrac and \dfrac.

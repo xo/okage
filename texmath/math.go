@@ -80,9 +80,9 @@ func cellStyle(s Style) Style {
 func (l *layout) px(s Style) float64 {
 	switch s {
 	case Script:
-		return float64(l.size*float64(l.face.MathConstant(font.ScriptPercentScaleDown))) / 100
+		return float64(l.size*float64(l.constant(font.ScriptPercentScaleDown))) / 100
 	case ScriptScript:
-		return float64(l.size*float64(l.face.MathConstant(font.ScriptScriptPercentScaleDown))) / 100
+		return float64(l.size*float64(l.constant(font.ScriptScriptPercentScaleDown))) / 100
 	}
 	return l.size
 }
@@ -177,7 +177,16 @@ func (l *layout) scale(px float64) float64 { return px / l.upem }
 
 // mc reads a MATH constant, scaled to the size px.
 func (l *layout) mc(which font.MathConstant, px float64) float64 {
-	return float64(float64(l.face.MathConstant(which)) * l.scale(px))
+	return float64(float64(l.constant(which)) * l.scale(px))
+}
+
+// constant returns the constant which of the MATH table in font units, or
+// the value that WithMathConstant gives it (D103).
+func (l *layout) constant(which font.MathConstant) float32 {
+	if v, ok := l.cfg.constants[which]; ok {
+		return v
+	}
+	return l.face.MathConstant(which)
 }
 
 func (l *layout) axis(px float64) float64 { return l.mc(font.AxisHeight, px) }
@@ -394,7 +403,11 @@ func (l *layout) attachScripts(nuc, sup, sub *box, st Style) *box {
 	// The drops of the baselines apply to a nucleus that is a box, and not
 	// to one glyph of a character (Appendix G, rule 18a, and the OpenType
 	// specification of SuperscriptBaselineDropMax).
-	dropUp, dropDown := nuc.h-l.mc(font.SuperscriptBaselineDropMax, px), nuc.d+l.mc(font.SubscriptBaselineDropMin, px)
+	//
+	// okage: the drop of a subscript is at the size of the script, as
+	// sub_drop of TeX comes from the font of the script size (D103).
+	dropUp := nuc.h - l.mc(font.SuperscriptBaselineDropMax, px)
+	dropDown := nuc.d + l.mc(font.SubscriptBaselineDropMin, l.px(scriptOf(st)))
 	if nuc.char {
 		dropUp, dropDown = 0, 0
 	}
@@ -403,7 +416,14 @@ func (l *layout) attachScripts(nuc, sup, sub *box, st Style) *box {
 		u = max(l.mc(font.SuperscriptShiftUp, px), dropUp, sup.d+l.mc(font.SuperscriptBottomMin, px))
 	}
 	if sub != nil {
-		v = max(l.mc(font.SubscriptShiftDown, px), dropDown)
+		// okage: a subscript with a superscript takes the shift of
+		// WithSubSupShiftDown, sub2 of TeX, when the caller gives one. The
+		// MATH table has one shift for sub1 and sub2 (D103).
+		shift := l.mc(font.SubscriptShiftDown, px)
+		if sup != nil && l.cfg.hasSubSup {
+			shift = float64(float64(l.cfg.subSupShift) * l.scale(px))
+		}
+		v = max(shift, dropDown)
 		if sup == nil {
 			v = max(v, sub.h-l.mc(font.SubscriptTopMax, px))
 		}
@@ -1150,7 +1170,7 @@ func (l *layout) radical(body, index *box, st Style) *box {
 	if index != nil {
 		x += l.mc(font.RadicalKernBeforeDegree, px)
 		ascender := -ruleY // the top of the ink of the sign, over the baseline
-		raise := float64(float64(l.face.MathConstant(font.RadicalDegreeBottomRaisePercent)) / 100 * ascender)
+		raise := float64(float64(l.constant(font.RadicalDegreeBottomRaisePercent)) / 100 * ascender)
 		degreeTop = raise + index.d + index.h
 		iw := index.w
 		place(out, index, x, -(raise + index.d))

@@ -21,6 +21,9 @@ func TestEverySymbolParses(t *testing.T) {
 		if name == "sqrt" || name == "{" || name == "}" || name == " " {
 			continue // a command that comes first, or a brace
 		}
+		if _, ok := dotsKinds[name]; ok {
+			continue // the dots of TeX in math (D103)
+		}
 		l, err := Parse(`\` + name)
 		if err != nil {
 			t.Errorf(`\%s: %v`, name, err)

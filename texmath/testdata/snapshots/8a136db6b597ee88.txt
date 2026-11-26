@@ -1,23 +1,23 @@
 tex "\\operatorname{argmax}_i f"
 
 style display
-box 41.64466666666667 7.11 4.013 0.2
+box 41.64466666666667 7.11 3.5330000000000004 0.2
 glyph 255 10 0 0 text "a" color 0 0 0 1
 glyph 273 10 4.8 0 text "r" color 0 0 0 1
 glyph 261 10 8.6 0 text "g" color 0 0 0 1
 glyph 268 10 13.44 0 text "m" color 0 0 0 1
 glyph 255 10 21.96 0 text "a" color 0 0 0 1
 glyph 279 10 26.76 0 text "x" color 0 0 0 1
-glyph 3334 7 31.55 3.95 text "𝑖" color 0 0 0 1
+glyph 3334 7 31.55 3.47 text "𝑖" color 0 0 0 1
 glyph 3331 10 35.67466666666667 0 text "𝑓" color 0 0 0 1
 
 style text
-box 41.64466666666667 7.11 4.013 0.2
+box 41.64466666666667 7.11 3.5330000000000004 0.2
 glyph 255 10 0 0 text "a" color 0 0 0 1
 glyph 273 10 4.8 0 text "r" color 0 0 0 1
 glyph 261 10 8.6 0 text "g" color 0 0 0 1
 glyph 268 10 13.44 0 text "m" color 0 0 0 1
 glyph 255 10 21.96 0 text "a" color 0 0 0 1
 glyph 279 10 26.76 0 text "x" color 0 0 0 1
-glyph 3334 7 31.55 3.95 text "𝑖" color 0 0 0 1
+glyph 3334 7 31.55 3.47 text "𝑖" color 0 0 0 1
 glyph 3331 10 35.67466666666667 0 text "𝑓" color 0 0 0 1

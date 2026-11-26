@@ -13,13 +13,13 @@ glyph 3338 7 18.830000000000002 10.745000000000001 text "𝑘" color 0 0 0 1
 glyph 3326 10 24.262666666666668 0 text "𝑎" color 0 0 0 1
 
 style text
-box 39.57266666666666 10.085 4.24 0
+box 39.57266666666666 10.085 3.76 0
 glyph 1646 10 0 0.08999999999999986 text "∑" color 0 0 0 1
 glyph 3336 7 9.36 -5.43 text "𝑗" color 0 0 0 1
-glyph 3338 7 9.36 4.17 text "𝑘" color 0 0 0 1
-glyph 3338 7 13.126 4.17 text "𝑘" color 0 0 0 1
-glyph 3338 7 16.892 4.17 text "𝑘" color 0 0 0 1
-glyph 3338 7 20.658 4.17 text "𝑘" color 0 0 0 1
-glyph 3338 7 24.424 4.17 text "𝑘" color 0 0 0 1
-glyph 3338 7 28.19 4.17 text "𝑘" color 0 0 0 1
+glyph 3338 7 9.36 3.69 text "𝑘" color 0 0 0 1
+glyph 3338 7 13.126 3.69 text "𝑘" color 0 0 0 1
+glyph 3338 7 16.892 3.69 text "𝑘" color 0 0 0 1
+glyph 3338 7 20.658 3.69 text "𝑘" color 0 0 0 1
+glyph 3338 7 24.424 3.69 text "𝑘" color 0 0 0 1
+glyph 3338 7 28.19 3.69 text "𝑘" color 0 0 0 1
 glyph 3326 10 34.022666666666666 0 text "𝑎" color 0 0 0 1

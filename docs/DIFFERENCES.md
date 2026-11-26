@@ -164,7 +164,10 @@ okage differs from upstream only where a decision says so:
     `\hdashline`. It reads `\char` followed by a backtick and `^`,
     `\operatorname x`, `\substack x`, a fourth argument of one token of
     `\mathchoice` and `\mkern3pt` as KaTeX does, where the source gives an
-    error.
+    error. On 2026-11-26, D103 set the dots of `\ldots` and its kin, the
+    primes, the scripts of an accented character, the drop of a subscript
+    and the cells of `aligned` and `split` as TeX does, and added
+    `texmath.WithMathConstant` and `texmath.WithSubSupShiftDown`.
 25. A glyph of a TrueType CID font of `pdf` whose text differs from the
     text of its first use takes a second CID, with its own entry in the
     ToUnicode map, where krilla marks the use with ActualText. A

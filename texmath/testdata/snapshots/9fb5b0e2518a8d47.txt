@@ -1,9 +1,13 @@
 tex "\\dotsb"
 
 style display
-box 9.53 3.18 0 0
-glyph 1986 10 0 0 text "⋯" color 0 0 0 1
+box 12.123333333333333 3.2 0 0
+glyph 1938 10 0 0 text "⋅" color 0 0 0 1
+glyph 1938 10 4.596666666666667 0 text "⋅" color 0 0 0 1
+glyph 1938 10 9.193333333333333 0 text "⋅" color 0 0 0 1
 
 style text
-box 9.53 3.18 0 0
-glyph 1986 10 0 0 text "⋯" color 0 0 0 1
+box 12.123333333333333 3.2 0 0
+glyph 1938 10 0 0 text "⋅" color 0 0 0 1
+glyph 1938 10 4.596666666666667 0 text "⋅" color 0 0 0 1
+glyph 1938 10 9.193333333333333 0 text "⋅" color 0 0 0 1

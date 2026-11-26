@@ -1,9 +1,13 @@
 tex "\\dotsi"
 
 style display
-box 9.53 3.18 0 0
-glyph 1986 10 0 0 text "⋯" color 0 0 0 1
+box 10.456666666666667 3.2 0 0
+glyph 1938 10 -1.6666666666666667 0 text "⋅" color 0 0 0 1
+glyph 1938 10 2.9299999999999997 0 text "⋅" color 0 0 0 1
+glyph 1938 10 7.526666666666666 0 text "⋅" color 0 0 0 1
 
 style text
-box 9.53 3.18 0 0
-glyph 1986 10 0 0 text "⋯" color 0 0 0 1
+box 10.456666666666667 3.2 0 0
+glyph 1938 10 -1.6666666666666667 0 text "⋅" color 0 0 0 1
+glyph 1938 10 2.9299999999999997 0 text "⋅" color 0 0 0 1
+glyph 1938 10 7.526666666666666 0 text "⋅" color 0 0 0 1

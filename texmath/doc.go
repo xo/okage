@@ -125,9 +125,23 @@
 // a script into the shape of its nucleus, such as the subscript of an italic
 // V (WithMathKern).
 //
-// The commands of D78 section 10 that are still missing are
-// \underrightarrow, \sideset and the environments align, equation and
-// gather. The other commands that KaTeX parses and Parse does not are in
+// On 2026-11-26 ivy asked for six changes, which follow TeX where the source
+// and the MATH table do not (D103). \ldots, \dots, \mathellipsis, \cdots and
+// the dots of amsmath are three dots of the class Punct in an atom of the
+// class Inner, as fontmath.ltx and amsmath set them, so 1,\ldots,n has the
+// width of TeX. \dots sets the dots at the center before a binary operator,
+// a relation or a large operator. The primes of x' are at the size of x,
+// after it, and the scripts attach to the primes. A superscript of \prime
+// only is primes. An accent over one character takes its scripts as TeX
+// Appendix G, rule 12, says, so the subscript of \hat y_i is where the
+// subscript of y_i is. The drop of a subscript under a nucleus that is not
+// one character, SubscriptBaselineDropMin, is at the size of the script.
+// WithMathConstant sets a constant of the MATH table, and
+// WithSubSupShiftDown gives a subscript with a superscript the shift sub2
+// of TeX. The cells of aligned, alignedat, split and gathered, and of the
+// environments of KaTeX that take their layout, are in display style.
+//
+// The commands that KaTeX parses and Parse does not are in
 // test/texmath/katex_parse.txt, with their reasons.
 //
 // # Differences from go-tex/math
