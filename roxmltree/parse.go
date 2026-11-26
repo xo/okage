@@ -612,6 +612,10 @@ type context struct {
 	tagName      tagNameSpan
 	loopDetector loopDetector
 	doc          Document
+
+	// okage: text is the buffer of processText, which each text of the
+	// parse takes in turn (D105).
+	text textBuffer
 }
 
 // appendNode is Context::append_node in roxmltree src/parse.rs.
@@ -687,7 +691,11 @@ func (ctx *context) resetAfterText() {
 // parse is parse in roxmltree src/parse.rs.
 func parse(text string, opt ParsingOptions) (*Document, error) {
 	// Trying to guess rough nodes and attributes amount.
-	nodesCapacity := strings.Count(text, "<")
+	//
+	// okage: the guess counts the text nodes too, as guessNodes says, so
+	// that the list of the nodes of a large document does not grow
+	// (D105).
+	nodesCapacity := guessNodes(text)
 	attributesCapacity := strings.Count(text, "=")
 
 	// Init document.
@@ -754,6 +762,28 @@ func parse(text string, opt ParsingOptions) (*Document, error) {
 	d.namespaces.shrinkToFit()
 
 	return d, nil
+}
+
+// guessNodes returns a guess of the number of nodes of text: a node for
+// each '<' that does not start an end tag, and a text node for each '>'
+// that a character other than '<' follows. roxmltree guesses the number of
+// '<' alone, which misses the text nodes, so that the list of the nodes
+// grew several times in a large document (D105).
+func guessNodes(text string) int {
+	n := 1
+	for i := range len(text) {
+		switch text[i] {
+		case '<':
+			if i+1 >= len(text) || text[i+1] != '/' {
+				n++
+			}
+		case '>':
+			if i+1 < len(text) && text[i+1] != '<' {
+				n++
+			}
+		}
+	}
+	return n
 }
 
 // token is XmlEvents::token for Context in roxmltree src/parse.rs.
@@ -1107,7 +1137,11 @@ func processText(text string, rng Range, ctx *context) error {
 		return ctx.appendText(text, rng)
 	}
 
-	textBuffer := newTextBuffer()
+	// okage: the buffer of the context serves each text. A text of an
+	// entity, which parseContent below reads, writes its own text before
+	// this function clears the buffer again (D105).
+	textBuffer := &ctx.text
+	textBuffer.clear()
 	isAsIs := false // TODO: explain
 	stream := streamFromSubstr(ctx.doc.text, rng)
 	for !stream.AtEnd() {
@@ -1492,9 +1526,11 @@ func (t *textBuffer) isEmpty() bool {
 }
 
 // finish is TextBuffer::finish in roxmltree src/parse.rs.
+//
+// okage: the buffer keeps its memory for the next text (D105).
 func (t *textBuffer) finish() string {
 	// `unwrap` is safe, because buffer must contain a valid UTF-8 string.
 	s := string(t.buffer)
-	t.buffer = nil
+	t.buffer = t.buffer[:0]
 	return s
 }

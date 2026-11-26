@@ -50,7 +50,10 @@ okage differs from upstream only where a decision says so:
 11. `tinycss2` nests at most 256 blocks and `cssselect2` at most 32
     selectors, where upstream has no limit. Where upstream raises an
     exception for a selector or a color, the port returns a `SelectorError`
-    or no color (D50).
+    or no color (D50). `roxmltree` guesses the number of nodes with the
+    text nodes, copies a list of a parse only when a quarter of it is
+    spare, and keeps one text buffer for a parse. `cssselect2` makes the
+    wrappers of the children of a parent as one slice (D105).
 12. A fill clamps each side of the bounds of a path to 2^26 pixels from the
     origin before it rounds them. Upstream panics or leaves out rows for an
     antialiased fill with a point past about 2^29 pixels, and draws nothing
@@ -254,7 +257,9 @@ okage also adds APIs that upstream does not have:
     before the parse. `svg.FromXMLTree` and `svg.FromXMLNode` make a tree
     from a document of roxmltree, and `roxmltree.Builder` makes such a
     document without XML text. `svg.WithZeroSize` accepts an image of size
-    zero (D58).
+    zero (D58). The optional interface `cssselect2.ChildrenAppender` gives
+    the children of an `Element` as a slice, without the closures of
+    `Children` (D105).
 13. The package `typesetting/font/cff` exports the predefined charsets of
     CFF, and draws the accented glyphs of `seac` and the FontMatrix of each
     font dictionary (D59).

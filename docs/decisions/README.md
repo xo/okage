@@ -124,3 +124,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D102 | [`pdf` gives a glyph a second CID for a second text](D102-pdf-gives-a-glyph-a-second-cid-for-a-second-text.md) | Decided, amends D62 |
 | D103 | [texmath sets dots, primes, accent scripts and aligned cells as TeX](D103-texmath-sets-dots-primes-accent-scripts-and-aligned-cells-as-tex.md) | Decided, amends D78 |
 | D104 | [`pdf` links to a named destination by its name alone](D104-pdf-links-to-a-named-destination-by-its-name-alone.md) | Decided, amends D62 |
+| D105 | [roxmltree and cssselect2 allocate less for a large document](D105-roxmltree-and-cssselect2-allocate-less-for-a-large-document.md) | Decided, amends D47 and D50 |

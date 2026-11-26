@@ -27,7 +27,7 @@ on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35, D96). `svg` holds the port of
 usvg and resvg, with the layout of text on go-text (D9), up to the commit
 `1938e970` of resvg of 2026-11-23. The maintainers accepted the decisions D1
-to D104. The package `html` parses
+to D105. The package `html` parses
 and lays out the HTML-like labels of Graphviz, with `dot` as its oracle
 (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
@@ -71,7 +71,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on a `Mask`, a clip, or the stage `mask_u8` | D35 and D60, then D86 for the masks of `NewRectMask` |
 | working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |
 | working on the radial gradients of `NewRadialGradientExtend`, for the radial shadings of PDF | D64, then D55 |
-| working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47 and D50 |
+| working on the size of an SVG image, a tree from roxmltree, or the cost of `:has()` | D58, then D47, D50 and D105 |
 | making the pipeline faster, or measuring the cost of the SIMD build | D17, D35, D96 and D98, then "A new release of Go" in [docs/SIMD.md](docs/SIMD.md) |
 | writing or changing the vector types, or anything with a build tag | [docs/SIMD.md](docs/SIMD.md), then D15 and D16 |
 | writing arithmetic on a `float32` or a `float64` anywhere | "The same bytes in every build" in [docs/PLAN.md](docs/PLAN.md), then D16 and D71 |
@@ -80,7 +80,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on images, text or fonts in `svg` | D7, D9, D32, D36, D37, D39, D40, D45, D46, D57, D61, D100 and D101 |
 | working on the HTML-like labels of Graphviz in `html` | D38 |
 | working on the parser of HTML documents in `html` | D49, then D38 |
-| working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
+| working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50, D61 and D105 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45, D51 and D91 |
 | working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83, D84, D87, D90, D92, D93, D97 and D101, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
 | working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99, D101, D102 and D104, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |

@@ -54,4 +54,8 @@
 //     of elements. Upstream takes time in the square of the number of
 //     elements, and in a power of it for :has() inside :has(). Two
 //     different elements of a tree must not be equal as values of Element.
+//   - IterSubtree and IterChildren make the wrappers of the children of
+//     one parent as one slice. An Element with the optional method
+//     AppendChildren of ChildrenAppender gives its children without the
+//     closures of Children (D105).
 package cssselect2

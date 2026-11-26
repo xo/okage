@@ -606,8 +606,12 @@ func (n *namespaces) get(idx namespaceIdx) *Namespace {
 
 // shrinkToFit is Vec::shrink_to_fit of the Rust alloc library. It copies the
 // slice into one of its length when the slice has spare capacity.
+//
+// okage: it copies the slice only when more than a quarter of its capacity
+// is spare. The guess of guessNodes leaves a small spare capacity, and the
+// copy of a large list of nodes costs more than the spare (D105).
 func shrinkToFit[S ~[]E, E any](s S) S {
-	if cap(s) == len(s) {
+	if cap(s)-len(s) <= cap(s)/4 {
 		return s
 	}
 	c := make(S, len(s))

@@ -25,6 +25,11 @@
 // another parser, without XML text. An error of a Builder is a sentinel
 // error itself, without a position.
 //
+// The parser allocates less than upstream for a large document (D105). Its
+// guess of the number of nodes counts the text nodes, it copies a list into
+// a list of its length only when more than a quarter of the list is spare,
+// and one text buffer serves each text of a parse.
+//
 // The tree structure itself is a heavily modified
 // <https://github.com/causal-agent/ego-tree>, under the license ISC.
 package roxmltree

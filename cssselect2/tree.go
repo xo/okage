@@ -39,6 +39,17 @@ type Element interface {
 	Text() string
 }
 
+// ChildrenAppender is an optional interface of an Element. AppendChildren
+// appends the child elements to dst, in tree order, and returns the result.
+// It skips the comments, the processing instructions and the text, as
+// Children does. ElementWrapper calls it in place of Children when the
+// Element has it. The iterator of Children makes closures for each
+// element, and the list of the children then grows one element at a time
+// (D105).
+type ChildrenAppender interface {
+	AppendChildren(dst []Element) []Element
+}
+
 // ElementWrapper is ElementWrapper in cssselect2 cssselect2/tree.py. It
 // wraps an Element for the matching of selectors.
 //
@@ -110,7 +121,19 @@ func fromRoot(root Element, contentLanguage string, inHTMLDocument bool) *Elemen
 func newElementWrapper(etreeElement Element, parent *ElementWrapper, index int, previous *ElementWrapper,
 	inHTMLDocument bool, contentLanguage string,
 ) *ElementWrapper {
-	e := &ElementWrapper{
+	e := &ElementWrapper{}
+	e.init(etreeElement, parent, index, previous, inHTMLDocument, contentLanguage)
+	return e
+}
+
+// init sets the fields of a new wrapper, as newElementWrapper does. The
+// iterators of the children set the wrappers of the children of a parent
+// in one slice with it, so that a family of siblings is one allocation
+// (D105).
+func (e *ElementWrapper) init(etreeElement Element, parent *ElementWrapper, index int, previous *ElementWrapper,
+	inHTMLDocument bool, contentLanguage string,
+) {
+	*e = ElementWrapper{
 		Element:                  etreeElement,
 		Parent:                   parent,
 		Previous:                 previous,
@@ -125,7 +148,6 @@ func newElementWrapper(etreeElement Element, parent *ElementWrapper, index int, 
 		e.etreeSiblings = []Element{etreeElement}
 		e.cache = &matchCache{}
 	}
-	return e
 }
 
 // EtreeSiblings is the attribute etree_siblings of upstream: the children of
@@ -192,9 +214,13 @@ func (e *ElementWrapper) iterSiblingsAfter() iter.Seq[*ElementWrapper] {
 // the child elements, in tree order.
 func (e *ElementWrapper) IterChildren() iter.Seq[*ElementWrapper] {
 	return func(yield func(*ElementWrapper) bool) {
+		children := e.EtreeChildren()
+		// okage: the wrappers of the children are one slice (D105).
+		wrappers := make([]ElementWrapper, len(children))
 		var child *ElementWrapper
-		for i, etreeChild := range e.EtreeChildren() {
-			child = newElementWrapper(etreeChild, e, i, child, e.InHTMLDocument, "")
+		for i, etreeChild := range children {
+			wrappers[i].init(etreeChild, e, i, child, e.InHTMLDocument, "")
+			child = &wrappers[i]
 			if !yield(child) {
 				return
 			}
@@ -208,31 +234,41 @@ func (e *ElementWrapper) IterChildren() iter.Seq[*ElementWrapper] {
 func (e *ElementWrapper) IterSubtree() iter.Seq[*ElementWrapper] {
 	return func(yield func(*ElementWrapper) bool) {
 		// frame is an iterator of the children of parent: the index of the
-		// next child, and the wrapper of the previous one.
+		// next child, and the wrappers of the children.
+		//
+		// okage: the stack holds the frames by value, and the wrappers of
+		// the children of a parent are one slice, so that an element costs
+		// no allocation of its own (D105).
 		type frame struct {
 			parent   *ElementWrapper
 			index    int
-			previous *ElementWrapper
+			wrappers []ElementWrapper
 		}
 		if !yield(e) {
 			return
 		}
-		stack := []*frame{{parent: e}}
+		stack := []frame{{parent: e}}
 		for len(stack) > 0 {
-			top := stack[len(stack)-1]
+			top := &stack[len(stack)-1]
 			children := top.parent.EtreeChildren()
 			if top.index >= len(children) {
 				stack = stack[:len(stack)-1]
 				continue
 			}
-			child := newElementWrapper(children[top.index], top.parent, top.index, top.previous,
-				top.parent.InHTMLDocument, "")
+			if top.wrappers == nil {
+				top.wrappers = make([]ElementWrapper, len(children))
+			}
+			var previous *ElementWrapper
+			if top.index > 0 {
+				previous = &top.wrappers[top.index-1]
+			}
+			child := &top.wrappers[top.index]
+			child.init(children[top.index], top.parent, top.index, previous, top.parent.InHTMLDocument, "")
 			top.index++
-			top.previous = child
 			if !yield(child) {
 				return
 			}
-			stack = append(stack, &frame{parent: child})
+			stack = append(stack, frame{parent: child})
 		}
 	}
 }
@@ -298,8 +334,14 @@ func (e *ElementWrapper) Query(selectors ...*CompiledSelector) *ElementWrapper {
 func (e *ElementWrapper) EtreeChildren() []Element {
 	if !e.childrenDone {
 		e.childrenDone = true
-		for child := range e.Element.Children() {
-			e.children = append(e.children, child)
+		// okage: an Element with AppendChildren gives its children
+		// without the closures of Children (D105).
+		if a, ok := e.Element.(ChildrenAppender); ok {
+			e.children = a.AppendChildren(nil)
+		} else {
+			for child := range e.Element.Children() {
+				e.children = append(e.children, child)
+			}
 		}
 	}
 	return e.children
