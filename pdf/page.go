@@ -339,12 +339,20 @@ func (p *internalPage) serialize(sc *serializeContext, cc *chunkContainer, rootR
 	hasAnnotations := len(p.annotations) != 0
 	if hasAnnotations {
 		for _, annotation := range p.annotations {
+			// okage: a link to a name without a destination is left out
+			// (D104).
+			if sc.unresolvedLink(annotation) {
+				continue
+			}
 			annotRef := sc.newRef()
 			if err := annotation.serialize(sc, cc, annotRef, p.pageSettings.surfaceHeight()); err != nil {
 				return err
 			}
 			annotationRefs = append(annotationRefs, annotRef)
 		}
+		// okage: a page whose links all named no destination has no
+		// annotation (D104).
+		hasAnnotations = len(annotationRefs) != 0
 	}
 
 	chunk := cc.nonStream.pages

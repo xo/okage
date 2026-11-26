@@ -303,7 +303,10 @@ okage also adds APIs that upstream does not have:
     adds with `Font.AddImageGlyph`, each a mask or an image with its
     advance. `DrawGlyphs` draws them into Type 3 fonts with their text. A
     mask glyph is a shape glyph with `d1`, which takes the fill of the text.
-    krilla writes no `d1` (D89).
+    krilla writes no `d1` (D89). The link target `DestinationName` names a
+    named destination by its name alone, and `Document.Finish` resolves the
+    name after the last page. A link to a name without a destination is
+    left out (D104).
 18. `StrokeDash` gives its dash array and its dash offset with the methods
     `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
     with them (D69).

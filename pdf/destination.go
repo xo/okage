@@ -81,6 +81,58 @@ func (d NamedDestination) serializeTarget(sc *serializeContext, a *pdfwriter.Ann
 	return d.serializeDestination(sc, a.Insert(pdfwriter.Name("Dest")))
 }
 
+// DestinationName is a target of a link annotation that names a named
+// destination by its name alone. The annotation writes the name, and
+// Document.Finish resolves it after the last page. So a page can link to a
+// destination of a later page before that page is drawn. The caller
+// registers the destination of the name before Document.Finish, with
+// Document.RegisterNamedDestination or with a link to a NamedDestination.
+// Document.Finish leaves out a link to a name that has no destination, and
+// logs it to the logger of WithLogger. krilla has no such target (D104).
+type DestinationName string
+
+// serializeTarget writes the name into the annotation (D104).
+func (n DestinationName) serializeTarget(_ *serializeContext, a *pdfwriter.Annotation, _ Location) error {
+	a.Insert(pdfwriter.Name("Dest")).Primitive(pdfwriter.Str(n))
+	return nil
+}
+
+// collectNames records the name of each named destination of the document
+// before the pages are written: the names that the caller registered, and
+// the name of each link of a page to a NamedDestination (D104).
+func (sc *serializeContext) collectNames() {
+	sc.knownNames = map[string]bool{}
+	for name := range sc.globalObjects.namedDestinations {
+		sc.knownNames[name] = true
+	}
+	for _, e := range sc.globalObjects.pages {
+		for _, a := range e.page.annotations {
+			if a, ok := a.(Annotation); ok {
+				if nd, ok := a.link.target.(NamedDestination); ok {
+					sc.knownNames[nd.name] = true
+				}
+			}
+		}
+	}
+}
+
+// unresolvedLink reports whether a is a link to a DestinationName that no
+// named destination has, and logs it (D104).
+func (sc *serializeContext) unresolvedLink(a annotation) bool {
+	link, ok := a.(Annotation)
+	if !ok {
+		return false
+	}
+	name, ok := link.link.target.(DestinationName)
+	if !ok || sc.knownNames[string(name)] {
+		return false
+	}
+	if logger := sc.serializeSettings().logger; logger != nil {
+		logger.Warn("pdf: a link names no named destination, and the file leaves it out", "name", string(name))
+	}
+	return true
+}
+
 // duplicateNamedDestination is KrillaError::DuplicateNamedDestination of
 // krilla src/error.rs, with the Display text of upstream.
 func duplicateNamedDestination(name string) error {

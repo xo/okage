@@ -268,6 +268,9 @@
 //     mask glyph is a shape glyph with d1, which takes the fill of the
 //     text, and an image glyph is a color glyph with d0. The file
 //     pdf/ivy_type3.go holds them (D89).
+//   - The link target DestinationName names a named destination by its
+//     name alone. Document.Finish resolves the name after the last page,
+//     and leaves out a link to a name without a destination (D104).
 //
 // A change to a file of the port for them has a comment that starts with
 // okage: and names D68, D69 or D89. Each one keeps the bytes and the hashes of

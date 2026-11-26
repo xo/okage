@@ -27,7 +27,7 @@ on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35, D96). `svg` holds the port of
 usvg and resvg, with the layout of text on go-text (D9), up to the commit
 `1938e970` of resvg of 2026-11-23. The maintainers accepted the decisions D1
-to D103. The package `html` parses
+to D104. The package `html` parses
 and lays out the HTML-like labels of Graphviz, with `dot` as its oracle
 (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
@@ -83,7 +83,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45, D51 and D91 |
 | working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83, D84, D87, D90, D92, D93, D97 and D101, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99, D101 and D102, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99, D101, D102 and D104, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the math layout of `texmath`, the table MATH, or applying a commit of go-tex/math | D78, D95 and D103, then D52 for the reader of the table MATH in `typesetting` |
 | working on the blurs, the color matrix or the transfer functions of `filter`, or a blur of `svg` or `lottie` | D88, then D79 and D16 |
 | working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79, D82, D85, D91 and D94 |

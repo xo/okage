@@ -318,6 +318,9 @@ type serializeContext struct {
 	// globalObjects holds the global objects, such as the pages, that are
 	// populated over time.
 	globalObjects globalObjects
+	// okage: knownNames holds the name of each named destination of the
+	// document, for the links to a DestinationName (D104).
+	knownNames map[string]bool
 	// pageInfos holds information for each page written so far, indexed by
 	// the page index.
 	pageInfos []pageInfo
@@ -431,6 +434,9 @@ func (sc *serializeContext) finish(cc *chunkContainer) (*pdfwriter.Pdf, error) {
 	sc.serializeDestinationProfiles(cc)
 	sc.serializePageLabelTree(cc)
 	sc.serializeOutline(cc)
+	// okage: the names of the named destinations, for the links to a
+	// DestinationName (D104).
+	sc.collectNames()
 	if err := sc.serializePages(cc); err != nil {
 		return nil, err
 	}
