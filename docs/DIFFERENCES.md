@@ -165,6 +165,12 @@ okage differs from upstream only where a decision says so:
     `\operatorname x`, `\substack x`, a fourth argument of one token of
     `\mathchoice` and `\mkern3pt` as KaTeX does, where the source gives an
     error.
+25. A glyph of a TrueType CID font of `pdf` whose text differs from the
+    text of its first use takes a second CID, with its own entry in the
+    ToUnicode map, where krilla marks the use with ActualText. A
+    CIDToGIDMap stream maps the second CIDs to their glyphs. A font without
+    a second CID keeps the map `Identity` of krilla. A glyph without text
+    takes an empty ActualText, so that MuPDF gives no U+FFFD for it (D102).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and

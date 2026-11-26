@@ -512,6 +512,7 @@ func (b *contentBuilder) encodeConsecutiveGlyphRun(
 	size float32,
 	contextColor ColorRGB,
 	glyphs []Glyph,
+	cids []uint16,
 	text string,
 ) {
 	fontName := b.rdBuilder.registerResource(sc.registerFontIdentifier(id))
@@ -542,17 +543,27 @@ func (b *contentBuilder) encodeConsecutiveGlyphRun(
 	// if `/ActualText` is used at the end of a line, but only if `TJ` is
 	// used. With `Tj`, it's fine.
 	if len(glyphs) == 1 && approxZero(glyphs[0].xOffset(1.0)) {
-		b.encodeSingleGlyph(curX, pdfFont, size, contextColor, &glyphs[0])
+		b.encodeSingleGlyph(curX, pdfFont, size, contextColor, &glyphs[0], cids)
 		return
 	}
 
-	b.encodeGlyphsWithIndividualPositioning(curX, pdfFont, size, contextColor, glyphs)
+	b.encodeGlyphsWithIndividualPositioning(curX, pdfFont, size, contextColor, glyphs, cids)
+}
+
+// spanGlyph returns the glyph of the font for glyphs[i], with its second
+// CID from cids when it has one (D102).
+func spanGlyph(pdfFont pdfFont, contextColor ColorRGB, glyph *Glyph, cids []uint16, i int) pdfGlyph {
+	if i < len(cids) && cids[i] != 0 {
+		return pdfGlyph{cid: cids[i]}
+	}
+	g, _ := pdfFont.getGID(coloredGlyph{glyphID: glyph.GlyphID, contextColor: contextColor})
+	return g
 }
 
 // encodeSingleGlyph is ContentBuilder::encode_single_glyph in krilla
 // src/content.rs.
-func (b *contentBuilder) encodeSingleGlyph(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyph *Glyph) {
-	g, _ := pdfFont.getGID(coloredGlyph{glyphID: glyph.GlyphID, contextColor: contextColor})
+func (b *contentBuilder) encodeSingleGlyph(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyph *Glyph, cids []uint16) {
+	g := spanGlyph(pdfFont, contextColor, glyph, cids, 0)
 	b.scratch = g.encodeInto(b.scratch[:0])
 	b.content.Show(pdfwriter.Str(b.scratch))
 	*curX += glyph.xAdvance(size)
@@ -561,7 +572,7 @@ func (b *contentBuilder) encodeSingleGlyph(curX *float32, pdfFont pdfFont, size 
 // encodeGlyphsWithIndividualPositioning is
 // ContentBuilder::encode_glyphs_with_individual_positioning in krilla
 // src/content.rs.
-func (b *contentBuilder) encodeGlyphsWithIndividualPositioning(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyphs []Glyph) {
+func (b *contentBuilder) encodeGlyphsWithIndividualPositioning(curX *float32, pdfFont pdfFont, size float32, contextColor ColorRGB, glyphs []Glyph, cids []uint16) {
 	encoded := b.scratch[:0]
 
 	var adjustment float32
@@ -574,7 +585,7 @@ func (b *contentBuilder) encodeGlyphsWithIndividualPositioning(curX *float32, pd
 
 	for i := range glyphs {
 		glyph := &glyphs[i]
-		g, _ := pdfFont.getGID(coloredGlyph{glyphID: glyph.GlyphID, contextColor: contextColor})
+		g := spanGlyph(pdfFont, contextColor, glyph, cids, i)
 
 		xAdvance := scale(glyph.xAdvance(1.0))
 		fontAdvance, hasFontAdvance := pdfFont.font().advanceWidth(glyph.GlyphID)
@@ -710,10 +721,10 @@ func (b *contentBuilder) fillStrokeGlyphSpan(
 
 	// Segment into glyph runs that can be encoded in one go using a PDF text
 	// showing operator (i.e. no y shift, same Type3 font, etc.)
-	rest := fragment.glyphs
+	rest, restCIDs := fragment.glyphs, fragment.cids
 	for len(rest) != 0 {
 		var group glyphGroup
-		group, rest = nextGlyphGroup(fc, contextColor, rest)
+		group, rest, restCIDs = nextGlyphGroup(fc, contextColor, rest, restCIDs)
 		b.fillStrokeGlyphGroup(curX, curY, group, sc, fillRenderMode, fc, contextColor, text, fontSize)
 	}
 
@@ -761,6 +772,7 @@ func (b *contentBuilder) fillStrokeGlyphGroup(
 		fontSize,
 		contextColor,
 		group.glyphs,
+		group.cids,
 		text,
 	)
 

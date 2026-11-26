@@ -590,6 +590,8 @@ func (o *textOutliner) outline(items []contentToken) {
 		case tokenString:
 			for i := 0; i+1 < len(item.text); i += 2 {
 				cid := uint16(item.text[i])<<8 | uint16(item.text[i+1])
+				// okage: a second CID draws the glyph of its CID (D102).
+				cid = f.primaryCID(cid)
 				if int(cid) >= len(o.font.gids) || int(cid) >= len(f.widths) {
 					continue
 				}

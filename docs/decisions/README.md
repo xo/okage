@@ -121,3 +121,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D99 | [`pdf` writes XMP metadata and validates PDF/A](D099-pdf-writes-xmp-metadata-and-validates-pdf-a.md) | Decided, amends D62 |
 | D100 | [svg follows the font model of read-fonts 0.46](D100-svg-follows-the-font-model-of-read-fonts-0-46.md) | Decided, amends D32, amended by D101 |
 | D101 | [typesetting normalizes as skrifa, reads long deltas and the null offsets of trak](D101-typesetting-normalizes-as-skrifa-reads-long-deltas-and-null-offsets-of-trak.md) | Decided, amends D84 and D100 |
+| D102 | [`pdf` gives a glyph a second CID for a second text](D102-pdf-gives-a-glyph-a-second-cid-for-a-second-text.md) | Decided, amends D62 |

@@ -233,6 +233,13 @@
 //     only them, so the other bytes of the file do not change.
 //     WithSubsetFallback(false) gives the error of krilla, and WithLogger
 //     takes the logger of the fallback (D80).
+//  9. krilla marks a use of a glyph whose text differs from the text of
+//     its first use with ActualText. For a TrueType CID font, the port
+//     gives that use a second CID, with its own entry in the ToUnicode map
+//     and a CIDToGIDMap stream. A glyph without text takes an empty
+//     ActualText, so that MuPDF gives no U+FFFD for it. The switch
+//     Krilla of internal/pdfcompat turns both off for the tests against
+//     krilla (D102).
 //
 // # The additions for ivy
 //

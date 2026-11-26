@@ -27,7 +27,7 @@ on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35, D96). `svg` holds the port of
 usvg and resvg, with the layout of text on go-text (D9), up to the commit
 `1938e970` of resvg of 2026-11-23. The maintainers accepted the decisions D1
-to D101. The package `html` parses
+to D102. The package `html` parses
 and lays out the HTML-like labels of Graphviz, with `dot` as its oracle
 (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
@@ -83,7 +83,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | working on the CSS parser of `tinycss2` or the selectors of `cssselect2` | D50 and D61 |
 | working on the fonts in WOFF, WOFF2 and EOT of `webfont` | D45, D51 and D91 |
 | working on the copy of go-text in `typesetting`, or applying a commit of go-text | D52, D59, D61, D63, D65, D67, D70, D71, D72, D73, D76, D77, D81, D83, D84, D87, D90, D92, D93, D97 and D101, then "typesetting" in [docs/UPSTREAM.md](docs/UPSTREAM.md) |
-| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99 and D101, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
+| working on the PDF writer, or comparing it with krilla | D62, D65, D66, D68, D74, D80, D84, D89, D99, D101 and D102, then "The PDF writer" in [docs/PLAN.md](docs/PLAN.md), then the questions of the oracle in `test/krilla/doc.go` |
 | working on the math layout of `texmath`, the table MATH, or applying a commit of go-tex/math | D78 and D95, then D52 for the reader of the table MATH in `typesetting` |
 | working on the blurs, the color matrix or the transfer functions of `filter`, or a blur of `svg` or `lottie` | D88, then D79 and D16 |
 | working on the Lottie animations of `lottie` | D41, D42, D43, D44, D75, D79, D82, D85, D91 and D94 |
@@ -253,6 +253,7 @@ When code exists, the code goes here:
 | `pdf/` | the package `pdf`, the port of the crate `krilla`, which writes PDF files. A file of a folder of `src` starts with the name of the folder, such as `configure_version.go` (D62) |
 | `pdfsvg/` | the package `pdfsvg`, the port of the crate `krilla-svg`, which draws a tree of `svg` onto a surface of `pdf`. A file has the name of its file in `src`, such as `clip_path.go` (D62) |
 | `internal/lottiecompat/` | the switch that turns the differences of D42 and D43 off, for the test against velato (D43) |
+| `internal/pdfcompat/` | the switch that turns the second CIDs and the empty ActualText of D102 off, for the tests against krilla (D102) |
 | `internal/glyphoutline/` | the code that draws the outline of a glyph of `typesetting` in the order of skrifa, with the filter of read-fonts for CFF, which `svg` and `pdf` share |
 | `internal/pathbool/` | the geometric boolean operations of paths, which `lottie` uses for a stroke or a trim path of the result of a merge path. It ports no upstream code (D94) |
 | `internal/wide/` | the vector types, with a scalar file and a SIMD file for each type (D15), and the fused programs of the pipeline that `fusegen` writes (D98) |

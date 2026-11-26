@@ -5,6 +5,8 @@
 
 package pdf
 
+import "github.com/xo/okage/internal/pdfcompat"
+
 // This file ports krilla src/text/group.rs. The iterators GlyphSpanner and
 // GlyphGrouper of upstream become functions that return the next span or
 // the next group with the rest of the glyphs.
@@ -16,6 +18,9 @@ type glyphSpan struct {
 	glyphs        []Glyph
 	actualText    string
 	hasActualText bool
+	// okage: cids holds the second CID of each glyph of glyphs, or 0 for
+	// the CID of its glyph ID. It is nil when no glyph has one (D102).
+	cids []uint16
 }
 
 // glyphSpanner is GlyphSpanner in krilla src/text/group.rs.
@@ -59,9 +64,10 @@ func newGlyphSpanner(slice []Glyph, text string, reversed, forbidInvalidCodepoin
 }
 
 // spannerGlyph is the function func of the impl Iterator for GlyphSpanner in
-// krilla src/text/group.rs. It returns the range of the glyph and whether
-// its codepoints are incompatible with the codepoints of an earlier glyph.
-func spannerGlyph(g *Glyph, contextColor ColorRGB, previousRange *TextRange, forbidInvalidCodepoints bool, fc *fontContainer, text string) (TextRange, bool) {
+// krilla src/text/group.rs. It returns the range of the glyph, whether its
+// codepoints are incompatible with the codepoints of an earlier glyph, and
+// the second CID of the glyph, or 0 (D102).
+func spannerGlyph(g *Glyph, contextColor ColorRGB, previousRange *TextRange, forbidInvalidCodepoints bool, fc *fontContainer, text string) (TextRange, bool, uint16) {
 	fg := fc.addGlyph(coloredGlyph{glyphID: g.GlyphID, contextColor: contextColor})
 	pdfFont, _ := fc.getFromIdentifier(fg.id)
 
@@ -71,6 +77,18 @@ func spannerGlyph(g *Glyph, contextColor ColorRGB, previousRange *TextRange, for
 	// Check if the glyph has already been assigned codepoints that don't
 	// match the one we are seeing right now.
 	incompatibleCodepoint := hasCodepoints && codepoints != glyphText
+
+	// okage: a glyph of a TrueType CID font whose text differs from the
+	// text of an earlier use takes a second CID, with its own entry in the
+	// ToUnicode map, where krilla marks it with ActualText. Each reader
+	// reads the ToUnicode map, and few read ActualText (D102).
+	inCluster := previousRange != nil && *previousRange == r
+	var alias uint16
+	if cf, ok := pdfFont.(*cidFont); ok && !pdfcompat.Krilla && incompatibleCodepoint && !inCluster && !fg.glyph.isType3 {
+		if a, ok := cf.aliasCID(fg.glyph.cid, glyphText, g.Location); ok {
+			alias, incompatibleCodepoint = a, false
+		}
+	}
 
 	// Only set the codepoint if there isn't a previous, different mapping.
 	//
@@ -87,13 +105,23 @@ func spannerGlyph(g *Glyph, contextColor ColorRGB, previousRange *TextRange, for
 	// is required to have a valid codepoint mapping. So in this case, we
 	// still add the codepoints to each glyph in the cluster, this will
 	// result in worse copy-pasting in viewers that don't support ActualText.
-	if !incompatibleCodepoint &&
+	//
+	// okage: a glyph with a second CID keeps the text of its first CID.
+	if !incompatibleCodepoint && alias == 0 &&
 		(previousRange == nil || *previousRange != r || forbidInvalidCodepoints) &&
 		(!hasCodepoints || codepoints != glyphText) {
 		pdfFont.setCodepoints(fg.glyph, glyphText, g.Location)
 	}
 
-	return r, incompatibleCodepoint
+	// okage: a glyph without text, such as a mark that the caller puts
+	// after the text of its cluster, takes an empty ActualText. MuPDF
+	// gives U+FFFD for a glyph without an entry in the ToUnicode map, and
+	// ignores an empty entry (D102).
+	if glyphText == "" && !inCluster && !pdfcompat.Krilla {
+		incompatibleCodepoint = true
+	}
+
+	return r, incompatibleCodepoint, alias
 }
 
 // next is Iterator::next for GlyphSpanner in krilla src/text/group.rs. It
@@ -118,14 +146,27 @@ func (s *glyphSpanner) next() (glyphSpan, bool) {
 	}
 	count := 1
 
+	// okage: cids holds the second CIDs of the glyphs (D102).
+	var cids []uint16
+	setCID := func(i int, alias uint16) {
+		if alias != 0 && cids == nil {
+			cids = make([]uint16, len(s.slice))
+		}
+		if cids != nil {
+			cids[i] = alias
+		}
+	}
+
 	// Get the range of the first glyph, as well as whether it's
 	// incompatible.
-	firstRange, firstIncompatible := spannerGlyph(&s.slice[0], s.contextColor, nil, s.forbidInvalidCodepoints, s.fontContainer, s.text)
+	firstRange, firstIncompatible, firstAlias := spannerGlyph(&s.slice[0], s.contextColor, nil, s.forbidInvalidCodepoints, s.fontContainer, s.text)
+	setCID(0, firstAlias)
 
 	prevRange := firstRange
 
 	for i := 1; i < len(s.slice); i++ {
-		nextRange, nextIncompatible := spannerGlyph(&s.slice[i], s.contextColor, &prevRange, s.forbidInvalidCodepoints, s.fontContainer, s.text)
+		nextRange, nextIncompatible, nextAlias := spannerGlyph(&s.slice[i], s.contextColor, &prevRange, s.forbidInvalidCodepoints, s.fontContainer, s.text)
+		setCID(i, nextAlias)
 
 		stop := false
 		switch useSpan {
@@ -205,11 +246,14 @@ func (s *glyphSpanner) next() (glyphSpan, bool) {
 
 	head, tail := s.slice[:count], s.slice[count:]
 	s.slice = tail
+	if cids != nil {
+		cids = cids[:count]
+	}
 
 	if useSpan == spanTrue {
-		return glyphSpan{glyphs: head, actualText: s.text[firstRange.Start:firstRange.End], hasActualText: true}, true
+		return glyphSpan{glyphs: head, actualText: s.text[firstRange.Start:firstRange.End], hasActualText: true, cids: cids}, true
 	}
-	return glyphSpan{glyphs: head}, true
+	return glyphSpan{glyphs: head, cids: cids}, true
 }
 
 // glyphGroup is GlyphGroup in krilla src/text/group.rs.
@@ -220,6 +264,9 @@ type glyphGroup struct {
 	yOffset float32
 	// yAdvance is stored in normalized form (i.e. at a font size of 1).
 	yAdvance float32
+	// okage: cids holds the second CIDs of the glyphs, as in glyphSpan
+	// (D102).
+	cids []uint16
 }
 
 // glyphProps is GlyphProps in krilla src/text/group.rs.
@@ -242,7 +289,8 @@ func getGlyphProps(g *Glyph, contextColor ColorRGB, fc *fontContainer) glyphProp
 }
 
 // nextGlyphGroup is Iterator::next for GlyphGrouper in krilla
-// src/text/group.rs. It returns the next group and the rest of the glyphs.
+// src/text/group.rs. It returns the next group and the rest of the glyphs,
+// with the rest of the second CIDs of D102.
 //
 // The GlyphGrouper further segments glyph runs (that already have been
 // segmented by TextSpanner into subruns that can be encoded as one
@@ -252,7 +300,7 @@ func getGlyphProps(g *Glyph, contextColor ColorRGB, fc *fontContainer) glyphProp
 //   - The glyph contains a y_offset/y_advance, which cannot be expressed as
 //     an adjustment and requires us to start a new run with a
 //     transformation matrix that takes this adjustment into account.
-func nextGlyphGroup(fc *fontContainer, contextColor ColorRGB, slice []Glyph) (glyphGroup, []Glyph) {
+func nextGlyphGroup(fc *fontContainer, contextColor ColorRGB, slice []Glyph, cids []uint16) (glyphGroup, []Glyph, []uint16) {
 	// Guarantees: All glyphs in head have the font identifier that is given
 	// in props, the same size and the same y offset.
 	count := 1
@@ -273,12 +321,17 @@ func nextGlyphGroup(fc *fontContainer, contextColor ColorRGB, slice []Glyph) (gl
 	}
 
 	head, tail := slice[:count], slice[count:]
+	var headCIDs, tailCIDs []uint16
+	if cids != nil {
+		headCIDs, tailCIDs = cids[:count], cids[count:]
+	}
 	return glyphGroup{
 		fontIdentifier: first.fontIdentifier,
 		glyphs:         head,
 		yOffset:        first.yOffset,
 		yAdvance:       first.yAdvance,
-	}, tail
+		cids:           headCIDs,
+	}, tail, tailCIDs
 }
 
 // useTextSpanner is use_text_spanner in krilla src/text/group.rs.
@@ -341,5 +394,10 @@ func checkTextSpanProp(g *Glyph, text string, contextColor ColorRGB, fc *fontCon
 		*doTextSpan = true
 	case !ok:
 		pdfFont.setCodepoints(fg.glyph, glyphText, g.Location)
+	}
+	// okage: a glyph without text takes an empty ActualText, which the text
+	// spanner writes (D102).
+	if glyphText == "" && !pdfcompat.Krilla {
+		*doTextSpan = true
 	}
 }

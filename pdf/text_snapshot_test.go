@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/xo/okage/internal/pdfcompat"
 	"github.com/xo/okage/path"
 )
 
@@ -36,10 +37,13 @@ func testFont(tb testing.TB, name string, opts ...FontOption) *Font {
 
 // textSnapshotPage starts a document with settings_1 and a page of 200 by
 // 200, as the macro snapshot of krilla does, and gives the surface of the
-// page.
+// page. It turns the second CIDs and the empty ActualText of D102 off for
+// the test, so that the document has the bytes of krilla.
 // Document.Finish finishes the page and its surface.
 func textSnapshotPage(t *testing.T, opts ...Option) (*Document, *Surface) {
 	t.Helper()
+	pdfcompat.Krilla = true
+	t.Cleanup(func() { pdfcompat.Krilla = false })
 	d := NewDocument(append(settings1(), opts...)...)
 	ps, _ := PageSettingsFromWH(200, 200)
 	return d, d.StartPage(ps).Surface()

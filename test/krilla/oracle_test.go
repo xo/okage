@@ -16,6 +16,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/xo/okage/internal/pdfcompat"
 )
 
 // root is the root of the repository, seen from this package.
@@ -26,6 +28,9 @@ const root = "../.."
 var oraclePath, skipReason string
 
 func TestMain(m *testing.M) {
+	// The oracle compares the port itself, without the second CIDs and the
+	// empty ActualText of D102.
+	pdfcompat.Krilla = true
 	oraclePath, skipReason = build()
 	os.Exit(m.Run())
 }

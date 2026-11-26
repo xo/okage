@@ -8,6 +8,7 @@ package pdf
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/bits"
 
 	"github.com/xo/okage"
@@ -106,6 +107,22 @@ type cidFont struct {
 	widths []float32
 	// empty is true until the first glyph.
 	empty bool
+
+	// okage: the second CIDs of D102. aliases maps the CID of a glyph and a
+	// text to a second CID of the same glyph. aliasGIDs holds the CID of the
+	// glyph of each second CID, and aliasEntries holds its text. The second
+	// CIDs start at the number of glyphs of the font, which no CID of the
+	// subset reaches.
+	aliases      map[cidAlias]uint16
+	aliasGIDs    []uint16
+	aliasEntries []cmapEntry
+}
+
+// cidAlias is the key of a second CID: the CID of the glyph and the text of
+// the second CID (D102).
+type cidAlias struct {
+	cid  uint16
+	text string
 }
 
 // newCIDFont is CIDFont::new in krilla src/text/cid.rs.
@@ -171,6 +188,41 @@ func (f *cidFont) addGlyph(glyph GlyphID) uint16 {
 	}
 
 	return newID
+}
+
+// aliasCID returns a second CID of the glyph with the CID cid, with text as
+// its own entry in the ToUnicode map (D102). It returns false when the
+// text is empty, when the font is not a TrueType font, whose CIDToGIDMap
+// can map two CIDs to one glyph, and when no CID is left.
+func (f *cidFont) aliasCID(cid uint16, text string, location Location) (uint16, bool) {
+	if text == "" || !f.f.info.hasGlyf || f.f.info.hasCFF {
+		return 0, false
+	}
+	key := cidAlias{cid: cid, text: text}
+	if alias, ok := f.aliases[key]; ok {
+		return alias, true
+	}
+	next := f.f.numGlyphs() + uint32(len(f.aliasGIDs))
+	if next > math.MaxUint16 {
+		return 0, false
+	}
+	if f.aliases == nil {
+		f.aliases = map[cidAlias]uint16{}
+	}
+	alias := uint16(next)
+	f.aliases[key] = alias
+	f.aliasGIDs = append(f.aliasGIDs, cid)
+	f.aliasEntries = append(f.aliasEntries, cmapEntry{text: text, location: location})
+	return alias, true
+}
+
+// primaryCID returns the CID of the glyph of a second CID, and any other CID
+// as it is (D102).
+func (f *cidFont) primaryCID(cid uint16) uint16 {
+	if k := int(cid) - int(f.f.numGlyphs()); k >= 0 && k < len(f.aliasGIDs) {
+		return f.aliasGIDs[k]
+	}
+	return cid
 }
 
 // getCodepoints is CIDFont::get_codepoints in krilla src/text/cid.rs, and
@@ -292,7 +344,20 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 	cid.FontDescriptor(descriptorRef)
 	cid.DefaultWidth(0.0)
 
-	if !isCFF {
+	// okage: a font with second CIDs maps them to their glyphs with a
+	// CIDToGIDMap stream (D102). A font without them keeps the map
+	// Identity of krilla.
+	aliasBase := uint32(glyphRemapper.NumGids())
+	if len(f.aliasGIDs) != 0 {
+		aliasBase = f.f.numGlyphs()
+	}
+	var cidToGIDRef pdfwriter.Ref
+	switch {
+	case isCFF:
+	case len(f.aliasGIDs) != 0:
+		cidToGIDRef = sc.newRef()
+		cid.CIDToGIDMapStream(cidToGIDRef)
+	default:
 		cid.CIDToGIDMapPredefined(pdfwriter.Name("Identity"))
 	}
 
@@ -312,6 +377,16 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 		}
 		first = end
 	}
+	// okage: a second CID has the width of its glyph (D102).
+	first = 0
+	aliasWidth := func(cid uint16) float32 { return f.widths[cid] }
+	for w, group := range groupByKey(f.aliasGIDs, aliasWidth) {
+		end := first + len(group)
+		if w != 0.0 {
+			widthWriter.Same(uint16(aliasBase)+uint16(first), uint16(aliasBase)+uint16(end-1), toPDFUnits(w))
+		}
+		first = end
+	}
 
 	widthWriter.Finish()
 	cid.Finish()
@@ -327,6 +402,14 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 		}
 		if padding := numGlyphs % 8; padding != 0 {
 			cidStreamData = append(cidStreamData, ^byte(0xFF>>padding))
+		}
+		// okage: the CIDSet holds the second CIDs too (D102).
+		if len(f.aliasGIDs) != 0 {
+			end := aliasBase + uint32(len(f.aliasGIDs))
+			cidStreamData = append(cidStreamData, make([]byte, int((end+7)/8)-len(cidStreamData))...)
+			for c := aliasBase; c < end; c++ {
+				cidStreamData[c/8] |= 0x80 >> (c % 8)
+			}
 		}
 
 		cidStream := newFilterStreamFromBinaryData(cidStreamData).finish(sc.serializeSettings())
@@ -401,6 +484,10 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 		}
 		writeCmapEntry(f.f, entry, sc, cmap, g)
 	}
+	// okage: each second CID has its own text (D102).
+	for k := range f.aliasEntries {
+		writeCmapEntry(f.f, &f.aliasEntries[k], sc, cmap, uint16(aliasBase)+uint16(k))
+	}
 
 	cmapBuf := cmap.Finish()
 	cmapStream := newFilterStreamFromContentStream(cmapBuf.AsSlice(), sc.serializeSettings()).finish(sc.serializeSettings())
@@ -418,9 +505,31 @@ func (f *cidFont) serialize(sc *serializeContext, cc *chunkContainer, rootRef pd
 
 		stream.Finish()
 	}
+	if len(f.aliasGIDs) != 0 && !isCFF {
+		writeCIDToGIDMap(sc, streamChunk, cidToGIDRef, glyphRemapper.NumGids(), aliasBase, f.aliasGIDs)
+	}
 	cc.streams.fonts = append(cc.streams.fonts, streamChunk)
 
 	return nil
+}
+
+// writeCIDToGIDMap writes the CIDToGIDMap stream of a font with second CIDs
+// (D102). A CID below numGids is the glyph ID of the subset, as with the
+// map Identity. The second CIDs from aliasBase map to the glyphs of
+// gids, and the CIDs between them map to the glyph 0.
+func writeCIDToGIDMap(sc *serializeContext, chunk *pdfwriter.Chunk, ref pdfwriter.Ref, numGids uint16, aliasBase uint32, gids []uint16) {
+	data := make([]byte, 2*(int(aliasBase)+len(gids)))
+	for c := range numGids {
+		data[2*int(c)], data[2*int(c)+1] = byte(c>>8), byte(c)
+	}
+	for k, g := range gids {
+		i := 2 * (int(aliasBase) + k)
+		data[i], data[i+1] = byte(g>>8), byte(g)
+	}
+	stream := newFilterStreamFromBinaryData(data).finish(sc.serializeSettings())
+	w := chunk.Stream(ref, stream.encodedData())
+	stream.writeFilters(w.Dict)
+	w.Finish()
 }
 
 // fontError is KrillaError::Font of krilla src/error.rs. It wraps
