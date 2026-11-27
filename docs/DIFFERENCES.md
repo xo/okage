@@ -311,7 +311,9 @@ okage also adds APIs that upstream does not have:
     krilla writes no `d1` (D89). The link target `DestinationName` names a
     named destination by its name alone, and `Document.Finish` resolves the
     name after the last page. A link to a name without a destination is
-    left out (D104).
+    left out (D104). `Surface.DrawInvisibleGlyphs` draws a run of glyphs
+    with its text as invisible text, with the text rendering mode 3, so
+    that a reader can search and copy text that paints nothing (D106).
 18. `StrokeDash` gives its dash array and its dash offset with the methods
     `Array` and `Offset`. A writer of PDF writes the dashes of a stroke
     with them (D69).

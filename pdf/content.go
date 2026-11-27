@@ -755,6 +755,9 @@ func (b *contentBuilder) fillStrokeGlyphGroup(
 	}
 
 	switch {
+	// okage: an invisible run stays invisible in a Type 3 font too (D106).
+	case fillRenderMode == pdfwriter.TextRenderingModeInvisible:
+		b.content.SetTextRenderingMode(pdfwriter.TextRenderingModeInvisible)
 	case fillRenderMode == pdfwriter.TextRenderingModeFill || pdfFont.forceFill():
 		b.content.SetTextRenderingMode(pdfwriter.TextRenderingModeFill)
 	case fillRenderMode == pdfwriter.TextRenderingModeFillStroke:

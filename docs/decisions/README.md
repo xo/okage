@@ -87,7 +87,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D65 | [typesetting fixes the variable fonts of the subsetter](D065-typesetting-fixes-the-variable-fonts-of-the-subsetter.md) | Decided, amended by D67 and D84 |
 | D66 | [`pdf` returns errors for large strokes and mixed stops](D066-pdf-returns-errors-for-large-strokes-and-mixed-stops.md) | Decided, amends D62 |
 | D67 | [typesetting applies the fixes of malformed input out of order](D067-typesetting-applies-the-fixes-of-malformed-input-out-of-order.md) | Decided, amends D65 |
-| D68 | [`pdf` adds what the PDF device of ivy needs](D068-pdf-adds-what-the-pdf-device-of-ivy-needs.md) | Decided, amends D62, amended by D69 and D89 |
+| D68 | [`pdf` adds what the PDF device of ivy needs](D068-pdf-adds-what-the-pdf-device-of-ivy-needs.md) | Decided, amends D62, amended by D69, D89 and D106 |
 | D69 | [Dashes, many stops and image masks for the PDF device of ivy](D069-dashes-many-stops-and-image-masks-for-the-pdf-device-of-ivy.md) | Decided, amends D68 |
 | D70 | [shaping gives the flags of HarfBuzz and reuses its glyphs](D070-shaping-gives-the-flags-of-harfbuzz-and-reuses-its-glyphs.md) | Decided, amended by D77 and D93 |
 | D71 | [The copy of go-text does not fuse a multiply and an add](D071-the-copy-of-go-text-does-not-fuse-a-multiply-and-an-add.md) | Decided, amends D16 |
@@ -125,3 +125,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D103 | [texmath sets dots, primes, accent scripts and aligned cells as TeX](D103-texmath-sets-dots-primes-accent-scripts-and-aligned-cells-as-tex.md) | Decided, amends D78 |
 | D104 | [`pdf` links to a named destination by its name alone](D104-pdf-links-to-a-named-destination-by-its-name-alone.md) | Decided, amends D62 |
 | D105 | [roxmltree and cssselect2 allocate less for a large document](D105-roxmltree-and-cssselect2-allocate-less-for-a-large-document.md) | Decided, amends D47 and D50 |
+| D106 | [`pdf` draws glyphs as invisible text](D106-pdf-draws-glyphs-as-invisible-text.md) | Decided, amends D68 |

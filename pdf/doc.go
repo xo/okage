@@ -271,9 +271,13 @@
 //   - The link target DestinationName names a named destination by its
 //     name alone. Document.Finish resolves the name after the last page,
 //     and leaves out a link to a name without a destination (D104).
+//   - Surface.DrawInvisibleGlyphs draws a run of glyphs with its text as
+//     invisible text, with the text rendering mode 3. A reader can search
+//     and copy the text, and the run paints nothing. The file
+//     pdf/ivy_text.go holds it (D106).
 //
 // A change to a file of the port for them has a comment that starts with
-// okage: and names D68, D69 or D89. Each one keeps the bytes and the hashes of
+// okage: and names D68, D69, D89 or D106. Each one keeps the bytes and the hashes of
 // every input of krilla, except a stitching function of more than 256
 // functions. MuPDF does not read such a function (D69).
 package pdf
