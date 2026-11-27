@@ -1,6 +1,6 @@
 # D74. pdf reuses its compressor, limits a subset, and a stroke ends on NaN
 
-Status: Decided, amends D16.
+Status: Decided, amends D16, amended by D107.
 
 "The PDF writer" in `docs/BACKLOG.md` lists three faults that make a program
 run out of memory or wait forever:

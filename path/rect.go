@@ -475,7 +475,11 @@ func RectFromPoints(points []Point) (Rect, bool) {
 		offset = 2
 	}
 
-	var accum f32x4
+	// okage: accum starts as the first points times 0, as in
+	// SkRect::setBoundsCheck of Skia, so that a NaN or an infinity in them
+	// makes the check fail. tiny-skia starts it at 0 and checks only the
+	// points of the loop (D107).
+	accum := min.mul(f32x4{})
 	for offset != len(points) {
 		pt0 := points[offset+0]
 		pt1 := points[offset+1]

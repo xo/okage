@@ -35,7 +35,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D13 | [Each package keeps the license of its upstream](D013-each-package-keeps-the-license-of-its-upstream.md) | Decided, amended by D45, D49, D50, D52 and D78 |
 | D14 | [okage uses SIMD, and scalar code is the fallback](D014-okage-uses-simd-and-scalar-code-is-the-fallback.md) | Decided |
 | D15 | [The vector types keep fixed widths and check the CPU once](D015-the-vector-types-keep-fixed-widths-and-check-the-cpu-once.md) | Decided, amended by D28 |
-| D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34, D54, D71 and D74 |
+| D16 | [The renderer gives the same bytes in every build](D016-the-renderer-gives-the-same-bytes-in-every-build.md) | Decided, amended by D34, D54, D71, D74 and D107 |
 | D17 | [A prototype chooses the form of the pipeline](D017-a-prototype-chooses-the-form-of-the-pipeline.md) | Decided, amended by D96 and D98 |
 | D18 | [The SIMD build is within twice the time of upstream](D018-the-simd-build-is-within-twice-the-time-of-upstream.md) | Decided, amended by D35 |
 | D19 | [A `Pixmap` works with the package `image`](D019-a-pixmap-works-with-the-image-package.md) | Decided |
@@ -93,7 +93,7 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D71 | [The copy of go-text does not fuse a multiply and an add](D071-the-copy-of-go-text-does-not-fuse-a-multiply-and-an-add.md) | Decided, amends D16 |
 | D72 | [typesetting skips work that left-to-right Latin text does not need](D072-typesetting-skips-work-that-left-to-right-latin-text-does-not-need.md) | Decided, amended by D81 and D92 |
 | D73 | [typesetting fixes the faults that go-text still has](D073-typesetting-fixes-the-faults-that-go-text-still-has.md) | Decided, amended by D97 |
-| D74 | [pdf reuses its compressor, limits a subset, and a stroke ends on NaN](D074-pdf-reuses-its-compressor-limits-a-subset-and-a-stroke-ends-on-nan.md) | Decided, amends D16 |
+| D74 | [pdf reuses its compressor, limits a subset, and a stroke ends on NaN](D074-pdf-reuses-its-compressor-limits-a-subset-and-a-stroke-ends-on-nan.md) | Decided, amends D16, amended by D107 |
 | D75 | [lottie draws image assets in the pixmap sink](D075-lottie-draws-image-assets-in-the-pixmap-sink.md) | Decided, amends D41, amended by D82 |
 | D76 | [The test fonts of go-text are a module of their own](D076-the-test-fonts-of-go-text-are-a-module-of-their-own.md) | Decided, amends D63 |
 | D77 | [shaping shapes a paragraph once for its lines](D077-shaping-shapes-a-paragraph-once-for-its-lines.md) | Decided, amends D70, amended by D93 |
@@ -126,3 +126,4 @@ The decisions were consolidated on 2026-11-09, before the first commit (D4).
 | D104 | [`pdf` links to a named destination by its name alone](D104-pdf-links-to-a-named-destination-by-its-name-alone.md) | Decided, amends D62 |
 | D105 | [roxmltree and cssselect2 allocate less for a large document](D105-roxmltree-and-cssselect2-allocate-less-for-a-large-document.md) | Decided, amends D47 and D50 |
 | D106 | [`pdf` draws glyphs as invisible text](D106-pdf-draws-glyphs-as-invisible-text.md) | Decided, amends D68 |
+| D107 | [The bounds of a path check each point, and a hairline stays in the pixmap](D107-the-bounds-of-a-path-check-each-point-and-a-hairline-stays-in-the-pixmap.md) | Decided, amends D16 and D74 |

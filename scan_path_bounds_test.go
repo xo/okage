@@ -133,20 +133,17 @@ func TestStrokePathHuge(t *testing.T) {
 	}
 }
 
-// FuzzFillPathHuge makes sure that no finite path makes FillPath or StrokePath
+// FuzzFillPathHuge makes sure that no path makes FillPath or StrokePath
 // panic. The coordinates are 10 to the power of an exponent of up to 38, so
-// that the fuzzer reaches huge values often.
+// that the fuzzer reaches huge values often. A coordinate can also be NaN
+// or an infinity, which Finish rejects (D107).
 func FuzzFillPathHuge(f *testing.F) {
 	f.Add(-1.5e13, -1.5e13, 1.5e13, -1.4e13, 1.6e13, 1.5e13, -1.4e13, 1.6e13, float32(0.09), float32(1), uint8(0))
 	f.Add(-1.98e11, 8.66e10, -8.95e10, -1.47e11, 1.85e10, 1.99e10, -9.99e10, -3.47e10, float32(0.09), float32(3), uint8(1))
 	f.Add(-3e12, -6.2e12, 2.3e12, 3.6e11, 0.0, 0.0, 1e3, 1e3, float32(3.6), float32(0), uint8(2))
+	f.Add(109.0, 19.0, -15.0, math.NaN(), -6.0, 125.0, -5.0, 228.0, float32(0.5), float32(1), uint8(1))
 	f.Fuzz(func(t *testing.T, x0, y0, x1, y1, x2, y2, x3, y3 float64, scale, width float32, mode uint8) {
 		xy := []float32{float32(x0), float32(y0), float32(x1), float32(y1), float32(x2), float32(y2), float32(x3), float32(y3)}
-		for _, v := range xy {
-			if math.IsNaN(float64(v)) || math.IsInf(float64(v), 0) {
-				return
-			}
-		}
 		pb := okage.NewPathBuilder()
 		pb.MoveTo(xy[0], xy[1])
 		switch mode % 3 {

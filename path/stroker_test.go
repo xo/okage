@@ -232,11 +232,11 @@ func TestQuadMaxCurvatureNaN(t *testing.T) {
 	NewPathStroker().Stroke(path, &stroke, 1.0)
 }
 
-// TestStrokeNotFinite is not in tiny-skia. The bounds of each path leave its
-// NaN out, so PathBuilder takes the path. tiny-skia does not end when it
-// strokes the first path. okage strokes no path with a point that is NaN or
-// infinite (D74). PathBuilder takes no path with an infinite point, because
-// its bounds are not finite.
+// TestStrokeNotFinite is not in tiny-skia. In tiny-skia, the bounds of each
+// path leave its NaN out, so PathBuilder takes the path, and the stroke of
+// the first path does not end. PathBuilder of okage takes no path with a
+// NaN (D107). The test then makes each path by hand, and okage strokes no
+// path with a point that is NaN or infinite (D74).
 func TestStrokeNotFinite(t *testing.T) {
 	nan := float32(math.NaN())
 	stroke := DefaultStroke()
@@ -250,9 +250,14 @@ func TestStrokeNotFinite(t *testing.T) {
 		pb.LineTo(pts[1].X, pts[1].Y)
 		pb.LineTo(pts[2].X, pts[2].Y)
 		pb.Close()
-		path, ok := pb.Finish()
-		if !ok {
-			t.Fatalf("the path of %v has no bounds", pts)
+		if _, ok := pb.Finish(); ok {
+			t.Errorf("the path of %v has bounds", pts)
+		}
+		bounds, _ := RectFromLTRB(-3e38, -1.7e38, 2, 1e38)
+		path := &Path{
+			verbs:  []PathVerb{PathVerbMove, PathVerbLine, PathVerbLine, PathVerbClose},
+			points: pts[:],
+			bounds: bounds,
 		}
 		if got, ok := path.Stroke(&stroke, 1.0); ok || got != nil {
 			t.Errorf("the stroke of %v is %v, %v, want nil, false", pts, got, ok)

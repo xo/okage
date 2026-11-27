@@ -154,8 +154,23 @@ func hairLineRgn(points []Point, clip *screenIntRect, b blitter) {
 			slope := fdot16Div(dx, dy)
 			startX := fdot6ToFDot16(x0) + ((slope * ((32 - y0) & 63)) >> 6)
 
+			// okage: startX can reach the right edge of the clip, as startY
+			// can reach its bottom above. tiny-skia draws such a pixel on
+			// the first column of the next row, and okage keeps that (D16).
+			// On the last row, the pixel is past the end of the pixmap, and
+			// tiny-skia panics. okage skips it (D107).
+			maxX, lastRow := int32(math.MaxInt32), int32(math.MaxInt32)
+			if clip != nil {
+				// A clip as wide as 32768 pixels has its right edge past
+				// the range of an FDot16, where startX cannot reach.
+				if clip.Right() < 1<<15 {
+					maxX = int32(clip.Right()) << 16
+				}
+				lastRow = int32(min(clip.Bottom(), math.MaxInt32)) - 1
+			}
+
 			for {
-				if startX >= 0 && iy0 >= 0 {
+				if startX >= 0 && iy0 >= 0 && (startX < maxX || iy0 < lastRow) {
 					b.blitH(uint32(startX>>16), uint32(iy0), lengthU32One)
 				}
 

@@ -27,7 +27,7 @@ on each random scene with no cubic curve. okage has no speed target, and work
 that makes it faster is always welcome (D35, D96). `svg` holds the port of
 usvg and resvg, with the layout of text on go-text (D9), up to the commit
 `1938e970` of resvg of 2026-11-23. The maintainers accepted the decisions D1
-to D106. The package `html` parses
+to D107. The package `html` parses
 and lays out the HTML-like labels of Graphviz, with `dot` as its oracle
 (D38). It also parses HTML documents, as
 a port of tinyhtml5 (D49). The package `lottie` is the port of
@@ -66,7 +66,7 @@ every other agent read the same rules. Edit this file, not `CLAUDE.md`.
 | porting upstream code or an upstream change | [docs/UPSTREAM.md](docs/UPSTREAM.md), then the list of upstreams in `docs/upstream/upstreams.tsv` |
 | adding an upstream repository, or a new version of a dependency | "A new version of a dependency" in [docs/UPSTREAM.md](docs/UPSTREAM.md), then D12 and D7 |
 | naming a function whose Rust name collides with another | D10 |
-| working on the scan converter, a huge path, or the fast path of `DrawPixmap` | D53 |
+| working on the scan converter, a huge path, or the fast path of `DrawPixmap` | D53, then D107 for a point that is not finite and a hairline at the edge |
 | working on the coverage of a fill, stroke adjustment or the clip of a hairline | D16, then D54 |
 | working on a `Mask`, a clip, or the stage `mask_u8` | D35 and D60, then D86 for the masks of `NewRectMask` |
 | working on mesh gradients, the decal spread mode, soft masks or transparency groups | D55 and D56 |

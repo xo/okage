@@ -8,7 +8,6 @@ package pdf
 import (
 	"bytes"
 	"errors"
-	"math"
 	"slices"
 	"strings"
 	"testing"
@@ -575,22 +574,9 @@ func TestPaintErrors(t *testing.T) {
 			s.SetStroke(&k)
 			s.DrawPath(quad(0, 0, 1e30, 1, 2e30, 0))
 		}, okage.ErrPDFInvalidPath},
-		{"stroke of a point that is NaN", func(s *Surface) {
-			// The stroker of tiny-skia does not end for this path.
-			b := path.NewPathBuilder()
-			b.MoveTo(float32(math.NaN()), 1e38)
-			b.LineTo(1, -1.7e38)
-			b.LineTo(-3e38, -2e37)
-			b.Close()
-			p, ok := b.Finish()
-			if !ok {
-				t.Fatal("the path is empty")
-			}
-			s.PushIsolated()
-			s.SetStroke(redStroke(t, 1, 2))
-			s.DrawPath(p)
-			s.Pop()
-		}, okage.ErrPDFInvalidPath},
+		// A path with a point that is NaN, whose stroke does not end in
+		// tiny-skia, has no case here: PathBuilder.Finish refuses it
+		// (D107). TestStrokeNotFinite of path covers the check of D74.
 		{"wide stroke in a group", func(s *Surface) {
 			s.PushIsolated()
 			s.SetStroke(redStroke(t, 1, 2e18))

@@ -1,9 +1,10 @@
 package okage_test
 
 // This file ports no upstream test. It checks a fault of tiny-skia that
-// okage keeps (D35): a hairline without anti-aliasing can give a rect one
+// okage keeps (D16): a hairline without anti-aliasing can give a rect one
 // column past the right side of the pixmap, and tiny-skia draws that pixel
-// on the first column of the next row.
+// on the first column of the next row. On the last row, okage skips the
+// pixel, where tiny-skia panics (D107).
 
 import (
 	"testing"
@@ -42,4 +43,26 @@ func TestHairlinePastTheRightSide(t *testing.T) {
 	if c, _ := pixmap.Pixel(0, 6); c.Alpha() != 255 || c.Red() != 255 {
 		t.Errorf("pixel (0, 6): got %d %d %d %d, want 255 0 0 255", c.Red(), c.Green(), c.Blue(), c.Alpha())
 	}
+}
+
+// TestHairlinePastTheLastRow draws a hairline whose pixel past the right side
+// is on the last row of the pixmap, which FuzzFillPathHuge found. The next
+// row is past the end of the pixmap, and tiny-skia panics. okage skips the
+// pixel (D107).
+func TestHairlinePastTheLastRow(t *testing.T) {
+	pb := okage.NewPathBuilder()
+	pb.MoveTo(-6e12, -7.0857142858321e13)
+	pb.CubicTo(1.150000000038e12, 2.16e12, -3303, 64.2, 1154, 1019)
+	pb.Close()
+	p, ok := pb.Finish()
+	if !ok {
+		t.Fatal("no path")
+	}
+	pixmap, _ := okage.NewPixmap(27, 27)
+	paint := okage.DefaultPaint()
+	paint.AntiAlias = false
+	stroke := okage.DefaultStroke()
+	stroke.Width = 0
+	ts := okage.TransformFromScale(0.0036734692, 0.0036734692)
+	pixmap.StrokePath(p, &paint, &stroke, ts, nil)
 }

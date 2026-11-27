@@ -177,6 +177,12 @@ okage differs from upstream only where a decision says so:
     CIDToGIDMap stream maps the second CIDs to their glyphs. A font without
     a second CID keeps the map `Identity` of krilla. A glyph without text
     takes an empty ActualText, so that MuPDF gives no U+FFFD for it (D102).
+26. `RectFromPoints` of `path` returns false for a NaN or an infinity in
+    any point, as Skia does. tiny-skia does not check the first one or two
+    points, so `PathBuilder.Finish` takes a path whose second point is NaN,
+    and its fill panics. A hairline without anti-aliasing skips a pixel past
+    the right side on the last row of the pixmap, where tiny-skia panics.
+    Each image that tiny-skia draws keeps its bytes (D107).
 
 When upstream changes the code of a difference, okage removes its own code
 and ports the change of upstream. D40 gives the steps for items 7 and 8, and
